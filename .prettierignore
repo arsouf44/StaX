@@ -1,0 +1,13 @@
+node_modules
+.next
+.open-next
+.wrangler
+dist
+build
+coverage
+pnpm-lock.yaml
+*.min.*
+supabase/migrations/*.sql
+docs/**/*.md
+playwright-report
+test-results
