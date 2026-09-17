@@ -147,7 +147,13 @@ export function ActivationForm({
         hint="Celle à laquelle le code a été envoyé."
         required
       >
-        <Input name="email" type="email" defaultValue={initialEmail} autoComplete="email" required />
+        <Input
+          name="email"
+          type="email"
+          defaultValue={initialEmail}
+          autoComplete="email"
+          required
+        />
       </Field>
 
       <TurnstileField siteKey={turnstileSiteKey} />

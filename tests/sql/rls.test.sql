@@ -82,11 +82,14 @@ begin
   insert into public.organizations (name, slug, created_by)
        values ('Tenant B', 'tenant-b', v_bob) returning id into v_org_b;
 
+  -- Le declencheur app.grant_creator_ownership a deja rattache le createur :
+  -- on complete les autres roles sans dupliquer le sien.
   insert into public.organization_members (organization_id, user_id, role) values
     (v_org_a, v_alice,  'owner'),
     (v_org_a, v_eve,    'editor'),
     (v_org_a, v_viewer, 'viewer'),
-    (v_org_b, v_bob,    'owner');
+    (v_org_b, v_bob,    'owner')
+  on conflict (organization_id, user_id) do update set role = excluded.role;
 
   insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug)
        values (v_org_a, 'Site A', 'site-a',
@@ -960,6 +963,222 @@ begin
     has_function_privilege('service_role',
       'public.record_page_view(uuid, text, text, text, char, text)', 'execute'),
     'service_role peut enregistrer une vue de page');
+end;
+$$;
+
+
+-- -----------------------------------------------------------------------------
+--  20. Effets des evenements de paiement
+-- -----------------------------------------------------------------------------
+--  La verite sur un paiement vient du webhook signe, jamais de la redirection
+--  du navigateur. Ces assertions verifient les deux proprietes qui protegent
+--  l'argent : l'idempotence (Stripe rejoue jusqu'a trois jours) et le fait que
+--  le montant credite vient de la commande, pas de la charge utile.
+\echo '--- Evenements de paiement ---'
+do $$
+declare
+  org_a   uuid := (select v from t.fixtures where k='org_a');
+  alice   uuid := (select v from t.fixtures where k='alice');
+  plan_id uuid;
+  v_order uuid;
+  v_ref   text;
+  v_result jsonb;
+  v_first  jsonb;
+  v_count  int;
+  v_amount int;
+  v_site   uuid;
+begin
+  select id into plan_id from public.plans where slug = 'classique' and is_active limit 1;
+
+  -- Commande creee par la fonction serveur : le prix vient du catalogue.
+  v_ref := 'TEST-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8);
+  insert into public.orders
+    (reference, organization_id, created_by, status, plan_id, plan_slug, plan_version,
+     setup_price_cents, monthly_price_cents, vat_rate_bps, vat_cents, total_cents,
+     business_type_slug, questionnaire, terms_version, terms_accepted_at)
+  values
+    (v_ref, org_a, alice, 'checkout_pending', plan_id, 'classique', 1,
+     23999, 1400, 2000, 4799, 28798, 'restaurant',
+     jsonb_build_object('businessName', 'Chez Test'), '2026-01', now())
+  returning id into v_order;
+
+  -- Premier passage : la commande bascule, le site et le projet sont crees.
+  v_first := app.apply_order_paid(v_order, 'pi_test_1', 'cs_test_1', 'cus_test_1');
+  perform t.assert((v_first ->> 'ok')::boolean, 'Le paiement est applique');
+  perform t.assert(v_first ->> 'code' = 'applied', 'La commande est passee en payee');
+  perform t.assert(v_first ? 'siteId', 'Un site est cree');
+  perform t.assert(v_first ? 'projectId', 'Un projet de suivi est cree');
+
+  select status::text, site_id into strict v_ref, v_site from public.orders where id = v_order;
+  perform t.assert(v_ref = 'paid', 'La commande est marquee payee');
+
+  -- Le montant credite est celui de la commande, pas une valeur exterieure.
+  select amount_cents into v_amount
+    from public.payments where order_id = v_order and scope = 'platform';
+  perform t.assert(v_amount = 28798,
+    'Le montant encaisse est celui fige dans la commande');
+
+  -- Rejeu du MEME evenement : rien ne doit etre duplique.
+  v_result := app.apply_order_paid(v_order, 'pi_test_1', 'cs_test_1', 'cus_test_1');
+  perform t.assert((v_result ->> 'ok')::boolean, 'Un rejeu ne provoque pas d erreur');
+  perform t.assert(v_result ->> 'code' = 'already_applied', 'Le rejeu est detecte');
+
+  select count(*) into v_count from public.payments where order_id = v_order;
+  perform t.assert(v_count = 1, 'Aucun paiement en double apres rejeu');
+
+  select count(*) into v_count from public.sites where id = v_site;
+  perform t.assert(v_count = 1, 'Aucun site en double apres rejeu');
+
+  select count(*) into v_count from public.projects where order_id = v_order;
+  perform t.assert(v_count = 1, 'Aucun projet en double apres rejeu');
+
+  -- Journal de bord : l'evenement est trace une seule fois.
+  perform t.assert(app.begin_webhook_event('stripe', 'evt_test_1', 'checkout.session.completed'),
+    'Un evenement inconnu est accepte');
+  perform app.finish_webhook_event('stripe', 'evt_test_1', 'processed');
+  perform t.assert(
+    not app.begin_webhook_event('stripe', 'evt_test_1', 'checkout.session.completed'),
+    'Un evenement deja traite est refuse');
+
+  select count(*) into v_count from public.webhook_events where event_id = 'evt_test_1';
+  perform t.assert(v_count = 1, 'L evenement n est enregistre qu une fois');
+end;
+$$;
+
+do $$
+declare
+  org_a   uuid := (select v from t.fixtures where k='org_a');
+  alice   uuid := (select v from t.fixtures where k='alice');
+  plan_id uuid;
+  v_order uuid;
+  v_ref   text;
+  v_result jsonb;
+  v_count  int;
+  v_price  int;
+begin
+  select id into plan_id from public.plans where slug = 'premium' and is_active limit 1;
+
+  v_ref := 'TEST-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8);
+  insert into public.orders
+    (reference, organization_id, created_by, status, plan_id, plan_slug, plan_version,
+     setup_price_cents, monthly_price_cents, vat_rate_bps, vat_cents, total_cents,
+     terms_version, terms_accepted_at)
+  values
+    (v_ref, org_a, alice, 'checkout_pending', plan_id, 'premium', 1,
+     49900, 3200, 2000, 9980, 59880, '2026-01', now())
+  returning id into v_order;
+
+  perform app.apply_order_paid(v_order, 'pi_test_2', 'cs_test_2', 'cus_test_2');
+
+  v_result := app.upsert_subscription_from_stripe(
+    'sub_test_1', 'cus_test_2', 'trialing',
+    now(), now() + interval '30 days', false, v_order, 'price_test');
+  perform t.assert((v_result ->> 'ok')::boolean, 'L abonnement est cree');
+  perform t.assert(v_result ->> 'code' = 'created', 'Premiere creation');
+
+  -- Le prix mensuel est celui de la commande : un changement du tarif public
+  -- ne doit jamais toucher un contrat en cours.
+  select monthly_price_cents into v_price
+    from public.subscriptions where stripe_subscription_id = 'sub_test_1';
+  perform t.assert(v_price = 3200, 'Le prix mensuel est fige au tarif de la commande');
+
+  -- Rejeu : mise a jour, jamais duplication.
+  v_result := app.upsert_subscription_from_stripe(
+    'sub_test_1', 'cus_test_2', 'active',
+    now(), now() + interval '30 days', false, v_order, 'price_test');
+  perform t.assert(v_result ->> 'code' = 'updated', 'Un second evenement met a jour');
+
+  select count(*) into v_count
+    from public.subscriptions where stripe_subscription_id = 'sub_test_1';
+  perform t.assert(v_count = 1, 'Aucun abonnement en double');
+
+  -- Resiliation : la periode de continuite est calculee, pas devinee.
+  perform app.upsert_subscription_from_stripe(
+    'sub_test_1', 'cus_test_2', 'canceled',
+    now() - interval '30 days', now(), true, v_order, 'price_test');
+  perform t.assert(
+    (select grace_period_ends_at > now()
+       from public.subscriptions where stripe_subscription_id = 'sub_test_1'),
+    'Une resiliation ouvre une periode de continuite');
+  perform t.assert(
+    (select maintenance_state = 'maintenance_ended'
+       from public.subscriptions where stripe_subscription_id = 'sub_test_1'),
+    'L etat de maintenance suit le statut Stripe');
+end;
+$$;
+
+\echo '--- Surface RPC des webhooks ---'
+do $$
+begin
+  perform t.assert(
+    not has_function_privilege('authenticated',
+      'public.apply_order_paid(uuid, text, text, text, text, text, text)', 'execute'),
+    'authenticated ne peut PAS marquer une commande payee');
+  perform t.assert(
+    not has_function_privilege('anon',
+      'public.apply_order_paid(uuid, text, text, text, text, text, text)', 'execute'),
+    'anon ne peut PAS marquer une commande payee');
+  perform t.assert(
+    has_function_privilege('service_role',
+      'public.apply_order_paid(uuid, text, text, text, text, text, text)', 'execute'),
+    'service_role peut appliquer un paiement');
+  perform t.assert(
+    not has_function_privilege('authenticated',
+      'public.upsert_subscription_from_stripe(text, text, text, timestamptz, timestamptz, boolean, uuid, text)',
+      'execute'),
+    'authenticated ne peut PAS creer d abonnement');
+  perform t.assert(
+    not has_function_privilege('authenticated',
+      'public.begin_webhook_event(text, text, text, text, timestamptz, jsonb)', 'execute'),
+    'authenticated ne peut PAS enregistrer d evenement de paiement');
+end;
+$$;
+
+
+-- -----------------------------------------------------------------------------
+--  21. Creation d'une organisation par un client
+-- -----------------------------------------------------------------------------
+\echo '--- Creation d organisation ---'
+do $$
+declare
+  carol  uuid;
+  v_org  uuid;
+  v_role text;
+  v_slug text;
+  v_can  boolean;
+  v_count int;
+begin
+  -- Nouveau compte, sans aucune organisation.
+  insert into auth.users (id, email) values (gen_random_uuid(), 'carol@example.test')
+  returning id into carol;
+
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', carol, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- `returning` applique aussi la policy de lecture : si elle etait trop
+  -- stricte, cette insertion echouerait pour la personne qui cree pourtant
+  -- l organisation.
+  insert into public.organizations (name, slug, created_by)
+  values ('Carol SARL', public.unique_organization_slug('Carol SARL'), carol)
+  returning id, slug into v_org, v_slug;
+
+  v_can := app.org_can(v_org, 'billing.manage');
+  select role::text into v_role
+    from public.organization_members where organization_id = v_org and user_id = carol;
+  select count(*) into v_count from public.organization_members where user_id = carol;
+
+  -- Les assertions sortent du role restreint : la schema de test n est
+  -- volontairement pas accessible a `authenticated`.
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(v_slug = 'carol-sarl',
+    'Le slug conserve toutes les lettres du nom');
+  perform t.assert(v_role = 'owner',
+    'Le createur devient proprietaire dans la meme transaction');
+  perform t.assert(v_can, 'Il peut immediatement commander');
+  perform t.assert(v_count = 1, 'Aucune autre appartenance n est creee');
 end;
 $$;
 

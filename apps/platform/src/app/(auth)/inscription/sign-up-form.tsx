@@ -76,11 +76,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
               conditions générales de vente
             </Link>{' '}
             et la{' '}
-            <Link
-              href="/confidentialite"
-              className="underline underline-offset-4"
-              target="_blank"
-            >
+            <Link href="/confidentialite" className="underline underline-offset-4" target="_blank">
               politique de confidentialité
             </Link>
             .

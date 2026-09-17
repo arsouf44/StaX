@@ -3,7 +3,12 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSessionClient } from '@stax/auth';
-import { fieldErrors, formDataToObject, mfaChallengeSchema, mfaEnrollSchema } from '@stax/validation';
+import {
+  fieldErrors,
+  formDataToObject,
+  mfaChallengeSchema,
+  mfaEnrollSchema,
+} from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
 import { safeRedirectTarget } from '~/lib/session';
 import type { AuthFormState } from '../actions';
