@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@stax/config": "workspace:*",
+    "@stax/security": "workspace:*",
     "@stax/types": "workspace:*",
+    "@supabase/supabase-js": "2.116.0",
     "zod": "4.6.5"
   },
   "devDependencies": {

@@ -214,6 +214,9 @@ importers:
       '@stax/config':
         specifier: workspace:*
         version: link:../config
+      '@stax/security':
+        specifier: workspace:*
+        version: link:../security
       '@stax/types':
         specifier: workspace:*
         version: link:../types
@@ -290,6 +293,9 @@ importers:
       '@stax/config':
         specifier: workspace:*
         version: link:../config
+      '@stax/security':
+        specifier: workspace:*
+        version: link:../security
       '@stax/types':
         specifier: workspace:*
         version: link:../types
@@ -312,9 +318,15 @@ importers:
       '@stax/config':
         specifier: workspace:*
         version: link:../config
+      '@stax/security':
+        specifier: workspace:*
+        version: link:../security
       '@stax/types':
         specifier: workspace:*
         version: link:../types
+      '@supabase/supabase-js':
+        specifier: 2.116.0
+        version: 2.116.0
       zod:
         specifier: 4.6.5
         version: 4.6.5

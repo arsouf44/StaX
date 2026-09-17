@@ -646,6 +646,90 @@ begin
 end;
 $$;
 
+
+-- -----------------------------------------------------------------------------
+--  16. Surface RPC : les fonctions serveur restent inaccessibles aux clients
+-- -----------------------------------------------------------------------------
+\echo '--- Surface RPC exposee ---'
+do $$
+declare
+  fn text;
+  ok boolean;
+  server_only text[] := array[
+    'public.bump_rate_limit(text, text, int, int)',
+    'public.resolve_published_site(text)',
+    'public.redeem_activation_code(text, uuid, text)'
+  ];
+  client_allowed text[] := array[
+    'public.has_feature(uuid, text)',
+    'public.publish_site(uuid, text)',
+    'public.create_order(uuid, uuid, text, text, jsonb, text, text, text, text, text, text)',
+    'public.request_refund(uuid, text, int, int)'
+  ];
+begin
+  foreach fn in array server_only loop
+    ok := has_function_privilege('authenticated', fn, 'execute');
+    perform t.assert(not ok, format('authenticated ne peut PAS executer %s', split_part(fn, '(', 1)));
+    ok := has_function_privilege('anon', fn, 'execute');
+    perform t.assert(not ok, format('anon ne peut PAS executer %s', split_part(fn, '(', 1)));
+    ok := has_function_privilege('service_role', fn, 'execute');
+    perform t.assert(ok, format('service_role peut executer %s', split_part(fn, '(', 1)));
+  end loop;
+
+  foreach fn in array client_allowed loop
+    ok := has_function_privilege('authenticated', fn, 'execute');
+    perform t.assert(ok, format('authenticated peut executer %s', split_part(fn, '(', 1)));
+    ok := has_function_privilege('anon', fn, 'execute');
+    perform t.assert(not ok, format('anon ne peut PAS executer %s', split_part(fn, '(', 1)));
+  end loop;
+end;
+$$;
+
+-- Le schema `app` n'est jamais expose : ses fonctions ne sont pas appelables
+-- par une session cliente sans passer par une enveloppe publique auditee.
+do $$
+begin
+  perform t.assert(
+    not has_schema_privilege('anon', 'app', 'create'),
+    'anon ne peut pas creer d objet dans le schema app');
+  perform t.assert(
+    not has_function_privilege('anon', 'app.resolve_published_site(text)', 'execute'),
+    'anon ne peut pas appeler directement app.resolve_published_site');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  17. Droits d offre exposes : un client ne lit que SES organisations
+-- -----------------------------------------------------------------------------
+\echo '--- Enveloppes RPC de droits ---'
+do $$
+declare
+  alice uuid := (select v from t.fixtures where k='alice');
+  org_b uuid := (select v from t.fixtures where k='org_b');
+  org_a uuid := (select v from t.fixtures where k='org_a');
+  v_result boolean;
+begin
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', alice, 'role', 'authenticated')::text, true);
+  v_result := public.has_feature(org_a, 'online_payments');
+  perform t.assert(v_result, 'Alice lit les droits de SON organisation');
+
+  v_result := public.has_feature(org_b, 'custom_domain');
+  perform t.assert(not v_result,
+    'Alice ne peut pas interroger les droits d une autre organisation');
+
+  perform t.assert(public.feature_limit(org_b, 'max_pages') = -1,
+    'Le quota d une autre organisation n est pas divulgue');
+  perform t.assert(
+    cardinality(public.my_capabilities(org_b)) = 0,
+    'Aucune capacite n est renvoyee pour une organisation etrangere');
+  perform t.assert(
+    'content.publish' = any (public.my_capabilities(org_a)),
+    'Les capacites de sa propre organisation sont bien renvoyees');
+  perform set_config('request.jwt.claims', null, true);
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

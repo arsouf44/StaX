@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@stax/config": "workspace:*",
+    "@stax/security": "workspace:*",
     "@stax/types": "workspace:*",
     "@stax/validation": "workspace:*",
     "zod": "4.6.5"
