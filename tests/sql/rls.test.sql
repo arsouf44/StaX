@@ -622,11 +622,16 @@ $$;
 -- -----------------------------------------------------------------------------
 \echo '--- Acces du personnel plateforme ---'
 do $$
-declare staff uuid := (select v from t.fixtures where k='staff');
+declare
+  staff uuid := (select v from t.fixtures where k='staff');
+  v_orgs  int := (select count(*) from public.organizations);
+  v_sites int := (select count(*) from public.sites);
 begin
-  perform t.assert(t.count_as(staff, 'select 1 from organizations') = 2,
+  -- Le total est lu, pas suppose : ajouter une organisation interne ne doit
+  -- pas faire echouer une assertion qui parle d autre chose.
+  perform t.assert(t.count_as(staff, 'select 1 from organizations') = v_orgs,
     'Le personnel plateforme voit toutes les organisations');
-  perform t.assert(t.count_as(staff, 'select 1 from sites') = 2,
+  perform t.assert(t.count_as(staff, 'select 1 from sites') = v_sites,
     'Le personnel plateforme voit tous les sites');
   perform t.assert(t.denied_as(staff, 'delete from sites'),
     'Un platform_admin ne peut PAS supprimer un site (reserve au platform_owner)');
