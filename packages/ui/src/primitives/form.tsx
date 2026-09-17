@@ -208,21 +208,28 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label: ReactNode;
   description?: ReactNode;
+  /** Message d erreur du champ, relie par `aria-errormessage`. */
+  error?: string | string[] | null;
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  { label, description, className, ...props },
+  { label, description, error, className, ...props },
   ref,
 ) {
   const id = useId();
+  const message = Array.isArray(error) ? error[0] : error;
   return (
     <div className={cn('flex gap-3', className)}>
       <input
         ref={ref}
         id={id}
         type="checkbox"
+        aria-invalid={message ? true : undefined}
+        aria-errormessage={message ? `${id}-error` : undefined}
+        aria-describedby={description ? `${id}-hint` : undefined}
         className={cn(
-          'mt-0.5 size-4.5 shrink-0 cursor-pointer rounded-[5px] border border-[var(--border-strong)]',
+          'mt-0.5 size-4.5 shrink-0 cursor-pointer rounded-[5px] border',
+          message ? 'border-[var(--danger)]' : 'border-[var(--border-strong)]',
           'bg-[var(--background-inset)] accent-[var(--accent)]',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]',
         )}
@@ -232,7 +239,16 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         <label htmlFor={id} className="cursor-pointer text-sm text-[var(--foreground)]">
           {label}
         </label>
-        {description ? <p className="mt-0.5 text-xs text-[var(--muted)]">{description}</p> : null}
+        {description ? (
+          <p id={`${id}-hint`} className="mt-0.5 text-xs text-[var(--muted)]">
+            {description}
+          </p>
+        ) : null}
+        {message ? (
+          <p id={`${id}-error`} className="mt-1 text-xs text-[var(--danger)]">
+            {message}
+          </p>
+        ) : null}
       </div>
     </div>
   );

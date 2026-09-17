@@ -167,3 +167,54 @@ export async function revokeActivationCode(
 export function formatActivationCode(code: string): string {
   return normalizeActivationCode(code);
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Verification sans consommation                                             */
+/* -------------------------------------------------------------------------- */
+
+export interface ActivationPreview {
+  organizationName: string | null;
+  grantedRole: OrgRole;
+}
+
+/**
+ * Verifie un code SANS le consommer.
+ *
+ * Utilisee par la premiere etape du parcours d activation : elle evite de
+ * creer un compte avant de savoir si le code est valide. La tentative est
+ * neanmoins comptee en base, donc un code ne peut pas etre teste indefiniment.
+ */
+export async function peekActivationCode(
+  serviceDb: SupabaseClient,
+  params: { code: string; email: string },
+): Promise<Result<ActivationPreview>> {
+  const codeHash = await hashActivationCode(params.code);
+
+  const { data, error } = await serviceDb.rpc('peek_activation_code', {
+    p_code_hash: codeHash,
+    p_email: params.email.trim().toLowerCase(),
+  });
+
+  if (error) {
+    return err(
+      appError('internal', 'Impossible de vérifier ce code pour le moment.', { cause: error }),
+    );
+  }
+
+  const result = data as {
+    ok: boolean;
+    reason: ActivationFailureReason;
+    organizationName: string | null;
+    grantedRole: OrgRole | null;
+  } | null;
+
+  if (!result || !result.ok) {
+    const reason = result?.reason ?? 'invalid';
+    return err(appError('forbidden', ACTIVATION_MESSAGES[reason] ?? ACTIVATION_MESSAGES.invalid));
+  }
+
+  return ok({
+    organizationName: result.organizationName,
+    grantedRole: (result.grantedRole ?? 'owner') as OrgRole,
+  });
+}
