@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { blockSettingsSchema } from './blocks/primitives.js';
-import { getBlockDefinition, type ParsedBlock } from './blocks/registry.js';
+import { blockSettingsSchema } from './blocks/primitives';
+import { getBlockDefinition, type ParsedBlock } from './blocks/registry';
 
 /**
  * Snapshot publie.

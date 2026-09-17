@@ -1,5 +1,5 @@
 import type { Cents, UUID } from '@stax/types';
-import { type Db, unwrapList } from '../client.js';
+import { type Db, unwrapList } from '../client';
 
 /**
  * Requetes du back-office.

@@ -1,5 +1,5 @@
 import type { PageBlockRow, SitePage, SiteVersion, UUID } from '@stax/types';
-import { type Db, unwrap, unwrapList, unwrapMaybe } from '../client.js';
+import { type Db, unwrap, unwrapList, unwrapMaybe } from '../client';
 
 /**
  * Lecture et ecriture du contenu d un site (brouillon).

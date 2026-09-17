@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { boundedText, emailSchema, honeypotSchema, localeSchema, phoneSchema } from './common.js';
+import { boundedText, emailSchema, honeypotSchema, localeSchema, phoneSchema } from './common';
 
 /**
  * Schemas d authentification et d activation.

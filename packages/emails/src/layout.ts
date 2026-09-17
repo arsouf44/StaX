@@ -1,4 +1,4 @@
-import { escapeHtml } from './escape.js';
+import { escapeHtml } from './escape';
 
 /**
  * Gabarit d e-mail.

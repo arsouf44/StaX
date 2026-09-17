@@ -6,8 +6,8 @@ import {
   renderEmailLayout,
   strongLine,
   toPlainText,
-} from './layout.js';
-import type { EmailMessage } from './provider.js';
+} from './layout';
+import type { EmailMessage } from './provider';
 
 /**
  * Gabarits transactionnels.

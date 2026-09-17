@@ -1,6 +1,6 @@
 import type { Cents, Currency, UUID } from '@stax/types';
 import { platformUrl, readEnv } from '@stax/config';
-import { getStripe, idempotencyKey, type Stripe } from './stripe-client.js';
+import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
 
 /**
  * Parcours de paiement de la plateforme.

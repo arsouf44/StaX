@@ -1,3 +1,3 @@
-export * from './runtime.js';
-export * from './env.js';
-export * from './legal.js';
+export * from './runtime';
+export * from './env';
+export * from './legal';

@@ -21,7 +21,7 @@ import type {
   SubscriptionStatus,
   TicketPriority,
   TicketStatus,
-} from './enums.js';
+} from './enums';
 
 export type UUID = string;
 /** Horodatage ISO 8601 en UTC. Toute date stockee est en UTC. */

@@ -1,2 +1,2 @@
-export * from './primitives.js';
-export * from './registry.js';
+export * from './primitives';
+export * from './registry';

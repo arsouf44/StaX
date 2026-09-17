@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { boundedText, emailSchema, honeypotSchema, optionalText, uuidSchema } from './common.js';
+import { boundedText, emailSchema, honeypotSchema, optionalText, uuidSchema } from './common';
 
 /**
  * RGPD : consentement, demandes d exercice des droits, cookies.

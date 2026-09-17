@@ -9,7 +9,7 @@ import {
   postalCodeSchema,
   slugSchema,
   uuidSchema,
-} from './common.js';
+} from './common';
 
 /**
  * Organisations et equipes.

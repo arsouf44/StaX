@@ -1,6 +1,6 @@
 import { hashEmail } from '@stax/security';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getEmailProvider, type EmailMessage, type EmailSendResult } from './provider.js';
+import { getEmailProvider, type EmailMessage, type EmailSendResult } from './provider';
 
 /**
  * Envoi journalise.

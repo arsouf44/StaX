@@ -1,6 +1,6 @@
 import { resolveBusiness, type BusinessDefinition } from '@stax/business';
-import { createBlock, type ParsedBlock } from './blocks/registry.js';
-import { getPreset } from './theme.js';
+import { createBlock, type ParsedBlock } from './blocks/registry';
+import { getPreset } from './theme';
 
 /**
  * Instanciation d un site a partir d un metier.

@@ -1,6 +1,6 @@
 import type { FeatureKey, OrgCapability } from '@stax/types';
-import type { DashboardEntry, DashboardGroup, ModuleId } from './types.js';
-import { MODULES, getModule } from './modules.js';
+import type { DashboardEntry, DashboardGroup, ModuleId } from './types';
+import { MODULES, getModule } from './modules';
 
 /**
  * Navigation de l'espace client.

@@ -1,4 +1,4 @@
-import { deployEnvironment, readEnv } from './runtime.js';
+import { deployEnvironment, readEnv } from './runtime';
 
 /**
  * LEGAL_REVIEW_REQUIRED

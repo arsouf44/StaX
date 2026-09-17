@@ -1,5 +1,5 @@
 import type { FeatureKey, LimitKey, UUID } from '@stax/types';
-import type { Db } from '../client.js';
+import type { Db } from '../client';
 
 /**
  * Droits d offre et quotas.

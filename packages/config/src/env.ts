@@ -5,7 +5,7 @@ import {
   isProduction,
   readAllEnv,
   readEnv,
-} from './runtime.js';
+} from './runtime';
 
 /* -------------------------------------------------------------------------- */
 /*  Public configuration (safe to ship in a browser bundle)                    */

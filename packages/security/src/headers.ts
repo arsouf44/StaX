@@ -1,5 +1,5 @@
 import { isProduction } from '@stax/config';
-import { randomToken } from './crypto.js';
+import { randomToken } from './crypto';
 
 /**
  * En-tetes de securite HTTP.

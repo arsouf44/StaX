@@ -1,5 +1,5 @@
 import { serializeJsonLd } from '@stax/security';
-import type { SiteSettingsView } from './snapshot.js';
+import type { SiteSettingsView } from './snapshot';
 
 /**
  * SEO technique des sites clients.

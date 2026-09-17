@@ -1,4 +1,4 @@
-import { hmacHex, randomToken, timingSafeEqual } from './crypto.js';
+import { hmacHex, randomToken, timingSafeEqual } from './crypto';
 
 /**
  * Protection CSRF par jeton signe (double soumission).

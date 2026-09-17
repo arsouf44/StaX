@@ -5,8 +5,8 @@ import type {
   OnboardingQuestion,
   PageBlueprint,
   SeoDefaults,
-} from './types.js';
-import { COMMON_ONBOARDING, getSector } from './sectors.js';
+} from './types';
+import { COMMON_ONBOARDING, getSector } from './sectors';
 
 /**
  * Registre des metiers.

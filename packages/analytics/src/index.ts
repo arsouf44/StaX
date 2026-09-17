@@ -1,2 +1,2 @@
-export * from './collect.js';
-export * from './aggregate.js';
+export * from './collect';
+export * from './aggregate';

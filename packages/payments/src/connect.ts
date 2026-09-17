@@ -1,6 +1,6 @@
 import type { Cents, ConnectStatus, Currency, UUID } from '@stax/types';
 import { platformUrl } from '@stax/config';
-import { getStripe, idempotencyKey, type Stripe } from './stripe-client.js';
+import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
 
 /**
  * Stripe Connect — paiements encaisses SUR les sites des clients.

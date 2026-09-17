@@ -8,7 +8,7 @@ import type {
   Subscription,
   UUID,
 } from '@stax/types';
-import { type Db, unwrapList, unwrapMaybe } from '../client.js';
+import { type Db, unwrapList, unwrapMaybe } from '../client';
 
 /**
  * Contexte de travail d un utilisateur : ses organisations, ses sites, ses

@@ -1,5 +1,5 @@
 import { readEnv } from '@stax/config';
-import { getStripe, getWebhookCryptoProvider, type Stripe } from './stripe-client.js';
+import { getStripe, getWebhookCryptoProvider, type Stripe } from './stripe-client';
 
 /**
  * Reception des webhooks Stripe.

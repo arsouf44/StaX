@@ -9,7 +9,7 @@ import {
   slugSchema,
   timezoneSchema,
   uuidSchema,
-} from './common.js';
+} from './common';
 
 /**
  * Site, pages, theme et domaines.

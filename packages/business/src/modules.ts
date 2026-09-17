@@ -1,4 +1,4 @@
-import type { DashboardEntry, ModuleDefinition, ModuleId } from './types.js';
+import type { DashboardEntry, ModuleDefinition, ModuleId } from './types';
 
 /**
  * Registre des modules metier.

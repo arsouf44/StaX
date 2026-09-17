@@ -1,5 +1,5 @@
 import type { Cents, Currency, FeatureRow, PlanRow } from '@stax/types';
-import { type Db, unwrapList } from '../client.js';
+import { type Db, unwrapList } from '../client';
 
 /**
  * Catalogue commercial.

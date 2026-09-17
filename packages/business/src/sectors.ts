@@ -1,4 +1,4 @@
-import type { ModuleId, OnboardingQuestion, PageBlueprint, SectorDefinition } from './types.js';
+import type { ModuleId, OnboardingQuestion, PageBlueprint, SectorDefinition } from './types';
 
 /**
  * Secteurs d'activite. Chaque secteur porte des defauts (modules, pages,

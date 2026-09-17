@@ -8,7 +8,7 @@ import {
   phoneSchema,
   slugSchema,
   uuidSchema,
-} from './common.js';
+} from './common';
 
 /**
  * Commande, devis et remboursement.

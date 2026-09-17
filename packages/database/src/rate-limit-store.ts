@@ -1,5 +1,5 @@
 import type { RateLimitDecision, RateLimitStore } from '@stax/security';
-import { createServiceClient, type Db } from './client.js';
+import { createServiceClient, type Db } from './client';
 
 /**
  * Compteurs de limitation de debit persistes en base.

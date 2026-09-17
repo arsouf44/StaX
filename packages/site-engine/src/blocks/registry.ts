@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { blockSettingsSchema, linkSchema, mediaRefSchema, richParagraphSchema } from './primitives.js';
+import { blockSettingsSchema, linkSchema, mediaRefSchema, richParagraphSchema } from './primitives';
 
 /**
  * Registre des blocs.

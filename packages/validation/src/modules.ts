@@ -9,7 +9,7 @@ import {
   phoneSchema,
   slugSchema,
   uuidSchema,
-} from './common.js';
+} from './common';
 
 /**
  * Schemas des modules metier : carte, prestations, reservations, catalogue,

@@ -1,0 +1,47 @@
+{
+  // Configuration Cloudflare Workers de l application StaX.
+  // Les secrets ne figurent JAMAIS ici : ils sont poses par
+  // `wrangler secret put` ou par les secrets GitHub Actions.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stax-platform",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "placement": { "mode": "smart" },
+  "vars": {
+    "STAX_ENV": "development"
+  },
+  "env": {
+    "preview": {
+      "name": "stax-platform-preview",
+      "vars": {
+        "STAX_ENV": "preview"
+      },
+      "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS"
+      },
+      "observability": { "enabled": true }
+    },
+    "production": {
+      "name": "stax-platform",
+      "vars": {
+        "STAX_ENV": "production"
+      },
+      "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS"
+      },
+      "observability": { "enabled": true },
+      "placement": { "mode": "smart" }
+    }
+  }
+}

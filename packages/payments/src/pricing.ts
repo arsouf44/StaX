@@ -1,5 +1,5 @@
 import type { Cents, Currency } from '@stax/types';
-import { applyBasisPoints, assertCents, vatFromGross } from './money.js';
+import { applyBasisPoints, assertCents, vatFromGross } from './money';
 
 /**
  * Calcul tarifaire canonique cote application.
