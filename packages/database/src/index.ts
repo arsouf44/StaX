@@ -1,5 +1,6 @@
 export * from './client';
 export * from './rate-limit-store';
+export * from './queries/media';
 export * from './queries/catalog';
 export * from './queries/workspace';
 export * from './queries/features';

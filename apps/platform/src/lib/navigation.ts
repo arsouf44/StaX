@@ -135,13 +135,13 @@ export const PRIMARY_NAV: NavGroup[] = [
 export const LEGAL_LINKS: NavLink[] = [
   { label: 'Mentions légales', href: '/mentions-legales' },
   { label: 'Conditions générales de vente', href: '/cgv' },
-  { label: 'Conditions générales d utilisation', href: '/cgu' },
-  { label: 'Politique de confidentialite', href: '/confidentialite' },
+  { label: 'Conditions générales d’utilisation', href: '/cgu' },
+  { label: 'Politique de confidentialité', href: '/confidentialite' },
   { label: 'Cookies', href: '/cookies' },
   { label: 'Remboursements', href: '/remboursements' },
   { label: 'Données personnelles', href: '/donnees-personnelles' },
   { label: 'Sous-traitants', href: '/sous-traitants' },
-  { label: 'Accessibilite', href: '/accessibilite' },
+  { label: 'Accessibilité', href: '/accessibilite' },
 ];
 
 /** Pages indexables, pour le sitemap. */

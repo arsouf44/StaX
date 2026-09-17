@@ -296,6 +296,13 @@ export interface SystemHealthView {
   observedAt: string | null;
 }
 
+/**
+ * Indicateurs de sante.
+ *
+ * Les colonnes sont enumerees explicitement : `metadata` n'est pas lisible par
+ * le role anonyme (privilege retire colonne par colonne), et un `select('*')`
+ * ferait donc echouer la page publique /status.
+ */
 export async function loadSystemHealth(db: Db): Promise<SystemHealthView[]> {
   const rows = unwrapList<{
     key: string;
@@ -303,7 +310,12 @@ export async function loadSystemHealth(db: Db): Promise<SystemHealthView[]> {
     status: SystemHealthView['status'];
     detail: string | null;
     observed_at: string | null;
-  }>((await db.from('system_health').select('*').order('key')) as never);
+  }>(
+    (await db
+      .from('system_health')
+      .select('key, label, status, detail, observed_at')
+      .order('key')) as never,
+  );
 
   return rows.map((row) => ({
     key: row.key,

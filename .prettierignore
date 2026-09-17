@@ -11,3 +11,4 @@ supabase/migrations/*.sql
 docs/**/*.md
 playwright-report
 test-results
+next-env.d.ts

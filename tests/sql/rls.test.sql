@@ -730,6 +730,239 @@ begin
 end;
 $$;
 
+
+-- -----------------------------------------------------------------------------
+--  18. Etat des services : public, mais sans details d exploitation
+-- -----------------------------------------------------------------------------
+\echo '--- Page publique d etat des services ---'
+do $$
+begin
+  perform t.assert(
+    has_column_privilege('anon', 'public.system_health', 'status', 'select'),
+    'anon peut lire le statut des services');
+  perform t.assert(
+    has_column_privilege('anon', 'public.system_health', 'label', 'select'),
+    'anon peut lire le libelle des services');
+  perform t.assert(
+    not has_column_privilege('anon', 'public.system_health', 'metadata', 'select'),
+    'anon ne peut PAS lire les metadonnees d exploitation');
+  perform t.assert(
+    not has_table_privilege('anon', 'public.system_health', 'update'),
+    'anon ne peut PAS modifier l etat des services');
+end;
+$$;
+
+
+-- -----------------------------------------------------------------------------
+--  19. Reception du trafic public : isolation par le nom d hote
+-- -----------------------------------------------------------------------------
+--  Le Worker des sites publics agit avec le role de service, qui contourne la
+--  RLS. Ces assertions verifient donc que les fonctions d ingestion refusent
+--  elles-memes de franchir la frontiere entre deux clients, meme appelees avec
+--  tous les droits.
+\echo '--- Formulaires et reservations publics ---'
+do $$
+declare
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  site_b uuid := (select v from t.fixtures where k='site_b');
+  org_a  uuid := (select v from t.fixtures where k='org_a');
+  org_b  uuid := (select v from t.fixtures where k='org_b');
+  v_form_a uuid;
+  v_form_b uuid;
+  v_result jsonb;
+  v_count  int;
+  v_raised boolean;
+  v_row    public.form_submissions%rowtype;
+begin
+  insert into public.forms (site_id, organization_id, slug, name, kind)
+  values (site_a, org_a, 'contact-public', 'Contact', 'contact')
+  returning id into v_form_a;
+
+  insert into public.forms (site_id, organization_id, slug, name, kind)
+  values (site_b, org_b, 'contact-public', 'Contact', 'contact')
+  returning id into v_form_b;
+
+  insert into public.form_fields (form_id, name, label, type, is_required)
+  values (v_form_a, 'email', 'E-mail', 'email', true),
+         (v_form_a, 'message', 'Message', 'textarea', true);
+
+  -- Un champ obligatoire absent est signale, sans rien ecrire.
+  v_result := app.submit_form(site_a, 'contact-public', '{"email":"visiteur@example.test"}'::jsonb);
+  perform t.assert((v_result ->> 'ok')::boolean is false,
+    'Un champ obligatoire manquant fait echouer la soumission');
+  perform t.assert(v_result ->> 'code' = 'missing_fields',
+    'Le motif du refus est explicite');
+  select count(*) into v_count from public.form_submissions where form_id = v_form_a;
+  perform t.assert(v_count = 0, 'Aucune soumission incomplete n est enregistree');
+
+  -- Soumission valide, accompagnee de deux cles hostiles non declarees.
+  v_result := app.submit_form(
+    site_a, 'contact-public',
+    '{"email":"visiteur@example.test","message":"Bonjour","admin":"true","site_id":"forge"}'::jsonb);
+  perform t.assert((v_result ->> 'ok')::boolean, 'Une soumission complete est acceptee');
+
+  -- On relit la ligne reellement ecrite : un comptage seul pourrait passer a
+  -- vide et donner une fausse assurance.
+  select * into v_row
+    from public.form_submissions
+   where id = (v_result ->> 'submissionId')::uuid;
+  perform t.assert(v_row.id is not null, 'La soumission est bien enregistree');
+
+  -- Liste blanche : les cles non declarees sont ecartees, y compris celles qui
+  -- tenteraient de forcer un champ interne.
+  perform t.assert(v_row.data ? 'message',
+    'Les champs declares sont conserves');
+  perform t.assert(not (v_row.data ? 'admin'),
+    'Une cle non declaree est ignoree (liste blanche)');
+  perform t.assert(not (v_row.data ? 'site_id'),
+    'Un site_id injecte dans le corps est ignore');
+
+  -- La soumission est rattachee au BON site et au BON formulaire.
+  perform t.assert(v_row.site_id = site_a, 'La soumission est rattachee au site du formulaire');
+  perform t.assert(v_row.form_id = v_form_a, 'La soumission est rattachee au formulaire vise');
+  perform t.assert(v_row.organization_id = org_a,
+    'L organisation proprietaire est celle du site');
+
+  -- Isolation : le slug « contact » du site B n est jamais atteint depuis A.
+  select count(*) into v_count from public.form_submissions where form_id = v_form_b;
+  perform t.assert(v_count = 0,
+    'Le formulaire homonyme d un autre client n a rien recu');
+
+  -- Un formulaire d un autre tenant designe explicitement reste introuvable :
+  -- la recherche se fait par couple (site, slug), jamais par identifiant seul.
+  -- Le drapeau est pose AVANT le bloc : sans lui, un `assert` place dans le
+  -- corps serait rattrape par son propre gestionnaire et le test passerait
+  -- quoi qu il arrive.
+  v_raised := false;
+  begin
+    v_result := app.submit_form(site_b, 'inexistant', '{}'::jsonb);
+  exception when others then
+    v_raised := true;
+  end;
+  perform t.assert(v_raised, 'Un slug inconnu pour ce site est refuse');
+
+  -- Une soumission au score eleve est classee, jamais perdue.
+  v_result := app.submit_form(
+    site_a, 'contact-public',
+    '{"email":"bot@example.test","message":"casino viagra"}'::jsonb, 0.95);
+  perform t.assert((v_result ->> 'ok')::boolean, 'Une soumission suspecte est acceptee');
+  perform t.assert((v_result ->> 'spam')::boolean, 'Elle est marquee comme indesirable');
+  select count(*) into v_count
+    from public.form_submissions where form_id = v_form_a and status = 'spam';
+  perform t.assert(v_count = 1, 'Elle reste consultable par le client');
+end;
+$$;
+
+do $$
+declare
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  site_b uuid := (select v from t.fixtures where k='site_b');
+  org_a  uuid := (select v from t.fixtures where k='org_a');
+  org_b  uuid := (select v from t.fixtures where k='org_b');
+  v_service_a uuid;
+  v_service_b uuid;
+  v_result jsonb;
+  v_slot   timestamptz;
+  v_count  int;
+begin
+  insert into public.booking_services
+    (site_id, organization_id, name, duration_minutes, capacity_per_slot,
+     lead_time_hours, horizon_days, requires_approval)
+  values (site_a, org_a, 'Table', 90, 2, 1, 60, true)
+  returning id into v_service_a;
+
+  insert into public.booking_services
+    (site_id, organization_id, name, duration_minutes, capacity_per_slot,
+     lead_time_hours, horizon_days, requires_approval)
+  values (site_b, org_b, 'Table', 90, 20, 1, 60, true)
+  returning id into v_service_b;
+
+  v_slot := date_trunc('hour', now()) + interval '2 days';
+
+  -- Une prestation d un AUTRE site ne peut pas etre reservee depuis le site A,
+  -- meme si son identifiant est connu.
+  v_result := app.create_booking(site_a, v_service_b, v_slot, 2, 'Mallory',
+                                 'mallory@example.test', null);
+  perform t.assert((v_result ->> 'ok')::boolean is false,
+    'Une prestation d un autre client est inaccessible');
+  perform t.assert(v_result ->> 'code' = 'service_unavailable',
+    'Le refus ne revele pas l existence de la prestation');
+
+  select count(*) into v_count from public.bookings where booking_service_id = v_service_b;
+  perform t.assert(v_count = 0, 'Aucune reservation croisee n a ete creee');
+
+  -- Reservation legitime.
+  v_result := app.create_booking(site_a, v_service_a, v_slot, 2, 'Alice',
+                                 'alice.client@example.test', null);
+  perform t.assert((v_result ->> 'ok')::boolean, 'Une reservation valide est acceptee');
+  perform t.assert(v_result ? 'reference', 'Une reference lisible est renvoyee');
+
+  -- La capacite est un invariant : le creneau est maintenant complet.
+  v_result := app.create_booking(site_a, v_service_a, v_slot, 1, 'Bob',
+                                 'bob.client@example.test', null);
+  perform t.assert((v_result ->> 'ok')::boolean is false,
+    'La capacite du creneau est respectee');
+  perform t.assert(v_result ->> 'code' = 'slot_full', 'Le motif indique un creneau complet');
+
+  -- Delai minimal et horizon.
+  v_result := app.create_booking(site_a, v_service_a, now() + interval '5 minutes', 1,
+                                 'Trop tot', 'tot@example.test', null);
+  perform t.assert(v_result ->> 'code' = 'too_soon', 'Le delai minimal est applique');
+
+  v_result := app.create_booking(site_a, v_service_a, now() + interval '400 days', 1,
+                                 'Trop loin', 'loin@example.test', null);
+  perform t.assert(v_result ->> 'code' = 'too_far', 'L horizon de reservation est applique');
+
+  -- Un contact est obligatoire.
+  v_result := app.create_booking(site_a, v_service_a, v_slot + interval '4 hours', 1,
+                                 'Anonyme', null, null);
+  perform t.assert(v_result ->> 'code' = 'contact_required',
+    'Une reservation sans e-mail ni telephone est refusee');
+end;
+$$;
+
+\echo '--- Surface RPC de la reception publique ---'
+do $$
+begin
+  perform t.assert(
+    not has_function_privilege('authenticated',
+      'public.submit_form(uuid, text, jsonb, numeric, text, text, text, text)', 'execute'),
+    'authenticated ne peut PAS executer public.submit_form');
+  perform t.assert(
+    not has_function_privilege('anon',
+      'public.submit_form(uuid, text, jsonb, numeric, text, text, text, text)', 'execute'),
+    'anon ne peut PAS executer public.submit_form');
+  perform t.assert(
+    has_function_privilege('service_role',
+      'public.submit_form(uuid, text, jsonb, numeric, text, text, text, text)', 'execute'),
+    'service_role peut executer public.submit_form');
+
+  perform t.assert(
+    not has_function_privilege('anon',
+      'public.create_booking(uuid, uuid, timestamptz, int, text, text, text, text, text)',
+      'execute'),
+    'anon ne peut PAS executer public.create_booking');
+  perform t.assert(
+    has_function_privilege('service_role',
+      'public.create_booking(uuid, uuid, timestamptz, int, text, text, text, text, text)',
+      'execute'),
+    'service_role peut executer public.create_booking');
+
+  perform t.assert(
+    not has_function_privilege('authenticated', 'public.available_slots(uuid, uuid, date)',
+      'execute'),
+    'authenticated ne peut PAS enumerer les creneaux d un site');
+  perform t.assert(
+    not has_function_privilege('anon', 'public.record_page_view(uuid, text, text, text, char, text)',
+      'execute'),
+    'anon ne peut PAS injecter de mesure d audience');
+  perform t.assert(
+    has_function_privilege('service_role',
+      'public.record_page_view(uuid, text, text, text, char, text)', 'execute'),
+    'service_role peut enregistrer une vue de page');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

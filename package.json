@@ -2,7 +2,7 @@
   "name": "stax",
   "version": "0.1.0",
   "private": true,
-  "description": "StaX \u2014 plateforme SaaS francaise de creation, vente, livraison et gestion de sites web professionnels.",
+  "description": "StaX — plateforme SaaS francaise de creation, vente, livraison et gestion de sites web professionnels.",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22.11.0"
@@ -17,7 +17,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css,yml,yaml}\"",
-    "typecheck": "pnpm -r --no-bail typecheck",
+    "typecheck": "pnpm -r --no-bail typecheck && tsc --noEmit -p tsconfig.scripts.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit",
@@ -37,6 +37,7 @@
   "devDependencies": {
     "@eslint/js": "9.39.1",
     "@playwright/test": "1.63.0",
+    "@supabase/supabase-js": "2.116.0",
     "@types/node": "22.19.1",
     "@types/pg": "8.23.1",
     "@vitejs/plugin-react": "5.1.1",

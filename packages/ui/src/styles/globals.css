@@ -87,12 +87,8 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 24px -8px rgb(0 0 0 / 0.55);
   --shadow-lg: 0 24px 64px -20px rgb(0 0 0 / 0.7);
-  --shadow-glass:
-    0 1px 0 0 var(--glass-sheen) inset,
-    0 24px 64px -24px rgb(0 0 0 / 0.8);
-  --shadow-glass-sm:
-    0 1px 0 0 rgb(255 255 255 / 0.12) inset,
-    0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-glass: 0 1px 0 0 var(--glass-sheen) inset, 0 24px 64px -24px rgb(0 0 0 / 0.8);
+  --shadow-glass-sm: 0 1px 0 0 rgb(255 255 255 / 0.12) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
   --shadow-focus: 0 0 0 1px var(--background), 0 0 0 3px var(--border-focus);
 
   /* Grille technique de fond */
@@ -150,12 +146,8 @@
   --shadow-sm: 0 1px 2px rgb(9 9 11 / 0.06);
   --shadow-md: 0 8px 24px -10px rgb(9 9 11 / 0.14);
   --shadow-lg: 0 24px 64px -24px rgb(9 9 11 / 0.2);
-  --shadow-glass:
-    0 1px 0 0 rgb(255 255 255 / 0.9) inset,
-    0 20px 48px -24px rgb(9 9 11 / 0.18);
-  --shadow-glass-sm:
-    0 1px 0 0 rgb(255 255 255 / 0.9) inset,
-    0 6px 20px -12px rgb(9 9 11 / 0.14);
+  --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 20px 48px -24px rgb(9 9 11 / 0.18);
+  --shadow-glass-sm: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 6px 20px -12px rgb(9 9 11 / 0.14);
 
   --grid-line: rgb(9 9 11 / 0.045);
   --grid-line-strong: rgb(9 9 11 / 0.07);
@@ -275,7 +267,12 @@
     overflow-x: clip;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-weight: 560;
     letter-spacing: -0.022em;
     text-wrap: balance;
@@ -307,18 +304,28 @@
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
   }
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
   ::-webkit-scrollbar-thumb {
     background: var(--border-strong);
     border-radius: 99px;
     border: 3px solid transparent;
     background-clip: content-box;
   }
-  ::-webkit-scrollbar-thumb:hover { background-color: var(--muted); background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted);
+    background-clip: content-box;
+  }
 
   /* Le tableau de bord ne doit jamais etre mis en cache par le navigateur */
-  [data-sensitive] { view-transition-name: none; }
+  [data-sensitive] {
+    view-transition-name: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -455,8 +462,12 @@
     color: transparent;
   }
 
-  .text-balance { text-wrap: balance; }
-  .text-pretty { text-wrap: pretty; }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
 
   /* Reaction douce au curseur : la surface s eclaire la ou pointe la souris */
   .cursor-glow {
@@ -476,45 +487,85 @@
     );
     pointer-events: none;
   }
-  .cursor-glow:hover::before { opacity: 1; }
+  .cursor-glow:hover::before {
+    opacity: 1;
+  }
 
   /* Bandes de defilement horizontal sans barre visible */
-  .no-scrollbar { scrollbar-width: none; }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Largeur de lecture confortable */
-  .measure { max-width: 68ch; }
-  .measure-tight { max-width: 54ch; }
+  .measure {
+    max-width: 68ch;
+  }
+  .measure-tight {
+    max-width: 54ch;
+  }
 }
 
 /* --------------------------------------------------------------------------
    6. Animations — toutes desactivables
    -------------------------------------------------------------------------- */
 @keyframes reveal {
-  from { opacity: 0; transform: translate3d(0, 14px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 @keyframes shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 @keyframes scan {
-  0% { transform: translateY(-100%); opacity: 0; }
-  12% { opacity: 1; }
-  88% { opacity: 1; }
-  100% { transform: translateY(1100%); opacity: 0; }
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(1100%);
+    opacity: 0;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @layer utilities {
@@ -558,15 +609,21 @@
     scroll-behavior: auto !important;
   }
 
-  html { scroll-behavior: auto; }
+  html {
+    scroll-behavior: auto;
+  }
 
   .reveal-on-scroll {
     opacity: 1 !important;
     transform: none !important;
   }
 
-  .cursor-glow::before { display: none; }
-  .halo::after { filter: none; }
+  .cursor-glow::before {
+    display: none;
+  }
+  .halo::after {
+    filter: none;
+  }
 }
 
 /*
@@ -575,20 +632,36 @@
  * ce qui preserve la hierarchie visuelle sans le cout de composition.
  */
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-1 { background: var(--surface); }
-  .glass-2 { background: var(--surface-elevated); }
-  .glass-3 { background: var(--surface-elevated); }
+  .glass-1 {
+    background: var(--surface);
+  }
+  .glass-2 {
+    background: var(--surface-elevated);
+  }
+  .glass-3 {
+    background: var(--surface-elevated);
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .glass-1, .glass-2, .glass-3 {
+  .glass-1,
+  .glass-2,
+  .glass-3 {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .glass-1 { background: var(--surface); }
-  .glass-2 { background: var(--surface-elevated); }
-  .glass-3 { background: var(--surface-elevated); }
-  .noise::after { display: none; }
+  .glass-1 {
+    background: var(--surface);
+  }
+  .glass-2 {
+    background: var(--surface-elevated);
+  }
+  .glass-3 {
+    background: var(--surface-elevated);
+  }
+  .noise::after {
+    display: none;
+  }
 }
 
 /* Contraste renforce : les bordures deviennent franches */
@@ -615,13 +688,26 @@
     --background: #ffffff;
     --foreground: #000000;
   }
-  body { background: #fff; color: #000; }
-  .glass-1, .glass-2, .glass-3 {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .glass-1,
+  .glass-2,
+  .glass-3 {
     background: #fff !important;
     backdrop-filter: none !important;
     border: 1px solid #ddd !important;
     box-shadow: none !important;
   }
-  .noise::after, .halo::after, [data-print-hide] { display: none !important; }
-  a[href^='http']::after { content: ' (' attr(href) ')'; font-size: 0.75em; color: #555; }
+  .noise::after,
+  .halo::after,
+  [data-print-hide] {
+    display: none !important;
+  }
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.75em;
+    color: #555;
+  }
 }

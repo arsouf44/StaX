@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@stax/business": "workspace:*",
+    "@stax/payments": "workspace:*",
     "@stax/security": "workspace:*",
     "@stax/types": "workspace:*",
     "@stax/validation": "workspace:*",

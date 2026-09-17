@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./packages/config/tsconfig/base.json",
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"],
+    // `DOM` fournit les types web standards (BufferSource, Blob, fetch) que
+    // Node 22 implemente reellement et que @stax/security utilise.
+    "lib": ["ES2023", "DOM"],
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    // Les scripts et les tests ne sont pas des paquets de l espace de travail :
+    // ils resolvent les modules @stax/* directement vers leurs sources, comme
+    // le fait vitest.config.ts. Les deux listes doivent rester alignees.
+    "paths": {
+      "@stax/types": ["./packages/types/src/index.ts"],
+      "@stax/config": ["./packages/config/src/index.ts"],
+      "@stax/validation": ["./packages/validation/src/index.ts"],
+      "@stax/payments": ["./packages/payments/src/index.ts"],
+      "@stax/payments/*": ["./packages/payments/src/*.ts"],
+      "@stax/business": ["./packages/business/src/index.ts"],
+      "@stax/security": ["./packages/security/src/index.ts"],
+      "@stax/site-engine": ["./packages/site-engine/src/index.ts"],
+      "@stax/database": ["./packages/database/src/index.ts"],
+      "@stax/analytics": ["./packages/analytics/src/index.ts"],
+      "@stax/emails": ["./packages/emails/src/index.ts"],
+      "@stax/ui": ["./packages/ui/src/index.ts"]
+    }
+  },
+  "include": ["scripts/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "playwright.config.ts"],
+  "exclude": ["node_modules", "tests/e2e/**"]
+}

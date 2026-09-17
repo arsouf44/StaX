@@ -44,7 +44,11 @@ export function readAllEnv(): EnvSource {
 }
 
 export function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof window.document !== 'undefined';
+  // On interroge `globalThis` plutot que `window` directement : le typage d'un
+  // Worker Cloudflare ne declare pas le DOM, et une reference directe y serait
+  // une erreur de compilation alors que le test doit rester valable partout.
+  const scope = globalThis as { window?: { document?: unknown } };
+  return scope.window !== undefined && scope.window.document !== undefined;
 }
 
 export type DeployEnvironment = 'development' | 'preview' | 'production' | 'test';

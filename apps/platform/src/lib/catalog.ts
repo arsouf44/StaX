@@ -4,8 +4,9 @@ import {
   listPublicPlans,
   listSectorsWithCounts,
   listBusinessTypes,
+  listSubprocessors,
 } from '@stax/database';
-import type { BusinessTypeView, PlanView, SectorView } from '@stax/database';
+import type { BusinessTypeView, PlanView, SectorView, SubprocessorView } from '@stax/database';
 
 /**
  * Acces au catalogue public.
@@ -45,4 +46,19 @@ export const getBusinessTypes = cache(async (sectorSlug?: string): Promise<Busin
 export const getPlanBySlugSafe = cache(async (slug: string): Promise<PlanView | null> => {
   const plans = await getPlans();
   return plans.find((plan) => plan.slug === slug) ?? null;
+});
+
+/**
+ * Sous-traitants publies sur /sous-traitants.
+ *
+ * `null` signifie « liste non consultable pour le moment » et non « aucun
+ * sous-traitant » : la page affiche alors un message explicite plutot qu un
+ * tableau vide qui laisserait croire que nous n en avons aucun.
+ */
+export const getSubprocessors = cache(async (): Promise<SubprocessorView[] | null> => {
+  try {
+    return await listSubprocessors(createAnonClient());
+  } catch {
+    return null;
+  }
 });

@@ -248,3 +248,53 @@ export async function listModulesForBusinessType(
       requiredFeature: mod.required_feature,
     }));
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Sous-traitants publies                                                     */
+/* -------------------------------------------------------------------------- */
+
+export interface SubprocessorView {
+  name: string;
+  purpose: string;
+  location: string;
+  transferSafeguards: string | null;
+  privacyUrl: string | null;
+  dpaUrl: string | null;
+  category: string;
+}
+
+/**
+ * Liste publique des sous-traitants.
+ *
+ * La page /sous-traitants lit cette table et rien d'autre : ce qui est affiche
+ * est ce que la plateforme utilise reellement, pas une liste recopiee a la main
+ * dans un fichier de contenu qui divergerait au premier changement.
+ */
+export async function listSubprocessors(db: Db): Promise<SubprocessorView[]> {
+  const rows = unwrapList<{
+    name: string;
+    purpose: string;
+    location: string;
+    transfer_safeguards: string | null;
+    privacy_url: string | null;
+    dpa_url: string | null;
+    category: string;
+  }>(
+    (await db
+      .from('subprocessors')
+      .select('name, purpose, location, transfer_safeguards, privacy_url, dpa_url, category')
+      .eq('is_active', true)
+      .order('sort_order')
+      .order('name')) as never,
+  );
+
+  return rows.map((row) => ({
+    name: row.name,
+    purpose: row.purpose,
+    location: row.location,
+    transferSafeguards: row.transfer_safeguards,
+    privacyUrl: row.privacy_url,
+    dpaUrl: row.dpa_url,
+    category: row.category,
+  }));
+}

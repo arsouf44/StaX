@@ -1,0 +1,32 @@
+{
+  // Worker multi-tenant servant TOUS les sites clients.
+  // Un seul deploiement pour l ensemble des tenants : le site est resolu a
+  // partir du nom d hote, jamais d un identifiant fourni par le navigateur.
+  // Les secrets sont poses par `wrangler secret put`, jamais ici.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stax-sites",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "placement": { "mode": "smart" },
+  "vars": {
+    "STAX_ENV": "development"
+  },
+  "env": {
+    "preview": {
+      "name": "stax-sites-preview",
+      "vars": { "STAX_ENV": "preview" },
+      "observability": { "enabled": true }
+    },
+    "production": {
+      "name": "stax-sites",
+      "vars": { "STAX_ENV": "production" },
+      "observability": { "enabled": true },
+      "placement": { "mode": "smart" }
+    }
+  }
+}
