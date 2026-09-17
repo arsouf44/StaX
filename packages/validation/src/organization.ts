@@ -33,7 +33,7 @@ export const organizationProfileSchema = z
       .string()
       .trim()
       .toUpperCase()
-      .regex(/^[A-Z]{2}[0-9A-Z]{2,13}$/, 'Numero de TVA invalide.')
+      .regex(/^[A-Z]{2}[0-9A-Z]{2,13}$/, 'Numéro de TVA invalide.')
       .optional()
       .or(z.literal('')),
     addressLine1: optionalText(120),

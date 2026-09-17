@@ -15,6 +15,9 @@
 // non echappes, ils cassent un bloc <script> embarquant du JSON-LD.
 const LINE_SEPARATORS = new RegExp('[\\u2028\\u2029]', 'g');
 
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS_GLOBAL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g;
+
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',
@@ -59,8 +62,21 @@ export function serializeJsonLd(data: unknown): string {
  * une ressource, d'executer du code ou de modifier la mise en page globale.
  */
 const ALLOWED_INLINE_TAGS = new Set([
-  'p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li',
-  'h2', 'h3', 'h4', 'blockquote', 'code',
+  'p',
+  'br',
+  'strong',
+  'em',
+  'u',
+  's',
+  'a',
+  'ul',
+  'ol',
+  'li',
+  'h2',
+  'h3',
+  'h4',
+  'blockquote',
+  'code',
 ]);
 
 const ALLOWED_ATTRIBUTES: Record<string, ReadonlySet<string>> = {
@@ -152,12 +168,16 @@ export function sanitizeRichText(input: string, maxLength = 20_000): string {
 
 /** Texte simple : retire tout balisage et normalise les espaces. */
 export function sanitizePlainText(input: string, maxLength = 5_000): string {
-  return input
-    .slice(0, maxLength)
-    .replace(/<[^>]*>/g, '')
-    .replace(new RegExp('[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]', 'g'), '')
-    .replace(/\s{3,}/g, '  ')
-    .trim();
+  return (
+    input
+      .slice(0, maxLength)
+      .replace(/<[^>]*>/g, '')
+      // Les caracteres de controle sont precisement la cible : les retirer evite
+      // l'injection d'en-tetes et les artefacts d'affichage.
+      .replace(CONTROL_CHARS_GLOBAL, '')
+      .replace(/\s{3,}/g, '  ')
+      .trim()
+  );
 }
 
 /**

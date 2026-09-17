@@ -33,11 +33,7 @@ const SLABS = [
 export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoProps) {
   const gradientId = `stax-mark-${tone}`;
   const stroke =
-    tone === 'mono'
-      ? 'currentColor'
-      : tone === 'accent'
-        ? 'var(--accent)'
-        : `url(#${gradientId})`;
+    tone === 'mono' ? 'currentColor' : tone === 'accent' ? 'var(--accent)' : `url(#${gradientId})`;
 
   return (
     <svg
@@ -54,7 +50,14 @@ export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoP
       {title ? <title>{title}</title> : null}
       {tone === 'duotone' ? (
         <defs>
-          <linearGradient id={gradientId} x1="6" y1="6" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id={gradientId}
+            x1="6"
+            y1="6"
+            x2="26"
+            y2="26"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="var(--foreground)" />
             <stop offset="0.55" stopColor="var(--foreground)" stopOpacity="0.92" />
             <stop offset="1" stopColor="var(--accent)" />
@@ -151,7 +154,7 @@ export function faviconDataUri(): string {
 export const BRAND = {
   name: 'StaX',
   /** Positionnement, utilise dans les metadonnees et les partages. */
-  tagline: 'Votre site professionnel. Construit pour votre metier.',
+  tagline: 'Votre site professionnel. Construit pour votre métier.',
   colors: {
     ink: '#08080A',
     paper: '#FAFAFA',

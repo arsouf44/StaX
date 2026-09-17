@@ -62,7 +62,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     id: 'graphite',
     label: 'Graphite',
-    description: 'Sobre et technique. Convient a presque tous les metiers.',
+    description: 'Sobre et technique. Convient a presque tous les métiers.',
     scheme: 'light',
     colors: {
       background: '#FFFFFF',
@@ -78,7 +78,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     id: 'slate',
     label: 'Ardoise',
-    description: 'Serieux et institutionnel. Immobilier, conseil, sante.',
+    description: 'Serieux et institutionnel. Immobilier, conseil, santé.',
     scheme: 'light',
     colors: {
       background: '#FBFCFD',
@@ -94,7 +94,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     id: 'nocturne',
     label: 'Nocturne',
-    description: 'Fond sombre, contraste eleve. Bars, evenementiel, studios.',
+    description: 'Fond sombre, contraste élevé. Bars, événementiel, studios.',
     scheme: 'dark',
     colors: {
       background: '#08080A',
@@ -110,7 +110,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     id: 'ember',
     label: 'Braise',
-    description: 'Chaleureux et gourmand. Restauration et metiers de bouche.',
+    description: 'Chaleureux et gourmand. Restauration et métiers de bouche.',
     scheme: 'light',
     colors: {
       background: '#FFFCF8',
@@ -126,7 +126,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     id: 'lumen',
     label: 'Lumen',
-    description: 'Doux et lumineux. Beaute, bien-etre, hebergement.',
+    description: 'Doux et lumineux. Beauté, bien-être, hébergement.',
     scheme: 'light',
     colors: {
       background: '#FDFCFB',
@@ -141,7 +141,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   },
   {
     id: 'forest',
-    label: 'Foret',
+    label: 'Forêt',
     description: 'Naturel et rassurant. Paysagistes, bio, associations.',
     scheme: 'light',
     colors: {
@@ -184,10 +184,22 @@ const HEADING_SCALE: Record<string, { h1: string; h2: string; h3: string }> = {
 };
 
 export const themeTokensSchema = z.object({
-  accent: z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
-  background: z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
-  foreground: z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
-  surface: z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).optional(),
+  accent: z
+    .string()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+    .optional(),
+  background: z
+    .string()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+    .optional(),
+  foreground: z
+    .string()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+    .optional(),
+  surface: z
+    .string()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+    .optional(),
   radius: z.enum(['none', 'sm', 'md', 'lg', 'full']).optional(),
   density: z.enum(['compact', 'comfortable', 'spacious']).optional(),
   buttonStyle: z.enum(['solid', 'outline', 'soft', 'pill']).optional(),
@@ -238,7 +250,8 @@ export function resolveTheme(input: {
   const buttonStyle = tokens.buttonStyle ?? 'solid';
   const headingScale = tokens.headingScale ?? 'balanced';
 
-  const fontHeadingKey = input.fontHeading && FONT_STACKS[input.fontHeading] ? input.fontHeading : 'geist';
+  const fontHeadingKey =
+    input.fontHeading && FONT_STACKS[input.fontHeading] ? input.fontHeading : 'geist';
   const fontBodyKey = input.fontBody && FONT_STACKS[input.fontBody] ? input.fontBody : 'geist';
   const headingFont = FONT_STACKS[fontHeadingKey] as (typeof FONT_STACKS)[string];
   const bodyFont = FONT_STACKS[fontBodyKey] as (typeof FONT_STACKS)[string];

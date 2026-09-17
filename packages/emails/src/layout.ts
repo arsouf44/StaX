@@ -33,8 +33,15 @@ const COLORS = {
 
 export function renderEmailLayout(options: EmailLayoutOptions): string {
   const {
-    preheader, heading, body, action, secondaryAction, footerNote,
-    platformUrl, supportEmail, companyName,
+    preheader,
+    heading,
+    body,
+    action,
+    secondaryAction,
+    footerNote,
+    platformUrl,
+    supportEmail,
+    companyName,
   } = options;
 
   const button = action

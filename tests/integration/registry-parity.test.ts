@@ -27,14 +27,18 @@ describeIfDb('coherence registre TypeScript / catalogue PostgreSQL', () => {
   it('declare exactement les memes secteurs', async () => {
     const { rows } = await client.query('select slug from public.business_sectors order by slug');
     const sql = rows.map((r) => r.slug).sort();
-    const ts = listSectors().map((s) => s.id).sort();
+    const ts = listSectors()
+      .map((s) => s.id)
+      .sort();
     expect(ts).toEqual(sql);
   });
 
   it('declare exactement les memes metiers', async () => {
     const { rows } = await client.query('select slug from public.business_types order by slug');
     const sql = rows.map((r) => r.slug).sort();
-    const ts = listBusinesses().map((b) => b.id).sort();
+    const ts = listBusinesses()
+      .map((b) => b.id)
+      .sort();
     expect(ts).toEqual(sql);
   });
 

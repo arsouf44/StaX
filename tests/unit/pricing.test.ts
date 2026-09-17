@@ -88,9 +88,9 @@ describe('codes promotionnels', () => {
     const past = new Date('2020-01-01T00:00:00Z');
     expect(isCouponUsable({ ...percent, validUntil: past }, 'classique')).toBe(false);
     expect(isCouponUsable({ ...percent, isActive: false }, 'classique')).toBe(false);
-    expect(
-      isCouponUsable({ ...percent, maxRedemptions: 5, redeemedCount: 5 }, 'classique'),
-    ).toBe(false);
+    expect(isCouponUsable({ ...percent, maxRedemptions: 5, redeemedCount: 5 }, 'classique')).toBe(
+      false,
+    );
     expect(computeDiscount(CLASSIQUE, { ...percent, isActive: false })).toBe(0);
   });
 

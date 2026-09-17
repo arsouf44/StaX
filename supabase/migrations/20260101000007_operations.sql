@@ -45,7 +45,7 @@ create index activation_codes_open_idx on public.activation_codes (expires_at)
 
 comment on table public.activation_codes is
   'Codes a usage unique. Consommation atomique via app.redeem_activation_code(), '
-  'qui verifie expiration, revocation, contrainte d''email et nombre de tentatives.';
+  'qui vérifié expiration, révocation, contrainte d''email et nombre de tentatives.';
 
 -- -----------------------------------------------------------------------------
 --  notifications in-app
@@ -329,8 +329,8 @@ create index impersonation_active_idx on public.impersonation_sessions (expires_
   where ended_at is null;
 
 comment on table public.impersonation_sessions is
-  'Toute session « voir comme ce client » est tracee : motif, duree limitee, '
-  'banniere visible, sortie instantanee. Les operations financieres restent bloquees.';
+  'Toute session « voir comme ce client » est tracée : motif, durée limitée, '
+  'banniere visible, sortie instantanee. Les opérations financières restent bloquées.';
 
 -- -----------------------------------------------------------------------------
 --  Limitation de debit persistante (complement du cache edge)
@@ -373,8 +373,8 @@ end;
 $$;
 
 comment on function app.bump_rate_limit(text, text, int, int) is
-  'Incremente un compteur a fenetre fixe et indique si la requete reste autorisee. '
-  'Renvoie false des que le quota est depasse.';
+  'Incremente un compteur a fenêtre fixe et indiqué si la requête reste autorisée. '
+  'Renvoie false des que le quota est dépasse.';
 
 -- -----------------------------------------------------------------------------
 --  Analytics respectueuses de la vie privee
@@ -408,7 +408,7 @@ create index analytics_events_site_created_idx on public.analytics_events (site_
 create index analytics_events_site_path_idx on public.analytics_events (site_id, path, created_at desc);
 
 comment on table public.analytics_events is
-  'Aucune adresse IP complete n''est conservee. Les evenements bruts sont agreges '
+  'Aucune adresse IP complète n''est conservée. Les événements bruts sont agreges '
   'quotidiennement dans daily_site_metrics puis purges.';
 
 create table public.daily_site_metrics (
@@ -514,4 +514,4 @@ create trigger system_health_touch_updated_at
 
 comment on table public.system_health is
   'Etat reel des dependances. Un indicateur reste `unknown` ou `not_configured` '
-  'tant que la donnee n''est pas reellement observee : jamais de sante simulee.';
+  'tant que la donnee n''est pas réellement observée : jamais de santé simulee.';

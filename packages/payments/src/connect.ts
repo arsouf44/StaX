@@ -26,9 +26,7 @@ export interface CreateConnectedAccountInput {
   country?: string;
 }
 
-export async function createConnectedAccount(
-  input: CreateConnectedAccountInput,
-): Promise<string> {
+export async function createConnectedAccount(input: CreateConnectedAccountInput): Promise<string> {
   const stripe = getStripe();
   const account = await stripe.accounts.create(
     {
@@ -84,10 +82,7 @@ export interface ConnectAccountSnapshot {
 
 export function summarizeAccount(account: Stripe.Account): ConnectAccountSnapshot {
   const requirements = account.requirements;
-  const due = [
-    ...(requirements?.currently_due ?? []),
-    ...(requirements?.past_due ?? []),
-  ];
+  const due = [...(requirements?.currently_due ?? []), ...(requirements?.past_due ?? [])];
   const chargesEnabled = account.charges_enabled === true;
   const payoutsEnabled = account.payouts_enabled === true;
   const detailsSubmitted = account.details_submitted === true;
@@ -223,22 +218,20 @@ export async function createConnectCheckoutSession(params: {
 export const CONNECT_STATUS_LABELS: Record<ConnectStatus, string> = {
   not_started: 'Non configure',
   onboarding: 'Configuration en cours',
-  pending_verification: 'Verification Stripe en cours',
+  pending_verification: 'Vérification Stripe en cours',
   active: 'Actif',
   restricted: 'Limite',
-  disabled: 'Desactive',
+  disabled: 'Désactivé',
 };
 
 export const CONNECT_STATUS_HELP: Record<ConnectStatus, string> = {
-  not_started:
-    'Activez les paiements pour encaisser directement sur votre compte bancaire.',
-  onboarding:
-    'Terminez votre inscription Stripe pour pouvoir encaisser des paiements.',
+  not_started: 'Activez les paiements pour encaisser directement sur votre compte bancaire.',
+  onboarding: 'Terminez votre inscription Stripe pour pouvoir encaisser des paiements.',
   pending_verification:
-    'Stripe verifie vos informations. Cela prend generalement moins de 24 heures.',
+    'Stripe vérifié vos informations. Cela prend généralement moins de 24 heures.',
   active: 'Vous pouvez encaisser des paiements. Les fonds arrivent sur votre compte bancaire.',
   restricted:
-    'Vos encaissements fonctionnent, mais vos virements sont bloques. Completez les informations demandees par Stripe.',
+    'Vos encaissements fonctionnent, mais vos virements sont bloques. Complétez les informations demandées par Stripe.',
   disabled:
-    'Votre compte Stripe est desactive. Consultez les informations demandees pour le reactiver.',
+    'Votre compte Stripe est désactivé. Consultez les informations demandées pour le réactiver.',
 };

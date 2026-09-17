@@ -41,7 +41,10 @@ export async function issueActivationCode(
 ): Promise<Result<IssuedActivationCode>> {
   const code = generateActivationCode();
   const codeHash = await hashActivationCode(code);
-  const ttlDays = Math.min(Math.max(input.expiresInDays ?? ACTIVATION_CODE_DEFAULT_TTL_DAYS, 1), 180);
+  const ttlDays = Math.min(
+    Math.max(input.expiresInDays ?? ACTIVATION_CODE_DEFAULT_TTL_DAYS, 1),
+    180,
+  );
   const expiresAt = new Date(Date.now() + ttlDays * 86_400_000).toISOString();
 
   const { data, error } = await db
@@ -59,7 +62,9 @@ export async function issueActivationCode(
     .single();
 
   if (error || !data) {
-    return err(appError('internal', 'Impossible de generer le code d activation.', { cause: error }));
+    return err(
+      appError('internal', 'Impossible de générer le code d activation.', { cause: error }),
+    );
   }
 
   return ok({
@@ -71,12 +76,7 @@ export async function issueActivationCode(
 }
 
 export type ActivationFailureReason =
-  | 'invalid'
-  | 'expired'
-  | 'revoked'
-  | 'already_used'
-  | 'email_mismatch'
-  | 'too_many_attempts';
+  'invalid' | 'expired' | 'revoked' | 'already_used' | 'email_mismatch' | 'too_many_attempts';
 
 export interface ActivationSuccess {
   organizationId: UUID;
@@ -92,12 +92,12 @@ export interface ActivationSuccess {
  * pas apprendre lesquels ont existe.
  */
 export const ACTIVATION_MESSAGES: Record<ActivationFailureReason, string> = {
-  invalid: 'Ce code n est pas valide. Verifiez la saisie ou contactez-nous.',
-  expired: 'Ce code n est plus valide. Contactez-nous pour en recevoir un nouveau.',
-  revoked: 'Ce code n est plus valide. Contactez-nous pour en recevoir un nouveau.',
-  already_used: 'Ce code a deja ete utilise. Connectez-vous avec votre compte existant.',
+  invalid: 'Ce code n est pas validé. Vérifiez la saisie ou contactez-nous.',
+  expired: 'Ce code n est plus validé. Contactez-nous pour en recevoir un nouveau.',
+  revoked: 'Ce code n est plus validé. Contactez-nous pour en recevoir un nouveau.',
+  already_used: 'Ce code a déjà ete utilise. Connectez-vous avec votre compte existant.',
   email_mismatch:
-    'Ce code est reserve a une autre adresse e-mail. Utilisez celle a laquelle il vous a ete envoye.',
+    'Ce code est réservé a une autre adresse e-mail. Utilisez celle a laquelle il vous a ete envoyé.',
   too_many_attempts:
     'Trop de tentatives sur ce code. Patientez ou contactez-nous pour en recevoir un nouveau.',
 };
@@ -123,7 +123,9 @@ export async function redeemActivationCode(
   });
 
   if (error) {
-    return err(appError('internal', 'Impossible de valider ce code pour le moment.', { cause: error }));
+    return err(
+      appError('internal', 'Impossible de valider ce code pour le moment.', { cause: error }),
+    );
   }
 
   const result = data as {
@@ -157,7 +159,7 @@ export async function revokeActivationCode(
     .eq('id', codeId)
     .is('used_at', null);
 
-  if (error) return err(appError('internal', 'Revocation impossible.', { cause: error }));
+  if (error) return err(appError('internal', 'Révocation impossible.', { cause: error }));
   return ok(true);
 }
 

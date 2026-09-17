@@ -23,10 +23,10 @@ export class MoneyError extends Error {
 /** Valide qu'une valeur est un montant en centimes exploitable. */
 export function assertCents(value: number, label = 'montant'): asserts value is Cents {
   if (!Number.isInteger(value)) {
-    throw new MoneyError(`Le ${label} doit etre un entier de centimes, recu : ${value}`);
+    throw new MoneyError(`Le ${label} doit être un entier de centimes, reçu : ${value}`);
   }
   if (!Number.isSafeInteger(value)) {
-    throw new MoneyError(`Le ${label} depasse la plage entiere sure : ${value}`);
+    throw new MoneyError(`Le ${label} dépasse la plage entière sure : ${value}`);
   }
 }
 
@@ -74,6 +74,9 @@ export function clampCents(amountCents: Cents, min: Cents, max: Cents): Cents {
 /** Conversion en unites majeures. Reservee a l'affichage et aux APIs externes. */
 export function toMajorUnits(amountCents: Cents): number {
   assertCents(amountCents);
+  // Seul endroit du code ou un montant devient un flottant : la frontiere
+  // d'affichage. La regle ESLint interdit cette division partout ailleurs.
+  // eslint-disable-next-line no-restricted-syntax
   return amountCents / 100;
 }
 

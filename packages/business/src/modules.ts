@@ -4,7 +4,7 @@ import type { DashboardEntry, ModuleDefinition, ModuleId } from './types';
  * Registre des modules metier.
  *
  * Un module declare ce qu'il ouvre : des entrees de navigation dans l'espace
- * client et des types de blocs dans l'editeur. C'est ce qui permet a
+ * client et des types de blocs dans l'éditeur. C'est ce qui permet a
  * l'interface de s'adapter au metier SANS aucune condition en dur dans les
  * composants — un plombier ne voit jamais « Carte du restaurant ».
  */
@@ -24,7 +24,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   contact: {
     id: 'contact',
     label: 'Formulaire de contact',
-    description: 'Recevez les messages de vos visiteurs dans une boite de reception claire.',
+    description: 'Recevez les messages de vos visiteurs dans une boîte de réception claire.',
     icon: 'mail',
     category: 'crm',
     requiredFeature: null,
@@ -38,7 +38,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   'opening-hours': {
     id: 'opening-hours',
     label: 'Horaires d’ouverture',
-    description: 'Horaires reguliers, services midi et soir, fermetures exceptionnelles.',
+    description: 'Horaires réguliers, services midi et soir, fermetures exceptionnelles.',
     icon: 'clock',
     category: 'content',
     requiredFeature: null,
@@ -49,7 +49,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   gallery: {
     id: 'gallery',
     label: 'Galerie photos',
-    description: 'Mettez en valeur votre lieu, vos produits et vos realisations.',
+    description: 'Mettez en valeur votre lieu, vos produits et vos réalisations.',
     icon: 'images',
     category: 'content',
     requiredFeature: null,
@@ -60,7 +60,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   testimonials: {
     id: 'testimonials',
     label: 'Avis clients',
-    description: 'Publiez les temoignages de vos clients satisfaits.',
+    description: 'Publiez les témoignages de vos clients satisfaits.',
     icon: 'quote',
     category: 'marketing',
     requiredFeature: null,
@@ -70,8 +70,8 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   faq: {
     id: 'faq',
-    label: 'Questions frequentes',
-    description: 'Repondez une fois aux questions recurrentes, gagnez du temps chaque semaine.',
+    label: 'Questions fréquentes',
+    description: 'Répondez une fois aux questions recurrentes, gagnez du temps chaque semaine.',
     icon: 'help-circle',
     category: 'content',
     requiredFeature: null,
@@ -81,19 +81,19 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   team: {
     id: 'team',
-    label: 'Equipe',
-    description: 'Presentez les personnes qui font votre entreprise.',
+    label: 'Équipe',
+    description: 'Présentez les personnes qui font votre entreprise.',
     icon: 'users',
     category: 'content',
     requiredFeature: null,
-    dashboardEntries: [entry('/app/equipe', 'Equipe', 'users', 'content.edit', 'activite', 50)],
+    dashboardEntries: [entry('/app/equipe', 'Équipe', 'users', 'content.edit', 'activite', 50)],
     blockTypes: ['team'],
     sortOrder: 60,
   },
   services: {
     id: 'services',
     label: 'Prestations & tarifs',
-    description: 'Detaillez vos prestations, leurs durees et leurs tarifs.',
+    description: 'Détaillez vos prestations, leurs durées et leurs tarifs.',
     icon: 'list-checks',
     category: 'content',
     requiredFeature: null,
@@ -118,13 +118,13 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   portfolio: {
     id: 'portfolio',
-    label: 'Realisations',
+    label: 'Réalisations',
     description: 'Un portfolio avant/apres qui prouve votre savoir-faire.',
     icon: 'layout-grid',
     category: 'content',
     requiredFeature: null,
     dashboardEntries: [
-      entry('/app/realisations', 'Realisations', 'layout-grid', 'content.edit', 'activite', 40),
+      entry('/app/realisations', 'Réalisations', 'layout-grid', 'content.edit', 'activite', 40),
     ],
     blockTypes: ['portfolio', 'before-after'],
     sortOrder: 90,
@@ -132,18 +132,20 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   quotes: {
     id: 'quotes',
     label: 'Demande de devis',
-    description: 'Un formulaire structure qui qualifie vos demandes entrantes.',
+    description: 'Un formulaire structuré qui qualifié vos demandes entrantes.',
     icon: 'file-text',
     category: 'crm',
     requiredFeature: null,
-    dashboardEntries: [entry('/app/contacts', 'Prospects', 'contact', 'inbox.view', 'activite', 15)],
+    dashboardEntries: [
+      entry('/app/contacts', 'Prospects', 'contact', 'inbox.view', 'activite', 15),
+    ],
     blockTypes: ['quote-form'],
     sortOrder: 100,
   },
   'restaurant-menu': {
     id: 'restaurant-menu',
     label: 'Carte & menus',
-    description: 'Categories, plats, prix, allergenes, formules du midi et du soir.',
+    description: 'Catégories, plats, prix, allergènes, formules du midi et du soir.',
     icon: 'utensils',
     category: 'content',
     requiredFeature: null,
@@ -153,14 +155,21 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   booking: {
     id: 'booking',
-    label: 'Reservations',
+    label: 'Réservations',
     description: 'Creneaux, capacites, confirmations et rappels automatiques.',
     icon: 'calendar-check',
     category: 'booking',
     requiredFeature: 'bookings',
     dashboardEntries: [
-      entry('/app/reservations', 'Reservations', 'calendar-check', 'inbox.view', 'activite', 12),
-      entry('/app/disponibilites', 'Disponibilites', 'calendar-cog', 'content.edit', 'activite', 30),
+      entry('/app/reservations', 'Réservations', 'calendar-check', 'inbox.view', 'activite', 12),
+      entry(
+        '/app/disponibilites',
+        'Disponibilités',
+        'calendar-cog',
+        'content.edit',
+        'activite',
+        30,
+      ),
     ],
     blockTypes: ['booking'],
     sortOrder: 120,
@@ -168,7 +177,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   products: {
     id: 'products',
     label: 'Catalogue produits',
-    description: 'Produits, variantes, categories et stock simplifie.',
+    description: 'Produits, variantes, catégories et stock simplifié.',
     icon: 'package',
     category: 'commerce',
     requiredFeature: 'ecommerce',
@@ -217,8 +226,8 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   rooms: {
     id: 'rooms',
-    label: 'Chambres & hebergements',
-    description: 'Chambres, equipements, tarifs et demandes de sejour.',
+    label: 'Chambres & hébergements',
+    description: 'Chambres, équipements, tarifs et demandes de sejour.',
     icon: 'bed-double',
     category: 'content',
     requiredFeature: null,
@@ -230,13 +239,13 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   events: {
     id: 'events',
-    label: 'Evenements',
-    description: 'Agenda, dates et inscriptions a vos evenements.',
+    label: 'Événements',
+    description: 'Agenda, dates et inscriptions a vos événements.',
     icon: 'calendar-days',
     category: 'content',
     requiredFeature: null,
     dashboardEntries: [
-      entry('/app/evenements', 'Evenements', 'calendar-days', 'content.edit', 'activite', 35),
+      entry('/app/evenements', 'Événements', 'calendar-days', 'content.edit', 'activite', 35),
     ],
     blockTypes: ['events'],
     sortOrder: 180,
@@ -244,7 +253,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   blog: {
     id: 'blog',
     label: 'Actualites',
-    description: 'Publiez vos nouvelles et alimentez votre referencement.',
+    description: 'Publiez vos nouvelles et alimentez votre référencement.',
     icon: 'newspaper',
     category: 'marketing',
     requiredFeature: 'blog',
@@ -272,9 +281,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
     icon: 'user-round-check',
     category: 'operations',
     requiredFeature: 'customer_accounts',
-    dashboardEntries: [
-      entry('/app/contacts', 'Clients', 'contact', 'inbox.view', 'activite', 15),
-    ],
+    dashboardEntries: [entry('/app/contacts', 'Clients', 'contact', 'inbox.view', 'activite', 15)],
     blockTypes: [],
     sortOrder: 210,
   },
@@ -286,7 +293,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
     category: 'commerce',
     requiredFeature: 'online_payments',
     dashboardEntries: [
-      entry('/app/paiements', 'Dons recus', 'heart', 'billing.view', 'activite', 16),
+      entry('/app/paiements', 'Dons reçus', 'heart', 'billing.view', 'activite', 16),
     ],
     blockTypes: ['donation'],
     sortOrder: 220,

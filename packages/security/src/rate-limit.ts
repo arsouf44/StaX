@@ -26,43 +26,43 @@ export const RATE_LIMITS = {
     bucket: 'auth.login',
     windowSeconds: 300,
     max: 10,
-    message: 'Trop de tentatives de connexion. Reessayez dans quelques minutes.',
+    message: 'Trop de tentatives de connexion. Réessayez dans quelques minutes.',
   },
   signup: {
     bucket: 'auth.signup',
     windowSeconds: 3600,
     max: 5,
-    message: 'Trop de creations de compte depuis cette connexion. Reessayez plus tard.',
+    message: 'Trop de creations de compte depuis cette connexion. Réessayez plus tard.',
   },
   passwordReset: {
     bucket: 'auth.password_reset',
     windowSeconds: 3600,
     max: 5,
-    message: 'Trop de demandes de reinitialisation. Reessayez dans une heure.',
+    message: 'Trop de demandes de reinitialisation. Réessayez dans une heure.',
   },
   activation: {
     bucket: 'auth.activation',
     windowSeconds: 900,
     max: 8,
-    message: 'Trop de tentatives d’activation. Reessayez dans quinze minutes.',
+    message: 'Trop de tentatives d’activation. Réessayez dans quinze minutes.',
   },
   contactForm: {
     bucket: 'public.contact_form',
     windowSeconds: 3600,
     max: 10,
-    message: 'Vous avez envoye trop de messages. Reessayez dans une heure.',
+    message: 'Vous avez envoyé trop de messages. Réessayez dans une heure.',
   },
   quoteForm: {
     bucket: 'public.quote_form',
     windowSeconds: 3600,
     max: 5,
-    message: 'Vous avez envoye trop de demandes de devis. Reessayez plus tard.',
+    message: 'Vous avez envoyé trop de demandes de devis. Réessayez plus tard.',
   },
   booking: {
     bucket: 'public.booking',
     windowSeconds: 3600,
     max: 12,
-    message: 'Trop de demandes de reservation. Reessayez dans une heure.',
+    message: 'Trop de demandes de réservation. Réessayez dans une heure.',
   },
   checkout: {
     bucket: 'commerce.checkout',
@@ -74,19 +74,19 @@ export const RATE_LIMITS = {
     bucket: 'admin.sensitive',
     windowSeconds: 300,
     max: 20,
-    message: 'Trop d’operations sensibles en peu de temps.',
+    message: 'Trop d’opérations sensibles en peu de temps.',
   },
   apiWrite: {
     bucket: 'api.write',
     windowSeconds: 60,
     max: 60,
-    message: 'Trop de requetes. Ralentissez le rythme.',
+    message: 'Trop de requêtes. Ralentissez le rythme.',
   },
   mediaUpload: {
     bucket: 'media.upload',
     windowSeconds: 3600,
     max: 200,
-    message: 'Trop de fichiers envoyes. Reessayez dans une heure.',
+    message: 'Trop de fichiers envoyés. Réessayez dans une heure.',
   },
 } as const satisfies Record<string, RateLimitRule>;
 
@@ -114,12 +114,7 @@ export async function enforceRateLimit(
   identifier: string,
 ): Promise<RateLimitDecision & { error?: AppError }> {
   const rule = RATE_LIMITS[name];
-  const decision = await store.increment(
-    rule.bucket,
-    identifier,
-    rule.windowSeconds,
-    rule.max,
-  );
+  const decision = await store.increment(rule.bucket, identifier, rule.windowSeconds, rule.max);
   if (decision.allowed) return decision;
   return { ...decision, error: appError('rate_limited', rule.message) };
 }
@@ -161,7 +156,7 @@ export class MemoryRateLimitStore implements RateLimitStore {
 }
 
 /**
- * Identifiant de limitation. Prefere l'utilisateur authentifie a l'adresse IP :
+ * Identifiant de limitation. Prefere l'utilisateur authentifié a l'adresse IP :
  * un NAT d'entreprise partage une IP entre de nombreuses personnes.
  */
 export function rateLimitIdentity(params: {

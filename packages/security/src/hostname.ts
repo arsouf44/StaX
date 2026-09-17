@@ -102,9 +102,9 @@ export function buildCacheKey(params: {
   const locale = params.locale ?? 'fr';
   const path = params.path.startsWith('/') ? params.path : `/${params.path}`;
   const host = normalizeHostname(params.hostname);
-  if (!host) throw new Error('Cle de cache : nom d’hote invalide.');
+  if (!host) throw new Error('Clé de cache : nom d’hote invalide.');
   if (!/^[0-9a-f]{8,128}$/.test(params.contentHash)) {
-    throw new Error('Cle de cache : empreinte de version invalide.');
+    throw new Error('Clé de cache : empreinte de version invalide.');
   }
   return `https://cache.stax.internal/v1/${host}/${params.contentHash}/${locale}${path}`;
 }
@@ -124,11 +124,48 @@ export function suggestSubdomain(businessName: string): string {
 
 /** Sous-domaines interdits : reserves a l'infrastructure ou trompeurs. */
 export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
-  'www', 'app', 'admin', 'api', 'preview', 'staging', 'dev', 'test', 'mail', 'smtp',
-  'imap', 'pop', 'ftp', 'cdn', 'assets', 'static', 'status', 'support', 'help',
-  'blog', 'docs', 'account', 'accounts', 'login', 'signup', 'billing', 'pay',
-  'stripe', 'webhook', 'webhooks', 'cloudflare', 'supabase', 'stax', 'security',
-  'abuse', 'postmaster', 'hostmaster', 'webmaster', 'ns', 'ns1', 'ns2', 'mx',
+  'www',
+  'app',
+  'admin',
+  'api',
+  'preview',
+  'staging',
+  'dev',
+  'test',
+  'mail',
+  'smtp',
+  'imap',
+  'pop',
+  'ftp',
+  'cdn',
+  'assets',
+  'static',
+  'status',
+  'support',
+  'help',
+  'blog',
+  'docs',
+  'account',
+  'accounts',
+  'login',
+  'signup',
+  'billing',
+  'pay',
+  'stripe',
+  'webhook',
+  'webhooks',
+  'cloudflare',
+  'supabase',
+  'stax',
+  'security',
+  'abuse',
+  'postmaster',
+  'hostmaster',
+  'webmaster',
+  'ns',
+  'ns1',
+  'ns2',
+  'mx',
 ]);
 
 export function isSubdomainAvailable(subdomain: string): boolean {

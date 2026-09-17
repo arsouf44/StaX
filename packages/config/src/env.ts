@@ -1,11 +1,5 @@
 import { z } from 'zod';
-import {
-  assertServerOnly,
-  deployEnvironment,
-  isProduction,
-  readAllEnv,
-  readEnv,
-} from './runtime';
+import { assertServerOnly, deployEnvironment, isProduction, readAllEnv, readEnv } from './runtime';
 
 /* -------------------------------------------------------------------------- */
 /*  Public configuration (safe to ship in a browser bundle)                    */
@@ -39,7 +33,6 @@ let publicCache: PublicEnv | null = null;
  */
 export function publicEnv(): PublicEnv {
   if (publicCache) return publicCache;
-  /* eslint-disable no-restricted-properties */
   const raw = {
     NEXT_PUBLIC_PLATFORM_URL: process.env.NEXT_PUBLIC_PLATFORM_URL,
     NEXT_PUBLIC_SITES_DOMAIN: process.env.NEXT_PUBLIC_SITES_DOMAIN,
@@ -48,7 +41,6 @@ export function publicEnv(): PublicEnv {
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
   };
-  /* eslint-enable no-restricted-properties */
   const cleaned = Object.fromEntries(
     Object.entries(raw).filter(([, value]) => value !== undefined && value !== ''),
   );
@@ -156,11 +148,7 @@ export function resetEnvCache(): void {
 /* -------------------------------------------------------------------------- */
 
 export type CapabilityKey =
-  | 'stripe'
-  | 'stripe_connect'
-  | 'cloudflare_domains'
-  | 'turnstile'
-  | 'email';
+  'stripe' | 'stripe_connect' | 'cloudflare_domains' | 'turnstile' | 'email';
 
 export function hasCapability(key: CapabilityKey): boolean {
   switch (key) {

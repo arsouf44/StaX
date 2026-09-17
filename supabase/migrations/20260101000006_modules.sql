@@ -17,7 +17,7 @@ create table public.forms (
   name             text not null,
   kind             text not null default 'contact',
   description      text,
-  success_message  text not null default 'Merci, votre message a bien ete envoye.',
+  success_message  text not null default 'Merci, votre message a bien ete envoyé.',
   notify_emails    text[] not null default '{}',
   is_active        boolean not null default true,
   /** Anti-spam : champ piege invisible pour les robots. */

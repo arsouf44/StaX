@@ -31,12 +31,12 @@ export function requireAuthenticated(context: {
 }): AuthContext {
   if (!context.user || !context.profile) {
     throw new AuthorizationError(
-      appError('unauthenticated', 'Vous devez etre connecte pour acceder a cette page.'),
+      appError('unauthenticated', 'Vous devez être connecte pour acceder a cette page.'),
     );
   }
   if (context.profile.disabled_at) {
     throw new AuthorizationError(
-      appError('forbidden', 'Votre compte a ete desactive. Contactez le support.'),
+      appError('forbidden', 'Votre compte a ete désactivé. Contactez le support.'),
     );
   }
   return {
@@ -63,7 +63,7 @@ export async function requireOrgCapability(
   });
   if (error || data !== true) {
     throw new AuthorizationError(
-      appError('forbidden', "Vous n'avez pas les droits necessaires pour cette action."),
+      appError('forbidden', "Vous n'avez pas les droits nécessaires pour cette action."),
     );
   }
 }
@@ -122,7 +122,7 @@ export function requirePlatformRole(
     throw new AuthorizationError(
       appError(
         'forbidden',
-        'L acces au back-office exige une authentification a deux facteurs active et validee.',
+        'L accès au back-office exigé une authentification a deux facteurs active et validée.',
       ),
     );
   }
@@ -134,7 +134,7 @@ export function requireVerifiedEmail(user: { emailVerified: boolean }): void {
     throw new AuthorizationError(
       appError(
         'forbidden',
-        'Confirmez votre adresse e-mail pour continuer. Verifiez votre boite de reception.',
+        'Confirmez votre adresse e-mail pour continuer. Vérifiez votre boîte de réception.',
       ),
     );
   }

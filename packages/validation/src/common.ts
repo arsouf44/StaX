@@ -22,9 +22,9 @@ export const emailSchema = z
 export const phoneSchema = z
   .string()
   .trim()
-  .min(6, 'Numero de telephone trop court.')
-  .max(30, 'Numero de telephone trop long.')
-  .regex(/^[+0-9][0-9\s.\-()]{5,29}$/, 'Numero de telephone invalide.');
+  .min(6, 'Numéro de téléphone trop court.')
+  .max(30, 'Numéro de téléphone trop long.')
+  .regex(/^[+0-9][0-9\s.\-()]{5,29}$/, 'Numéro de téléphone invalide.');
 
 export const slugSchema = z
   .string()
@@ -59,8 +59,8 @@ export const pathSchema = z
 /** Montant en centimes : entier, positif, plafonne a 100 000 000 EUR. */
 export const centsSchema = z
   .number()
-  .int('Le montant doit etre un entier de centimes.')
-  .min(0, 'Le montant ne peut pas etre negatif.')
+  .int('Le montant doit être un entier de centimes.')
+  .min(0, 'Le montant ne peut pas être negatif.')
   .max(10_000_000_000, 'Montant hors limites.');
 
 export const currencySchema = z.literal('EUR');
@@ -89,8 +89,11 @@ export function boundedText(min: number, max: number, label = 'Ce champ') {
   return z
     .string()
     .trim()
-    .min(min, min === 1 ? `${label} est obligatoire.` : `${label} doit faire au moins ${min} caracteres.`)
-    .max(max, `${label} ne peut pas depasser ${max} caracteres.`);
+    .min(
+      min,
+      min === 1 ? `${label} est obligatoire.` : `${label} doit faire au moins ${min} caractères.`,
+    )
+    .max(max, `${label} ne peut pas dépasser ${max} caractères.`);
 }
 
 export const optionalText = (max: number) =>
@@ -121,11 +124,7 @@ export const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date inval
 export const isoDateTimeSchema = z.string().datetime({ offset: true });
 
 /** Champ piege anti-robot : doit rester vide. */
-export const honeypotSchema = z
-  .string()
-  .max(0, 'Requete refusee.')
-  .optional()
-  .or(z.literal(''));
+export const honeypotSchema = z.string().max(0, 'Requête refusée.').optional().or(z.literal(''));
 
 /** Pagination normalisee, plafonnee pour ne jamais exposer un scan complet. */
 export const paginationSchema = z.object({
@@ -152,8 +151,7 @@ export function fieldErrors(error: z.ZodError): Record<string, string[]> {
 }
 
 export type ValidationOutcome<T> =
-  | { success: true; data: T }
-  | { success: false; errors: Record<string, string[]> };
+  { success: true; data: T } | { success: false; errors: Record<string, string[]> };
 
 /** Validation d une entree, sans exception : le resultat est explicite. */
 export function validate<T extends z.ZodTypeAny>(

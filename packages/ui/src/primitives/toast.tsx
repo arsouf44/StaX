@@ -45,7 +45,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
-  if (!context) throw new Error('useToast doit etre utilise dans un ToastProvider.');
+  if (!context) throw new Error('useToast doit être utilise dans un ToastProvider.');
   return context;
 }
 
@@ -95,22 +95,30 @@ const TONE_STYLES: Record<ToastTone, { border: string; icon: ReactNode; text: st
   success: {
     border: 'border-[var(--success)]/35',
     text: 'text-[var(--success)]',
-    icon: <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />,
+    icon: (
+      <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
+    ),
   },
   error: {
     border: 'border-[var(--danger)]/35',
     text: 'text-[var(--danger)]',
-    icon: <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7.25 4.5h1.5v5h-1.5v-5Zm0 6.25h1.5v1.5h-1.5v-1.5Z" />,
+    icon: (
+      <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7.25 4.5h1.5v5h-1.5v-5Zm0 6.25h1.5v1.5h-1.5v-1.5Z" />
+    ),
   },
   warning: {
     border: 'border-[var(--warning)]/35',
     text: 'text-[var(--warning)]',
-    icon: <path d="M8 1.2c.42 0 .8.22 1 .58l6.1 10.6c.4.7-.1 1.72-1 1.72H1.9c-.9 0-1.4-1.02-1-1.72L7 1.78c.2-.36.58-.58 1-.58Zm-.75 4.3v3.75h1.5V5.5h-1.5Zm0 5v1.5h1.5v-1.5h-1.5Z" />,
+    icon: (
+      <path d="M8 1.2c.42 0 .8.22 1 .58l6.1 10.6c.4.7-.1 1.72-1 1.72H1.9c-.9 0-1.4-1.02-1-1.72L7 1.78c.2-.36.58-.58 1-.58Zm-.75 4.3v3.75h1.5V5.5h-1.5Zm0 5v1.5h1.5v-1.5h-1.5Z" />
+    ),
   },
   info: {
     border: 'border-[var(--info)]/35',
     text: 'text-[var(--info)]',
-    icon: <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7.25 6.5h1.5v5h-1.5v-5Zm0-2.75h1.5v1.5h-1.5v-1.5Z" />,
+    icon: (
+      <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7.25 6.5h1.5v5h-1.5v-5Zm0-2.75h1.5v1.5h-1.5v-1.5Z" />
+    ),
   },
 };
 
@@ -149,7 +157,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
     <div
       role={toast.tone === 'error' ? 'alert' : 'status'}
       className={cn(
-        'glass-3 glass-edge pointer-events-auto w-full max-w-sm rounded-[var(--radius-md)] p-4',
+        'pointer-events-auto glass-edge w-full max-w-sm rounded-[var(--radius-md)] p-4 glass-3',
         'animate-[reveal_0.28s_cubic-bezier(0.16,1,0.3,1)]',
         style.border,
       )}
@@ -189,7 +197,13 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
           aria-label="Fermer la notification"
           className="-mt-1 -mr-1 shrink-0 rounded-[var(--radius-xs)] p-1 text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-3.5">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            className="size-3.5"
+          >
             <path d="m4 4 8 8M12 4l-8 8" strokeLinecap="round" />
           </svg>
         </button>

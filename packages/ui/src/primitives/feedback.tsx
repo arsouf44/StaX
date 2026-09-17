@@ -30,8 +30,7 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 export function Badge({ className, tone, size, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ tone, size }), className)} {...props} />;
@@ -115,7 +114,9 @@ const ALERT_ICONS: Record<string, ReactNode> = {
   info: (
     <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM7.25 6.5h1.5v5h-1.5v-5Zm0-2.75h1.5v1.5h-1.5v-1.5Z" />
   ),
-  success: <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />,
+  success: (
+    <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
+  ),
   warning: (
     <path d="M8 1.2c.42 0 .8.22 1 .58l6.1 10.6c.2.36.2.8 0 1.15-.2.36-.58.57-1 .57H1.9c-.42 0-.8-.21-1-.57a1.16 1.16 0 0 1 0-1.15L7 1.78c.2-.36.58-.58 1-.58Zm-.75 4.3v3.75h1.5V5.5h-1.5Zm0 5v1.5h1.5v-1.5h-1.5Z" />
   ),
@@ -142,7 +143,14 @@ export interface AlertProps extends VariantProps<typeof alertVariants> {
   live?: 'alert' | 'status' | 'none';
 }
 
-export function Alert({ tone = 'info', title, children, action, className, live = 'none' }: AlertProps) {
+export function Alert({
+  tone = 'info',
+  title,
+  children,
+  action,
+  className,
+  live = 'none',
+}: AlertProps) {
   const key = tone ?? 'info';
   return (
     <div
@@ -159,9 +167,7 @@ export function Alert({ tone = 'info', title, children, action, className, live 
           {ALERT_ICONS[key]}
         </svg>
         <div className="min-w-0 flex-1">
-          {title ? (
-            <p className={cn('text-sm font-medium', ALERT_TEXT[key])}>{title}</p>
-          ) : null}
+          {title ? <p className={cn('text-sm font-medium', ALERT_TEXT[key])}>{title}</p> : null}
           {children ? (
             <div
               className={cn(
@@ -260,7 +266,7 @@ export function ErrorState({
 
 /** Refus d acces : formulation neutre, sans reveler ce qui existe. */
 export function PermissionDenied({
-  message = "Vous n'avez pas acces a cette page avec votre role actuel.",
+  message = "Vous n'avez pas accès a cette page avec votre role actuel.",
   action,
 }: {
   message?: string;
@@ -273,7 +279,7 @@ export function PermissionDenied({
           <path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1.5 1.5 0 0 0-1.5 1.5v5A1.5 1.5 0 0 0 4 14h8a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 12 6h-.5V4.5A3.5 3.5 0 0 0 8 1Zm2 5H6V4.5a2 2 0 1 1 4 0V6Z" />
         </svg>
       }
-      title="Acces restreint"
+      title="Accès restreint"
       description={message}
       action={action}
     />
@@ -312,7 +318,13 @@ export function SkeletonList({ rows = 5, className }: { rows?: number; className
   );
 }
 
-export function Spinner({ className, label = 'Chargement' }: { className?: string; label?: string }) {
+export function Spinner({
+  className,
+  label = 'Chargement',
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
     <span role="status" className={cn('inline-flex items-center gap-2', className)}>
       <span
@@ -389,7 +401,7 @@ export function QuotaMeter({
     return (
       <div className={cn('flex items-center justify-between text-sm', className)}>
         <span className="text-[var(--foreground-muted)]">{label}</span>
-        <span className="font-medium tabular-nums text-[var(--foreground)]">
+        <span className="font-medium text-[var(--foreground)] tabular-nums">
           {used.toLocaleString('fr-FR')} {unit} · illimite
         </span>
       </div>
@@ -401,7 +413,7 @@ export function QuotaMeter({
     <div className={className}>
       <div className="mb-2 flex items-baseline justify-between gap-4 text-sm">
         <span className="text-[var(--foreground-muted)]">{label}</span>
-        <span className="font-medium tabular-nums text-[var(--foreground)]">
+        <span className="font-medium text-[var(--foreground)] tabular-nums">
           {used.toLocaleString('fr-FR')} / {limit.toLocaleString('fr-FR')} {unit}
         </span>
       </div>

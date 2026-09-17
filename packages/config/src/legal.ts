@@ -43,7 +43,7 @@ export type LegalKey =
 export const LEGAL_FIELDS: readonly LegalField[] = [
   {
     key: 'LEGAL_COMPANY_NAME',
-    label: 'Denomination sociale',
+    label: 'Dénomination sociale',
     required: true,
     placeholder: '[A CONFIGURER — denomination sociale]',
     hint: 'Nom exact figurant sur l’extrait Kbis.',
@@ -60,28 +60,28 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Capital social',
     required: false,
     placeholder: '[A CONFIGURER — capital social]',
-    hint: 'Obligatoire pour les societes de capitaux. Laisser vide pour une entreprise individuelle.',
+    hint: 'Obligatoire pour les sociétés de capitaux. Laisser vide pour une entreprise individuelle.',
   },
   {
     key: 'LEGAL_ADDRESS',
-    label: 'Siege social',
+    label: 'Siège social',
     required: true,
     placeholder: '[A CONFIGURER — adresse du siege social]',
-    hint: 'Adresse postale complete.',
+    hint: 'Adresse postale complète.',
   },
   {
     key: 'LEGAL_SIREN',
     label: 'SIREN / SIRET',
     required: true,
     placeholder: '[A CONFIGURER — SIREN]',
-    hint: 'Numero d’identification INSEE.',
+    hint: 'Numéro d’identification INSEE.',
   },
   {
     key: 'LEGAL_RCS',
     label: 'RCS',
     required: false,
     placeholder: '[A CONFIGURER — RCS]',
-    hint: 'Ville d’immatriculation et numero, si applicable.',
+    hint: 'Ville d’immatriculation et numéro, si applicable.',
   },
   {
     key: 'LEGAL_VAT',
@@ -99,28 +99,28 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
   },
   {
     key: 'LEGAL_HOST',
-    label: 'Hebergeur',
+    label: 'Hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — hebergeur]',
-    hint: 'Raison sociale de l’hebergeur (Cloudflare, Inc. et Supabase, Inc. pour StaX).',
+    hint: 'Raison sociale de l’hébergeur (Cloudflare, Inc. et Supabase, Inc. pour StaX).',
   },
   {
     key: 'LEGAL_HOST_ADDRESS',
-    label: 'Adresse de l’hebergeur',
+    label: 'Adresse de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — adresse de l’hebergeur]',
-    hint: 'Adresse postale et moyen de contact de l’hebergeur.',
+    hint: 'Adresse postale et moyen de contact de l’hébergeur.',
   },
   {
     key: 'LEGAL_DPO_CONTACT',
-    label: 'Contact donnees personnelles',
+    label: 'Contact données personnelles',
     required: true,
     placeholder: '[A CONFIGURER — contact RGPD]',
     hint: 'Adresse de contact pour l’exercice des droits RGPD.',
   },
   {
     key: 'LEGAL_MEDIATOR',
-    label: 'Mediateur de la consommation',
+    label: 'Médiateur de la consommation',
     required: false,
     placeholder: '[A CONFIGURER — mediateur de la consommation]',
     hint: 'Obligatoire pour les ventes aux consommateurs (article L.612-1 du Code de la consommation).',
@@ -134,7 +134,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
   },
   {
     key: 'SUPPORT_PHONE',
-    label: 'Telephone de support',
+    label: 'Téléphone de support',
     required: false,
     placeholder: '[A CONFIGURER — telephone de support]',
     hint: 'Facultatif mais recommande pour la confiance client.',
@@ -152,7 +152,7 @@ export interface LegalStatus {
 
 function fieldFor(key: LegalKey): LegalField {
   const found = LEGAL_FIELDS.find((field) => field.key === key);
-  if (!found) throw new Error(`[StaX] Champ legal inconnu : ${key}`);
+  if (!found) throw new Error(`[StaX] Champ légal inconnu : ${key}`);
   return found;
 }
 
@@ -207,7 +207,7 @@ export function assertLegalConfigured(): void {
   if (deployEnvironment() !== 'production') return;
   if (readEnv('LEGAL_ALLOW_INCOMPLETE') === 'true') {
     console.warn(
-      `[StaX] Mentions legales incompletes en production : ${status.missingRequired.join(', ')}. ` +
+      `[StaX] Mentions légales incomplètes en production : ${status.missingRequired.join(', ')}. ` +
         'LEGAL_ALLOW_INCOMPLETE=true est actif — a retirer avant ouverture commerciale.',
     );
     return;

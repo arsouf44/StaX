@@ -63,10 +63,7 @@ export async function verifyWebhook(
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const reason = message.toLowerCase().includes('timestamp') ? 'too_old' : 'bad_signature';
-    throw new WebhookVerificationError(
-      `Signature de webhook Stripe invalide : ${message}`,
-      reason,
-    );
+    throw new WebhookVerificationError(`Signature de webhook Stripe invalide : ${message}`, reason);
   }
 }
 

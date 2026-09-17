@@ -96,7 +96,7 @@ export function Tab({
   count?: number;
 }) {
   const context = useContext(TabsContext);
-  if (!context) throw new Error('Tab doit etre utilise dans Tabs.');
+  if (!context) throw new Error('Tab doit être utilise dans Tabs.');
   const selected = context.value === value;
 
   return (
@@ -134,7 +134,7 @@ export function Tab({
 
 export function TabPanel({ value, children }: { value: string; children: ReactNode }) {
   const context = useContext(TabsContext);
-  if (!context) throw new Error('TabPanel doit etre utilise dans Tabs.');
+  if (!context) throw new Error('TabPanel doit être utilise dans Tabs.');
   if (context.value !== value) return null;
 
   return (

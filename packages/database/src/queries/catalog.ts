@@ -143,10 +143,7 @@ export async function listSectorsWithCounts(db: Db): Promise<SectorView[]> {
   );
 
   const types = unwrapList<{ slug: string; sector_slug: string }>(
-    (await db
-      .from('business_types')
-      .select('slug, sector_slug')
-      .eq('is_active', true)) as never,
+    (await db.from('business_types').select('slug, sector_slug').eq('is_active', true)) as never,
   );
 
   const counts = new Map<string, number>();
@@ -173,13 +170,12 @@ export interface BusinessTypeView {
   schemaOrgType: string;
 }
 
-export async function listBusinessTypes(
-  db: Db,
-  sectorSlug?: string,
-): Promise<BusinessTypeView[]> {
+export async function listBusinessTypes(db: Db, sectorSlug?: string): Promise<BusinessTypeView[]> {
   let query = db
     .from('business_types')
-    .select('slug, sector_slug, label, plural_label, description, icon, schema_org_type, sort_order')
+    .select(
+      'slug, sector_slug, label, plural_label, description, icon, schema_org_type, sort_order',
+    )
     .eq('is_active', true)
     .order('sort_order');
 

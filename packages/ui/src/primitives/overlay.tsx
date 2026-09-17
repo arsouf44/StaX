@@ -141,7 +141,7 @@ export function Dialog({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={cn(
-          'glass-3 glass-edge relative w-full overflow-hidden',
+          'glass-edge relative w-full overflow-hidden glass-3',
           'rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-xl)]',
           'max-h-[90dvh] animate-[reveal_0.28s_cubic-bezier(0.16,1,0.3,1)]',
           widths[size],
@@ -204,7 +204,14 @@ export interface ConfirmDialogProps {
  * Pour une suppression irreversible, `confirmationText` impose de recopier un
  * mot exact : un clic distrait ne doit jamais suffire.
  */
-export function ConfirmDialog({
+export function ConfirmDialog(props: ConfirmDialogProps) {
+  // Monte seulement lorsqu'il est ouvert : la saisie de confirmation repart
+  // donc toujours de zero, sans reinitialisation manuelle.
+  if (!props.open) return null;
+  return <ConfirmDialogBody {...props} />;
+}
+
+function ConfirmDialogBody({
   open,
   onClose,
   onConfirm,
@@ -218,10 +225,6 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const [typed, setTyped] = useState('');
   const canConfirm = !confirmationText || typed.trim() === confirmationText;
-
-  useEffect(() => {
-    if (!open) setTyped('');
-  }, [open]);
 
   return (
     <Dialog
@@ -307,7 +310,7 @@ export function Sheet({ open, onClose, title, children, side = 'right', footer }
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
-          'glass-3 absolute inset-y-0 flex w-full max-w-sm flex-col',
+          'absolute inset-y-0 flex w-full max-w-sm flex-col glass-3',
           side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
           'border-[var(--glass-border-strong)]',
         )}
@@ -375,9 +378,15 @@ export function DropdownMenu({ children }: { children: ReactNode }) {
   );
 }
 
-export function DropdownTrigger({ children, className }: { children: ReactNode; className?: string }) {
+export function DropdownTrigger({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const context = useContext(MenuContext);
-  if (!context) throw new Error('DropdownTrigger doit etre utilise dans un DropdownMenu.');
+  if (!context) throw new Error('DropdownTrigger doit être utilise dans un DropdownMenu.');
   return (
     <button
       type="button"
@@ -410,8 +419,8 @@ export function DropdownContent({
       role="menu"
       aria-labelledby={context.triggerId}
       className={cn(
-        'glass-3 glass-edge absolute top-[calc(100%+6px)] z-40 min-w-52 overflow-hidden',
-        'rounded-[var(--radius-md)] p-1 animate-[reveal_0.16s_ease-out]',
+        'absolute glass-edge top-[calc(100%+6px)] z-40 min-w-52 overflow-hidden glass-3',
+        'animate-[reveal_0.16s_ease-out] rounded-[var(--radius-md)] p-1',
         align === 'end' ? 'right-0' : 'left-0',
         className,
       )}

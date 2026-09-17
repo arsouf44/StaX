@@ -28,14 +28,7 @@ export const FONT_CHOICES = [
   'ibm-plex-sans',
 ] as const;
 
-export const THEME_PRESETS = [
-  'graphite',
-  'slate',
-  'nocturne',
-  'ember',
-  'lumen',
-  'forest',
-] as const;
+export const THEME_PRESETS = ['graphite', 'slate', 'nocturne', 'ember', 'lumen', 'forest'] as const;
 
 export const fontSchema = z.enum(FONT_CHOICES);
 export const presetSchema = z.enum(THEME_PRESETS);
@@ -131,7 +124,7 @@ export const seoSettingsSchema = z
       .string()
       .trim()
       .max(120)
-      .regex(/^[A-Za-z0-9_-]*$/, 'Code de verification invalide.')
+      .regex(/^[A-Za-z0-9_-]*$/, 'Code de vérification invalide.')
       .optional()
       .or(z.literal('')),
   })
@@ -143,8 +136,18 @@ export const pageSchema = z
     path: pathSchema,
     kind: z
       .enum([
-        'home', 'standard', 'contact', 'legal', 'menu', 'services',
-        'products', 'booking', 'gallery', 'team', 'blog', 'listing',
+        'home',
+        'standard',
+        'contact',
+        'legal',
+        'menu',
+        'services',
+        'products',
+        'booking',
+        'gallery',
+        'team',
+        'blog',
+        'listing',
       ])
       .default('standard'),
     locale: localeSchema.default('fr'),
@@ -181,7 +184,7 @@ export const domainAttachSchema = z
   })
   .strict()
   .refine((data) => !data.hostname.endsWith('.local') && !data.hostname.endsWith('.localhost'), {
-    message: 'Ce nom de domaine ne peut pas etre utilise.',
+    message: 'Ce nom de domaine ne peut pas être utilise.',
     path: ['hostname'],
   });
 
@@ -189,11 +192,13 @@ export const redirectSchema = z
   .object({
     sourcePath: pathSchema,
     targetPath: z.string().trim().max(2048).min(1),
-    statusCode: z.union([z.literal(301), z.literal(302), z.literal(307), z.literal(308)]).default(301),
+    statusCode: z
+      .union([z.literal(301), z.literal(302), z.literal(307), z.literal(308)])
+      .default(301),
   })
   .strict()
   .refine((data) => data.sourcePath !== data.targetPath, {
-    message: 'La source et la destination doivent etre differentes.',
+    message: 'La source et la destination doivent être differentes.',
     path: ['targetPath'],
   });
 

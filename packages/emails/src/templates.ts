@@ -58,14 +58,13 @@ function shell(params: {
       params.heading,
       ...params.bodyText,
       params.action ? `${params.action.label} : ${params.action.url}` : '',
-      `Une question ? Ecrivez a ${support}.`,
+      `Une question ? Écrivez a ${support}.`,
       `${company} — ${base}`,
     ]),
   };
 }
 
-const hello = (firstName?: string | null) =>
-  firstName ? `Bonjour ${firstName},` : 'Bonjour,';
+const hello = (firstName?: string | null) => (firstName ? `Bonjour ${firstName},` : 'Bonjour,');
 
 /* -------------------------------------------------------------------------- */
 /*  Compte                                                                     */
@@ -82,10 +81,10 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
       paragraph(hello(ctx.firstName)),
       paragraph(
         'Votre compte est cree. Vous pouvez des maintenant commander votre site, ' +
-          'suivre son avancement et gerer votre entreprise depuis votre espace.',
+          'suivre son avancement et gérer votre entreprise depuis votre espace.',
       ),
       paragraph(
-        'Nous vous accompagnons a chaque etape : vous n avez rien a installer et ' +
+        'Nous vous accompagnons a chaque étape : vous n avez rien a installer et ' +
           'rien a configurer techniquement.',
       ),
     ].join(''),
@@ -102,12 +101,12 @@ export function verifyEmailEmail(ctx: BaseContext & { verifyUrl: string }): Emai
     to: ctx.to,
     template: 'verify_email',
     subject: 'Confirmez votre adresse e-mail',
-    preheader: 'Une derniere etape pour activer votre compte.',
+    preheader: 'Une dernière étape pour activer votre compte.',
     heading: 'Confirmez votre adresse e-mail',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        'Confirmez votre adresse pour securiser votre compte et recevoir les messages ' +
+        'Confirmez votre adresse pour sécuriser votre compte et recevoir les messages ' +
           'de vos visiteurs.',
       ),
     ].join(''),
@@ -145,13 +144,13 @@ export function activationCodeEmail(
   return shell({
     to: ctx.to,
     template: 'activation_code',
-    subject: `Votre code d acces — ${ctx.businessName}`,
-    preheader: 'Recuperez l acces a votre espace client.',
+    subject: `Votre code d accès — ${ctx.businessName}`,
+    preheader: 'Récupérez l accès a votre espace client.',
     heading: 'Votre site vous attend',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Le site de ${ctx.businessName} est pret. Ce code vous donne acces a votre espace, ` +
+        `Le site de ${ctx.businessName} est pret. Ce code vous donne accès a votre espace, ` +
           'depuis lequel vous pourrez modifier votre contenu et recevoir vos messages.',
       ),
       codeBlock(ctx.code),
@@ -161,11 +160,11 @@ export function activationCodeEmail(
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Votre code d acces : ${ctx.code}`,
+      `Votre code d accès : ${ctx.code}`,
       `Code a usage unique, valable jusqu au ${ctx.expiresAt}.`,
     ],
     action: { label: 'Activer mon espace', url: `${platformUrl()}/activation` },
-    footerNote: 'Ce code est personnel. StaX ne vous le demandera jamais par telephone.',
+    footerNote: 'Ce code est personnel. StaX ne vous le demandera jamais par téléphone.',
   });
 }
 
@@ -211,9 +210,9 @@ export function orderConfirmedEmail(
   return shell({
     to: ctx.to,
     template: 'order_confirmed',
-    subject: `Commande confirmee — ${ctx.reference}`,
-    preheader: 'Nous demarrons votre projet.',
-    heading: 'Votre commande est confirmee',
+    subject: `Commande confirmée — ${ctx.reference}`,
+    preheader: 'Nous démarrons votre projet.',
+    heading: 'Votre commande est confirmée',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph('Merci pour votre confiance. Voici le recapitulatif de votre commande.'),
@@ -222,20 +221,20 @@ export function orderConfirmedEmail(
         ['Offre', ctx.planName],
         ['Paiement initial', ctx.setupAmount],
         ['Maintenance mensuelle', ctx.monthlyAmount],
-        ['Premiere echeance de maintenance', ctx.firstMaintenanceDate],
+        ['Première échéance de maintenance', ctx.firstMaintenanceDate],
       ]),
       paragraph(
-        'Prochaine etape : completez le questionnaire de votre projet. Plus vos reponses ' +
-          'sont precises, plus votre site vous ressemblera.',
+        'Prochaine étape : complétez le questionnaire de votre projet. Plus vos réponses ' +
+          'sont précises, plus votre site vous ressemblera.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Commande ${ctx.reference} confirmee.`,
+      `Commande ${ctx.reference} confirmée.`,
       `Offre : ${ctx.planName} — ${ctx.setupAmount} puis ${ctx.monthlyAmount}.`,
-      `Premiere echeance de maintenance : ${ctx.firstMaintenanceDate}.`,
+      `Première échéance de maintenance : ${ctx.firstMaintenanceDate}.`,
     ],
-    action: { label: 'Completer mon questionnaire', url: ctx.orderUrl },
+    action: { label: 'Compléter mon questionnaire', url: ctx.orderUrl },
   });
 }
 
@@ -245,17 +244,17 @@ export function projectStartedEmail(
   return shell({
     to: ctx.to,
     template: 'project_started',
-    subject: 'Nous demarrons la creation de votre site',
-    preheader: 'Votre projet est entre les mains de notre equipe.',
-    heading: 'La creation a commence',
+    subject: 'Nous démarrons la création de votre site',
+    preheader: 'Votre projet est entre les mains de notre équipe.',
+    heading: 'La création a commence',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Notre equipe a commence la conception du site de ${ctx.businessName}. ` +
-          'Vous pouvez suivre chaque etape depuis votre espace, et nous ecrire a tout moment.',
+        `Notre équipe a commence la conception du site de ${ctx.businessName}. ` +
+          'Vous pouvez suivre chaque étape depuis votre espace, et nous écrire a tout moment.',
       ),
     ].join(''),
-    bodyText: [hello(ctx.firstName), `La creation du site de ${ctx.businessName} a commence.`],
+    bodyText: [hello(ctx.firstName), `La création du site de ${ctx.businessName} a commence.`],
     action: { label: 'Suivre mon projet', url: ctx.projectUrl },
   });
 }
@@ -266,13 +265,13 @@ export function previewReadyEmail(
   return shell({
     to: ctx.to,
     template: 'preview_ready',
-    subject: 'Votre site est pret a etre relu',
+    subject: 'Votre site est pret a être relu',
     preheader: 'Decouvrez votre site avant sa mise en ligne.',
-    heading: 'Votre site est pret a etre relu',
+    heading: 'Votre site est pret a être relu',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        'Votre site est disponible en apercu prive. Prenez le temps de tout relire : textes, ' +
+        'Votre site est disponible en aperçu privé. Prenez le temps de tout relire : textes, ' +
           'photos, horaires, coordonnees.',
       ),
       paragraph(
@@ -280,7 +279,7 @@ export function previewReadyEmail(
           'corrigeons avant la mise en ligne.',
       ),
     ].join(''),
-    bodyText: [hello(ctx.firstName), 'Votre site est disponible en apercu prive.'],
+    bodyText: [hello(ctx.firstName), 'Votre site est disponible en aperçu privé.'],
     action: { label: 'Voir mon site', url: ctx.previewUrl },
     secondaryAction: { label: 'Demander des modifications', url: ctx.projectUrl },
   });
@@ -297,23 +296,23 @@ export function sitePublishedEmail(
     heading: 'Votre site est en ligne',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
-      strongLine('Votre site est desormais accessible publiquement.'),
+      strongLine('Votre site est désormais accessible publiquement.'),
       paragraph(
         'Vous pouvez modifier vos contenus a tout moment depuis votre espace : textes, photos, ' +
-          'horaires, tarifs. Les modifications ne sont visibles qu apres publication.',
+          'horaires, tarifs. Les modifications ne sont visibles qu après publication.',
       ),
       definitionList([
         ['Adresse de votre site', ctx.siteUrl],
-        ['Periode de garantie commerciale', `jusqu au ${ctx.refundDeadline}`],
+        ['Période de garantie commerciale', `jusqu au ${ctx.refundDeadline}`],
       ]),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Votre site est en ligne : ${ctx.siteUrl}`,
-      `Periode de garantie commerciale jusqu au ${ctx.refundDeadline}.`,
+      `Période de garantie commerciale jusqu au ${ctx.refundDeadline}.`,
     ],
     action: { label: 'Voir mon site', url: ctx.siteUrl },
-    secondaryAction: { label: 'Gerer mon site', url: ctx.appUrl },
+    secondaryAction: { label: 'Gérer mon site', url: ctx.appUrl },
   });
 }
 
@@ -329,13 +328,13 @@ export function newMessageEmail(
     template: 'new_message',
     subject: `Nouveau message de ${ctx.senderName}`,
     preheader: ctx.excerpt.slice(0, 120),
-    heading: 'Vous avez recu un message',
+    heading: 'Vous avez reçu un message',
     bodyHtml: [
-      paragraph(`${ctx.senderName} vous a ecrit depuis votre site :`),
+      paragraph(`${ctx.senderName} vous a écrit depuis votre site :`),
       `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E4E4E7;
         color:#3F3F46;font-style:italic;">${ctx.excerpt.slice(0, 500)}</blockquote>`,
     ].join(''),
-    bodyText: [`${ctx.senderName} vous a ecrit :`, ctx.excerpt.slice(0, 500)],
+    bodyText: [`${ctx.senderName} vous a écrit :`, ctx.excerpt.slice(0, 500)],
     action: { label: 'Lire le message', url: ctx.inboxUrl },
   });
 }
@@ -351,16 +350,16 @@ export function newBookingEmail(
   return shell({
     to: ctx.to,
     template: 'new_booking',
-    subject: `Nouvelle reservation — ${ctx.dateLabel}`,
+    subject: `Nouvelle réservation — ${ctx.dateLabel}`,
     preheader: `${ctx.customerName}, ${ctx.partySize} personne(s).`,
-    heading: 'Nouvelle demande de reservation',
+    heading: 'Nouvelle demande de réservation',
     bodyHtml: definitionList([
       ['Client', ctx.customerName],
       ['Date et heure', ctx.dateLabel],
       ['Nombre de personnes', String(ctx.partySize)],
     ]),
     bodyText: [
-      `Nouvelle reservation : ${ctx.customerName}, ${ctx.dateLabel}, ${ctx.partySize} personne(s).`,
+      `Nouvelle réservation : ${ctx.customerName}, ${ctx.dateLabel}, ${ctx.partySize} personne(s).`,
     ],
     action: { label: 'Confirmer ou refuser', url: ctx.bookingsUrl },
   });
@@ -374,7 +373,7 @@ export function newShopOrderEmail(
     template: 'new_shop_order',
     subject: `Nouvelle commande — ${ctx.reference}`,
     preheader: `${ctx.customerName} — ${ctx.total}`,
-    heading: 'Vous avez recu une commande',
+    heading: 'Vous avez reçu une commande',
     bodyHtml: definitionList([
       ['Reference', ctx.reference],
       ['Client', ctx.customerName],
@@ -395,22 +394,20 @@ export function paymentFailedEmail(
   return shell({
     to: ctx.to,
     template: 'payment_failed',
-    subject: 'Echec du prelevement de votre maintenance',
+    subject: 'Échec du prelevement de votre maintenance',
     preheader: 'Mettez a jour votre moyen de paiement.',
     heading: 'Nous n avons pas pu encaisser votre maintenance',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
         `Le prelevement de ${ctx.amount} n a pas abouti. Votre site reste en ligne : ` +
-          `nous reessaierons automatiquement le ${ctx.retryDate}.`,
+          `nous réessaierons automatiquement le ${ctx.retryDate}.`,
       ),
-      paragraph(
-        'Pour eviter toute interruption, verifiez votre moyen de paiement des maintenant.',
-      ),
+      paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement des maintenant.'),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Echec du prelevement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
+      `Échec du prelevement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
     ],
     action: { label: 'Mettre a jour mon paiement', url: ctx.billingUrl },
   });
@@ -422,15 +419,15 @@ export function invoiceEmail(
   return shell({
     to: ctx.to,
     template: 'invoice',
-    subject: `Votre facture — ${ctx.periodLabel}`,
+    subject: `Votre facturé — ${ctx.periodLabel}`,
     preheader: `Facture de ${ctx.amount}.`,
-    heading: 'Votre facture est disponible',
+    heading: 'Votre facturé est disponible',
     bodyHtml: definitionList([
-      ['Periode', ctx.periodLabel],
+      ['Période', ctx.periodLabel],
       ['Montant', ctx.amount],
     ]),
     bodyText: [`Facture ${ctx.periodLabel} — ${ctx.amount}.`],
-    action: { label: 'Telecharger ma facture', url: ctx.invoiceUrl },
+    action: { label: 'Télécharger ma facturé', url: ctx.invoiceUrl },
   });
 }
 
@@ -440,25 +437,25 @@ export function subscriptionCancelledEmail(
   return shell({
     to: ctx.to,
     template: 'subscription_cancelled',
-    subject: 'Resiliation de votre maintenance enregistree',
+    subject: 'Résiliation de votre maintenance enregistrée',
     preheader: `Votre site reste en ligne jusqu au ${ctx.endDate}.`,
-    heading: 'Votre resiliation est enregistree',
+    heading: 'Votre résiliation est enregistrée',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
         `Votre maintenance prendra fin le ${ctx.endDate}. Votre site reste accessible ` +
-          `jusqu a cette date, puis pendant une periode de continuite jusqu au ${ctx.gracePeriodEnd}.`,
+          `jusqu a cette date, puis pendant une période de continuite jusqu au ${ctx.gracePeriodEnd}.`,
       ),
       paragraph(
-        'Vos donnees ne sont pas supprimees a l echeance : vous pouvez les exporter ou ' +
-          'reactiver votre maintenance a tout moment.',
+        'Vos données ne sont pas supprimées a l échéance : vous pouvez les exporter ou ' +
+          'réactiver votre maintenance a tout moment.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Maintenance resiliee au ${ctx.endDate}. Periode de continuite jusqu au ${ctx.gracePeriodEnd}.`,
+      `Maintenance résiliée au ${ctx.endDate}. Période de continuite jusqu au ${ctx.gracePeriodEnd}.`,
     ],
-    action: { label: 'Gerer mon abonnement', url: ctx.billingUrl },
+    action: { label: 'Gérer mon abonnement', url: ctx.billingUrl },
   });
 }
 
@@ -468,27 +465,27 @@ export function refundRequestedEmail(
   return shell({
     to: ctx.to,
     template: 'refund_requested',
-    subject: 'Votre demande de remboursement est enregistree',
+    subject: 'Votre demande de remboursement est enregistrée',
     preheader: 'Nous revenons vers vous rapidement.',
-    heading: 'Demande de remboursement recue',
+    heading: 'Demande de remboursement reçue',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
-      paragraph('Nous avons bien recu votre demande et nous l examinons.'),
+      paragraph('Nous avons bien reçu votre demande et nous l examinons.'),
       definitionList([
         ['Commande', ctx.reference],
-        ['Montant estime du remboursement', ctx.amount],
+        ['Montant estimé du remboursement', ctx.amount],
         ...(ctx.deduction
           ? ([['Retenue pour achat du nom de domaine', ctx.deduction]] as Array<[string, string]>)
           : []),
       ]),
       paragraph(
-        'Ce montant est une estimation : il sera confirme apres verification. ' +
-          'Cette garantie commerciale ne remplace pas vos droits legaux.',
+        'Ce montant est une estimation : il sera confirme après vérification. ' +
+          'Cette garantie commerciale ne remplacé pas vos droits légaux.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Demande de remboursement recue pour la commande ${ctx.reference}. Montant estime : ${ctx.amount}.`,
+      `Demande de remboursement reçue pour la commande ${ctx.reference}. Montant estimé : ${ctx.amount}.`,
     ],
     action: { label: 'Suivre ma demande', url: `${platformUrl()}/app/facturation` },
   });
@@ -500,17 +497,17 @@ export function refundProcessedEmail(
   return shell({
     to: ctx.to,
     template: 'refund_processed',
-    subject: 'Votre remboursement a ete effectue',
-    preheader: `${ctx.amount} rembourses.`,
-    heading: 'Remboursement effectue',
+    subject: 'Votre remboursement a ete effectué',
+    preheader: `${ctx.amount} remboursés.`,
+    heading: 'Remboursement effectué',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Un remboursement de ${ctx.amount} a ete emis pour la commande ${ctx.reference}. ` +
-          'Le delai de credit depend de votre banque, generalement 5 a 10 jours ouvres.',
+        `Un remboursement de ${ctx.amount} a ete émis pour la commande ${ctx.reference}. ` +
+          'Le délai de credit dépend de votre banque, généralement 5 a 10 jours ouvrés.',
       ),
     ].join(''),
-    bodyText: [hello(ctx.firstName), `Remboursement de ${ctx.amount} effectue (${ctx.reference}).`],
+    bodyText: [hello(ctx.firstName), `Remboursement de ${ctx.amount} effectué (${ctx.reference}).`],
   });
 }
 

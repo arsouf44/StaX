@@ -33,7 +33,7 @@ export const linkSchema = z.object({
         value.startsWith('https://') ||
         value.startsWith('mailto:') ||
         value.startsWith('tel:'),
-      { message: 'Lien non autorise.' },
+      { message: 'Lien non autorisé.' },
     ),
   style: z.enum(['primary', 'secondary', 'ghost', 'link']).default('primary'),
   external: z.boolean().default(false),
@@ -48,7 +48,9 @@ export const richParagraphSchema = z.object({
 
 /** Reglages de presentation communs a tous les blocs. */
 export const blockSettingsSchema = z.object({
-  background: z.enum(['default', 'surface', 'contrast', 'accent', 'image', 'none']).default('default'),
+  background: z
+    .enum(['default', 'surface', 'contrast', 'accent', 'image', 'none'])
+    .default('default'),
   width: z.enum(['narrow', 'default', 'wide', 'full']).default('default'),
   spacing: z.enum(['none', 'compact', 'default', 'roomy']).default('default'),
   align: z.enum(['left', 'center']).default('left'),

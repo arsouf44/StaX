@@ -85,7 +85,9 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
   ] = await Promise.all([
     countOf(db, 'projects', (q) =>
       (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
-        'ordered', 'questionnaire_pending', 'assets_pending',
+        'ordered',
+        'questionnaire_pending',
+        'assets_pending',
       ]),
     ),
     countOf(db, 'orders', (q) =>
@@ -100,16 +102,25 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
       (q as never as { eq: (c: string, v: string) => unknown }).eq('status', 'live'),
     ),
     countOf(db, 'sites', (q) =>
-      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', ['draft', 'building']),
+      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
+        'draft',
+        'building',
+      ]),
     ),
     countOf(db, 'sites', (q) =>
       (q as never as { in: (c: string, v: string[]) => unknown }).in('status', ['review', 'ready']),
     ),
     countOf(db, 'site_domains', (q) =>
-      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', ['pending', 'verifying']),
+      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
+        'pending',
+        'verifying',
+      ]),
     ),
     countOf(db, 'site_domains', (q) =>
-      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', ['failed', 'expired']),
+      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
+        'failed',
+        'expired',
+      ]),
     ),
     countOf(db, 'payments', (q) =>
       (q as never as { eq: (c: string, v: string) => { gte: (c: string, v: string) => unknown } })
@@ -118,19 +129,33 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
     ),
     countOf(db, 'refund_requests', (q) =>
       (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
-        'requested', 'under_review', 'approved', 'processing',
+        'requested',
+        'under_review',
+        'approved',
+        'processing',
       ]),
     ),
     countOf(db, 'quotes', (q) =>
-      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', ['draft', 'sent', 'viewed']),
+      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
+        'draft',
+        'sent',
+        'viewed',
+      ]),
     ),
     countOf(db, 'support_tickets', (q) =>
-      (q as never as { in: (c: string, v: string[]) => { in: (c: string, v: string[]) => unknown } })
+      (
+        q as never as {
+          in: (c: string, v: string[]) => { in: (c: string, v: string[]) => unknown };
+        }
+      )
         .in('priority', ['high', 'urgent'])
         .in('status', ['open', 'waiting_support']),
     ),
     countOf(db, 'subscriptions', (q) =>
-      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', ['past_due', 'unpaid']),
+      (q as never as { in: (c: string, v: string[]) => unknown }).in('status', [
+        'past_due',
+        'unpaid',
+      ]),
     ),
   ]);
 
@@ -174,10 +199,18 @@ export async function adminSearch(db: Db, rawQuery: string): Promise<AdminSearch
 
   const [orgs, sites, orders, domains, users, quotes] = await Promise.all([
     unwrapList<{ id: string; name: string; slug: string }>(
-      (await db.from('organizations').select('id, name, slug').ilike('name', pattern).limit(5)) as never,
+      (await db
+        .from('organizations')
+        .select('id, name, slug')
+        .ilike('name', pattern)
+        .limit(5)) as never,
     ),
     unwrapList<{ id: string; name: string; slug: string; status: string }>(
-      (await db.from('sites').select('id, name, slug, status').ilike('name', pattern).limit(5)) as never,
+      (await db
+        .from('sites')
+        .select('id, name, slug, status')
+        .ilike('name', pattern)
+        .limit(5)) as never,
     ),
     unwrapList<{ id: string; reference: string; status: string; total_cents: number }>(
       (await db
@@ -194,7 +227,11 @@ export async function adminSearch(db: Db, rawQuery: string): Promise<AdminSearch
         .limit(5)) as never,
     ),
     unwrapList<{ id: string; email: string; full_name: string | null }>(
-      (await db.from('profiles').select('id, email, full_name').ilike('email', pattern).limit(5)) as never,
+      (await db
+        .from('profiles')
+        .select('id, email, full_name')
+        .ilike('email', pattern)
+        .limit(5)) as never,
     ),
     unwrapList<{ id: string; reference: string; contact_name: string; status: string }>(
       (await db
@@ -283,7 +320,9 @@ export async function listAuditLog(
 ) {
   let query = db
     .from('audit_logs')
-    .select('id, actor_email, actor_type, action, target_type, target_id, metadata_safe, created_at, organization_id, site_id')
+    .select(
+      'id, actor_email, actor_type, action, target_type, target_id, metadata_safe, created_at, organization_id, site_id',
+    )
     .order('created_at', { ascending: false })
     .limit(options.limit ?? 50);
 

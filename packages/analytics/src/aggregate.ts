@@ -91,8 +91,10 @@ export function rollupDay(
     const source = event.utm_source ?? event.referrer_host ?? 'direct';
     sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1);
     if (event.device) deviceCounts.set(event.device, (deviceCounts.get(event.device) ?? 0) + 1);
-    if (event.browser) browserCounts.set(event.browser, (browserCounts.get(event.browser) ?? 0) + 1);
-    if (event.country) countryCounts.set(event.country, (countryCounts.get(event.country) ?? 0) + 1);
+    if (event.browser)
+      browserCounts.set(event.browser, (browserCounts.get(event.browser) ?? 0) + 1);
+    if (event.country)
+      countryCounts.set(event.country, (countryCounts.get(event.country) ?? 0) + 1);
 
     if (typeof event.duration_ms === 'number') {
       durationTotal += event.duration_ms;

@@ -61,7 +61,7 @@ export const dataExportSchema = z
           'invoices',
         ]),
       )
-      .min(1, 'Choisissez au moins un type de donnees.')
+      .min(1, 'Choisissez au moins un type de données.')
       .max(9),
     format: z.enum(['json', 'csv']).default('json'),
   })
@@ -76,7 +76,7 @@ export const accountDeletionSchema = z
     confirmationText: z.string().min(1, 'Saisissez le nom exact de votre organisation.'),
     acknowledgeRetention: z.literal(true, {
       message:
-        'Vous devez reconnaitre que les pieces comptables sont conservees le temps impose par la loi.',
+        'Vous devez reconnaitre que les pièces comptables sont conservées le temps imposé par la loi.',
     }),
   })
   .strict();

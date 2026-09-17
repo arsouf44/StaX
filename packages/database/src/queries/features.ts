@@ -25,15 +25,32 @@ export interface FeatureSnapshot {
 }
 
 const FEATURE_KEYS: FeatureKey[] = [
-  'custom_domain', 'seo_tools', 'content_editor', 'scheduled_publishing', 'version_history',
-  'advanced_animations', 'custom_design', 'bookings', 'ecommerce', 'online_payments',
-  'customer_accounts', 'blog', 'advanced_analytics', 'multi_language', 'team_collaboration',
+  'custom_domain',
+  'seo_tools',
+  'content_editor',
+  'scheduled_publishing',
+  'version_history',
+  'advanced_animations',
+  'custom_design',
+  'bookings',
+  'ecommerce',
+  'online_payments',
+  'customer_accounts',
+  'blog',
+  'advanced_analytics',
+  'multi_language',
+  'team_collaboration',
   'priority_support',
 ];
 
 const LIMIT_KEYS: LimitKey[] = [
-  'max_sites', 'max_pages', 'max_team_members', 'max_products',
-  'max_media_mb', 'max_monthly_submissions', 'max_forms',
+  'max_sites',
+  'max_pages',
+  'max_team_members',
+  'max_products',
+  'max_media_mb',
+  'max_monthly_submissions',
+  'max_forms',
 ];
 
 /**
@@ -111,20 +128,19 @@ export async function hasFeature(
 }
 
 export const FEATURE_UPGRADE_MESSAGES: Record<FeatureKey, string> = {
-  custom_domain: 'Le nom de domaine personnalise est inclus dans toutes nos offres.',
-  seo_tools: 'Les outils de referencement sont inclus dans toutes nos offres.',
-  content_editor: 'L editeur de contenu est inclus dans toutes nos offres.',
-  scheduled_publishing:
-    'La publication programmee est disponible a partir de l offre Premium.',
+  custom_domain: 'Le nom de domaine personnalisé est inclus dans toutes nos offres.',
+  seo_tools: 'Les outils de référencement sont inclus dans toutes nos offres.',
+  content_editor: 'L éditeur de contenu est inclus dans toutes nos offres.',
+  scheduled_publishing: 'La publication programmée est disponible a partir de l offre Premium.',
   version_history: 'L historique des versions est inclus dans toutes nos offres.',
-  advanced_animations: 'Les animations avancees sont disponibles avec l offre Signature.',
+  advanced_animations: 'Les animations avancées sont disponibles avec l offre Signature.',
   custom_design: 'Le design sur mesure est disponible avec l offre Signature.',
-  bookings: 'Les reservations en ligne sont disponibles a partir de l offre Premium.',
+  bookings: 'Les réservations en ligne sont disponibles a partir de l offre Premium.',
   ecommerce: 'La vente en ligne est disponible a partir de l offre Premium.',
   online_payments: 'Le paiement en ligne est disponible a partir de l offre Premium.',
   customer_accounts: 'Les comptes clients sont disponibles a partir de l offre Premium.',
   blog: 'Les actualites sont disponibles a partir de l offre Premium.',
-  advanced_analytics: 'Les statistiques avancees sont disponibles a partir de l offre Premium.',
+  advanced_analytics: 'Les statistiques avancées sont disponibles a partir de l offre Premium.',
   multi_language: 'Le multilingue est disponible avec l offre Signature.',
   team_collaboration: 'La collaboration est incluse dans toutes nos offres.',
   priority_support: 'Le support prioritaire est inclus avec l offre Signature.',

@@ -32,8 +32,9 @@ describe('politique de remboursement', () => {
     });
     expect(r.eligible).toBe(false);
     expect(r.daysRemaining).toBe(0);
-    // La formulation rappelle que les droits legaux subsistent.
-    expect(r.reason).toContain('droits legaux');
+    // La formulation rappelle explicitement que les droits legaux subsistent :
+    // une garantie commerciale ne peut jamais les restreindre.
+    expect(r.reason).toContain('droits l\u00e9gaux');
   });
 
   it('retient 10 € UNIQUEMENT si un domaine a ete reellement achete', () => {

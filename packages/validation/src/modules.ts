@@ -19,17 +19,36 @@ import {
 /* --- Carte de restaurant ------------------------------------------------- */
 
 export const ALLERGENS = [
-  'gluten', 'crustaces', 'oeufs', 'poissons', 'arachides', 'soja', 'lait',
-  'fruits-a-coque', 'celeri', 'moutarde', 'sesame', 'sulfites', 'lupin', 'mollusques',
+  'gluten',
+  'crustaces',
+  'oeufs',
+  'poissons',
+  'arachides',
+  'soja',
+  'lait',
+  'fruits-a-coque',
+  'celeri',
+  'moutarde',
+  'sesame',
+  'sulfites',
+  'lupin',
+  'mollusques',
 ] as const;
 
 export const DIETARY_TAGS = [
-  'vegetarien', 'vegan', 'sans-gluten', 'sans-lactose', 'halal', 'fait-maison', 'bio', 'local',
+  'vegetarien',
+  'vegan',
+  'sans-gluten',
+  'sans-lactose',
+  'halal',
+  'fait-maison',
+  'bio',
+  'local',
 ] as const;
 
 export const menuCategorySchema = z
   .object({
-    name: boundedText(1, 80, 'Le nom de la categorie'),
+    name: boundedText(1, 80, 'Le nom de la catégorie'),
     description: optionalText(400),
     menuGroup: z
       .enum(['main', 'lunch', 'dinner', 'drinks', 'wine', 'dessert', 'brunch', 'set_menu', 'kids'])
@@ -124,7 +143,9 @@ export const openingHourSchema = z
     dayOfWeek: z.number().int().min(0).max(6),
     opensAt: timeSchema,
     closesAt: timeSchema,
-    service: z.enum(['all_day', 'morning', 'lunch', 'afternoon', 'dinner', 'night']).default('all_day'),
+    service: z
+      .enum(['all_day', 'morning', 'lunch', 'afternoon', 'dinner', 'night'])
+      .default('all_day'),
     label: optionalText(40),
   })
   .strict()
@@ -205,7 +226,7 @@ export const publicBookingSchema = z
   })
   .strict()
   .refine((data) => Boolean(data.customerEmail) || Boolean(data.customerPhone), {
-    message: 'Indiquez au moins un e-mail ou un telephone.',
+    message: 'Indiquez au moins un e-mail ou un téléphone.',
     path: ['customerEmail'],
   });
 
@@ -241,10 +262,9 @@ export const productSchema = z
   })
   .strict()
   .refine(
-    (data) =>
-      data.compareAtPriceCents == null || data.compareAtPriceCents > data.priceCents,
+    (data) => data.compareAtPriceCents == null || data.compareAtPriceCents > data.priceCents,
     {
-      message: 'Le prix barre doit etre superieur au prix de vente.',
+      message: 'Le prix barre doit être supérieur au prix de vente.',
       path: ['compareAtPriceCents'],
     },
   );
@@ -357,8 +377,21 @@ export const formFieldSchema = z
       .regex(/^[a-z][a-z0-9_]{0,40}$/, 'Identifiant de champ invalide.'),
     label: boundedText(1, 80, 'Le libelle'),
     type: z.enum([
-      'text', 'textarea', 'email', 'tel', 'number', 'date', 'time', 'datetime',
-      'select', 'multiselect', 'radio', 'checkbox', 'file', 'hidden', 'consent',
+      'text',
+      'textarea',
+      'email',
+      'tel',
+      'number',
+      'date',
+      'time',
+      'datetime',
+      'select',
+      'multiselect',
+      'radio',
+      'checkbox',
+      'file',
+      'hidden',
+      'consent',
     ]),
     placeholder: optionalText(120),
     helpText: optionalText(200),
@@ -419,6 +452,6 @@ export const contactSchema = z
   })
   .strict()
   .refine((data) => Boolean(data.email) || Boolean(data.phone) || Boolean(data.lastName), {
-    message: 'Indiquez au moins un nom, un e-mail ou un telephone.',
+    message: 'Indiquez au moins un nom, un e-mail ou un téléphone.',
     path: ['email'],
   });

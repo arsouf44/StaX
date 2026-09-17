@@ -101,31 +101,31 @@ export function translateDatabaseError(error: PostgrestLikeError): DatabaseError
   switch (code) {
     case '42501':
       return new DatabaseError(
-        "Vous n'avez pas les droits necessaires pour cette action.",
+        "Vous n'avez pas les droits nécessaires pour cette action.",
         code,
         error.details,
       );
     case '23505':
-      return new DatabaseError('Cette valeur existe deja.', code, error.details);
+      return new DatabaseError('Cette valeur existe déjà.', code, error.details);
     case '23503':
       return new DatabaseError(
-        'Cet element est lie a d autres donnees et ne peut pas etre supprime.',
+        'Cet élément est lie a d autres données et ne peut pas être supprime.',
         code,
         error.details,
       );
     case '23514':
       return new DatabaseError(
-        error.hint ?? 'Cette operation n est pas autorisee dans l etat actuel.',
+        error.hint ?? 'Cette opération n est pas autorisée dans l état actuel.',
         code,
         error.details,
       );
     case 'PGRST116':
-      return new DatabaseError('Element introuvable.', code, error.details);
+      return new DatabaseError('Élément introuvable.', code, error.details);
     case 'P0002':
-      return new DatabaseError('Element introuvable.', code, error.details);
+      return new DatabaseError('Élément introuvable.', code, error.details);
     default:
       return new DatabaseError(
-        'Une erreur est survenue lors de l enregistrement. Reessayez dans un instant.',
+        'Une erreur est survenue lors de l enregistrement. Réessayez dans un instant.',
         code,
         error.details,
       );
@@ -135,7 +135,7 @@ export function translateDatabaseError(error: PostgrestLikeError): DatabaseError
 export function unwrap<T>(result: { data: T | null; error: PostgrestLikeError | null }): T {
   if (result.error) throw translateDatabaseError(result.error);
   if (result.data === null) {
-    throw new DatabaseError('Element introuvable.', 'PGRST116');
+    throw new DatabaseError('Élément introuvable.', 'PGRST116');
   }
   return result.data;
 }

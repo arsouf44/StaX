@@ -50,10 +50,17 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'error',
         {
-          // Money must never be handled as a float.
-          selector: "BinaryExpression[operator='/'][right.value=100]",
+          // L'argent ne doit jamais devenir un flottant. Cible uniquement les
+          // valeurs nommees en centimes : `deltaBps / 100` reste legitime.
+          selector: "BinaryExpression[operator='/'][right.value=100][left.name=/[Cc]ents$/]",
           message:
-            'Ne divisez pas des montants par 100. Utilisez formatMoney()/toMajorUnits() de @stax/payments.',
+            'Ne divisez pas des montants en centimes par 100. Utilisez formatMoney() ou toMajorUnits() de @stax/payments.',
+        },
+        {
+          selector:
+            "BinaryExpression[operator='/'][right.value=100][left.property.name=/[Cc]ents$/]",
+          message:
+            'Ne divisez pas des montants en centimes par 100. Utilisez formatMoney() ou toMajorUnits() de @stax/payments.',
         },
       ],
       eqeqeq: ['error', 'always', { null: 'ignore' }],

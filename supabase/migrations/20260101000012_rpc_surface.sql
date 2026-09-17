@@ -267,5 +267,5 @@ $$;
 grant execute on function public.compute_order_pricing(uuid, text) to anon;
 
 comment on function public.resolve_published_site(text) is
-  'Resolution du tenant a partir du hostname. Reservee au service role : le '
-  'navigateur ne designe jamais lui-meme le site a servir.';
+  'Résolution du tenant a partir du hostname. Reservee au service role : le '
+  'navigateur ne designe jamais lui-même le site a servir.';

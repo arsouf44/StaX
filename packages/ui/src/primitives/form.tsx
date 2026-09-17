@@ -151,25 +151,26 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
   },
 );
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ className, rows = 4, ...props }, ref) {
-    const field = useField();
-    return (
-      <textarea
-        ref={ref}
-        rows={rows}
-        className={cn(
-          controlClasses,
-          'resize-y border-[var(--border)] leading-relaxed',
-          field?.hasError && 'border-[var(--danger)] focus:border-[var(--danger)]',
-          className,
-        )}
-        {...ariaProps(field)}
-        {...props}
-      />
-    );
-  },
-);
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function Textarea({ className, rows = 4, ...props }, ref) {
+  const field = useField();
+  return (
+    <textarea
+      ref={ref}
+      rows={rows}
+      className={cn(
+        controlClasses,
+        'resize-y border-[var(--border)] leading-relaxed',
+        field?.hasError && 'border-[var(--danger)] focus:border-[var(--danger)]',
+        className,
+      )}
+      {...ariaProps(field)}
+      {...props}
+    />
+  );
+});
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
   function Select({ className, children, ...props }, ref) {
@@ -231,9 +232,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         <label htmlFor={id} className="cursor-pointer text-sm text-[var(--foreground)]">
           {label}
         </label>
-        {description ? (
-          <p className="mt-0.5 text-xs text-[var(--muted)]">{description}</p>
-        ) : null}
+        {description ? <p className="mt-0.5 text-xs text-[var(--muted)]">{description}</p> : null}
       </div>
     </div>
   );
@@ -386,8 +385,8 @@ export function FormErrorSummary({
     >
       <p className="text-sm font-medium text-[var(--danger)]">
         {entries.length === 1
-          ? 'Un champ doit etre corrige :'
-          : `${entries.length} champs doivent etre corriges :`}
+          ? 'Un champ doit être corrigé :'
+          : `${entries.length} champs doivent être corrigés :`}
       </p>
       <ul className="mt-2 space-y-1 text-sm text-[var(--foreground-muted)]">
         {entries.map(([field, messages]) => (

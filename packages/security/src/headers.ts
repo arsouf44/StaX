@@ -10,7 +10,7 @@ import { randomToken } from './crypto';
  *    images et les polices, mais tout aussi stricts sur les scripts.
  *
  * Aucun site client ne peut executer de JavaScript arbitraire : le CSP
- * n'autorise que les scripts de l'origine et ceux portant le nonce de la
+ * n'autorisé que les scripts de l'origine et ceux portant le nonce de la
  * requete. C'est la derniere barriere contre une injection qui aurait
  * traverse la validation et l'assainissement.
  */
@@ -25,7 +25,7 @@ export interface SecurityHeaderOptions {
   frameSrc?: readonly string[];
   /** Desactive `upgrade-insecure-requests` en developpement local. */
   allowInsecure?: boolean;
-  /** Le site autorise-t-il l'integration d'une carte tierce ? */
+  /** Le site autorise-t-il l'intégration d'une carte tierce ? */
   allowMaps?: boolean;
 }
 
@@ -46,12 +46,7 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
     .filter(Boolean)
     .join(' ');
 
-  const connect = [
-    "'self'",
-    STRIPE_CONNECT,
-    TURNSTILE,
-    ...(options.connectSrc ?? []),
-  ].join(' ');
+  const connect = ["'self'", STRIPE_CONNECT, TURNSTILE, ...(options.connectSrc ?? [])].join(' ');
 
   const frame = [
     "'self'",

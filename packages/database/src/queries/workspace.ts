@@ -29,7 +29,9 @@ export interface WorkspaceSite {
   isDemo: boolean;
   suspendedAt: string | null;
   primaryHostname: string | null;
-  domains: Array<Pick<SiteDomain, 'id' | 'hostname' | 'status' | 'kind' | 'is_primary' | 'ssl_status'>>;
+  domains: Array<
+    Pick<SiteDomain, 'id' | 'hostname' | 'status' | 'kind' | 'is_primary' | 'ssl_status'>
+  >;
   enabledModules: string[];
 }
 
@@ -181,8 +183,7 @@ export async function loadWorkspace(
     getActiveSubscription(db, organization.id),
   ]);
 
-  const currentSite =
-    sites.find((site) => site.id === options.siteId) ?? sites[0] ?? null;
+  const currentSite = sites.find((site) => site.id === options.siteId) ?? sites[0] ?? null;
 
   return {
     profile,

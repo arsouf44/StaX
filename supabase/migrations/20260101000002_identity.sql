@@ -380,8 +380,8 @@ as $$
 $$;
 
 comment on function app.org_can(uuid, text) is
-  'Matrice RBAC canonique. Toute verification de droit, en SQL comme en TypeScript, '
-  'doit passer par cette definition unique.';
+  'Matrice RBAC canonique. Toute vérification de droit, en SQL comme en TypeScript, '
+  'doit passer par cette définition unique.';
 
 -- Organisations visibles par l'utilisateur courant (pour les jointures RLS).
 create or replace function app.member_org_ids()

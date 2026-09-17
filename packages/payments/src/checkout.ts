@@ -59,7 +59,7 @@ function lineItemForSetup(
       currency: plan.currency.toLowerCase(),
       unit_amount: amount,
       product_data: {
-        name: `Creation de votre site — offre ${plan.planName}`,
+        name: `Création de votre site — offre ${plan.planName}`,
         description: 'Conception, developpement, mise en ligne et accompagnement.',
       },
     },
@@ -82,7 +82,7 @@ function lineItemForMaintenance(
       product_data: {
         name: `Maintenance mensuelle — offre ${plan.planName}`,
         description:
-          'Hebergement, certificat HTTPS, sauvegardes, mises a jour de securite et support.',
+          'Hébergement, certificat HTTPS, sauvegardes, mises a jour de sécurité et support.',
       },
     },
   };

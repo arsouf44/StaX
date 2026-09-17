@@ -110,7 +110,13 @@ export interface OpeningHoursSpec {
 }
 
 const SCHEMA_DAYS = [
-  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
 ] as const;
 
 /**
@@ -135,7 +141,8 @@ export function buildLocalBusinessJsonLd(context: SeoContext, hours: OpeningHour
 
   if (s.addressLine1 || s.city || s.postalCode) {
     const address: Record<string, string> = { '@type': 'PostalAddress' };
-    if (s.addressLine1) address.streetAddress = [s.addressLine1, s.addressLine2].filter(Boolean).join(', ');
+    if (s.addressLine1)
+      address.streetAddress = [s.addressLine1, s.addressLine2].filter(Boolean).join(', ');
     if (s.postalCode) address.postalCode = s.postalCode;
     if (s.city) address.addressLocality = s.city;
     address.addressCountry = s.country;
@@ -146,7 +153,9 @@ export function buildLocalBusinessJsonLd(context: SeoContext, hours: OpeningHour
     data.geo = { '@type': 'GeoCoordinates', latitude: s.latitude, longitude: s.longitude };
   }
 
-  const social = Object.values(s.socialLinks).filter((url) => typeof url === 'string' && url.length > 0);
+  const social = Object.values(s.socialLinks).filter(
+    (url) => typeof url === 'string' && url.length > 0,
+  );
   if (social.length > 0) data.sameAs = social;
 
   if (hours.length > 0) {
@@ -190,6 +199,19 @@ export function buildFaqJsonLd(items: ReadonlyArray<{ question: string; answer: 
   };
 }
 
+/**
+ * Formate un montant en centimes au format attendu par Schema.org (« 24.00 »),
+ * sans jamais passer par un flottant : la partie entiere et les centimes sont
+ * calcules separement.
+ */
+function formatPriceForSchema(cents: number): string {
+  const sign = cents < 0 ? '-' : '';
+  const absolute = Math.abs(Math.trunc(cents));
+  const units = Math.trunc(absolute / 100);
+  const remainder = absolute % 100;
+  return `${sign}${units}.${String(remainder).padStart(2, '0')}`;
+}
+
 export function buildMenuJsonLd(
   restaurantName: string,
   sections: ReadonlyArray<{
@@ -213,7 +235,7 @@ export function buildMenuJsonLd(
           ? {
               offers: {
                 '@type': 'Offer',
-                price: (item.priceCents / 100).toFixed(2),
+                price: formatPriceForSchema(item.priceCents),
                 priceCurrency: 'EUR',
               },
             }
@@ -267,8 +289,10 @@ export function buildSitemapXml(origin: string, entries: readonly SitemapEntry[]
     .map((entry) => {
       const parts = [`    <loc>${xmlEscape(absoluteUrl(origin, entry.path))}</loc>`];
       if (entry.lastModified) parts.push(`    <lastmod>${xmlEscape(entry.lastModified)}</lastmod>`);
-      if (entry.changeFrequency) parts.push(`    <changefreq>${entry.changeFrequency}</changefreq>`);
-      if (entry.priority != null) parts.push(`    <priority>${entry.priority.toFixed(1)}</priority>`);
+      if (entry.changeFrequency)
+        parts.push(`    <changefreq>${entry.changeFrequency}</changefreq>`);
+      if (entry.priority != null)
+        parts.push(`    <priority>${entry.priority.toFixed(1)}</priority>`);
       return `  <url>\n${parts.join('\n')}\n  </url>`;
     })
     .join('\n');

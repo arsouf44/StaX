@@ -16,9 +16,9 @@ const panelVariants = cva('relative rounded-[var(--radius-lg)]', {
       /** Pose a plat dans la page : le plus discret. */
       1: 'glass-1',
       /** Carte autonome : le cas courant. */
-      2: 'glass-2 glass-edge',
+      2: 'glass-edge glass-2',
       /** Flottant au-dessus du contenu : menu, dialogue, panneau. */
-      3: 'glass-3 glass-edge',
+      3: 'glass-edge glass-3',
       /** Surface pleine, sans flou : tableaux denses et longues listes. */
       solid: 'border border-[var(--border)] bg-[var(--surface)]',
       /** Creux : champ de saisie, zone de code, encart. */
@@ -40,8 +40,7 @@ const panelVariants = cva('relative rounded-[var(--radius-lg)]', {
 });
 
 export interface PanelProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof panelVariants> {}
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof panelVariants> {}
 
 export const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel(
   { className, level, padding, interactive, ...props },
@@ -196,7 +195,7 @@ export function SectionHeading({
       ) : null}
       <Tag
         className={cn(
-          'text-balance font-medium tracking-[-0.03em]',
+          'font-medium tracking-[-0.03em] text-balance',
           Tag === 'h1' ? 'text-4xl sm:text-5xl lg:text-6xl' : 'text-3xl sm:text-4xl',
         )}
       >
@@ -205,7 +204,7 @@ export function SectionHeading({
       {description ? (
         <p
           className={cn(
-            'mt-5 text-pretty text-lg leading-relaxed text-[var(--foreground-muted)]',
+            'mt-5 text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]',
             align === 'center' && 'mx-auto',
           )}
         >

@@ -270,7 +270,9 @@
     font-feature-settings: 'cv11', 'ss01';
     font-variation-settings: normal;
     min-height: 100dvh;
-    overflow-x: hidden;
+    /* `clip` et non `hidden` : `hidden` ferait du body un conteneur de
+       defilement, ce qui neutraliserait `position: sticky` sur toute la page. */
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4, h5, h6 {

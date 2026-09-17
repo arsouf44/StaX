@@ -319,10 +319,10 @@ $$;
 revoke all on function app.request_refund(uuid, text, int, int) from anon;
 
 comment on function app.request_refund(uuid, text, int, int) is
-  'Cree une demande de remboursement avec une eligibilite calculee cote serveur. '
-  'La retenue domaine n''est appliquee que si un domaine a effectivement ete achete. '
-  'Cette regle commerciale ne remplace aucune obligation legale : le texte de '
-  'reference reste configurable et doit etre valide juridiquement.';
+  'Créé une demande de remboursement avec une éligibilité calculée cote serveur. '
+  'La retenue domaine n''est appliquée que si un domaine a effectivement ete acheté. '
+  'Cette règle commerciale ne remplacé aucune obligation légale : le texte de '
+  'reference reste configurable et doit être validé juridiquement.';
 
 -- -----------------------------------------------------------------------------
 --  Verrou : etat d'abonnement non modifiable depuis une session cliente

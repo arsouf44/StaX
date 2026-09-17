@@ -431,7 +431,7 @@ create trigger payments_touch_updated_at
   for each row execute function app.touch_updated_at();
 
 comment on table public.payments is
-  'Aucun numero de carte, aucun CVC, aucune donnee PCI sensible n''est stocke ici : '
+  'Aucun numéro de carte, aucun CVC, aucune donnee PCI sensible n''est stocké ici : '
   'uniquement des identifiants Stripe, un montant et un statut.';
 
 -- -----------------------------------------------------------------------------

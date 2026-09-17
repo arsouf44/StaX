@@ -15,12 +15,7 @@ import type { UUID } from '@stax/types';
  */
 
 export type AnalyticsEventKind =
-  | 'pageview'
-  | 'form_submit'
-  | 'booking'
-  | 'purchase'
-  | 'click'
-  | 'outbound';
+  'pageview' | 'form_submit' | 'booking' | 'purchase' | 'click' | 'outbound';
 
 export interface AnalyticsEventInput {
   siteId: UUID;

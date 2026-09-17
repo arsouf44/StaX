@@ -73,7 +73,10 @@ export async function startImpersonation(
   const reason = input.reason.trim();
   if (reason.length < 10) {
     return err(
-      appError('validation', 'Indiquez un motif precis (10 caracteres minimum) avant de continuer.'),
+      appError(
+        'validation',
+        'Indiquez un motif précis (10 caractères minimum) avant de continuer.',
+      ),
     );
   }
 
@@ -97,7 +100,9 @@ export async function startImpersonation(
     .single();
 
   if (error || !data) {
-    return err(appError('internal', 'Impossible d ouvrir la session d assistance.', { cause: error }));
+    return err(
+      appError('internal', 'Impossible d ouvrir la session d assistance.', { cause: error }),
+    );
   }
 
   await db.rpc('write_audit', {

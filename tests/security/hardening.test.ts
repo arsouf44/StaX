@@ -74,8 +74,16 @@ describe('liens de contenu', () => {
 describe('SSRF', () => {
   it('identifie les hotes internes', () => {
     for (const host of [
-      'localhost', '127.0.0.1', '10.0.0.5', '192.168.1.1', '172.16.0.1',
-      '169.254.169.254', 'metadata.google.internal', '::1', 'db.internal', 'printer.local',
+      'localhost',
+      '127.0.0.1',
+      '10.0.0.5',
+      '192.168.1.1',
+      '172.16.0.1',
+      '169.254.169.254',
+      'metadata.google.internal',
+      '::1',
+      'db.internal',
+      'printer.local',
     ]) {
       expect(isPrivateHost(host)).toBe(true);
     }
@@ -286,9 +294,9 @@ describe('televersement de fichiers', () => {
   });
 
   it('refuse un executable ou une page HTML deguises', () => {
-    expect(validateUpload({ fileName: 'x.html', mimeType: 'text/html', sizeBytes: 100 }).valid).toBe(
-      false,
-    );
+    expect(
+      validateUpload({ fileName: 'x.html', mimeType: 'text/html', sizeBytes: 100 }).valid,
+    ).toBe(false);
     expect(
       validateUpload({ fileName: 'x.php', mimeType: 'application/x-httpd-php', sizeBytes: 100 })
         .valid,

@@ -24,7 +24,10 @@ export interface SiteTemplate {
   theme: { preset: string; fontHeading: string; fontBody: string; accent: string };
   modules: readonly string[];
   pages: TemplatePage[];
-  navigation: { primary: { label: string; path: string }[]; footer: { label: string; path: string }[] };
+  navigation: {
+    primary: { label: string; path: string }[];
+    footer: { label: string; path: string }[];
+  };
 }
 
 /** Textes d amorce par metier. Jamais de faux chiffre, jamais de Lorem Ipsum. */
@@ -35,15 +38,14 @@ function heroCopy(business: BusinessDefinition): { title: string; subtitle: stri
   if (sector === 'restauration') {
     return {
       title: 'Une cuisine qui vous ressemble',
-      subtitle:
-        'Decouvrez notre carte, nos horaires et reservez votre table en quelques secondes.',
+      subtitle: 'Decouvrez notre carte, nos horaires et reservez votre table en quelques secondes.',
     };
   }
   if (sector === 'beaute-bien-etre') {
     return {
       title: 'Prenez soin de vous',
       subtitle:
-        'Nos prestations, nos tarifs et nos disponibilites. Prenez rendez-vous en ligne, a toute heure.',
+        'Nos prestations, nos tarifs et nos disponibilités. Prenez rendez-vous en ligne, a toute heure.',
     };
   }
   if (sector === 'artisanat') {
@@ -56,7 +58,7 @@ function heroCopy(business: BusinessDefinition): { title: string; subtitle: stri
   if (sector === 'commerce') {
     return {
       title: 'Notre boutique, en ligne aussi',
-      subtitle: 'Parcourez notre selection, commandez et retirez sur place ou faites-vous livrer.',
+      subtitle: 'Parcourez notre sélection, commandez et retirez sur place ou faites-vous livrer.',
     };
   }
   if (sector === 'immobilier') {
@@ -69,34 +71,35 @@ function heroCopy(business: BusinessDefinition): { title: string; subtitle: stri
   if (sector === 'hebergement-tourisme') {
     return {
       title: 'Un sejour dont on se souvient',
-      subtitle: 'Nos chambres, nos services et nos disponibilites. Reservez directement, sans intermediaire.',
+      subtitle:
+        'Nos chambres, nos services et nos disponibilités. Réservez directement, sans intermediaire.',
     };
   }
   if (sector === 'sante') {
     return {
-      title: 'Votre sante entre de bonnes mains',
-      subtitle: 'Informations pratiques, soins proposes et prise de rendez-vous en ligne.',
+      title: 'Votre santé entre de bonnes mains',
+      subtitle: 'Informations pratiques, soins proposés et prise de rendez-vous en ligne.',
     };
   }
   if (sector === 'associations') {
     return {
       title: 'Agissons ensemble',
-      subtitle: 'Nos actions, nos evenements et toutes les facons de nous rejoindre.',
+      subtitle: 'Nos actions, nos événements et toutes les façons de nous rejoindre.',
     };
   }
   return {
     title: `Votre ${name}, a votre service`,
     subtitle:
-      'Presentez votre activite, vos prestations et vos coordonnees. Vos clients vous trouvent et vous contactent.',
+      'Présentez votre activité, vos prestations et vos coordonnees. Vos clients vous trouvent et vous contactent.',
   };
 }
 
 function ctaCopy(business: BusinessDefinition): { title: string; subtitle: string; label: string } {
   if (business.modules.includes('booking')) {
     return {
-      title: 'Reservez en quelques secondes',
+      title: 'Réservez en quelques secondes',
       subtitle: 'Choisissez votre creneau, nous confirmons rapidement.',
-      label: 'Reserver',
+      label: 'Réserver',
     };
   }
   if (business.modules.includes('quotes')) {
@@ -108,7 +111,7 @@ function ctaCopy(business: BusinessDefinition): { title: string; subtitle: strin
   }
   return {
     title: 'Une question ?',
-    subtitle: 'Ecrivez-nous, nous repondons rapidement.',
+    subtitle: 'Écrivez-nous, nous répondons rapidement.',
     label: 'Nous contacter',
   };
 }
@@ -147,7 +150,14 @@ export function buildTemplateForBusiness(businessTypeSlug: string): SiteTemplate
           actions: [
             { label: cta.label, href: '/contact', style: 'primary', external: false },
             ...(modules.has('services')
-              ? [{ label: 'Nos prestations', href: '/prestations', style: 'secondary', external: false }]
+              ? [
+                  {
+                    label: 'Nos prestations',
+                    href: '/prestations',
+                    style: 'secondary',
+                    external: false,
+                  },
+                ]
               : modules.has('restaurant-menu')
                 ? [{ label: 'Voir la carte', href: '/carte', style: 'secondary', external: false }]
                 : []),
@@ -166,7 +176,7 @@ export function buildTemplateForBusiness(businessTypeSlug: string): SiteTemplate
             {
               kind: 'paragraph',
               text:
-                'Presentez votre histoire, votre equipe et ce qui fait votre difference. ' +
+                'Présentez votre histoire, votre équipe et ce qui fait votre difference. ' +
                 'Un texte sincere vaut mieux qu un discours generique.',
             },
           ],
@@ -177,32 +187,56 @@ export function buildTemplateForBusiness(businessTypeSlug: string): SiteTemplate
         overrides = {
           title: 'Pourquoi nous choisir',
           items: [
-            { icon: 'clock', title: 'Reactivite', description: 'Nous repondons rapidement a chaque demande.' },
-            { icon: 'shield-check', title: 'Travail soigne', description: 'Un resultat a la hauteur de vos attentes.' },
-            { icon: 'heart-handshake', title: 'Ecoute', description: 'Nous prenons le temps de comprendre votre besoin.' },
+            {
+              icon: 'clock',
+              title: 'Réactivité',
+              description: 'Nous répondons rapidement a chaque demande.',
+            },
+            {
+              icon: 'shield-check',
+              title: 'Travail soigne',
+              description: 'Un résultat a la hauteur de vos attentes.',
+            },
+            {
+              icon: 'heart-handshake',
+              title: 'Ecoute',
+              description: 'Nous prenons le temps de comprendre votre besoin.',
+            },
           ],
         };
       } else if (blockType === 'process') {
         overrides = {
           title: 'Comment ca se passe',
           steps: [
-            { title: 'Premier contact', description: 'Vous nous expliquez votre besoin, par telephone ou via le formulaire.' },
-            { title: 'Proposition', description: 'Nous vous adressons une proposition claire et detaillee.' },
-            { title: 'Realisation', description: 'Nous intervenons a la date convenue.' },
+            {
+              title: 'Premier contact',
+              description: 'Vous nous expliquez votre besoin, par téléphone ou via le formulaire.',
+            },
+            {
+              title: 'Proposition',
+              description: 'Nous vous adressons une proposition claire et détaillée.',
+            },
+            { title: 'Réalisation', description: 'Nous intervenons a la date convenue.' },
           ],
         };
       } else if (blockType === 'faq') {
         overrides = {
-          title: 'Questions frequentes',
+          title: 'Questions fréquentes',
           items: [
-            { question: 'Quels sont vos horaires ?', answer: 'Retrouvez nos horaires detailles en bas de cette page.' },
-            { question: 'Comment vous contacter ?', answer: 'Par telephone, par e-mail ou via le formulaire de contact.' },
+            {
+              question: 'Quels sont vos horaires ?',
+              answer: 'Retrouvez nos horaires détaillés en bas de cette page.',
+            },
+            {
+              question: 'Comment vous contacter ?',
+              answer: 'Par téléphone, par e-mail ou via le formulaire de contact.',
+            },
           ],
         };
       } else if (blockType === 'contact') {
         overrides = {
           title: 'Contactez-nous',
-          subtitle: 'Nous vous repondons dans les meilleurs delais.',
+          subtitle: 'Nous vous répondons dans les meilleurs délais.',
         };
       }
 
@@ -242,7 +276,7 @@ export function buildTemplateForBusiness(businessTypeSlug: string): SiteTemplate
         ...navPages.map((page) => ({ label: page.title, path: page.path })),
       ],
       footer: [
-        { label: 'Mentions legales', path: '/mentions-legales' },
+        { label: 'Mentions légales', path: '/mentions-legales' },
         { label: 'Confidentialite', path: '/confidentialite' },
       ],
     },

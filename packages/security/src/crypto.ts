@@ -55,11 +55,17 @@ export async function hmacHex(value: string, domainSeparator: string): Promise<s
 /** Comparaison a temps constant : empeche les attaques temporelles. */
 export function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
-    // Compare quand meme pour ne pas reveler la longueur par le temps de reponse.
-    let dummy = 0;
-    for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
-      dummy |= (a.charCodeAt(i % a.length) || 0) ^ (b.charCodeAt(i % b.length) || 0);
+    // On compare malgre tout, pour que le temps de reponse ne revele pas la
+    // difference de longueur. Le resultat est volontairement ignore.
+    let sink = 0;
+    const span = Math.max(a.length, b.length, 1);
+    for (let i = 0; i < span; i += 1) {
+      sink |=
+        (a.charCodeAt(i % Math.max(a.length, 1)) || 0) ^
+        (b.charCodeAt(i % Math.max(b.length, 1)) || 0);
     }
+    // Empeche le moteur d'eliminer la boucle comme code mort.
+    if (sink === Number.MIN_SAFE_INTEGER) return false;
     return false;
   }
   let diff = 0;
@@ -104,7 +110,8 @@ export function generateActivationCode(groups = 3, groupSize = 4): string {
   for (let i = 0; i < total; i += 1) {
     // Rejet du biais modulo negligeable ici : l'alphabet divise 248 presque
     // uniformement, et l'entropie reste tres au-dela du necessaire.
-    chars.push(CODE_ALPHABET[bytes[i]! % CODE_ALPHABET.length]!);
+    const byte = bytes[i] ?? 0;
+    chars.push(CODE_ALPHABET.charAt(byte % CODE_ALPHABET.length));
   }
   return Array.from({ length: groups }, (_, g) =>
     chars.slice(g * groupSize, (g + 1) * groupSize).join(''),

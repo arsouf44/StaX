@@ -7,9 +7,9 @@
  * bibliotheque.
  */
 const SCRIPT = `(function(){try{
-var s=localStorage.getItem('stax-theme');
+var s=localStorage.getItem('stax-thème');
 var m=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
-document.documentElement.setAttribute('data-theme', s==='light'||s==='dark'?s:(s==='system'?m:'dark'));
+document.documentElement.setAttribute('data-thème', s==='light'||s==='dark'?s:(s==='system'?m:'dark'));
 }catch(e){}})();`;
 
 export function ThemeScript() {

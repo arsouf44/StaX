@@ -26,12 +26,7 @@ export type ModuleId =
   | 'donations';
 
 export type ModuleCategory =
-  | 'content'
-  | 'commerce'
-  | 'booking'
-  | 'crm'
-  | 'marketing'
-  | 'operations';
+  'content' | 'commerce' | 'booking' | 'crm' | 'marketing' | 'operations';
 
 export interface ModuleDefinition {
   id: ModuleId;

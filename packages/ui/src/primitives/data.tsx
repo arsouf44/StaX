@@ -61,7 +61,7 @@ export function TH({ className, ...props }: ThHTMLAttributes<HTMLTableCellElemen
     <th
       scope="col"
       className={cn(
-        'px-4 py-3 text-left text-xs font-medium tracking-wide text-[var(--muted)] whitespace-nowrap uppercase',
+        'px-4 py-3 text-left text-xs font-medium tracking-wide whitespace-nowrap text-[var(--muted)] uppercase',
         className,
       )}
       {...props}
@@ -127,7 +127,10 @@ export function Stat({ label, value, hint, deltaBps, invertDelta, icon, classNam
             >
               <path d="M6 2 10 8H2L6 2Z" />
             </svg>
-            {Math.abs(deltaBps / 100).toFixed(1).replace('.', ',')} %
+            {Math.abs(deltaBps / 100)
+              .toFixed(1)
+              .replace('.', ',')}{' '}
+            %
           </span>
         ) : null}
         {hint ? <span className="text-[var(--muted)]">{hint}</span> : null}
@@ -154,7 +157,10 @@ export function Breadcrumb({ items, className }: { items: BreadcrumbItem[]; clas
                   {item.label}
                 </a>
               ) : (
-                <span aria-current={isLast ? 'page' : undefined} className="text-[var(--foreground)]">
+                <span
+                  aria-current={isLast ? 'page' : undefined}
+                  className="text-[var(--foreground)]"
+                >
                   {item.label}
                 </span>
               )}
@@ -323,8 +329,18 @@ export function Avatar({
       aria-hidden="true"
     >
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" width={size} height={size} className="size-full object-cover" />
+        /* Composant de bibliotheque, independant du framework : pas de
+           composant Image de Next ici. L'attribut alt est vide car l'avatar
+           est purement decoratif — le nom figure toujours a cote. */
+        <img
+          src={src}
+          alt=""
+          width={size}
+          height={size}
+          className="size-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
       ) : (
         initials || '?'
       )}

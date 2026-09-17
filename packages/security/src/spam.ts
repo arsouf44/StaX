@@ -27,9 +27,21 @@ export interface SpamVerdict {
 }
 
 const SPAM_PATTERNS: ReadonlyArray<{ pattern: RegExp; weight: number; reason: string }> = [
-  { pattern: /\b(?:viagra|cialis|casino|porn|xxx)\b/i, weight: 0.5, reason: 'vocabulaire typique de pourriel' },
-  { pattern: /\b(?:seo|backlink|referencement garanti|premiere page de google)\b/i, weight: 0.3, reason: 'demarchage SEO' },
-  { pattern: /\b(?:crypto|bitcoin|forex|investissement garanti)\b/i, weight: 0.3, reason: 'demarchage financier' },
+  {
+    pattern: /\b(?:viagra|cialis|casino|porn|xxx)\b/i,
+    weight: 0.5,
+    reason: 'vocabulaire typique de pourriel',
+  },
+  {
+    pattern: /\b(?:seo|backlink|referencement garanti|premiere page de google)\b/i,
+    weight: 0.3,
+    reason: 'demarchage SEO',
+  },
+  {
+    pattern: /\b(?:crypto|bitcoin|forex|investissement garanti)\b/i,
+    weight: 0.3,
+    reason: 'demarchage financier',
+  },
   { pattern: /(?:https?:\/\/[^\s]+){4,}/i, weight: 0.4, reason: 'nombre excessif de liens' },
   { pattern: /<\s*a\s+href/i, weight: 0.3, reason: 'balisage HTML dans le message' },
   { pattern: /\[url[=\]]/i, weight: 0.4, reason: 'balisage BBCode' },
@@ -48,7 +60,7 @@ export function scoreSubmission(signals: SpamSignals): SpamVerdict {
   // Moins de deux secondes : aucun humain n'a lu le formulaire.
   if (typeof signals.elapsedMs === 'number' && signals.elapsedMs >= 0 && signals.elapsedMs < 2000) {
     score += 0.4;
-    reasons.push('formulaire envoye trop vite');
+    reasons.push('formulaire envoyé trop vite');
   }
 
   const message = signals.message ?? '';
@@ -61,12 +73,11 @@ export function scoreSubmission(signals: SpamSignals): SpamVerdict {
 
   if (message.length > 0 && message.length < 12) {
     score += 0.15;
-    reasons.push('message tres court');
+    reasons.push('message très court');
   }
 
-  const upperRatio = message.length > 30
-    ? (message.match(/[A-Z]/g)?.length ?? 0) / message.length
-    : 0;
+  const upperRatio =
+    message.length > 30 ? (message.match(/[A-Z]/g)?.length ?? 0) / message.length : 0;
   if (upperRatio > 0.6) {
     score += 0.2;
     reasons.push('message majoritairement en capitales');
@@ -74,7 +85,7 @@ export function scoreSubmission(signals: SpamSignals): SpamVerdict {
 
   if ((signals.recentSubmissions ?? 0) > 3) {
     score += 0.3;
-    reasons.push('envois repetes depuis la meme origine');
+    reasons.push('envois répétés depuis la même origine');
   }
 
   const email = signals.email ?? '';

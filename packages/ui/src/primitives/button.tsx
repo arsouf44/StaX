@@ -30,17 +30,16 @@ const buttonVariants = cva(
         primary:
           'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_1px_0_0_rgb(255_255_255/0.2)_inset] hover:opacity-90',
         secondary:
-          'border border-[var(--border-strong)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]',
+          'border border-[var(--border-strong)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]',
         glass:
-          'glass-2 glass-edge text-[var(--foreground)] hover:bg-[color-mix(in_oklab,var(--glass-2),var(--foreground)_6%)]',
+          'glass-edge text-[var(--foreground)] glass-2 hover:bg-[color-mix(in_oklab,var(--glass-2),var(--foreground)_6%)]',
         ghost:
           'text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]',
         outline:
           'border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface)]',
         danger:
           'bg-[var(--danger)] text-white hover:opacity-90 focus-visible:outline-[var(--danger)]',
-        link:
-          'h-auto p-0 text-[var(--foreground)] underline underline-offset-4 decoration-[var(--border-strong)] hover:decoration-[var(--foreground)]',
+        link: 'h-auto p-0 text-[var(--foreground)] underline decoration-[var(--border-strong)] underline-offset-4 hover:decoration-[var(--foreground)]',
       },
       size: {
         sm: 'h-9 rounded-[var(--radius-sm)] px-3 text-sm',
@@ -57,8 +56,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   /** Affiche un indicateur et neutralise le bouton, sans changer sa largeur. */
   loading?: boolean;
   loadingLabel?: string;
@@ -131,8 +129,7 @@ export { buttonVariants };
  * comportement attendu des lecteurs d ecran.
  */
 export interface ButtonLinkProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement>, VariantProps<typeof buttonVariants> {
   iconLeft?: ReactNode;
   iconRight?: ReactNode;
 }

@@ -168,11 +168,7 @@ export type ConnectStatus = (typeof CONNECT_STATUSES)[number];
 
 export type PrivacyRequestKind = 'export' | 'deletion' | 'rectification' | 'objection';
 export type PrivacyRequestStatus =
-  | 'received'
-  | 'verifying'
-  | 'in_progress'
-  | 'completed'
-  | 'refused';
+  'received' | 'verifying' | 'in_progress' | 'completed' | 'refused';
 
 export type WebhookStatus = 'received' | 'processing' | 'processed' | 'failed' | 'ignored';
 

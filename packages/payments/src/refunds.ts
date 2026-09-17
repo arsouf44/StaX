@@ -4,7 +4,7 @@ import type { Cents, Currency, RefundRequestStatus } from '@stax/types';
  * Politique commerciale de remboursement.
  *
  * LEGAL_REVIEW_REQUIRED — Cette regle est une GARANTIE COMMERCIALE offerte par
- * StaX. Elle s'ajoute aux droits legaux du client et ne s'y substitue jamais :
+ * StaX. Elle s'ajouté aux droits légaux du client et ne s'y substitue jamais :
  * un professionnel ne beneficie pas du droit de retractation de l'article
  * L.221-18 du Code de la consommation dans les memes conditions qu'un
  * consommateur, et aucune stipulation contractuelle ne peut ecarter les
@@ -87,7 +87,7 @@ export function computeRefundEligibility(input: RefundEligibilityInput): RefundE
     return {
       eligible: null,
       reason:
-        "Votre site n'a pas encore ete mis en ligne : la periode de garantie n'a pas commence. " +
+        "Votre site n'a pas encore ete mis en ligne : la période de garantie n'a pas commence. " +
         'Contactez-nous, nous etudierons votre demande au cas par cas.',
       deadlineAt: null,
       daysRemaining: null,
@@ -105,11 +105,11 @@ export function computeRefundEligibility(input: RefundEligibilityInput): RefundE
   return {
     eligible,
     reason: eligible
-      ? `Demande recue dans la periode de garantie de ${policy.windowDays} jours ` +
+      ? `Demande reçue dans la période de garantie de ${policy.windowDays} jours ` +
         `suivant la mise en ligne du ${formatDate(input.goLiveAt)}.`
-      : `La periode de garantie de ${policy.windowDays} jours a pris fin le ` +
-        `${formatDate(deadlineAt)}. Votre demande reste examinee par notre equipe, ` +
-        'et vos droits legaux ne sont pas affectes par cette regle commerciale.',
+      : `La période de garantie de ${policy.windowDays} jours a pris fin le ` +
+        `${formatDate(deadlineAt)}. Votre demande reste examinée par notre équipe, ` +
+        'et vos droits légaux ne sont pas affectés par cette règle commerciale.',
     deadlineAt,
     daysRemaining: eligible ? Math.max(daysRemaining, 0) : 0,
     amountPaidCents,
@@ -130,28 +130,22 @@ const REFUND_TRANSITIONS: Record<RefundRequestStatus, readonly RefundRequestStat
   refunded: [],
 };
 
-export function canTransitionRefund(
-  from: RefundRequestStatus,
-  to: RefundRequestStatus,
-): boolean {
+export function canTransitionRefund(from: RefundRequestStatus, to: RefundRequestStatus): boolean {
   return REFUND_TRANSITIONS[from].includes(to);
 }
 
-export function assertRefundTransition(
-  from: RefundRequestStatus,
-  to: RefundRequestStatus,
-): void {
+export function assertRefundTransition(from: RefundRequestStatus, to: RefundRequestStatus): void {
   if (!canTransitionRefund(from, to)) {
     throw new Error(`Transition de remboursement interdite : ${from} -> ${to}`);
   }
 }
 
 export const REFUND_STATUS_LABELS: Record<RefundRequestStatus, string> = {
-  requested: 'Demande recue',
+  requested: 'Demande reçue',
   under_review: 'En cours d’examen',
-  approved: 'Approuvee',
-  rejected: 'Refusee',
+  approved: 'Approuvée',
+  rejected: 'Refusée',
   processing: 'Remboursement en cours',
-  refunded: 'Remboursee',
-  failed: 'Echec du remboursement',
+  refunded: 'Remboursée',
+  failed: 'Échec du remboursement',
 };

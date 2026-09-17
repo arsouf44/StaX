@@ -39,7 +39,7 @@ export class ConsoleEmailProvider implements EmailProvider {
 
   async send(message: EmailMessage): Promise<EmailSendResult> {
     console.warn(
-      `[StaX][email:${message.template}] destinataire masque, sujet : ${message.subject}`,
+      `[StaX][email:${message.template}] destinataire masqué, sujet : ${message.subject}`,
     );
     return { ok: true, providerMessageId: `console-${Date.now()}`, skipped: true };
   }

@@ -86,9 +86,15 @@ export const UPLOAD_RULES: readonly UploadRule[] = [
  * fichiers produits par la plateforme (logos internes) sont servis en SVG.
  */
 export const REJECTED_ALWAYS = new Set([
-  'image/svg+xml', 'text/html', 'application/xhtml+xml', 'application/javascript',
-  'text/javascript', 'application/x-httpd-php', 'application/x-msdownload',
-  'application/x-sh', 'application/octet-stream',
+  'image/svg+xml',
+  'text/html',
+  'application/xhtml+xml',
+  'application/javascript',
+  'text/javascript',
+  'application/x-httpd-php',
+  'application/x-msdownload',
+  'application/x-sh',
+  'application/octet-stream',
 ]);
 
 export interface UploadValidationInput {
@@ -125,7 +131,10 @@ export function validateUpload(input: UploadValidationInput): UploadValidationRe
   const mimeType = input.mimeType.toLowerCase().split(';')[0]?.trim() ?? '';
 
   if (REJECTED_ALWAYS.has(mimeType)) {
-    return { valid: false, error: 'Ce type de fichier n’est pas autorise pour des raisons de securite.' };
+    return {
+      valid: false,
+      error: 'Ce type de fichier n’est pas autorisé pour des raisons de sécurité.',
+    };
   }
 
   const rule = UPLOAD_RULES.find((r) => r.mimeType === mimeType);

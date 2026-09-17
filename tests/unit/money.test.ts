@@ -57,8 +57,11 @@ describe('arithmetique monetaire', () => {
   });
 
   it('formate en francais', () => {
-    expect(formatMoney(23999).replace(/ | /g, ' ')).toBe('239,99 €');
-    expect(formatMoney(1400, 'EUR', { hideDecimalsWhenRound: true }).replace(/ | /g, ' ')).toBe('14 €');
-    expect(formatMonthly(3200).replace(/ | /g, ' ')).toBe('32 € / mois');
+    // Intl insere une espace insecable etroite avant le symbole monetaire :
+    // on la normalise pour que l'assertion reste lisible dans le code source.
+    const normalize = (value: string) => value.replace(/\u202f|\u00a0/g, ' ');
+    expect(normalize(formatMoney(23999))).toBe('239,99 \u20ac');
+    expect(normalize(formatMoney(1400, 'EUR', { hideDecimalsWhenRound: true }))).toBe('14 \u20ac');
+    expect(normalize(formatMonthly(3200))).toBe('32 \u20ac / mois');
   });
 });

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../lib';
+import { useHasFinePointer, usePrefersReducedMotion } from '../hooks';
 
 /**
  * Mouvement.
@@ -13,18 +14,6 @@ import { cn } from '../lib';
  *  3. tout se fait par `transform` et `opacity`, jamais par des proprietes qui
  *     declenchent un recalcul de mise en page.
  */
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(query.matches);
-    const listener = (event: MediaQueryListEvent) => setReduced(event.matches);
-    query.addEventListener('change', listener);
-    return () => query.removeEventListener('change', listener);
-  }, []);
-  return reduced;
-}
 
 export interface RevealProps {
   children: ReactNode;
@@ -38,13 +27,13 @@ export interface RevealProps {
 export function Reveal({ children, className, delay = 0, as: Tag = 'div' }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
-  const [revealed, setRevealed] = useState(false);
+  const [intersected, setIntersected] = useState(false);
+  // Valeur derivee : quand l'utilisateur demande moins d'animations, le
+  // contenu est visible immediatement, sans passer par un etat intermediaire.
+  const revealed = reduced || intersected;
 
   useEffect(() => {
-    if (reduced) {
-      setRevealed(true);
-      return;
-    }
+    if (reduced) return;
     const element = ref.current;
     if (!element) return;
 
@@ -52,7 +41,7 @@ export function Reveal({ children, className, delay = 0, as: Tag = 'div' }: Reve
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            setRevealed(true);
+            setIntersected(true);
             observer.disconnect();
           }
         }
@@ -134,12 +123,12 @@ export function Parallax({
 export function PointerGlow({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
+  const finePointer = useHasFinePointer();
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || !finePointer) return;
     const element = ref.current;
     if (!element) return;
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
     const onMove = (event: PointerEvent) => {
       const rect = element.getBoundingClientRect();
@@ -148,7 +137,7 @@ export function PointerGlow({ children, className }: { children: ReactNode; clas
     };
     element.addEventListener('pointermove', onMove);
     return () => element.removeEventListener('pointermove', onMove);
-  }, [reduced]);
+  }, [reduced, finePointer]);
 
   return (
     <div ref={ref} className={cn('cursor-glow', className)}>
@@ -172,16 +161,16 @@ export function AnimatedNumber({
   className?: string;
   durationMs?: number;
 }) {
-  const [display, setDisplay] = useState(value);
+  const [animated, setAnimated] = useState<number | null>(null);
   const reduced = usePrefersReducedMotion();
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
+  // Sans animation, ou avant l'entree dans le champ de vision, on affiche
+  // directement la valeur reelle : aucune donnee n'est jamais inventee.
+  const display = reduced || animated === null ? value : animated;
 
   useEffect(() => {
-    if (reduced) {
-      setDisplay(value);
-      return;
-    }
+    if (reduced) return;
     const element = ref.current;
     if (!element) return;
 
@@ -197,9 +186,9 @@ export function AnimatedNumber({
         const progress = Math.min((now - startedAt) / durationMs, 1);
         // Courbe d attenuation : demarrage rapide, arret net sur la valeur exacte.
         const eased = 1 - Math.pow(1 - progress, 3);
-        setDisplay(Math.round(from + (value - from) * eased));
+        setAnimated(Math.round(from + (value - from) * eased));
         if (progress < 1) requestAnimationFrame(step);
-        else setDisplay(value);
+        else setAnimated(value);
       };
       requestAnimationFrame(step);
     });

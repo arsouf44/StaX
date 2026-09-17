@@ -27,7 +27,6 @@ export function clearEnvSource(): void {
 }
 
 function processEnv(): EnvSource {
-  // eslint-disable-next-line no-restricted-properties
   return typeof process !== 'undefined' && process.env ? (process.env as EnvSource) : {};
 }
 
@@ -69,7 +68,7 @@ export function isProduction(): boolean {
 export function assertServerOnly(moduleName: string): void {
   if (isBrowser()) {
     throw new Error(
-      `[StaX] ${moduleName} est un module serveur et ne doit jamais etre importe cote navigateur.`,
+      `[StaX] ${moduleName} est un module serveur et ne doit jamais être importe cote navigateur.`,
     );
   }
 }

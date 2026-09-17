@@ -210,7 +210,9 @@ export async function listVersions(db: Db, siteId: UUID, limit = 30): Promise<Si
   return unwrapList<SiteVersion>(
     (await db
       .from('site_versions')
-      .select('id, site_id, version_number, label, content_hash, published_at, published_by, scheduled_for, created_by, created_at')
+      .select(
+        'id, site_id, version_number, label, content_hash, published_at, published_by, scheduled_for, created_by, created_at',
+      )
       .eq('site_id', siteId)
       .order('version_number', { ascending: false })
       .limit(limit)) as never,

@@ -39,7 +39,12 @@ export const orderQuestionnaireSchema = z
     // Reponses libres, bornees pour ne pas permettre un envoi massif.
     answers: z.record(
       z.string().max(60),
-      z.union([z.string().max(5000), z.number(), z.boolean(), z.array(z.string().max(200)).max(30)]),
+      z.union([
+        z.string().max(5000),
+        z.number(),
+        z.boolean(),
+        z.array(z.string().max(200)).max(30),
+      ]),
     ),
   })
   .strict();
@@ -53,9 +58,7 @@ export const orderDomainSchema = z
   .strict()
   .refine(
     (data) =>
-      data.handling === 'none' ||
-      data.handling === 'subdomain_only' ||
-      Boolean(data.hostname),
+      data.handling === 'none' || data.handling === 'subdomain_only' || Boolean(data.hostname),
     { message: 'Indiquez le nom de domaine souhaite.', path: ['hostname'] },
   )
   .refine((data) => data.handling !== 'subdomain_only' || Boolean(data.subdomain), {
@@ -81,12 +84,17 @@ export const checkoutSchema = z
     questionnaire: z
       .record(
         z.string().max(60),
-        z.union([z.string().max(5000), z.number(), z.boolean(), z.array(z.string().max(200)).max(30)]),
+        z.union([
+          z.string().max(5000),
+          z.number(),
+          z.boolean(),
+          z.array(z.string().max(200)).max(30),
+        ]),
       )
       .default({}),
     customerNotes: optionalText(2000),
     acceptTerms: z.literal(true, {
-      message: 'Vous devez accepter les conditions generales de vente.',
+      message: 'Vous devez accepter les conditions générales de vente.',
     }),
     // Version exacte des CGV affichee au client : conservee comme preuve.
     termsVersion: z.string().min(1).max(20),
@@ -115,7 +123,7 @@ export const cancelSubscriptionSchema = z
       'other',
     ]),
     comment: optionalText(2000),
-    confirm: z.literal(true, { message: 'Confirmez la resiliation.' }),
+    confirm: z.literal(true, { message: 'Confirmez la résiliation.' }),
   })
   .strict();
 

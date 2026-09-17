@@ -50,10 +50,7 @@ export function isCouponUsable(coupon: CouponInput, planSlug: string, now = new 
   if (coupon.isActive === false) return false;
   if (coupon.validFrom && coupon.validFrom > now) return false;
   if (coupon.validUntil && coupon.validUntil <= now) return false;
-  if (
-    coupon.maxRedemptions != null &&
-    (coupon.redeemedCount ?? 0) >= coupon.maxRedemptions
-  ) {
+  if (coupon.maxRedemptions != null && (coupon.redeemedCount ?? 0) >= coupon.maxRedemptions) {
     return false;
   }
   if (coupon.planSlugs && coupon.planSlugs.length > 0 && !coupon.planSlugs.includes(planSlug)) {
@@ -83,9 +80,9 @@ export function computeOrderPricing(
   now = new Date(),
 ): PriceBreakdown {
   if (plan.isQuoteOnly) {
-    throw new Error('Une offre sur devis ne peut pas etre chiffree automatiquement.');
+    throw new Error('Une offre sur devis ne peut pas être chiffrée automatiquement.');
   }
-  assertCents(plan.setupPriceCents, 'prix de creation');
+  assertCents(plan.setupPriceCents, 'prix de création');
   assertCents(plan.monthlyPriceCents, 'prix de maintenance');
 
   const discountCents = computeDiscount(plan, coupon, now);

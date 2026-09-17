@@ -52,7 +52,7 @@ export async function verifyTurnstile(
     };
   } catch {
     // Turnstile injoignable : on ne bloque pas un client legitime pour autant.
-    // L'incident est journalise par l'appelant et la limitation de debit reste active.
+    // L'incident est journalisé par l'appelant et la limitation de debit reste active.
     return { success: true, skipped: true, errorCodes: ['verification-unreachable'] };
   }
 }

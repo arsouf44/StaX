@@ -8,7 +8,10 @@
  *    d'une entree utilisateur.
  */
 
-const CONTROL_CHARS = new RegExp('[\\u0000-\\u001f\\u007f]');
+// Detecter les caracteres de controle est le but : ils permettent l'injection
+// d'en-tetes HTTP dans une URL de redirection.
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS = /[\u0000-\u001f\u007f]/;
 const DIACRITICS = new RegExp('[\\u0300-\\u036f]', 'g');
 
 /**
@@ -92,7 +95,7 @@ export interface FetchGuardResult {
 
 /**
  * Autorise ou refuse une requete sortante vers une URL fournie par un
- * utilisateur (import d'image, verification d'un site existant...).
+ * utilisateur (import d'image, vérification d'un site existant...).
  */
 export function guardOutboundUrl(input: string): FetchGuardResult {
   let url: URL;
@@ -102,7 +105,7 @@ export function guardOutboundUrl(input: string): FetchGuardResult {
     return { allowed: false, reason: 'URL invalide.' };
   }
   if (url.protocol !== 'https:') {
-    return { allowed: false, reason: 'Seul le protocole HTTPS est autorise.' };
+    return { allowed: false, reason: 'Seul le protocole HTTPS est autorisé.' };
   }
   if (url.username || url.password) {
     return { allowed: false, reason: 'Les identifiants dans l’URL sont interdits.' };
@@ -111,7 +114,7 @@ export function guardOutboundUrl(input: string): FetchGuardResult {
     return { allowed: false, reason: 'Cette adresse designe une ressource interne.' };
   }
   if (url.port && url.port !== '443') {
-    return { allowed: false, reason: 'Seul le port 443 est autorise.' };
+    return { allowed: false, reason: 'Seul le port 443 est autorisé.' };
   }
   return { allowed: true, url };
 }
@@ -130,8 +133,7 @@ export function safeFileName(input: string, fallback = 'fichier'): string {
   return cleaned;
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
