@@ -20,6 +20,7 @@
     "@stax/config": "workspace:*",
     "@stax/database": "workspace:*",
     "@stax/emails": "workspace:*",
+    "@stax/infrastructure": "workspace:*",
     "@stax/payments": "workspace:*",
     "@stax/security": "workspace:*",
     "@stax/site-engine": "workspace:*",

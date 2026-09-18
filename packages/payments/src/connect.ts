@@ -48,7 +48,7 @@ export async function createConnectedAccount(input: CreateConnectedAccountInput)
 /** Lien d'onboarding Stripe (KYC). Toujours a usage unique et de courte duree. */
 export async function createOnboardingLink(
   stripeAccountId: string,
-  returnPath = '/app/payments',
+  returnPath = '/app/paiements',
 ): Promise<string> {
   const stripe = getStripe();
   const base = platformUrl();
@@ -216,11 +216,11 @@ export async function createConnectCheckoutSession(params: {
 }
 
 export const CONNECT_STATUS_LABELS: Record<ConnectStatus, string> = {
-  not_started: 'Non configure',
+  not_started: 'Non configuré',
   onboarding: 'Configuration en cours',
   pending_verification: 'Vérification Stripe en cours',
   active: 'Actif',
-  restricted: 'Limite',
+  restricted: 'Limité',
   disabled: 'Désactivé',
 };
 
@@ -228,10 +228,10 @@ export const CONNECT_STATUS_HELP: Record<ConnectStatus, string> = {
   not_started: 'Activez les paiements pour encaisser directement sur votre compte bancaire.',
   onboarding: 'Terminez votre inscription Stripe pour pouvoir encaisser des paiements.',
   pending_verification:
-    'Stripe vérifié vos informations. Cela prend généralement moins de 24 heures.',
+    'Stripe vérifie vos informations. Cela prend généralement moins de 24 heures.',
   active: 'Vous pouvez encaisser des paiements. Les fonds arrivent sur votre compte bancaire.',
   restricted:
-    'Vos encaissements fonctionnent, mais vos virements sont bloques. Complétez les informations demandées par Stripe.',
+    'Vos encaissements fonctionnent, mais vos virements sont bloqués. Complétez les informations demandées par Stripe.',
   disabled:
     'Votre compte Stripe est désactivé. Consultez les informations demandées pour le réactiver.',
 };

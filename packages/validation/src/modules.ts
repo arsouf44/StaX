@@ -269,6 +269,16 @@ export const productSchema = z
     },
   );
 
+export const productCategorySchema = z
+  .object({
+    name: boundedText(1, 80, 'Le nom de la catégorie'),
+    slug: slugSchema.optional(),
+    description: optionalText(400),
+    imageMediaId: uuidSchema.nullable().optional(),
+    isVisible: z.boolean().default(true),
+  })
+  .strict();
+
 export const productVariantSchema = z
   .object({
     productId: uuidSchema,
@@ -455,3 +465,48 @@ export const contactSchema = z
     message: 'Indiquez au moins un nom, un e-mail ou un téléphone.',
     path: ['email'],
   });
+
+/* --- Contenus editoriaux (articles, evenements, avis, realisations) ------ */
+
+export const CONTENT_COLLECTIONS = [
+  'article',
+  'event',
+  'portfolio',
+  'testimonial',
+  'faq',
+  'job',
+  'announcement',
+] as const;
+
+/**
+ * Entree de contenu.
+ *
+ * Une seule table sert les actualites, les evenements, les avis et les
+ * realisations : elles partagent la meme forme (titre, extrait, visuel, date)
+ * et ne different que par quelques attributs. Ceux-ci sont declares ici
+ * explicitement — `attributes` n'est jamais un fourre-tout ou le navigateur
+ * pourrait ecrire ce qu'il veut.
+ */
+export const contentEntrySchema = z
+  .object({
+    title: boundedText(2, 160, 'Le titre'),
+    slug: slugSchema.optional(),
+    excerpt: optionalText(400),
+    coverMediaId: uuidSchema.nullable().optional(),
+    tags: z.array(z.string().max(30)).max(12).default([]),
+    publishedAt: isoDateSchema.nullable().optional(),
+    isVisible: z.boolean().default(true),
+
+    /** Avis client : qui parle, et la note sur cinq. */
+    authorName: optionalText(80),
+    rating: z.number().int().min(1).max(5).nullable().optional(),
+
+    /** Evenement : quand et ou. */
+    startsOn: isoDateSchema.nullable().optional(),
+    location: optionalText(120),
+
+    /** Realisation : pour qui, et le lien public eventuel. */
+    clientName: optionalText(120),
+    externalUrl: z.string().trim().max(2048).optional().or(z.literal('')),
+  })
+  .strict();

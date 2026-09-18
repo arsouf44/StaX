@@ -5,6 +5,8 @@ import {
   assertCents,
   formatMoney,
   formatMonthly,
+  moneyInputValue,
+  parseMoneyInput,
   fromMajorUnits,
   grossFromNet,
   sumCents,
@@ -63,5 +65,37 @@ describe('arithmetique monetaire', () => {
     expect(normalize(formatMoney(23999))).toBe('239,99 \u20ac');
     expect(normalize(formatMoney(1400, 'EUR', { hideDecimalsWhenRound: true }))).toBe('14 \u20ac');
     expect(normalize(formatMonthly(3200))).toBe('32 \u20ac / mois');
+  });
+  it('lit un montant saisi a la main sans jamais passer par un flottant', () => {
+    expect(parseMoneyInput('12,50')).toBe(1250);
+    expect(parseMoneyInput('12.5')).toBe(1250);
+    expect(parseMoneyInput('39')).toBe(3900);
+    expect(parseMoneyInput('1\u00a0234,05')).toBe(123405);
+    expect(parseMoneyInput('239,99 \u20ac')).toBe(23999);
+    expect(parseMoneyInput('  ')).toBeNull();
+    expect(parseMoneyInput('')).toBeNull();
+  });
+
+  it('refuse une saisie qui ressemble a un montant sans en etre un', () => {
+    expect(() => parseMoneyInput('douze euros')).toThrow(MoneyError);
+    expect(() => parseMoneyInput('12,505')).toThrow(MoneyError);
+    expect(() => parseMoneyInput('12,,5')).toThrow(MoneyError);
+  });
+
+  it('evite l erreur de centime des flottants', () => {
+    // parseFloat('0.29') * 100 vaut 28.999999999999996 : arrondi a 29 ici,
+    // mais la lecture par chaine ne laisse aucune place au doute.
+    expect(parseMoneyInput('0,29')).toBe(29);
+    expect(parseMoneyInput('1,10')).toBe(110);
+    expect(parseMoneyInput('8,70')).toBe(870);
+  });
+
+  it('reaffiche un montant dans un champ de saisie sans perte', () => {
+    for (const cents of [0, 5, 29, 110, 1250, 23999, 99900]) {
+      expect(parseMoneyInput(moneyInputValue(cents))).toBe(cents);
+    }
+    expect(moneyInputValue(null)).toBe('');
+    expect(moneyInputValue(1250)).toBe('12,50');
+    expect(moneyInputValue(5)).toBe('0,05');
   });
 });

@@ -132,7 +132,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   quotes: {
     id: 'quotes',
     label: 'Demande de devis',
-    description: 'Un formulaire structuré qui qualifié vos demandes entrantes.',
+    description: 'Un formulaire structuré qui qualifie vos demandes entrantes.',
     icon: 'file-text',
     category: 'crm',
     requiredFeature: null,
@@ -203,7 +203,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   payments: {
     id: 'payments',
     label: 'Paiement en ligne',
-    description: 'Encaissez directement sur votre propre compte, sans intermediaire.',
+    description: 'Encaissez directement sur votre propre compte, sans intermédiaire.',
     icon: 'credit-card',
     category: 'commerce',
     requiredFeature: 'online_payments',

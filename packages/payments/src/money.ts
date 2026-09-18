@@ -117,3 +117,47 @@ export function formatBasisPoints(basisPoints: number, locale = 'fr-FR'): string
     maximumFractionDigits: 2,
   }).format(basisPoints / 10_000);
 }
+
+/**
+ * Lecture d'un montant saisi par un humain : « 12,50 », « 12.5 », « 1 234,05 »,
+ * « 39 € ».
+ *
+ * La conversion se fait par decoupage de chaine de caracteres, JAMAIS par un
+ * flottant intermediaire. `parseFloat('0.29') * 100` vaut 28.999999999999996 :
+ * une erreur d'un centime sur une facture est une erreur de trop.
+ *
+ * Renvoie `null` pour une saisie vide (« pas de prix », « sur devis »), et
+ * leve `MoneyError` pour une saisie qui ressemble a un montant sans en etre un.
+ */
+export function parseMoneyInput(input: string): Cents | null {
+  const cleaned = input
+    .replace(/[\s\u00a0\u202f]/g, '')
+    .replace(/[€]/g, '')
+    .replace(',', '.');
+
+  if (cleaned === '') return null;
+
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(cleaned);
+  if (!match) {
+    throw new MoneyError(`Montant illisible : « ${input} ». Exemple attendu : 12,50`);
+  }
+
+  const [, sign, units, fraction = ''] = match;
+  const centimes = Number.parseInt(fraction.padEnd(2, '0'), 10);
+  const cents = Number.parseInt(units ?? '0', 10) * 100 + centimes;
+
+  const signed = sign === '-' ? -cents : cents;
+  assertCents(signed);
+  return signed;
+}
+
+/** Montant pre-rempli dans un champ de saisie : « 12,50 », ou « » si absent. */
+export function moneyInputValue(amountCents: Cents | null | undefined): string {
+  if (amountCents == null) return '';
+  assertCents(amountCents);
+  const sign = amountCents < 0 ? '-' : '';
+  const absolute = Math.abs(amountCents);
+  const units = intDiv(absolute, 100);
+  const centimes = absolute % 100;
+  return `${sign}${units},${String(centimes).padStart(2, '0')}`;
+}

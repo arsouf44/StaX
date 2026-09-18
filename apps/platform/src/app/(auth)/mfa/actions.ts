@@ -114,7 +114,7 @@ export async function confirmMfaEnrollmentAction(
     };
   }
 
-  redirect('/app/parametres/securite?mfa=active');
+  redirect('/app/securite?mfa=active');
 }
 
 /** Valide le second facteur pour la session en cours. */

@@ -1,0 +1,4 @@
+{
+  "extends": "@stax/config/tsconfig/library",
+  "include": ["src/**/*.ts"]
+}
