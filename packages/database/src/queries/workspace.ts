@@ -8,6 +8,7 @@ import type {
   Subscription,
   UUID,
 } from '@stax/types';
+import { toCsv } from '@stax/security';
 import { type Db, unwrapList, unwrapMaybe } from '../client';
 
 /**
@@ -199,4 +200,165 @@ export async function loadWorkspace(
 
 export function workspaceCan(workspace: Workspace, capability: OrgCapability): boolean {
   return workspace.capabilities.includes(capability);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Export des donnees                                                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Prepare un export CSV.
+ *
+ * La requete est faite AVEC LE JETON DE LA PERSONNE : la RLS garantit que le
+ * fichier ne contient que ses propres donnees. Aucun filtre applicatif n est
+ * necessaire pour cela, et aucun ne pourrait le remplacer.
+ *
+ * Chaque cellule passe par `csvCell`, qui neutralise l injection de formule :
+ * un tableur execute une cellule commencant par `=`, `+`, `-` ou `@`.
+ */
+export async function toCsvExport(
+  db: Db,
+  collection: 'messages' | 'contacts' | 'reservations' | 'commandes',
+): Promise<{ ok: true; filename: string; csv: string }> {
+  const stamp = new Date().toISOString().slice(0, 10);
+
+  if (collection === 'contacts') {
+    const rows = unwrapList<{
+      first_name: string | null;
+      last_name: string | null;
+      email: string | null;
+      phone: string | null;
+      company: string | null;
+      source: string;
+      marketing_consent: boolean;
+      created_at: string;
+    }>(
+      (await db
+        .from('contacts')
+        .select(
+          'first_name, last_name, email, phone, company, source, marketing_consent, created_at',
+        )
+        .order('created_at', { ascending: false })
+        .limit(10_000)) as never,
+    );
+
+    return {
+      ok: true,
+      filename: `stax-contacts-${stamp}.csv`,
+      csv: toCsv([
+        ['Prénom', 'Nom', 'E-mail', 'Téléphone', 'Société', 'Origine', 'Consentement', 'Créé le'],
+        ...rows.map((row) => [
+          row.first_name,
+          row.last_name,
+          row.email,
+          row.phone,
+          row.company,
+          row.source,
+          row.marketing_consent ? 'oui' : 'non',
+          row.created_at,
+        ]),
+      ]),
+    };
+  }
+
+  if (collection === 'reservations') {
+    const rows = unwrapList<{
+      reference: string;
+      starts_at: string;
+      party_size: number;
+      status: string;
+      customer_name: string;
+      customer_email: string | null;
+      customer_phone: string | null;
+      customer_note: string | null;
+    }>(
+      (await db
+        .from('bookings')
+        .select(
+          'reference, starts_at, party_size, status, customer_name, customer_email, customer_phone, customer_note',
+        )
+        .order('starts_at', { ascending: false })
+        .limit(10_000)) as never,
+    );
+
+    return {
+      ok: true,
+      filename: `stax-reservations-${stamp}.csv`,
+      csv: toCsv([
+        ['Référence', 'Date', 'Personnes', 'État', 'Nom', 'E-mail', 'Téléphone', 'Précision'],
+        ...rows.map((row) => [
+          row.reference,
+          row.starts_at,
+          row.party_size,
+          row.status,
+          row.customer_name,
+          row.customer_email,
+          row.customer_phone,
+          row.customer_note,
+        ]),
+      ]),
+    };
+  }
+
+  if (collection === 'commandes') {
+    const rows = unwrapList<{
+      reference: string;
+      status: string;
+      total_cents: number;
+      currency: string;
+      customer_email: string | null;
+      created_at: string;
+    }>(
+      (await db
+        .from('shop_orders')
+        .select('reference, status, total_cents, currency, customer_email, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10_000)) as never,
+    );
+
+    return {
+      ok: true,
+      filename: `stax-commandes-${stamp}.csv`,
+      csv: toCsv([
+        ['Référence', 'État', 'Total (centimes)', 'Devise', 'E-mail', 'Créée le'],
+        ...rows.map((row) => [
+          row.reference,
+          row.status,
+          row.total_cents,
+          row.currency,
+          row.customer_email,
+          row.created_at,
+        ]),
+      ]),
+    };
+  }
+
+  const rows = unwrapList<{
+    created_at: string;
+    status: string;
+    data: Record<string, unknown>;
+  }>(
+    (await db
+      .from('form_submissions')
+      .select('created_at, status, data')
+      .order('created_at', { ascending: false })
+      .limit(10_000)) as never,
+  );
+
+  // Les colonnes sont l union des cles reellement presentes : un formulaire
+  // qui gagne un champ n oblige pas a toucher cet export.
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row.data ?? {})))].sort();
+
+  return {
+    ok: true,
+    filename: `stax-messages-${stamp}.csv`,
+    csv: toCsv([
+      ['Reçu le', 'État', ...columns],
+      ...rows.map((row) => [
+        row.created_at,
+        row.status,
+        ...columns.map((column) => row.data?.[column] ?? ''),
+      ]),
+    ]),
+  };
 }
