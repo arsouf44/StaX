@@ -333,12 +333,12 @@ export function EditorMock({ className }: { className?: string }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 border-b border-white/8 px-3 py-2">
-          <div className="flex gap-0.5 rounded-md border border-white/8 p-0.5">
+          <div className="flex min-w-0 gap-0.5 overflow-hidden rounded-md border border-white/8 p-0.5">
             {['Ordinateur', 'Tablette', 'Mobile'].map((device, index) => (
               <span
                 key={device}
                 className={cn(
-                  'rounded px-2 py-0.5 text-[9px]',
+                  'rounded px-2 py-0.5 text-[9px] whitespace-nowrap',
                   index === 0 ? 'bg-white/[0.08] text-white' : 'text-white/40',
                 )}
               >
@@ -346,11 +346,13 @@ export function EditorMock({ className }: { className?: string }) {
               </span>
             ))}
           </div>
-          <span className="ml-auto flex items-center gap-1.5 text-[9px] text-white/40">
+          {/* Sous 400 px, l etat du brouillon s efface : l action de publier
+              doit rester visible, l information peut attendre. */}
+          <span className="ml-auto hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-white/40 min-[400px]:flex">
             <span className="size-1.5 rounded-full bg-[#F5A524]" />
             Brouillon — 3 modifications
           </span>
-          <span className="rounded-md bg-white px-2.5 py-1 text-[9px] font-medium text-black">
+          <span className="ml-auto rounded-md bg-white px-2.5 py-1 text-[9px] font-medium whitespace-nowrap text-black min-[400px]:ml-0">
             Publier
           </span>
         </div>

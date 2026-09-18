@@ -3,7 +3,8 @@
 import { useActionState, useMemo, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Icon, cn } from '@stax/ui';
-import { chooseBusinessAction, STEP_IDLE, type StepState } from '../actions';
+import { IDLE_STATE as STEP_IDLE } from '~/lib/form-state';
+import { chooseBusinessAction, type StepState } from '../actions';
 
 interface SectorOption {
   id: string;

@@ -1,0 +1,68 @@
+name: Tests de bout en bout
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Parcours critiques
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://e2e.invalid
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: e2e-anon-key-placeholder
+      NEXT_PUBLIC_PLATFORM_URL: http://localhost:3000
+      NEXT_PUBLIC_SITES_DOMAIN: sites.e2e.invalid
+      NEXT_PUBLIC_PREVIEW_DOMAIN: preview.sites.e2e.invalid
+      NEXT_PUBLIC_DEFAULT_LOCALE: fr
+      STAX_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Navigateur
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm build:platform
+
+      - name: Parcours
+        run: pnpm test:e2e
+
+      - name: Rapport
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 7

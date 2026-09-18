@@ -45,11 +45,21 @@ export interface AuthFormState {
   mfaRequired?: boolean;
 }
 
-export const IDLE_STATE: AuthFormState = { status: 'idle' };
-
 /** Message unique, volontairement identique pour toutes les causes d echec. */
 const GENERIC_SIGNIN_ERROR =
   'Identifiants incorrects. Vérifiez votre adresse e-mail et votre mot de passe.';
+
+/**
+ * Message de panne.
+ *
+ * Distinct de l echec d identifiants, et c est voulu : dire « service
+ * indisponible » quand le fournisseur d authentification est injoignable ne
+ * revele rien sur l existence d un compte, et evite de faire douter quelqu un
+ * de son propre mot de passe. Il ne remplace JAMAIS le message generique en
+ * cas de refus reel.
+ */
+const SERVICE_UNAVAILABLE =
+  'Le service d’authentification est momentanément indisponible. Réessayez dans quelques instants.';
 
 function cookieAdapter(store: Awaited<ReturnType<typeof cookies>>) {
   return {
@@ -82,10 +92,18 @@ export async function signInAction(
   const store = await cookies();
   const client = createSessionClient(cookieAdapter(store));
 
-  const { data, error } = await client.auth.signInWithPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-  });
+  let data: Awaited<ReturnType<typeof client.auth.signInWithPassword>>['data'];
+  let error: Awaited<ReturnType<typeof client.auth.signInWithPassword>>['error'];
+  try {
+    ({ data, error } = await client.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    }));
+  } catch {
+    // Fournisseur injoignable : on le dit, plutot que de laisser une exception
+    // remonter jusqu a une page d erreur generique.
+    return { status: 'error', message: SERVICE_UNAVAILABLE };
+  }
 
   if (error || !data.user) {
     return { status: 'error', message: GENERIC_SIGNIN_ERROR };
@@ -154,23 +172,28 @@ export async function signUpAction(
   const store = await cookies();
   const client = createSessionClient(cookieAdapter(store));
 
-  const { error } = await client.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: absolutePlatformUrl('/app'),
-      data: {
-        first_name: parsed.data.firstName,
-        last_name: parsed.data.lastName,
-        phone: parsed.data.phone ?? null,
-        locale: parsed.data.locale,
-        marketing_opt_in: parsed.data.marketingOptIn,
-        // Version des conditions acceptees, conservee comme preuve.
-        terms_version: TERMS_VERSION,
-        terms_accepted_at: new Date().toISOString(),
+  let error: Awaited<ReturnType<typeof client.auth.signUp>>['error'];
+  try {
+    ({ error } = await client.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: {
+        emailRedirectTo: absolutePlatformUrl('/app'),
+        data: {
+          first_name: parsed.data.firstName,
+          last_name: parsed.data.lastName,
+          phone: parsed.data.phone ?? null,
+          locale: parsed.data.locale,
+          marketing_opt_in: parsed.data.marketingOptIn,
+          // Version des conditions acceptees, conservee comme preuve.
+          terms_version: TERMS_VERSION,
+          terms_accepted_at: new Date().toISOString(),
+        },
       },
-    },
-  });
+    }));
+  } catch {
+    return { status: 'error', message: SERVICE_UNAVAILABLE };
+  }
 
   if (error) {
     // Supabase distingue « adresse deja utilisee » des autres erreurs. On ne
@@ -223,9 +246,15 @@ export async function requestPasswordResetAction(
 
   const store = await cookies();
   const client = createSessionClient(cookieAdapter(store));
-  await client.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: absolutePlatformUrl('/nouveau-mot-de-passe'),
-  });
+  try {
+    await client.auth.resetPasswordForEmail(parsed.data.email, {
+      redirectTo: absolutePlatformUrl('/nouveau-mot-de-passe'),
+    });
+  } catch {
+    // La reponse reste identique : meme en panne, ce formulaire ne doit pas
+    // permettre de distinguer une adresse connue d une adresse inconnue.
+    return uniformAnswer;
+  }
 
   return uniformAnswer;
 }

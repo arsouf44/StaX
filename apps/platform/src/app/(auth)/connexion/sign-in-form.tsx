@@ -5,7 +5,8 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Field, Input } from '@stax/ui';
 import { TurnstileField } from '~/components/auth/turnstile-field';
-import { IDLE_STATE, signInAction, type AuthFormState } from '../actions';
+import { IDLE_STATE } from '~/lib/form-state';
+import { signInAction, type AuthFormState } from '../actions';
 
 function SubmitButton() {
   const { pending } = useFormStatus();

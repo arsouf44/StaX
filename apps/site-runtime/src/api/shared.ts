@@ -115,26 +115,34 @@ export async function guardPublicWrite(
   }
 
   const ipHash = await hashIp(clientIp(request));
-  const decision = await enforceRateLimit(
-    new PostgresRateLimitStore(createServiceClient()),
-    limit,
-    rateLimitIdentity({ ipHash: `${site.siteId}:${ipHash ?? 'anonymous'}` }),
-  );
-  if (!decision.allowed) {
-    return {
-      ok: false,
-      ipHash,
-      payload,
-      response: jsonResponse(
-        {
-          ok: false,
-          code: 'rate_limited',
-          message: decision.error?.message ?? 'Trop de requêtes.',
-        },
-        429,
-        { 'retry-after': String(decision.retryAfterSeconds) },
-      ),
-    };
+
+  // Le compteur est partage entre toutes les instances du Worker, donc en base.
+  // S il est injoignable, on laisse passer : un visiteur legitime ne doit pas
+  // etre bloque parce qu un compteur est en panne. L incident est journalise.
+  try {
+    const decision = await enforceRateLimit(
+      new PostgresRateLimitStore(createServiceClient()),
+      limit,
+      rateLimitIdentity({ ipHash: `${site.siteId}:${ipHash ?? 'anonymous'}` }),
+    );
+    if (!decision.allowed) {
+      return {
+        ok: false,
+        ipHash,
+        payload,
+        response: jsonResponse(
+          {
+            ok: false,
+            code: 'rate_limited',
+            message: decision.error?.message ?? 'Trop de requêtes.',
+          },
+          429,
+          { 'retry-after': String(decision.retryAfterSeconds) },
+        ),
+      };
+    }
+  } catch (error) {
+    console.error('[stax:rate-limit] compteur indisponible', error);
   }
 
   const captcha =

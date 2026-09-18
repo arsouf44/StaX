@@ -170,8 +170,10 @@ export const SITEMAP_ROUTES: Array<{
   { path: '/aide', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/faq', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/status', priority: 0.3, changeFrequency: 'daily' },
-  { path: '/connexion', priority: 0.4, changeFrequency: 'yearly' },
-  { path: '/inscription', priority: 0.5, changeFrequency: 'yearly' },
+  // Les pages d authentification et le parcours de commande sont volontairement
+  // ABSENTS : ils portent `noindex`, et les faire figurer dans le plan du site
+  // enverrait aux moteurs une consigne contradictoire.
+
   ...LEGAL_LINKS.map((link) => ({
     path: link.href,
     priority: 0.3,

@@ -3,7 +3,8 @@
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Icon, cn } from '@stax/ui';
-import { choosePlanAction, STEP_IDLE, type StepState } from './actions';
+import { IDLE_STATE as STEP_IDLE } from '~/lib/form-state';
+import { choosePlanAction, type StepState } from './actions';
 
 export interface PlanOption {
   slug: string;

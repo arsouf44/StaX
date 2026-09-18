@@ -48,13 +48,21 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
     null;
   const ipHash = await hashIp(ip);
 
-  const decision = await enforceRateLimit(
-    new PostgresRateLimitStore(createServiceClient()),
-    input.limit,
-    rateLimitIdentity({ userId: input.userId ?? null, ipHash }),
-  );
-  if (!decision.allowed) {
-    return { ok: false, message: decision.error?.message ?? 'Trop de tentatives.' };
+  // Le compteur est en base. S il est injoignable — base coupee, secret absent —
+  // on laisse passer plutot que de bloquer tout le monde : la limitation de
+  // debit protege contre l abus, elle ne doit pas devenir un point de panne.
+  // L incident est journalise bruyamment.
+  try {
+    const decision = await enforceRateLimit(
+      new PostgresRateLimitStore(createServiceClient()),
+      input.limit,
+      rateLimitIdentity({ userId: input.userId ?? null, ipHash }),
+    );
+    if (!decision.allowed) {
+      return { ok: false, message: decision.error?.message ?? 'Trop de tentatives.' };
+    }
+  } catch (error) {
+    console.error('[stax:rate-limit] compteur indisponible', error);
   }
 
   const turnstile = await verifyTurnstile(

@@ -1,0 +1,151 @@
+# StaX
+
+Plateforme française de création, vente, livraison et gestion de sites web professionnels.
+
+StaX permet à une entreprise de commander un site, de le faire réaliser, de le
+publier sur son propre nom de domaine, puis de le gérer elle-même : contenus,
+photos, horaires, messages reçus, réservations, commandes et encaissements.
+
+---
+
+## Ce que le produit fait réellement
+
+| Capacité                                           | État | Où c’est implémenté                                      |
+| -------------------------------------------------- | ---- | -------------------------------------------------------- |
+| Vendre des sites (offres, panier, paiement)        | ✅   | `apps/platform/src/app/(commande)` + `packages/payments` |
+| Recevoir commandes et paiements                    | ✅   | webhooks Stripe signés + `app.apply_order_paid`          |
+| Créer et publier des sites clients                 | ✅   | `app.publish_site` (instantané figé, immuable)           |
+| Héberger et servir les sites publiés               | ✅   | `apps/site-runtime` (Worker multi-tenant)                |
+| Espace client (contenus, messages, factures)       | ✅   | `apps/platform/src/app/app`                              |
+| Formulaires, prospects, réservations sur les sites | ✅   | `app.submit_form`, `app.create_booking`                  |
+| Domaine propre par client                          | ✅   | `site_domains` + résolution par nom d’hôte               |
+| Encaissements sur les sites clients                | ✅   | Stripe Connect, commission à zéro                        |
+| Abonnement de maintenance                          | ✅   | `subscriptions` + webhooks                               |
+| Projets sur mesure sur devis                       | ✅   | `/devis` → `quotes`                                      |
+
+> Aucune ligne de ce tableau n’est une intention : chacune correspond à du code
+> exécuté et, pour les points sensibles, à une assertion de test.
+
+---
+
+## Démarrage rapide
+
+```bash
+# 1. Dépendances (pnpm 10, Node 22)
+corepack enable
+pnpm install
+
+# 2. Configuration — copiez et renseignez
+cp .env.example .env.local
+
+# 3. Base de données
+pnpm db:migrate            # applique les migrations SQL
+pnpm db:types              # régénère les types TypeScript
+
+# 4. Compte administrateur (secret fourni au moment de l’exécution)
+ADMIN_BOOTSTRAP_PASSWORD="$(openssl rand -base64 24)" pnpm admin:bootstrap
+
+# 5. Développement
+pnpm dev                   # plateforme, http://localhost:3000
+pnpm dev:site              # moteur des sites clients, http://localhost:3001
+```
+
+### Vérification complète
+
+```bash
+pnpm verify                # format + lint + typecheck + tests
+scripts/db-test.sh         # 175 assertions de sécurité SQL
+pnpm build:cf              # build Cloudflare des deux applications
+```
+
+---
+
+## Architecture
+
+```
+apps/
+  platform/        Next.js 16 — site public, espace client, back-office, API
+  site-runtime/    Worker Cloudflare — sert TOUS les sites clients
+packages/
+  config/          Environnement, configuration légale, politiques commerciales
+  types/           Types partagés, énumérations, Result<T>
+  validation/      Schémas Zod — une seule définition par frontière
+  payments/        Arithmétique monétaire, Stripe, Connect, remboursements
+  business/        Registre des secteurs, métiers, modules, RBAC
+  security/        Crypto, en-têtes, CSRF, anti-pourriel, limitation de débit
+  site-engine/     Blocs, thèmes, instantanés, SEO, rendu HTML
+  database/        Clients Supabase et requêtes typées
+  auth/            Sessions, gardes, activation, prise en main support
+  emails/          Modèles et interface d’envoi indépendante du fournisseur
+  analytics/       Mesure d’audience sans cookie
+  ui/              Système de design, primitives, icônes, mouvement
+supabase/migrations/   18 migrations SQL versionnées
+tests/                 unitaires, intégration, sécurité, SQL, E2E
+```
+
+Documentation détaillée dans [`docs/`](./docs) :
+
+| Document                                                | Contenu                             |
+| ------------------------------------------------------- | ----------------------------------- |
+| [architecture.md](./docs/architecture.md)               | Choix structurants et leurs raisons |
+| [database.md](./docs/database.md)                       | Schéma, RLS, fonctions, invariants  |
+| [security.md](./docs/security.md)                       | Modèle de menace et défenses        |
+| [deployment.md](./docs/deployment.md)                   | Mise en production, étape par étape |
+| [cloudflare.md](./docs/cloudflare.md)                   | Workers, domaines, cache, DNS       |
+| [supabase.md](./docs/supabase.md)                       | Projet, rôles, sauvegardes          |
+| [stripe.md](./docs/stripe.md)                           | Produits, prix, webhooks            |
+| [stripe-connect.md](./docs/stripe-connect.md)           | Encaissements des clients           |
+| [domains.md](./docs/domains.md)                         | Connexion d’un domaine client       |
+| [admin-bootstrap.md](./docs/admin-bootstrap.md)         | Création du compte propriétaire     |
+| [backup-recovery.md](./docs/backup-recovery.md)         | Sauvegardes et restauration         |
+| [incident-response.md](./docs/incident-response.md)     | Conduite en cas d’incident          |
+| [legal-configuration.md](./docs/legal-configuration.md) | Mentions légales obligatoires       |
+
+---
+
+## Les cinq règles qui ne se négocient pas
+
+1. **L’isolation entre clients est imposée par PostgreSQL**, pas par un filtre
+   dans l’interface. Toutes les lectures et écritures de l’espace client passent
+   par un client Supabase portant le jeton de la personne. 175 assertions SQL
+   vérifient qu’un client ne peut pas lire, modifier ni supprimer les données
+   d’un autre.
+
+2. **La vérité sur un paiement vient du webhook signé**, jamais de la
+   redirection du navigateur. La page de confirmation ne lit même pas le
+   `session_id` renvoyé par Stripe : elle relit l’état réel de la commande.
+
+3. **L’argent est toujours manipulé en centimes entiers.** Aucun flottant
+   n’intervient dans un calcul de montant. Les arrondis TypeScript reproduisent
+   exactement ceux de PostgreSQL, et un test compare les deux implémentations.
+
+4. **Aucune donnée n’est inventée.** Pas de chiffre commercial non mesuré, pas
+   de SIREN fictif, pas de statistique illustrative. Une valeur inconnue affiche
+   un marqueur explicite ou n’est pas affichée.
+
+5. **Posséder l’adresse e-mail d’administration ne confère aucun droit.** Le
+   rôle vient de `profiles.platform_role`, écrit uniquement par le script
+   d’approvisionnement avec la clé de service, et protégé en base par un
+   déclencheur.
+
+---
+
+## Qualité
+
+| Contrôle                                   | Commande             | État |
+| ------------------------------------------ | -------------------- | ---- |
+| Formatage                                  | `pnpm format:check`  | ✅   |
+| Lint (0 avertissement toléré)              | `pnpm lint`          | ✅   |
+| Types (strict, `noUncheckedIndexedAccess`) | `pnpm typecheck`     | ✅   |
+| Tests unitaires et d’intégration           | `pnpm test`          | ✅   |
+| Assertions de sécurité SQL                 | `scripts/db-test.sh` | ✅   |
+| Build production                           | `pnpm build`         | ✅   |
+| Build Cloudflare                           | `pnpm build:cf`      | ✅   |
+
+---
+
+## Licence et statut
+
+Logiciel privé. Les textes juridiques livrés sont des **modèles** : ils doivent
+être relus et validés par un professionnel du droit avant toute ouverture
+commerciale. Voir [`docs/legal-configuration.md`](./docs/legal-configuration.md).

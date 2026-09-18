@@ -3,7 +3,8 @@
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Field, Input, cn } from '@stax/ui';
-import { saveDomainAction, STEP_IDLE, type StepState } from '../actions';
+import { IDLE_STATE as STEP_IDLE } from '~/lib/form-state';
+import { saveDomainAction, type StepState } from '../actions';
 
 type Handling = 'customer_owned' | 'stax_purchase' | 'subdomain_only';
 

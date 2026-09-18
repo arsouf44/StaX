@@ -4,7 +4,8 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Field, Input } from '@stax/ui';
 import { PasswordField } from '~/components/auth/password-field';
-import { IDLE_STATE, updatePasswordAction, type AuthFormState } from '../actions';
+import { IDLE_STATE } from '~/lib/form-state';
+import { updatePasswordAction, type AuthFormState } from '../actions';
 
 function SubmitButton() {
   const { pending } = useFormStatus();

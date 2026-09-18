@@ -1,5 +1,6 @@
 'use server';
 
+import type { ActionState } from '~/lib/form-state';
 import { redirect } from 'next/navigation';
 import { createUserClient, listMemberships, unwrapMaybe } from '@stax/database';
 import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@stax/payments';
@@ -34,12 +35,7 @@ import { TERMS_VERSION } from '~/content/legal';
  *     jamais comme telle, quoi qu il arrive ensuite dans le navigateur.
  */
 
-export interface CheckoutState {
-  status: 'idle' | 'error';
-  message?: string;
-}
-
-export const CHECKOUT_IDLE: CheckoutState = { status: 'idle' };
+export type CheckoutState = ActionState;
 
 export async function startCheckoutAction(
   _previous: CheckoutState,

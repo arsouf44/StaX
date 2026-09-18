@@ -14,7 +14,8 @@ import {
   Textarea,
 } from '@stax/ui';
 import { TurnstileField } from '~/components/auth/turnstile-field';
-import { LEAD_IDLE, sendContactAction, type LeadState } from './actions';
+import { IDLE_STATE as LEAD_IDLE } from '~/lib/form-state';
+import { sendContactAction, type LeadState } from './actions';
 
 const SUBJECTS = [
   { value: 'sales', label: 'Une question sur vos offres' },

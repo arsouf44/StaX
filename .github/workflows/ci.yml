@@ -1,0 +1,137 @@
+name: Intégration continue
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Une seule exécution par branche : une poussée annule la précédente plutôt
+# que de faire la queue sur un code déjà dépassé.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Valeurs factices, suffisantes pour compiler et typer. Aucun secret réel
+  # n'entre en CI : les tests qui en auraient besoin ne s'exécutent pas ici.
+  NEXT_PUBLIC_SUPABASE_URL: https://ci.invalid
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key-placeholder
+  NEXT_PUBLIC_PLATFORM_URL: https://ci.invalid
+  NEXT_PUBLIC_SITES_DOMAIN: sites.ci.invalid
+  NEXT_PUBLIC_PREVIEW_DOMAIN: preview.sites.ci.invalid
+  NEXT_PUBLIC_DEFAULT_LOCALE: fr
+  STAX_ENV: test
+
+jobs:
+  qualite:
+    name: Format, lint et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Formatage
+        run: pnpm format:check
+
+      - name: Lint (aucun avertissement toléré)
+        run: pnpm lint
+
+      - name: Types
+        run: pnpm typecheck
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tests unitaires, d’intégration et de sécurité
+        run: pnpm test
+
+  securite-sql:
+    name: Sécurité SQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Une vraie base : ces assertions vérifient le comportement de PostgreSQL,
+    # pas celui d'une simulation.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Client PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Migrations et assertions de sécurité
+        env:
+          PGPASSWORD: postgres
+        run: |
+          scripts/db-test.sh "postgresql://postgres@127.0.0.1:5432/postgres" stax_ci
+
+  build:
+    name: Build production et Cloudflare
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [qualite]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js
+        run: pnpm build:platform
+
+      - name: Build Cloudflare (les deux Workers)
+        run: pnpm build:cf
+
+  # Le déploiement n'est PAS automatique. Une mise en production suppose que
+  # les migrations ont été appliquées dans le bon ordre et que les informations
+  # légales sont renseignées : cela se décide, cela ne se déclenche pas sur une
+  # fusion.

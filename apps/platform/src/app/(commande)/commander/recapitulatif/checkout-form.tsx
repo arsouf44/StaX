@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Checkbox } from '@stax/ui';
-import { CHECKOUT_IDLE, startCheckoutAction, type CheckoutState } from './actions';
+import { IDLE_STATE as CHECKOUT_IDLE } from '~/lib/form-state';
+import { startCheckoutAction, type CheckoutState } from './actions';
 
 function SubmitButton() {
   const { pending } = useFormStatus();

@@ -14,7 +14,8 @@ import {
   Textarea,
 } from '@stax/ui';
 import { TurnstileField } from '~/components/auth/turnstile-field';
-import { LEAD_IDLE, sendQuoteRequestAction, type LeadState } from '../contact/actions';
+import { IDLE_STATE as LEAD_IDLE } from '~/lib/form-state';
+import { sendQuoteRequestAction, type LeadState } from '../contact/actions';
 
 const FEATURES = [
   { value: 'ecommerce', label: 'Vente en ligne' },

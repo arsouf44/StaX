@@ -29,8 +29,6 @@ export interface LeadState {
   errors?: Record<string, string[]>;
 }
 
-export const LEAD_IDLE: LeadState = { status: 'idle' };
-
 function checkbox(value: unknown): boolean {
   return value === 'on' || value === 'true' || value === true;
 }

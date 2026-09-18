@@ -1,5 +1,6 @@
 'use server';
 
+import type { ActionState } from '~/lib/form-state';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { getBusiness, listBusinessesBySector } from '@stax/business';
@@ -15,13 +16,7 @@ import { writeOrderDraft } from '~/lib/order-draft';
  * de ce que le navigateur a envoye.
  */
 
-export interface StepState {
-  status: 'idle' | 'error';
-  message?: string;
-  errors?: Record<string, string[]>;
-}
-
-export const STEP_IDLE: StepState = { status: 'idle' };
+export type StepState = ActionState;
 
 const planSchema = z.object({ planSlug: slugSchema }).strict();
 
