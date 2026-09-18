@@ -4,3 +4,4 @@ export * from './snapshot';
 export * from './seo';
 export * from './templates';
 export * from './render/index';
+export * from './editor/index';

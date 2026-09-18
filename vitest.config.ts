@@ -9,6 +9,10 @@ export default defineConfig({
       '@stax/types': r('./packages/types/src/index.ts'),
       '@stax/config': r('./packages/config/src/index.ts'),
       '@stax/validation': r('./packages/validation/src/index.ts'),
+      // Le sous-chemin doit venir AVANT le module racine : vite applique la
+      // premiere correspondance, et `@stax/payments` capturerait sinon
+      // `@stax/payments/money`.
+      '@stax/payments/money': r('./packages/payments/src/money.ts'),
       '@stax/payments': r('./packages/payments/src/index.ts'),
       '@stax/business': r('./packages/business/src/index.ts'),
       '@stax/security': r('./packages/security/src/index.ts'),
