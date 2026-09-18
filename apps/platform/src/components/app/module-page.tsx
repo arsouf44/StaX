@@ -78,7 +78,9 @@ export async function ModulePage({
                 <Icon name="lock" size={20} />
               </span>
               <div className="min-w-0">
-                <h2 className="text-sm font-medium">Cette rubrique n’est pas incluse dans votre offre</h2>
+                <h2 className="text-sm font-medium">
+                  Cette rubrique n’est pas incluse dans votre offre
+                </h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   {definition?.description ??
                     'Cette fonctionnalité fait partie d’une offre supérieure.'}{' '}

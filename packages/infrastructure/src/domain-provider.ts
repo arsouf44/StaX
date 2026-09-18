@@ -18,12 +18,7 @@ import { hasCapability, readEnv, sitesDomain } from '@stax/config';
  * depuis des actions serveur et des taches de fond.
  */
 
-export type DomainStatus =
-  | 'pending'
-  | 'verifying'
-  | 'active'
-  | 'failed'
-  | 'unsupported';
+export type DomainStatus = 'pending' | 'verifying' | 'active' | 'failed' | 'unsupported';
 
 export interface DnsInstruction {
   /** `TXT` pour la preuve de propriete, `CNAME` pour l'acheminement. */
@@ -217,10 +212,9 @@ class CloudflareDomainProvider implements DomainProvider {
       return { status: 'pending', externalId: null, instructions: [], message: null };
     }
 
-    const { ok, body } = await this.call(
-      `/zones/${this.zoneId}/custom_hostnames/${externalId}`,
-      { method: 'GET' },
-    );
+    const { ok, body } = await this.call(`/zones/${this.zoneId}/custom_hostnames/${externalId}`, {
+      method: 'GET',
+    });
 
     if (!ok) {
       return {

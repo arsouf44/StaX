@@ -22,7 +22,6 @@ import {
 import type { FeatureKey, OrgCapability } from '@stax/types';
 import type { ModuleId } from '@stax/business';
 
-
 /**
  * Registre des collections de l'espace client.
  *
@@ -949,7 +948,8 @@ export const COLLECTIONS = {
     singular: 'Rayon',
     addLabel: 'Ajouter un rayon',
     emptyTitle: 'Aucun rayon',
-    emptyDescription: 'Les rayons ne sont pas obligatoires, mais au-delà d’une dizaine de produits ils rendent la navigation beaucoup plus simple.',
+    emptyDescription:
+      'Les rayons ne sont pas obligatoires, mais au-delà d’une dizaine de produits ils rendent la navigation beaucoup plus simple.',
     icon: 'layers',
     schema: productCategorySchema,
     slugFrom: 'name',
@@ -1440,7 +1440,8 @@ export const COLLECTIONS = {
     singular: 'Article',
     addLabel: 'Écrire un article',
     emptyTitle: 'Aucun article',
-    emptyDescription: 'Racontez une nouveauté, un chantier, une recette. Sans date de publication, l’article reste en brouillon.',
+    emptyDescription:
+      'Racontez une nouveauté, un chantier, une recette. Sans date de publication, l’article reste en brouillon.',
     icon: 'newspaper',
     schema: contentEntrySchema,
     slugFrom: 'title',
@@ -1614,8 +1615,22 @@ export const COLLECTIONS = {
         maxLength: 60,
         inList: true,
       },
-      { name: 'email', column: 'email', label: 'E-mail', kind: 'email', maxLength: 180, inList: true },
-      { name: 'phone', column: 'phone', label: 'Téléphone', kind: 'tel', maxLength: 30, inList: true },
+      {
+        name: 'email',
+        column: 'email',
+        label: 'E-mail',
+        kind: 'email',
+        maxLength: 180,
+        inList: true,
+      },
+      {
+        name: 'phone',
+        column: 'phone',
+        label: 'Téléphone',
+        kind: 'tel',
+        maxLength: 30,
+        inList: true,
+      },
       {
         name: 'company',
         column: 'company',

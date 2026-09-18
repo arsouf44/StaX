@@ -11,14 +11,16 @@ import { BookingList, type BookingView } from './booking-list';
 export const metadata: Metadata = { title: 'Mes réservations' };
 
 /** Libelle du bouton, pas du statut : « Confirmer » plutot que « Confirmée ». */
-const TRANSITION_LABELS: Record<string, { label: string; tone: 'primary' | 'secondary' | 'ghost' }> =
-  {
-    confirmed: { label: 'Confirmer', tone: 'primary' },
-    seated: { label: 'Le client est arrivé', tone: 'secondary' },
-    completed: { label: 'Marquer comme honorée', tone: 'secondary' },
-    cancelled: { label: 'Annuler', tone: 'ghost' },
-    no_show: { label: 'Client absent', tone: 'ghost' },
-  };
+const TRANSITION_LABELS: Record<
+  string,
+  { label: string; tone: 'primary' | 'secondary' | 'ghost' }
+> = {
+  confirmed: { label: 'Confirmer', tone: 'primary' },
+  seated: { label: 'Le client est arrivé', tone: 'secondary' },
+  completed: { label: 'Marquer comme honorée', tone: 'secondary' },
+  cancelled: { label: 'Annuler', tone: 'ghost' },
+  no_show: { label: 'Client absent', tone: 'ghost' },
+};
 
 export default async function BookingsPage() {
   const { workspace, db } = await getWorkspace();
@@ -107,8 +109,8 @@ export default async function BookingsPage() {
               Demandes reçues
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Les horaires sont affichés dans le fuseau horaire de votre établissement
-              ({settings?.timezone ?? 'Europe/Paris'}).
+              Les horaires sont affichés dans le fuseau horaire de votre établissement (
+              {settings?.timezone ?? 'Europe/Paris'}).
             </p>
           </div>
 

@@ -31,8 +31,8 @@ export default function DisabledAccountPage() {
           <div className="max-w-xl">
             <h1 className="text-3xl font-medium tracking-[-0.03em]">Ce compte est désactivé</h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
-              L’accès à votre espace est suspendu. Cela arrive après une demande de votre part, ou
-              à la suite d’un manquement signalé.
+              L’accès à votre espace est suspendu. Cela arrive après une demande de votre part, ou à
+              la suite d’un manquement signalé.
             </p>
 
             <Panel level={1} padding="lg" className="mt-8">

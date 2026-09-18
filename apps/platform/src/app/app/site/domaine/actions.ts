@@ -97,7 +97,11 @@ export async function attachDomainAction(
 
   const hostname = parsed.data.hostname;
 
-  if (hostname.endsWith('.local') || hostname.endsWith('.localhost') || hostname.endsWith('.test')) {
+  if (
+    hostname.endsWith('.local') ||
+    hostname.endsWith('.localhost') ||
+    hostname.endsWith('.test')
+  ) {
     return {
       status: 'error',
       message: 'Ce nom de domaine ne peut pas être utilisé sur Internet.',

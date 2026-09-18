@@ -89,9 +89,10 @@ export function FormManager({ forms, canWrite }: { forms: FormView[]; canWrite: 
     formId: string;
     field: FormFieldView | null;
   } | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{ formId: string; field: FormFieldView } | null>(
-    null,
-  );
+  const [pendingDelete, setPendingDelete] = useState<{
+    formId: string;
+    field: FormFieldView;
+  } | null>(null);
   const [fieldType, setFieldType] = useState('text');
   const [formState, setFormState] = useState<ActionState>(IDLE_STATE);
   const [fieldState, setFieldState] = useState<ActionState>(IDLE_STATE);
@@ -150,7 +151,9 @@ export function FormManager({ forms, canWrite }: { forms: FormView[]; canWrite: 
           title="Aucun formulaire"
           description="Un formulaire de contact simple — nom, e-mail, message — convertit mieux qu’un questionnaire de vingt questions."
           action={
-            canWrite ? <Button onClick={() => setEditingForm('new')}>Créer un formulaire</Button> : undefined
+            canWrite ? (
+              <Button onClick={() => setEditingForm('new')}>Créer un formulaire</Button>
+            ) : undefined
           }
         />
       ) : (
@@ -197,7 +200,9 @@ export function FormManager({ forms, canWrite }: { forms: FormView[]; canWrite: 
                               *
                             </span>
                           ) : null}
-                          <span className="ml-2 text-xs text-[var(--muted)]">{field.typeLabel}</span>
+                          <span className="ml-2 text-xs text-[var(--muted)]">
+                            {field.typeLabel}
+                          </span>
                         </span>
                         {canWrite ? (
                           <span className="flex gap-1">
@@ -266,7 +271,11 @@ export function FormManager({ forms, canWrite }: { forms: FormView[]; canWrite: 
             </Alert>
           ) : null}
 
-          <Field label="Nom du formulaire" required hint="Sert à le retrouver. Non affiché sur votre site.">
+          <Field
+            label="Nom du formulaire"
+            required
+            hint="Sert à le retrouver. Non affiché sur votre site."
+          >
             <Input name="name" defaultValue={current?.name ?? ''} required maxLength={80} />
           </Field>
 
@@ -291,7 +300,9 @@ export function FormManager({ forms, canWrite }: { forms: FormView[]; canWrite: 
               required
               minLength={5}
               maxLength={300}
-              defaultValue={current?.successMessage ?? 'Merci, votre message nous est bien parvenu.'}
+              defaultValue={
+                current?.successMessage ?? 'Merci, votre message nous est bien parvenu.'
+              }
             />
           </Field>
 

@@ -386,9 +386,7 @@ export async function savePageAction(
       .order('sort_order', { ascending: true })) as never,
   );
 
-  const clash = siblings.find(
-    (page) => page.path === parsed.data.path && page.id !== pageId,
-  );
+  const clash = siblings.find((page) => page.path === parsed.data.path && page.id !== pageId);
   if (clash) {
     return {
       status: 'error',

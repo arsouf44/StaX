@@ -50,8 +50,8 @@ export default async function WelcomePage() {
               <Panel level={2} padding="lg">
                 <h2 className="text-base font-medium">Je veux commander un site</h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez
-                  tout modifier ensuite.
+                  Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez tout
+                  modifier ensuite.
                 </p>
                 <ButtonLink href="/commander" className="mt-4">
                   Commander mon site

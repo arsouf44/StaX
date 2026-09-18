@@ -61,6 +61,37 @@ const GENERIC_SIGNIN_ERROR =
 const SERVICE_UNAVAILABLE =
   'Le service d’authentification est momentanément indisponible. Réessayez dans quelques instants.';
 
+/**
+ * Delai maximal accorde au fournisseur d'authentification.
+ *
+ * Un appel reseau sans borne est un point de panne : si Supabase Auth devient
+ * lent ou injoignable, chaque tentative de connexion immobiliserait un worker
+ * et laisserait la personne devant un bouton qui tourne indefiniment. Passe ce
+ * delai, on rend la main avec un message honnete.
+ *
+ * La valeur est volontairement plus courte qu'un timeout de plateforme : mieux
+ * vaut inviter a reessayer que de faire attendre trente secondes.
+ */
+const AUTH_TIMEOUT_MS = 8_000;
+
+class AuthTimeoutError extends Error {
+  constructor() {
+    super('auth-timeout');
+    this.name = 'AuthTimeoutError';
+  }
+}
+
+function withAuthTimeout<T>(operation: Promise<T>): Promise<T> {
+  return Promise.race([
+    operation,
+    new Promise<T>((_resolve, reject) => {
+      const timer = setTimeout(() => reject(new AuthTimeoutError()), AUTH_TIMEOUT_MS);
+      // Le minuteur ne doit pas retenir le processus une fois la course gagnee.
+      void operation.finally(() => clearTimeout(timer)).catch(() => undefined);
+    }),
+  ]);
+}
+
 function cookieAdapter(store: Awaited<ReturnType<typeof cookies>>) {
   return {
     getAll: () => store.getAll().map(({ name, value }) => ({ name, value })),
@@ -95,10 +126,12 @@ export async function signInAction(
   let data: Awaited<ReturnType<typeof client.auth.signInWithPassword>>['data'];
   let error: Awaited<ReturnType<typeof client.auth.signInWithPassword>>['error'];
   try {
-    ({ data, error } = await client.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    }));
+    ({ data, error } = await withAuthTimeout(
+      client.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      }),
+    ));
   } catch {
     // Fournisseur injoignable : on le dit, plutot que de laisser une exception
     // remonter jusqu a une page d erreur generique.
@@ -174,23 +207,25 @@ export async function signUpAction(
 
   let error: Awaited<ReturnType<typeof client.auth.signUp>>['error'];
   try {
-    ({ error } = await client.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        emailRedirectTo: absolutePlatformUrl('/app'),
-        data: {
-          first_name: parsed.data.firstName,
-          last_name: parsed.data.lastName,
-          phone: parsed.data.phone ?? null,
-          locale: parsed.data.locale,
-          marketing_opt_in: parsed.data.marketingOptIn,
-          // Version des conditions acceptees, conservee comme preuve.
-          terms_version: TERMS_VERSION,
-          terms_accepted_at: new Date().toISOString(),
+    ({ error } = await withAuthTimeout(
+      client.auth.signUp({
+        email: parsed.data.email,
+        password: parsed.data.password,
+        options: {
+          emailRedirectTo: absolutePlatformUrl('/app'),
+          data: {
+            first_name: parsed.data.firstName,
+            last_name: parsed.data.lastName,
+            phone: parsed.data.phone ?? null,
+            locale: parsed.data.locale,
+            marketing_opt_in: parsed.data.marketingOptIn,
+            // Version des conditions acceptees, conservee comme preuve.
+            terms_version: TERMS_VERSION,
+            terms_accepted_at: new Date().toISOString(),
+          },
         },
-      },
-    }));
+      }),
+    ));
   } catch {
     return { status: 'error', message: SERVICE_UNAVAILABLE };
   }
@@ -247,9 +282,11 @@ export async function requestPasswordResetAction(
   const store = await cookies();
   const client = createSessionClient(cookieAdapter(store));
   try {
-    await client.auth.resetPasswordForEmail(parsed.data.email, {
-      redirectTo: absolutePlatformUrl('/nouveau-mot-de-passe'),
-    });
+    await withAuthTimeout(
+      client.auth.resetPasswordForEmail(parsed.data.email, {
+        redirectTo: absolutePlatformUrl('/nouveau-mot-de-passe'),
+      }),
+    );
   } catch {
     // La reponse reste identique : meme en panne, ce formulaire ne doit pas
     // permettre de distinguer une adresse connue d une adresse inconnue.

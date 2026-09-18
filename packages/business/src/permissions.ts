@@ -80,10 +80,10 @@ export const ROLE_LABELS: Record<OrgRole, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<OrgRole, string> = {
   owner: 'Contrôle total : contenu, équipe, facturation, domaine et suppression de l’organisation.',
-  admin: 'Gere le site, l’équipe et le domaine. Consulte la facturation sans pouvoir la modifier.',
+  admin: 'Gère le site, l’équipe et le domaine. Consulte la facturation sans pouvoir la modifier.',
   editor:
-    'Modifie et publié le contenu, traite les messages et les commandes. Aucun accès a la facturation.',
-  billing: 'Accès a la facturation, aux facturés et au moyen de paiement. Aucun accès au contenu.',
+    'Modifie et publie le contenu, traite les messages et les commandes. Aucun accès à la facturation.',
+  billing: 'Accès à la facturation, aux factures et au moyen de paiement. Aucun accès au contenu.',
   viewer: 'Consultation uniquement. Ne peut rien modifier.',
 };
 

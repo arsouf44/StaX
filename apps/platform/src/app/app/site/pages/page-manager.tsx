@@ -118,7 +118,10 @@ export function PageManager({ pages, canEdit }: { pages: PageRow[]; canEdit: boo
     });
 
   const current = editing === 'new' || editing === null ? null : editing;
-  const fields = editing === 'new' ? [FIELDS[0] as ClientField, FIELDS[1] as ClientField, KIND_FIELD, ...FIELDS.slice(2)] : FIELDS;
+  const fields =
+    editing === 'new'
+      ? [FIELDS[0] as ClientField, FIELDS[1] as ClientField, KIND_FIELD, ...FIELDS.slice(2)]
+      : FIELDS;
 
   const values: Record<string, string | boolean> = current
     ? {

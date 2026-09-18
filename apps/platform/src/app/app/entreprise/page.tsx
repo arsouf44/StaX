@@ -62,9 +62,16 @@ const GROUPS: SettingsGroup[] = [
   {
     id: 'reseaux',
     title: 'Vos réseaux sociaux',
-    description: 'Laissez vide ce que vous n’utilisez pas : un lien mort dessert votre crédibilité.',
+    description:
+      'Laissez vide ce que vous n’utilisez pas : un lien mort dessert votre crédibilité.',
     fields: [
-      { name: 'facebook', label: 'Facebook', kind: 'text', maxLength: 300, placeholder: 'https://' },
+      {
+        name: 'facebook',
+        label: 'Facebook',
+        kind: 'text',
+        maxLength: 300,
+        placeholder: 'https://',
+      },
       {
         name: 'instagram',
         label: 'Instagram',
@@ -72,7 +79,13 @@ const GROUPS: SettingsGroup[] = [
         maxLength: 300,
         placeholder: 'https://',
       },
-      { name: 'linkedin', label: 'LinkedIn', kind: 'text', maxLength: 300, placeholder: 'https://' },
+      {
+        name: 'linkedin',
+        label: 'LinkedIn',
+        kind: 'text',
+        maxLength: 300,
+        placeholder: 'https://',
+      },
       { name: 'x', label: 'X', kind: 'text', maxLength: 300, placeholder: 'https://' },
       { name: 'youtube', label: 'YouTube', kind: 'text', maxLength: 300, placeholder: 'https://' },
       { name: 'tiktok', label: 'TikTok', kind: 'text', maxLength: 300, placeholder: 'https://' },

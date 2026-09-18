@@ -39,8 +39,7 @@ export async function startConnectOnboardingAction(
   if (!context) {
     return {
       status: 'error',
-      message:
-        'Seul un propriétaire de votre organisation peut activer l’encaissement en ligne.',
+      message: 'Seul un propriétaire de votre organisation peut activer l’encaissement en ligne.',
     };
   }
 

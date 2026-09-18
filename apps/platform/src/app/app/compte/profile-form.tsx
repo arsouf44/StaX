@@ -56,7 +56,10 @@ export function ProfileForm({
         <Input name="phone" type="tel" defaultValue={phone} autoComplete="tel" />
       </Field>
 
-      <Field label="Adresse e-mail" hint="Elle sert à vous connecter. Sa modification se demande à l’assistance.">
+      <Field
+        label="Adresse e-mail"
+        hint="Elle sert à vous connecter. Sa modification se demande à l’assistance."
+      >
         <Input value={email} readOnly disabled />
       </Field>
 

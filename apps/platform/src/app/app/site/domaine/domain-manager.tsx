@@ -2,16 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
-import {
-  Alert,
-  Button,
-  ConfirmDialog,
-  Field,
-  Icon,
-  Input,
-  Panel,
-  StatusPill,
-} from '@stax/ui';
+import { Alert, Button, ConfirmDialog, Field, Icon, Input, Panel, StatusPill } from '@stax/ui';
 import type { StatusTone } from '@stax/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {
@@ -63,20 +54,22 @@ function SubmitButton({
 function CopyableRecord({ record }: { record: DnsRecordView }) {
   return (
     <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+      <p className="text-xs font-medium tracking-wide text-[var(--muted)] uppercase">
         Enregistrement {record.type}
       </p>
       <dl className="mt-2 space-y-1.5 text-sm">
         <div className="flex flex-wrap gap-2">
           <dt className="w-16 shrink-0 text-[var(--muted)]">Nom</dt>
-          <dd className="min-w-0 break-all font-mono text-xs">{record.name}</dd>
+          <dd className="min-w-0 font-mono text-xs break-all">{record.name}</dd>
         </div>
         <div className="flex flex-wrap gap-2">
           <dt className="w-16 shrink-0 text-[var(--muted)]">Valeur</dt>
-          <dd className="min-w-0 break-all font-mono text-xs">{record.value}</dd>
+          <dd className="min-w-0 font-mono text-xs break-all">{record.value}</dd>
         </div>
       </dl>
-      <p className="mt-2 text-xs leading-relaxed text-[var(--foreground-muted)]">{record.purpose}</p>
+      <p className="mt-2 text-xs leading-relaxed text-[var(--foreground-muted)]">
+        {record.purpose}
+      </p>
     </div>
   );
 }
@@ -98,7 +91,8 @@ export function DomainManager({
   const [rowState, setRowState] = useState<ActionState>(IDLE_STATE);
   const [, startTransition] = useTransition();
 
-  const attach = (formData: FormData) => attachDomainAction(IDLE_STATE, formData).then(setAttachState);
+  const attach = (formData: FormData) =>
+    attachDomainAction(IDLE_STATE, formData).then(setAttachState);
   const verify = (formData: FormData) => verifyDomainAction(IDLE_STATE, formData).then(setRowState);
   const makePrimary = (formData: FormData) =>
     setPrimaryDomainAction(IDLE_STATE, formData).then(setRowState);
@@ -179,7 +173,9 @@ export function DomainManager({
                     size="sm"
                     onClick={() => setExpanded(expanded === domain.id ? null : domain.id)}
                   >
-                    {expanded === domain.id ? 'Masquer la configuration DNS' : 'Voir la configuration DNS'}
+                    {expanded === domain.id
+                      ? 'Masquer la configuration DNS'
+                      : 'Voir la configuration DNS'}
                   </Button>
 
                   <Button variant="ghost" size="sm" onClick={() => setPendingDetach(domain)}>

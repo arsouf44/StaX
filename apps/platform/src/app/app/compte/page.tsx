@@ -51,8 +51,7 @@ export default async function AccountPage() {
             <h2 className="text-sm font-medium">Adresse e-mail</h2>
             <p className="mt-2 text-sm break-all text-[var(--foreground-muted)]">{profile.email}</p>
             <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
-              Changer d’adresse de connexion nécessite de vérifier la nouvelle : écrivez-nous
-              depuis{' '}
+              Changer d’adresse de connexion nécessite de vérifier la nouvelle : écrivez-nous depuis{' '}
               <Link href="/app/support" className="underline underline-offset-4">
                 l’assistance
               </Link>

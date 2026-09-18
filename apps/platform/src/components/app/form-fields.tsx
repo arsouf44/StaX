@@ -118,7 +118,12 @@ export function FieldControl({
   if (field.kind === 'textarea') {
     return (
       <Field label={field.label} hint={field.hint} error={error} required={field.required}>
-        <Textarea {...common} defaultValue={text} rows={field.rows ?? 3} maxLength={field.maxLength} />
+        <Textarea
+          {...common}
+          defaultValue={text}
+          rows={field.rows ?? 3}
+          maxLength={field.maxLength}
+        />
       </Field>
     );
   }
@@ -157,4 +162,3 @@ export function FieldControl({
     </Field>
   );
 }
-

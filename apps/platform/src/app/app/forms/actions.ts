@@ -269,7 +269,10 @@ export async function saveFormFieldAction(
   }
 
   const taken = new Set(existing.map((entry) => entry.name));
-  const base = slugify(parsed.data.label, 30).replace(/-/g, '_').replace(/^[^a-z]+/, '') || 'champ';
+  const base =
+    slugify(parsed.data.label, 30)
+      .replace(/-/g, '_')
+      .replace(/^[^a-z]+/, '') || 'champ';
   let name = base;
   for (let index = 2; taken.has(name); index += 1) name = `${base}_${index}`;
 

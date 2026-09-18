@@ -58,7 +58,7 @@ function shell(params: {
       params.heading,
       ...params.bodyText,
       params.action ? `${params.action.label} : ${params.action.url}` : '',
-      `Une question ? Écrivez a ${support}.`,
+      `Une question ? Écrivez à ${support}.`,
       `${company} — ${base}`,
     ]),
   };
@@ -84,8 +84,8 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
           'suivre son avancement et gérer votre entreprise depuis votre espace.',
       ),
       paragraph(
-        'Nous vous accompagnons a chaque étape : vous n avez rien a installer et ' +
-          'rien a configurer techniquement.',
+        'Nous vous accompagnons à chaque étape : vous n’avez rien à installer et ' +
+          'rien à configurer techniquement.',
       ),
     ].join(''),
     bodyText: [
@@ -113,7 +113,7 @@ export function verifyEmailEmail(ctx: BaseContext & { verifyUrl: string }): Emai
     bodyText: [hello(ctx.firstName), 'Confirmez votre adresse e-mail pour activer votre compte.'],
     action: { label: 'Confirmer mon adresse', url: ctx.verifyUrl },
     footerNote:
-      'Ce lien expire dans 24 heures. Si vous n etes pas a l origine de cette demande, ignorez ce message.',
+      'Ce lien expire dans 24 heures. Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.',
   });
 }
 
@@ -127,14 +127,14 @@ export function passwordResetEmail(ctx: BaseContext & { resetUrl: string }): Ema
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        'Vous avez demande a reinitialiser votre mot de passe. Ce lien est valable une heure ' +
+        'Vous avez demandé à réinitialiser votre mot de passe. Ce lien est valable une heure ' +
           'et ne fonctionne qu une seule fois.',
       ),
     ].join(''),
     bodyText: [hello(ctx.firstName), 'Reinitialisez votre mot de passe (lien valable une heure).'],
     action: { label: 'Choisir un nouveau mot de passe', url: ctx.resetUrl },
     footerNote:
-      'Si vous n etes pas a l origine de cette demande, ignorez ce message : votre mot de passe reste inchange.',
+      'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : votre mot de passe reste inchangé.',
   });
 }
 
@@ -145,23 +145,23 @@ export function activationCodeEmail(
     to: ctx.to,
     template: 'activation_code',
     subject: `Votre code d accès — ${ctx.businessName}`,
-    preheader: 'Récupérez l accès a votre espace client.',
+    preheader: 'Récupérez l’accès à votre espace client.',
     heading: 'Votre site vous attend',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Le site de ${ctx.businessName} est pret. Ce code vous donne accès a votre espace, ` +
+        `Le site de ${ctx.businessName} est prêt. Ce code vous donne accès à votre espace, ` +
           'depuis lequel vous pourrez modifier votre contenu et recevoir vos messages.',
       ),
       codeBlock(ctx.code),
       paragraph(
-        `Ce code est a usage unique et expire le ${ctx.expiresAt}. Ne le transmettez a personne.`,
+        `Ce code est à usage unique et expire le ${ctx.expiresAt}. Ne le transmettez à personne.`,
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Votre code d accès : ${ctx.code}`,
-      `Code a usage unique, valable jusqu au ${ctx.expiresAt}.`,
+      `Code à usage unique, valable jusqu’au ${ctx.expiresAt}.`,
     ],
     action: { label: 'Activer mon espace', url: `${platformUrl()}/activation` },
     footerNote: 'Ce code est personnel. StaX ne vous le demandera jamais par téléphone.',
@@ -174,21 +174,21 @@ export function teamInvitationEmail(
   return shell({
     to: ctx.to,
     template: 'team_invitation',
-    subject: `Invitation a rejoindre ${ctx.organizationName}`,
-    preheader: 'Vous avez ete invite a collaborer.',
+    subject: `Invitation à rejoindre ${ctx.organizationName}`,
+    preheader: 'Vous avez été invité à collaborer.',
     heading: `Rejoignez ${ctx.organizationName}`,
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Vous avez ete invite a rejoindre l espace de ${ctx.organizationName} sur StaX ` +
-          `avec le role « ${ctx.roleLabel} ».`,
+        `Vous avez été invité à rejoindre l’espace de ${ctx.organizationName} sur StaX ` +
+          `avec le rôle « ${ctx.roleLabel} ».`,
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Invitation a rejoindre ${ctx.organizationName} (role : ${ctx.roleLabel}).`,
+      `Invitation à rejoindre ${ctx.organizationName} (rôle : ${ctx.roleLabel}).`,
     ],
-    action: { label: 'Accepter l invitation', url: ctx.inviteUrl },
+    action: { label: 'Accepter l’invitation', url: ctx.inviteUrl },
     footerNote: 'Cette invitation expire dans 7 jours.',
   });
 }
@@ -246,15 +246,15 @@ export function projectStartedEmail(
     template: 'project_started',
     subject: 'Nous démarrons la création de votre site',
     preheader: 'Votre projet est entre les mains de notre équipe.',
-    heading: 'La création a commence',
+    heading: 'La création a commencé',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Notre équipe a commence la conception du site de ${ctx.businessName}. ` +
-          'Vous pouvez suivre chaque étape depuis votre espace, et nous écrire a tout moment.',
+        `Notre équipe a commencé la conception du site de ${ctx.businessName}. ` +
+          'Vous pouvez suivre chaque étape depuis votre espace, et nous écrire à tout moment.',
       ),
     ].join(''),
-    bodyText: [hello(ctx.firstName), `La création du site de ${ctx.businessName} a commence.`],
+    bodyText: [hello(ctx.firstName), `La création du site de ${ctx.businessName} a commencé.`],
     action: { label: 'Suivre mon projet', url: ctx.projectUrl },
   });
 }
@@ -265,9 +265,9 @@ export function previewReadyEmail(
   return shell({
     to: ctx.to,
     template: 'preview_ready',
-    subject: 'Votre site est pret a être relu',
+    subject: 'Votre site est prêt à être relu',
     preheader: 'Decouvrez votre site avant sa mise en ligne.',
-    heading: 'Votre site est pret a être relu',
+    heading: 'Votre site est prêt à être relu',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
@@ -292,13 +292,13 @@ export function sitePublishedEmail(
     to: ctx.to,
     template: 'site_published',
     subject: 'Votre site est en ligne',
-    preheader: 'Felicitations, votre site est accessible a tous.',
+    preheader: 'Félicitations, votre site est accessible à tous.',
     heading: 'Votre site est en ligne',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       strongLine('Votre site est désormais accessible publiquement.'),
       paragraph(
-        'Vous pouvez modifier vos contenus a tout moment depuis votre espace : textes, photos, ' +
+        'Vous pouvez modifier vos contenus à tout moment depuis votre espace : textes, photos, ' +
           'horaires, tarifs. Les modifications ne sont visibles qu après publication.',
       ),
       definitionList([
@@ -395,12 +395,12 @@ export function paymentFailedEmail(
     to: ctx.to,
     template: 'payment_failed',
     subject: 'Échec du prelevement de votre maintenance',
-    preheader: 'Mettez a jour votre moyen de paiement.',
+    preheader: 'Mettez à jour votre moyen de paiement.',
     heading: 'Nous n avons pas pu encaisser votre maintenance',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Le prelevement de ${ctx.amount} n a pas abouti. Votre site reste en ligne : ` +
+        `Le prélèvement de ${ctx.amount} n’a pas abouti. Votre site reste en ligne : ` +
           `nous réessaierons automatiquement le ${ctx.retryDate}.`,
       ),
       paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement des maintenant.'),
@@ -409,7 +409,7 @@ export function paymentFailedEmail(
       hello(ctx.firstName),
       `Échec du prelevement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
     ],
-    action: { label: 'Mettre a jour mon paiement', url: ctx.billingUrl },
+    action: { label: 'Mettre à jour mon paiement', url: ctx.billingUrl },
   });
 }
 
@@ -444,11 +444,11 @@ export function subscriptionCancelledEmail(
       paragraph(hello(ctx.firstName)),
       paragraph(
         `Votre maintenance prendra fin le ${ctx.endDate}. Votre site reste accessible ` +
-          `jusqu a cette date, puis pendant une période de continuite jusqu au ${ctx.gracePeriodEnd}.`,
+          `jusqu’à cette date, puis pendant une période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
       ),
       paragraph(
-        'Vos données ne sont pas supprimées a l échéance : vous pouvez les exporter ou ' +
-          'réactiver votre maintenance a tout moment.',
+        'Vos données ne sont pas supprimées à l’échéance : vous pouvez les exporter ou ' +
+          'réactiver votre maintenance à tout moment.',
       ),
     ].join(''),
     bodyText: [
@@ -497,14 +497,14 @@ export function refundProcessedEmail(
   return shell({
     to: ctx.to,
     template: 'refund_processed',
-    subject: 'Votre remboursement a ete effectué',
+    subject: 'Votre remboursement a été effectué',
     preheader: `${ctx.amount} remboursés.`,
     heading: 'Remboursement effectué',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Un remboursement de ${ctx.amount} a ete émis pour la commande ${ctx.reference}. ` +
-          'Le délai de credit dépend de votre banque, généralement 5 a 10 jours ouvrés.',
+        `Un remboursement de ${ctx.amount} a été émis pour la commande ${ctx.reference}. ` +
+          'Le délai de crédit dépend de votre banque, généralement 5 à 10 jours ouvrés.',
       ),
     ].join(''),
     bodyText: [hello(ctx.firstName), `Remboursement de ${ctx.amount} effectué (${ctx.reference}).`],

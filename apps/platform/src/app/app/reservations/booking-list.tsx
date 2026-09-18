@@ -90,7 +90,10 @@ export function BookingList({ bookings }: { bookings: BookingView[] }) {
                   <p className="text-sm font-medium">
                     <time dateTime={booking.startsAtIso}>{booking.startsAtLabel}</time>
                     {booking.serviceName ? (
-                      <span className="text-[var(--foreground-muted)]"> · {booking.serviceName}</span>
+                      <span className="text-[var(--foreground-muted)]">
+                        {' '}
+                        · {booking.serviceName}
+                      </span>
                     ) : null}
                   </p>
                   <p className="mt-1 text-sm text-[var(--foreground-muted)]">

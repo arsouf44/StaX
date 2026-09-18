@@ -166,7 +166,7 @@ export async function createCheckoutSession(
  */
 export async function createBillingPortalSession(
   stripeCustomerId: string,
-  returnPath = '/app/billing',
+  returnPath = '/app/facturation',
 ): Promise<string> {
   const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({

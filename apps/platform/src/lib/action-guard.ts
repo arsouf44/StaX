@@ -21,6 +21,36 @@ import {
  * que la donnee doit etre, la garde dit si la requete a le droit d exister.
  */
 
+/**
+ * Delai maximal accorde aux verifications d'entree.
+ *
+ * Le compteur de debit et la verification anti-robot sont des PROTECTIONS :
+ * elles ne doivent jamais devenir le maillon qui fait attendre. Si la base ou
+ * le service anti-robot ne repond pas dans ce delai, on laisse passer la
+ * requete en journalisant bruyamment, plutot que d'immobiliser un worker et de
+ * laisser la personne devant un bouton qui tourne.
+ */
+const GUARD_TIMEOUT_MS = 3_000;
+
+/** Course entre une verification et son delai. `fallback` gagne en cas de retard. */
+async function withinBudget<T>(operation: Promise<T>, fallback: T, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => {
+          console.error(`[stax:guard] ${label} n'a pas repondu en ${GUARD_TIMEOUT_MS} ms`);
+          resolve(fallback);
+        }, GUARD_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export interface ActionGuardInput {
   limit: RateLimitName;
   /** Valeur du champ piege : doit rester vide. */
@@ -53,10 +83,15 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
   // debit protege contre l abus, elle ne doit pas devenir un point de panne.
   // L incident est journalise bruyamment.
   try {
-    const decision = await enforceRateLimit(
-      new PostgresRateLimitStore(createServiceClient()),
-      input.limit,
-      rateLimitIdentity({ userId: input.userId ?? null, ipHash }),
+    const decision = await withinBudget(
+      enforceRateLimit(
+        new PostgresRateLimitStore(createServiceClient()),
+        input.limit,
+        rateLimitIdentity({ userId: input.userId ?? null, ipHash }),
+      ),
+      // Valeur de repli : on autorise. Un compteur muet ne doit pas bloquer.
+      { allowed: true, remaining: 0, retryAfterSeconds: 0 },
+      'le compteur de debit',
     );
     if (!decision.allowed) {
       return { ok: false, message: decision.error?.message ?? 'Trop de tentatives.' };
@@ -65,9 +100,13 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
     console.error('[stax:rate-limit] compteur indisponible', error);
   }
 
-  const turnstile = await verifyTurnstile(
-    typeof input.turnstileToken === 'string' ? input.turnstileToken : null,
-    ip,
+  // A l'inverse du compteur, une verification anti-robot muette echoue en
+  // SECURITE : sans reponse, on ne peut pas affirmer que la requete est
+  // humaine. Le repli est donc « non verifie ».
+  const turnstile = await withinBudget(
+    verifyTurnstile(typeof input.turnstileToken === 'string' ? input.turnstileToken : null, ip),
+    { success: false, skipped: false, errorCodes: ['timeout'] },
+    'la verification anti-robot',
   );
   if (!turnstile.success) {
     return {

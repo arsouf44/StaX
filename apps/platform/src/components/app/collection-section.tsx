@@ -20,7 +20,9 @@ const NUMBER_FORMAT = new Intl.NumberFormat('fr-FR');
 function selectColumns(descriptor: CollectionDescriptor): string {
   const columns = new Set<string>(['id']);
   for (const field of descriptor.fields) {
-    columns.add(field.column.includes('.') ? field.column.split('.')[0] ?? 'attributes' : field.column);
+    columns.add(
+      field.column.includes('.') ? (field.column.split('.')[0] ?? 'attributes') : field.column,
+    );
   }
   if (descriptor.sortColumn) columns.add(descriptor.sortColumn);
   if (descriptor.visibilityColumn) columns.add(descriptor.visibilityColumn);
@@ -139,7 +141,9 @@ export async function CollectionSection({ collection }: { collection: Collection
       if (field.kind === 'money') {
         const cents = row[field.column];
         display[field.name] =
-          typeof cents === 'number' ? formatMoney(cents, 'EUR', { hideDecimalsWhenRound: true }) : '';
+          typeof cents === 'number'
+            ? formatMoney(cents, 'EUR', { hideDecimalsWhenRound: true })
+            : '';
         continue;
       }
 
@@ -149,8 +153,7 @@ export async function CollectionSection({ collection }: { collection: Collection
       }
 
       if (field.kind === 'select') {
-        display[field.name] =
-          field.options?.find((choice) => choice.value === text)?.label ?? text;
+        display[field.name] = field.options?.find((choice) => choice.value === text)?.label ?? text;
         continue;
       }
 
@@ -225,4 +228,3 @@ export async function CollectionSection({ collection }: { collection: Collection
     />
   );
 }
-

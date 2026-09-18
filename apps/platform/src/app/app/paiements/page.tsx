@@ -48,7 +48,7 @@ const PAYMENT_KIND_LABELS: Record<string, string> = {
 const REQUIREMENT_LABELS: Record<string, string> = {
   'individual.verification.document': 'Une pièce d’identité',
   'company.verification.document': 'Un document d’immatriculation',
-  'external_account': 'Un compte bancaire pour recevoir vos virements',
+  external_account: 'Un compte bancaire pour recevoir vos virements',
   'business_profile.url': 'L’adresse de votre site',
   'business_profile.mcc': 'Votre secteur d’activité',
   'individual.address.line1': 'Votre adresse',
@@ -168,9 +168,7 @@ export default async function PaymentsPage() {
                           <time dateTime={date}>{DATE_TIME.format(new Date(date))}</time>
                         </TD>
                         <TD>
-                          {payment.description ??
-                            PAYMENT_KIND_LABELS[payment.kind] ??
-                            'Paiement'}
+                          {payment.description ?? PAYMENT_KIND_LABELS[payment.kind] ?? 'Paiement'}
                         </TD>
                         <TD className="tabular-nums">
                           {formatMoney(payment.amount_cents, 'EUR')}

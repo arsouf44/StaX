@@ -30,7 +30,13 @@ export interface ShopOrderView {
 function TransitionButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant="secondary" size="sm" loading={pending} loadingLabel="Mise à jour">
+    <Button
+      type="submit"
+      variant="secondary"
+      size="sm"
+      loading={pending}
+      loadingLabel="Mise à jour"
+    >
       {label}
     </Button>
   );
