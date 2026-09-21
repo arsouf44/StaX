@@ -31,6 +31,16 @@ $$;
 
 -- -----------------------------------------------------------------------------
 --  Activation globale de la RLS
+--
+--  La RLS est activee sur TOUTES les tables de `public`, sans exception et sans
+--  liste a tenir a jour : une table ajoutee demain est protegee le jour meme.
+--
+--  Consequence a bien comprendre avant d'y toucher : une table sans AUCUNE
+--  policy devient inaccessible a `anon` et a `authenticated`. Ce n'est pas un
+--  oubli, c'est le refus par defaut. `rate_limit_counters` est dans ce cas
+--  volontairement — ses compteurs ne regardent personne d'autre que le serveur,
+--  qui y accede par la cle de service. N'y ajoutez pas de policy « pour
+--  corriger » : ce serait ouvrir une table qui doit rester fermee.
 -- -----------------------------------------------------------------------------
 do $$
 declare
