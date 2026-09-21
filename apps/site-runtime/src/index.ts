@@ -14,6 +14,7 @@ import { handleFormSubmit } from './api/forms';
 import { handleBookingCreate, handleBookingSlots } from './api/bookings';
 import { handleCartRead, handleCartWrite } from './api/cart';
 import { handleCollect } from './api/collect';
+import { handleDonation } from './api/donations';
 import type { WorkerEnv } from './env';
 
 /**
@@ -207,6 +208,10 @@ async function route(request: Request): Promise<Response> {
     if (request.method === 'GET') return handleCartRead(request, site);
     if (request.method === 'POST') return handleCartWrite(request, site);
     return jsonResponse({ ok: false, code: 'method_not_allowed' }, 405);
+  }
+
+  if (path === '/api/donations' && request.method === 'POST') {
+    return handleDonation(request, site);
   }
 
   if (path.startsWith('/api/forms/') && request.method === 'POST') {

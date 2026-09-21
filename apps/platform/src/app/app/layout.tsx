@@ -3,6 +3,8 @@ import { buildDashboardNavigation } from '@stax/business';
 import { featureAccess, loadFeatureSnapshot } from '@stax/database';
 import { AppHeader } from '~/components/app/app-header';
 import { AppShell } from '~/components/app/app-shell';
+import { SupportBanner } from '~/components/app/support-banner';
+import { activeSupportSession } from '~/app/admin/assistance/actions';
 import { getWorkspace } from '~/lib/workspace';
 
 /**
@@ -26,6 +28,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const snapshot = await loadFeatureSnapshot(db, workspace.organization.id);
   const access = featureAccess(snapshot);
 
+  // Une session d'assistance ouverte doit se voir AVANT tout le reste.
+  const support = await activeSupportSession();
+  const supportActive = support?.organizationId === workspace.organization.id;
+
   const groups = buildDashboardNavigation({
     enabledModules: workspace.currentSite?.enabledModules ?? [],
     hasFeature: (key) => access.has(key),
@@ -33,8 +39,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   });
 
   return (
-    <AppShell groups={groups} header={<AppHeader workspace={workspace} />}>
-      {children}
-    </AppShell>
+    <>
+      {supportActive && support ? (
+        <SupportBanner
+          organizationName={workspace.organization.name}
+          reason={support.reason}
+          expiresAtLabel={new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(
+            new Date(support.expiresAt),
+          )}
+        />
+      ) : null}
+      <AppShell groups={groups} header={<AppHeader workspace={workspace} />}>
+        {children}
+      </AppShell>
+    </>
   );
 }

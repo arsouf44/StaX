@@ -56,6 +56,12 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
     label: 'Commerce',
     items: [
       { href: '/admin/commandes', label: 'Commandes', icon: 'receipt', minimum: 'support' },
+      {
+        href: '/admin/factures',
+        label: 'Factures de vente',
+        icon: 'file-text',
+        minimum: 'billing_admin',
+      },
       { href: '/admin/projets', label: 'Projets', icon: 'route', minimum: 'support' },
       { href: '/admin/devis', label: 'Devis', icon: 'file-text', minimum: 'support' },
       {
@@ -76,6 +82,12 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
     label: 'Plateforme',
     items: [
       { href: '/admin/support', label: 'Tickets', icon: 'life-buoy', minimum: 'support' },
+      {
+        href: '/admin/assistance',
+        label: 'Assistance client',
+        icon: 'user-check',
+        minimum: 'support',
+      },
       { href: '/admin/catalogue', label: 'Offres', icon: 'package', minimum: 'platform_admin' },
       { href: '/admin/webhooks', label: 'Événements', icon: 'zap', minimum: 'developer' },
       { href: '/admin/securite', label: 'Sécurité', icon: 'lock', minimum: 'platform_admin' },
