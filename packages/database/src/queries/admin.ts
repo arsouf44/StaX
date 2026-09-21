@@ -42,10 +42,10 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
   const [subscriptions, payments] = await Promise.all([
-    unwrapList<{ monthly_price_cents: number; status: string }>(
+    unwrapList<{ maintenance_price_cents: number; status: string }>(
       (await db
         .from('subscriptions')
-        .select('monthly_price_cents, status')
+        .select('maintenance_price_cents, status')
         .in('status', ['active', 'trialing', 'past_due', 'cancel_at_period_end'])) as never,
     ),
     unwrapList<{ amount_cents: number; amount_refunded_cents: number }>(
@@ -62,7 +62,7 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
   const billable = subscriptions.filter(
     (s) => s.status === 'active' || s.status === 'cancel_at_period_end',
   );
-  const mrrCents = billable.reduce((total, s) => total + s.monthly_price_cents, 0);
+  const mrrCents = billable.reduce((total, s) => total + s.maintenance_price_cents, 0);
   const revenueLast30dCents = payments.reduce(
     (total, p) => total + p.amount_cents - p.amount_refunded_cents,
     0,

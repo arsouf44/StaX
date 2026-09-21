@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 
 const PLAN_LABELS: Record<string, string> = {
   premium: 'Premium',
-  signature: 'Signature',
-  classique: 'Classique',
+  'ultra-premium': 'Ultra Premium',
+  essentiel: 'Essentiel',
 };
 
 export default function FeaturesIndexPage() {

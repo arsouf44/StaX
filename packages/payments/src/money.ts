@@ -105,9 +105,15 @@ export function formatMoney(
   }).format(toMajorUnits(amountCents));
 }
 
-/** « 14 € / mois ». */
-export function formatMonthly(amountCents: Cents, currency: Currency = 'EUR'): string {
-  return `${formatMoney(amountCents, currency, { hideDecimalsWhenRound: true })} / mois`;
+/**
+ * Maintenance annuelle : « 22 € / an ».
+ *
+ * La maintenance StaX est facturee une fois par an, pas par mois. Ce libelle
+ * est le seul endroit du code ou la periodicite s'ecrit : la changer ici la
+ * change partout, sans risque d'afficher « par mois » sur un ecran oublie.
+ */
+export function formatMaintenance(amountCents: Cents, currency: Currency = 'EUR'): string {
+  return `${formatMoney(amountCents, currency, { hideDecimalsWhenRound: true })} / an`;
 }
 
 /** « 20 % » a partir de points de base. */

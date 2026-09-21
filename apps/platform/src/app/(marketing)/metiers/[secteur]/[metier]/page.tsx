@@ -90,7 +90,7 @@ export default async function BusinessPage({
         name: 'Combien coûte un site pour ce métier ?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'À partir de 239,99 € hors taxes à la commande, puis 14 € par mois de maintenance. Les offres Premium et Signature ajoutent les réservations, le paiement en ligne et un design sur mesure.',
+          text: 'À partir de 300 € hors taxes à la commande, puis 22 € hors taxes par an de maintenance. L’offre Premium ajoute les réservations et les actualités ; l’offre Ultra Premium ajoute la boutique, l’encaissement en ligne et un design entièrement sur mesure.',
         },
       },
     ],

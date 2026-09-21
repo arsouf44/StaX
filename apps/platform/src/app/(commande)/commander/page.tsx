@@ -49,7 +49,7 @@ export default async function OrderPlanPage() {
             setupPrice: formatMoney(plan.setupPriceCents, plan.currency, {
               hideDecimalsWhenRound: true,
             }),
-            monthlyPrice: formatMoney(plan.monthlyPriceCents, plan.currency, {
+            monthlyPrice: formatMoney(plan.maintenancePriceCents, plan.currency, {
               hideDecimalsWhenRound: true,
             }),
             features: plan.features

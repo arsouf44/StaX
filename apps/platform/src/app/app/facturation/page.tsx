@@ -112,7 +112,7 @@ export default async function BillingPage() {
                   {SUBSCRIPTION_STATUS_LABELS[subscription.status] ?? subscription.status}
                 </StatusPill>
                 <span className="text-sm">
-                  {formatMoney(subscription.monthly_price_cents, subscription.currency, {
+                  {formatMoney(subscription.maintenance_price_cents, subscription.currency, {
                     hideDecimalsWhenRound: true,
                   })}{' '}
                   / mois

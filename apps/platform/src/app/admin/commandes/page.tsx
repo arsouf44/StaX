@@ -55,7 +55,7 @@ export default async function AdminOrdersPage({
   let query = db
     .from('orders')
     .select(
-      'id, reference, status, plan_slug, total_cents, monthly_price_cents, currency, created_at, paid_at, organizations ( name )',
+      'id, reference, status, plan_slug, total_cents, maintenance_price_cents, currency, created_at, paid_at, organizations ( name )',
     )
     .order('created_at', { ascending: false })
     .limit(150);
@@ -69,7 +69,7 @@ export default async function AdminOrdersPage({
     status: string;
     plan_slug: string | null;
     total_cents: number;
-    monthly_price_cents: number;
+    maintenance_price_cents: number;
     currency: string;
     created_at: string;
     paid_at: string | null;
@@ -128,10 +128,10 @@ export default async function AdminOrdersPage({
                     <TD className="text-[var(--foreground-muted)]">{row.plan_slug ?? '—'}</TD>
                     <TD className="tabular-nums">
                       {formatMoney(row.total_cents, row.currency as 'EUR')}
-                      {row.monthly_price_cents > 0 ? (
+                      {row.maintenance_price_cents > 0 ? (
                         <span className="block text-2xs text-[var(--muted)]">
                           puis{' '}
-                          {formatMoney(row.monthly_price_cents, row.currency as 'EUR', {
+                          {formatMoney(row.maintenance_price_cents, row.currency as 'EUR', {
                             hideDecimalsWhenRound: true,
                           })}{' '}
                           / mois

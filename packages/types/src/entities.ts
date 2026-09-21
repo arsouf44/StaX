@@ -141,6 +141,9 @@ export interface BusinessModuleRow {
   is_active: boolean;
 }
 
+/** Periodicite d'une facturation recurrente. */
+export type BillingInterval = 'year' | 'month';
+
 export interface PlanRow {
   id: UUID;
   slug: string;
@@ -150,7 +153,10 @@ export interface PlanRow {
   description: string | null;
   badge: string | null;
   setup_price_cents: Cents;
-  monthly_price_cents: Cents;
+  maintenance_price_cents: Cents;
+  /** `year` pour toutes les offres StaX. La colonne existe pour ne pas
+   *  supposer la periodicite dans le code qui affiche un prix. */
+  billing_interval: BillingInterval;
   currency: Currency;
   vat_rate_bps: number;
   prices_include_vat: boolean;
@@ -159,7 +165,7 @@ export interface PlanRow {
   is_public: boolean;
   sort_order: number;
   stripe_setup_price_id: string | null;
-  stripe_monthly_price_id: string | null;
+  stripe_maintenance_price_id: string | null;
   stripe_product_id: string | null;
   valid_from: Timestamp;
   valid_until: Timestamp | null;
@@ -320,7 +326,7 @@ export interface Order {
   plan_slug: string | null;
   plan_version: number | null;
   setup_price_cents: Cents;
-  monthly_price_cents: Cents;
+  maintenance_price_cents: Cents;
   discount_cents: Cents;
   vat_rate_bps: number;
   vat_cents: Cents;
@@ -390,7 +396,7 @@ export interface Quote {
   vat_rate_bps: number;
   vat_cents: Cents;
   total_cents: Cents;
-  monthly_price_cents: Cents;
+  maintenance_price_cents: Cents;
   currency: Currency;
   notes: string | null;
   internal_notes: string | null;
@@ -414,7 +420,7 @@ export interface Subscription {
   maintenance_state: MaintenanceState;
   plan_id: UUID | null;
   plan_slug: string | null;
-  monthly_price_cents: Cents;
+  maintenance_price_cents: Cents;
   vat_rate_bps: number;
   currency: Currency;
   stripe_subscription_id: string | null;

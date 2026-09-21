@@ -1,6 +1,7 @@
 import {
   LEGAL_REVIEW_REQUIRED,
   legalValue,
+  deliveryPolicyConfig,
   maintenancePolicyConfig,
   refundPolicyConfig,
 } from '@stax/config';
@@ -66,15 +67,20 @@ export function buildLegalNotice(): LegalDocument {
         id: 'editeur',
         title: 'Éditeur du site',
         blocks: [
-          p('Le présent site est édité par :'),
+          p(
+            `${legalValue('LEGAL_BRAND')} est une branche d’activité de ` +
+              `${legalValue('LEGAL_COMPANY_NAME')}. Le présent site est édité par :`,
+          ),
           {
             kind: 'definitions',
             definitions: [
               { term: 'Dénomination sociale', description: legalValue('LEGAL_COMPANY_NAME') },
+              { term: 'Nom commercial', description: legalValue('LEGAL_BRAND') },
               { term: 'Forme juridique', description: legalValue('LEGAL_FORM') },
               { term: 'Capital social', description: legalValue('LEGAL_CAPITAL') },
               { term: 'Siège social', description: legalValue('LEGAL_ADDRESS') },
-              { term: 'SIREN / SIRET', description: legalValue('LEGAL_SIREN') },
+              { term: 'SIREN', description: legalValue('LEGAL_SIREN') },
+              { term: 'SIRET du siège', description: legalValue('LEGAL_SIRET') },
               { term: 'RCS', description: legalValue('LEGAL_RCS') },
               { term: 'TVA intracommunautaire', description: legalValue('LEGAL_VAT') },
               { term: 'Directeur de la publication', description: legalValue('LEGAL_DIRECTOR') },
@@ -164,6 +170,7 @@ export function buildLegalNotice(): LegalDocument {
 export function buildTerms(): LegalDocument {
   const refund = refundPolicyConfig();
   const maintenance = maintenancePolicyConfig();
+  const delivery = deliveryPolicyConfig();
 
   return {
     slug: 'cgv',
@@ -276,9 +283,16 @@ export function buildTerms(): LegalDocument {
             'Le Client demande ses corrections depuis son espace. La mise en ligne intervient ' +
               'après sa validation explicite.',
           ),
+          p(
+            `Le Prestataire s’engage à livrer une première version du Site dans un délai de ` +
+              `${delivery.label} à compter de la réception de l’ensemble des informations et ` +
+              'éléments nécessaires à sa réalisation (contenus, photographies, identité visuelle, ' +
+              'accès éventuels). Ce point de départ est notifié au Client dans son espace.',
+          ),
           note(
-            'Les délais communiqués sont indicatifs et dépendent directement de la rapidité avec ' +
-              'laquelle le Client transmet les informations et éléments demandés.',
+            'Le délai ne court pas tant que les éléments demandés n’ont pas été transmis. Les ' +
+              'allers-retours de correction demandés par le Client après la première version ' +
+              'décalent la mise en ligne d’autant.',
           ),
         ],
       },

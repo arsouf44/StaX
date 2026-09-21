@@ -8,10 +8,18 @@ import {
   type PricingPlanInput,
 } from '@stax/payments';
 
-const CLASSIQUE: PricingPlanInput = {
-  slug: 'classique',
-  setupPriceCents: 23999,
-  monthlyPriceCents: 1400,
+/**
+ * Les trois offres du catalogue, en centimes HORS TAXES.
+ *
+ * Ces montants doivent rester identiques a ceux de la migration de donnees de
+ * reference : le test d'integration `pricing-parity` verifie que le calcul SQL
+ * et le calcul TypeScript donnent le meme centime pour chacun.
+ */
+const ESSENTIEL: PricingPlanInput = {
+  slug: 'essentiel',
+  setupPriceCents: 30_000,
+  maintenancePriceCents: 2_200,
+  billingInterval: 'year',
   vatRateBps: 2000,
   pricesIncludeVat: false,
   currency: 'EUR',
@@ -19,48 +27,58 @@ const CLASSIQUE: PricingPlanInput = {
 };
 
 const PREMIUM: PricingPlanInput = {
-  ...CLASSIQUE,
+  ...ESSENTIEL,
   slug: 'premium',
-  setupPriceCents: 49900,
-  monthlyPriceCents: 3200,
+  setupPriceCents: 50_000,
+  maintenancePriceCents: 3_200,
 };
 
-const SIGNATURE: PricingPlanInput = {
-  ...CLASSIQUE,
-  slug: 'signature',
-  setupPriceCents: 99900,
-  monthlyPriceCents: 4000,
+const ULTRA: PricingPlanInput = {
+  ...ESSENTIEL,
+  slug: 'ultra-premium',
+  setupPriceCents: 109_900,
+  maintenancePriceCents: 8_800,
 };
 
 describe('tarification des offres', () => {
-  it('chiffre l’offre Classique conformement au catalogue', () => {
-    const p = computeOrderPricing(CLASSIQUE);
-    expect(p.setupCents).toBe(23999);
-    expect(p.vatCents).toBe(4799);
-    expect(p.totalCents).toBe(28798);
-    expect(p.monthlyCents).toBe(1400);
-    expect(p.monthlyTotalCents).toBe(1680);
+  it('chiffre l’offre Essentiel conformement au catalogue', () => {
+    const p = computeOrderPricing(ESSENTIEL);
+    expect(p.setupCents).toBe(30_000);
+    expect(p.vatCents).toBe(6_000);
+    expect(p.totalCents).toBe(36_000);
+    expect(p.maintenanceCents).toBe(2_200);
+    expect(p.maintenanceTotalCents).toBe(2_640);
   });
 
   it('chiffre l’offre Premium', () => {
     const p = computeOrderPricing(PREMIUM);
-    expect(p.totalCents).toBe(59880);
-    expect(p.monthlyTotalCents).toBe(3840);
+    expect(p.totalCents).toBe(60_000);
+    expect(p.maintenanceTotalCents).toBe(3_840);
   });
 
-  it('chiffre l’offre Signature', () => {
-    const p = computeOrderPricing(SIGNATURE);
-    expect(p.totalCents).toBe(119880);
-    expect(p.monthlyTotalCents).toBe(4800);
+  it('chiffre l’offre Ultra Premium', () => {
+    const p = computeOrderPricing(ULTRA);
+    expect(p.totalCents).toBe(131_880);
+    expect(p.maintenanceTotalCents).toBe(10_560);
   });
 
   it('refuse de chiffrer une offre sur devis', () => {
-    expect(() => computeOrderPricing({ ...CLASSIQUE, isQuoteOnly: true })).toThrow();
+    expect(() => computeOrderPricing({ ...ESSENTIEL, isQuoteOnly: true })).toThrow();
   });
 
   it('affiche le cout reel de la premiere annee, sans cout cache', () => {
-    // 287,98 € + 12 x 16,80 € = 489,58 €
-    expect(firstYearTotal(CLASSIQUE)).toBe(28798 + 1680 * 12);
+    // Maintenance ANNUELLE : une seule echeance la premiere annee.
+    // 360,00 € + 26,40 € = 386,40 €
+    expect(firstYearTotal(ESSENTIEL)).toBe(36_000 + 2_640);
+    expect(firstYearTotal(PREMIUM)).toBe(60_000 + 3_840);
+    expect(firstYearTotal(ULTRA)).toBe(131_880 + 10_560);
+  });
+
+  it('compte douze echeances si une offre passait au mois', () => {
+    // La periodicite vient de l'offre, jamais d'une constante : une bascule au
+    // mois doit recalculer juste, sans toucher au code d'affichage.
+    const mensuel: PricingPlanInput = { ...ESSENTIEL, billingInterval: 'month' };
+    expect(firstYearTotal(mensuel)).toBe(36_000 + 2_640 * 12);
   });
 });
 
@@ -73,46 +91,46 @@ describe('codes promotionnels', () => {
   };
 
   it('applique une remise en pourcentage', () => {
-    expect(computeDiscount(CLASSIQUE, percent)).toBe(2399);
-    const p = computeOrderPricing(CLASSIQUE, percent);
-    expect(p.totalCents).toBe(25920);
+    expect(computeDiscount(ESSENTIEL, percent)).toBe(3_000);
+    const p = computeOrderPricing(ESSENTIEL, percent);
+    expect(p.totalCents).toBe(32_400);
   });
 
   it('applique une remise en montant fixe, plafonnee au prix', () => {
-    const fixed: CouponInput = { code: 'X', kind: 'amount', value: 50_000, appliesTo: 'setup' };
-    expect(computeDiscount(CLASSIQUE, fixed)).toBe(23999);
-    expect(computeOrderPricing(CLASSIQUE, fixed).totalCents).toBe(0);
+    const fixed: CouponInput = { code: 'X', kind: 'amount', value: 90_000, appliesTo: 'setup' };
+    expect(computeDiscount(ESSENTIEL, fixed)).toBe(30_000);
+    expect(computeOrderPricing(ESSENTIEL, fixed).totalCents).toBe(0);
   });
 
   it('ignore un code expire, desactive ou epuise', () => {
     const past = new Date('2020-01-01T00:00:00Z');
-    expect(isCouponUsable({ ...percent, validUntil: past }, 'classique')).toBe(false);
-    expect(isCouponUsable({ ...percent, isActive: false }, 'classique')).toBe(false);
-    expect(isCouponUsable({ ...percent, maxRedemptions: 5, redeemedCount: 5 }, 'classique')).toBe(
+    expect(isCouponUsable({ ...percent, validUntil: past }, 'essentiel')).toBe(false);
+    expect(isCouponUsable({ ...percent, isActive: false }, 'essentiel')).toBe(false);
+    expect(isCouponUsable({ ...percent, maxRedemptions: 5, redeemedCount: 5 }, 'essentiel')).toBe(
       false,
     );
-    expect(computeDiscount(CLASSIQUE, { ...percent, isActive: false })).toBe(0);
+    expect(computeDiscount(ESSENTIEL, { ...percent, isActive: false })).toBe(0);
   });
 
   it('ignore un code reserve a une autre offre', () => {
     const scoped: CouponInput = { ...percent, planSlugs: ['premium'] };
-    expect(computeDiscount(CLASSIQUE, scoped)).toBe(0);
-    expect(computeDiscount(PREMIUM, scoped)).toBe(4990);
+    expect(computeDiscount(ESSENTIEL, scoped)).toBe(0);
+    expect(computeDiscount(PREMIUM, scoped)).toBe(5_000);
   });
 
   it('n’applique pas une remise « maintenance » au prix de creation', () => {
-    expect(computeDiscount(CLASSIQUE, { ...percent, appliesTo: 'monthly' })).toBe(0);
+    expect(computeDiscount(ESSENTIEL, { ...percent, appliesTo: 'maintenance' })).toBe(0);
   });
 
   it('ne rend jamais un total negatif', () => {
     const huge: CouponInput = { code: 'X', kind: 'amount', value: 9_999_999, appliesTo: 'both' };
-    expect(computeOrderPricing(CLASSIQUE, huge).totalCents).toBe(0);
+    expect(computeOrderPricing(ESSENTIEL, huge).totalCents).toBe(0);
   });
 });
 
 describe('prix TTC affiches', () => {
   it('extrait correctement la TVA incluse', () => {
-    const ttc: PricingPlanInput = { ...CLASSIQUE, pricesIncludeVat: true, setupPriceCents: 12000 };
+    const ttc: PricingPlanInput = { ...ESSENTIEL, pricesIncludeVat: true, setupPriceCents: 12_000 };
     const p = computeOrderPricing(ttc);
     expect(p.totalCents).toBe(12000);
     expect(p.vatCents).toBe(2000);

@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   title: 'Votre site professionnel, construit pour votre métier',
   description:
     'StaX conçoit, héberge et maintient le site de votre entreprise. Réservations, messages, ' +
-    'paiements et contenus : un seul espace, adapte a votre metier. A partir de 239,99 € puis 14 €/mois.',
+    'paiements et contenus : un seul espace, adapte a votre metier. A partir de 300 € HT puis 22 € HT par an.',
   alternates: { canonical: '/' },
 };
 
@@ -84,7 +84,7 @@ export default async function HomePage() {
                 </h3>
                 <p className="measure mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   Hébergement, certificat HTTPS, sauvegardes, mises à jour de sécurité et
-                  surveillance sont inclus dans la maintenance mensuelle. Vous n’avez ni serveur à
+                  surveillance sont inclus dans la maintenance annuelle. Vous n’avez ni serveur à
                   gérer, ni extension à mettre à jour, ni panne à surveiller.
                 </p>
                 <OperationalIndicators className="mt-8" />
@@ -280,7 +280,7 @@ export default async function HomePage() {
               <div className="mt-8 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5">
                 <p className="text-sm font-medium">Ce que vous payez à StaX</p>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  La création de votre site, puis la maintenance mensuelle. C’est tout. Les frais
+                  La création de votre site, puis la maintenance annuelle. C’est tout. Les frais
                   bancaires de vos encaissements sont ceux de Stripe, facturés directement par
                   Stripe, en toute transparence.
                 </p>
@@ -341,7 +341,7 @@ export default async function HomePage() {
           <SectionHeading
             align="center"
             eyebrow="Tarifs"
-            title="Un prix de création, puis une maintenance mensuelle"
+            title="Un prix de création, puis une maintenance annuelle"
             description="Pas de coût caché, pas de facturation à la page vue, pas de commission sur vos ventes. Vous voyez exactement ce que vous paierez."
             className="mx-auto"
           />

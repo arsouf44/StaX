@@ -193,7 +193,7 @@ export const quoteDraftSchema = z
     quoteId: uuidSchema,
     items: z.array(quoteItemSchema).min(1, 'Ajoutez au moins une ligne.').max(50),
     vatRateBps: z.number().int().min(0).max(10_000).default(2000),
-    monthlyPriceCents: z.number().int().min(0).max(10_000_000).default(0),
+    maintenancePriceCents: z.number().int().min(0).max(10_000_000).default(0),
     notes: optionalText(4000),
     expiresInDays: z.number().int().min(1).max(365).default(30),
   })

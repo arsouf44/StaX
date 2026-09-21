@@ -1,4 +1,4 @@
-import type { Cents, Currency, FeatureRow, PlanRow } from '@stax/types';
+import type { BillingInterval, Cents, Currency, FeatureRow, PlanRow } from '@stax/types';
 import { type Db, unwrapList } from '../client';
 
 /**
@@ -28,7 +28,9 @@ export interface PlanView {
   description: string | null;
   badge: string | null;
   setupPriceCents: Cents;
-  monthlyPriceCents: Cents;
+  maintenancePriceCents: Cents;
+  /** Periodicite de la maintenance. Annuelle pour toutes les offres StaX. */
+  billingInterval: BillingInterval;
   currency: Currency;
   vatRateBps: number;
   pricesIncludeVat: boolean;
@@ -68,7 +70,8 @@ function toPlanView(row: PlanRowWithFeatures): PlanView {
     description: row.description,
     badge: row.badge,
     setupPriceCents: row.setup_price_cents,
-    monthlyPriceCents: row.monthly_price_cents,
+    maintenancePriceCents: row.maintenance_price_cents,
+    billingInterval: row.billing_interval === 'month' ? 'month' : 'year',
     currency: row.currency,
     vatRateBps: row.vat_rate_bps,
     pricesIncludeVat: row.prices_include_vat,
@@ -80,9 +83,10 @@ function toPlanView(row: PlanRowWithFeatures): PlanView {
 
 const PLAN_SELECT = `
   id, slug, version, name, tagline, description, badge,
-  setup_price_cents, monthly_price_cents, currency, vat_rate_bps, prices_include_vat,
+  setup_price_cents, maintenance_price_cents, billing_interval, currency, vat_rate_bps,
+  prices_include_vat,
   is_quote_only, is_active, is_public, sort_order,
-  stripe_setup_price_id, stripe_monthly_price_id, stripe_product_id,
+  stripe_setup_price_id, stripe_maintenance_price_id, stripe_product_id,
   valid_from, valid_until,
   plan_features (
     enabled, limit_value,

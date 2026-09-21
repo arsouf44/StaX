@@ -21,7 +21,9 @@ create table public.orders (
   plan_slug             text,
   plan_version          int,
   setup_price_cents     integer not null default 0,
-  monthly_price_cents   integer not null default 0,
+  maintenance_price_cents integer not null default 0,
+  /** Periodicite figee avec le prix : le contrat ne change pas sous le client. */
+  billing_interval      text not null default 'year',
   discount_cents        integer not null default 0,
   vat_rate_bps          integer not null default 2000,
   vat_cents             integer not null default 0,
@@ -54,9 +56,10 @@ create table public.orders (
   updated_at            timestamptz not null default now(),
 
   constraint orders_amounts_non_negative check (
-    setup_price_cents >= 0 and monthly_price_cents >= 0
+    setup_price_cents >= 0 and maintenance_price_cents >= 0
     and discount_cents >= 0 and vat_cents >= 0 and total_cents >= 0
   ),
+  constraint orders_billing_interval_valid check (billing_interval in ('year', 'month')),
   constraint orders_discount_bounded check (discount_cents <= setup_price_cents),
   constraint orders_currency_iso check (currency ~ '^[A-Z]{3}$'),
   constraint orders_domain_handling_valid
@@ -236,7 +239,7 @@ create table public.quotes (
   vat_rate_bps      integer not null default 2000,
   vat_cents         integer not null default 0,
   total_cents       integer not null default 0,
-  monthly_price_cents integer not null default 0,
+  maintenance_price_cents integer not null default 0,
   currency          char(3) not null default 'EUR',
 
   notes             text,
@@ -317,7 +320,7 @@ as $$
 $$;
 
 -- -----------------------------------------------------------------------------
---  subscriptions — maintenance mensuelle (independante de l'achat initial)
+--  subscriptions — maintenance annuelle (independante de l'achat initial)
 -- -----------------------------------------------------------------------------
 create table public.subscriptions (
   id                      uuid primary key default gen_random_uuid(),
@@ -332,7 +335,8 @@ create table public.subscriptions (
   plan_id                 uuid references public.plans (id) on delete restrict,
   plan_slug               text,
   /** Prix fige : un changement de tarif public n'affecte pas ce contrat. */
-  monthly_price_cents     integer not null,
+  maintenance_price_cents integer not null,
+  billing_interval        text not null default 'year',
   vat_rate_bps            integer not null default 2000,
   currency                char(3) not null default 'EUR',
 
@@ -354,7 +358,8 @@ create table public.subscriptions (
   created_at              timestamptz not null default now(),
   updated_at              timestamptz not null default now(),
 
-  constraint subscriptions_price_non_negative check (monthly_price_cents >= 0)
+  constraint subscriptions_price_non_negative check (maintenance_price_cents >= 0),
+  constraint subscriptions_billing_interval_valid check (billing_interval in ('year', 'month'))
 );
 
 create unique index subscriptions_stripe_key on public.subscriptions (stripe_subscription_id)

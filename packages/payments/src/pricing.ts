@@ -1,4 +1,4 @@
-import type { Cents, Currency } from '@stax/types';
+import type { BillingInterval, Cents, Currency } from '@stax/types';
 import { applyBasisPoints, assertCents, vatFromGross } from './money';
 
 /**
@@ -9,10 +9,17 @@ import { applyBasisPoints, assertCents, vatFromGross } from './money';
  * et aux tests, et un test croise verifie que les deux donnent le meme centime.
  */
 
+/** Nombre d'echeances de maintenance dans une annee civile. */
+export function periodsPerYear(interval: BillingInterval): number {
+  return interval === 'year' ? 1 : 12;
+}
+
 export interface PricingPlanInput {
   slug: string;
   setupPriceCents: Cents;
-  monthlyPriceCents: Cents;
+  maintenancePriceCents: Cents;
+  /** Periodicite de la maintenance. Annuelle pour toutes les offres StaX. */
+  billingInterval: BillingInterval;
   vatRateBps: number;
   pricesIncludeVat: boolean;
   currency: Currency;
@@ -24,7 +31,7 @@ export interface CouponInput {
   kind: 'percent' | 'amount';
   /** percent : points de base (1000 = 10 %). amount : centimes. */
   value: number;
-  appliesTo: 'setup' | 'monthly' | 'both';
+  appliesTo: 'setup' | 'maintenance' | 'both';
   planSlugs?: readonly string[];
   validFrom?: Date;
   validUntil?: Date | null;
@@ -35,15 +42,15 @@ export interface CouponInput {
 
 export interface PriceBreakdown {
   setupCents: Cents;
-  monthlyCents: Cents;
+  maintenanceCents: Cents;
   discountCents: Cents;
   netCents: Cents;
   vatCents: Cents;
   totalCents: Cents;
   vatRateBps: number;
   currency: Currency;
-  /** Premiere echeance mensuelle, TVA comprise. */
-  monthlyTotalCents: Cents;
+  /** Premiere echeance annuelle de maintenance, TVA comprise. */
+  maintenanceTotalCents: Cents;
 }
 
 export function isCouponUsable(coupon: CouponInput, planSlug: string, now = new Date()): boolean {
@@ -83,7 +90,7 @@ export function computeOrderPricing(
     throw new Error('Une offre sur devis ne peut pas être chiffrée automatiquement.');
   }
   assertCents(plan.setupPriceCents, 'prix de création');
-  assertCents(plan.monthlyPriceCents, 'prix de maintenance');
+  assertCents(plan.maintenancePriceCents, 'prix de maintenance');
 
   const discountCents = computeDiscount(plan, coupon, now);
   const netCents = Math.max(plan.setupPriceCents - discountCents, 0);
@@ -92,37 +99,44 @@ export function computeOrderPricing(
     const vatCents = vatFromGross(netCents, plan.vatRateBps);
     return {
       setupCents: plan.setupPriceCents,
-      monthlyCents: plan.monthlyPriceCents,
+      maintenanceCents: plan.maintenancePriceCents,
       discountCents,
       netCents: netCents - vatCents,
       vatCents,
       totalCents: netCents,
       vatRateBps: plan.vatRateBps,
       currency: plan.currency,
-      monthlyTotalCents: plan.monthlyPriceCents,
+      maintenanceTotalCents: plan.maintenancePriceCents,
     };
   }
 
   const vatCents = applyBasisPoints(netCents, plan.vatRateBps);
   return {
     setupCents: plan.setupPriceCents,
-    monthlyCents: plan.monthlyPriceCents,
+    maintenanceCents: plan.maintenancePriceCents,
     discountCents,
     netCents,
     vatCents,
     totalCents: netCents + vatCents,
     vatRateBps: plan.vatRateBps,
     currency: plan.currency,
-    monthlyTotalCents:
-      plan.monthlyPriceCents + applyBasisPoints(plan.monthlyPriceCents, plan.vatRateBps),
+    maintenanceTotalCents:
+      plan.maintenancePriceCents + applyBasisPoints(plan.maintenancePriceCents, plan.vatRateBps),
   };
 }
 
 /**
- * Cout total de la premiere annee : creation + douze mois de maintenance.
- * Affiche sur la page tarifs pour qu'aucun cout ne soit cache.
+ * Cout total de la premiere annee : creation + les echeances de maintenance
+ * dues sur douze mois.
+ *
+ * Affiche sur la page tarifs pour qu'aucun cout ne soit cache. Le nombre
+ * d'echeances vient de la periodicite de l'offre, jamais d'une constante : une
+ * offre mensuelle et une offre annuelle ne se calculent pas pareil, et le
+ * chiffre annonce doit rester exact si la periodicite change.
  */
 export function firstYearTotal(plan: PricingPlanInput, coupon?: CouponInput | null): Cents {
   const breakdown = computeOrderPricing(plan, coupon);
-  return breakdown.totalCents + breakdown.monthlyTotalCents * 12;
+  return (
+    breakdown.totalCents + breakdown.maintenanceTotalCents * periodsPerYear(plan.billingInterval)
+  );
 }

@@ -17,7 +17,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'general',
     question: 'Combien de temps faut-il pour avoir mon site en ligne ?',
     answer:
-      'Cela dépend surtout de la rapidité avec laquelle vous nous transmettez vos informations et vos photos. Une fois le questionnaire complété, comptez généralement quelques jours ouvrés pour une première version, puis un aller-retour de corrections avant la mise en ligne. Nous vous donnons une estimation précise dès l’ouverture de votre projet.',
+      'Comptez 1 à 3 semaines entre le moment où nous avons tous vos éléments (textes, photos, logo) et la mise en ligne. Le délai court à partir de la réception de ces éléments, pas de la commande : c’est souvent ce qui fait la différence entre une et trois semaines. Vous relisez une version privée avant toute publication, et vos demandes de correction sont incluses.',
   },
   {
     category: 'general',

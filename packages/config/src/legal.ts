@@ -1,3 +1,4 @@
+import { checkLegalIdentity, type IdentityProblem } from './identity';
 import { deployEnvironment, readEnv } from './runtime';
 
 /**
@@ -22,10 +23,25 @@ export interface LegalField {
   /** Explicit development placeholder — obviously fake, never plausible. */
   placeholder: string;
   hint: string;
+  /**
+   * Publicly mandatory identity of the publisher, committed on purpose.
+   *
+   * A SIREN, a registered address or a VAT number are not secrets: French law
+   * REQUIRES them to appear on every page of a commercial website. Keeping
+   * them out of the repository would not protect anything — it would only mean
+   * the site cannot render its own mandatory notices.
+   *
+   * Values that are NOT public knowledge, or that a deployment may legitimately
+   * change (share capital, publication director, support contacts), have no
+   * default: they must be provided at deployment time.
+   */
+  defaultValue?: string;
 }
 
 export type LegalKey =
   | 'LEGAL_COMPANY_NAME'
+  | 'LEGAL_SIRET'
+  | 'LEGAL_BRAND'
   | 'LEGAL_FORM'
   | 'LEGAL_CAPITAL'
   | 'LEGAL_ADDRESS'
@@ -46,69 +62,94 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Dénomination sociale',
     required: true,
     placeholder: '[A CONFIGURER — denomination sociale]',
+    defaultValue: 'LallianSe',
     hint: 'Nom exact figurant sur l’extrait Kbis.',
+  },
+  {
+    key: 'LEGAL_BRAND',
+    label: 'Nom commercial',
+    required: true,
+    placeholder: '[A CONFIGURER — nom commercial]',
+    defaultValue: 'StaX',
+    hint: 'Marque sous laquelle l’activité est exercée. StaX est une branche d’activité de LallianSe.',
   },
   {
     key: 'LEGAL_FORM',
     label: 'Forme juridique',
     required: true,
     placeholder: '[A CONFIGURER — forme juridique]',
+    defaultValue: 'SAS (société par actions simplifiée)',
     hint: 'SASU, SAS, SARL, EI, micro-entreprise…',
   },
   {
     key: 'LEGAL_CAPITAL',
     label: 'Capital social',
-    required: false,
+    required: true,
     placeholder: '[A CONFIGURER — capital social]',
-    hint: 'Obligatoire pour les sociétés de capitaux. Laisser vide pour une entreprise individuelle.',
+    hint: 'Obligatoire pour une société de capitaux (article R.123-237 du Code de commerce). Montant exact figurant sur le Kbis, par exemple « 10 000 € ».',
   },
   {
     key: 'LEGAL_ADDRESS',
     label: 'Siège social',
     required: true,
     placeholder: '[A CONFIGURER — adresse du siege social]',
+    defaultValue: '229 rue Saint-Honoré, 75001 Paris, France',
     hint: 'Adresse postale complète.',
   },
   {
     key: 'LEGAL_SIREN',
-    label: 'SIREN / SIRET',
+    label: 'SIREN',
     required: true,
     placeholder: '[A CONFIGURER — SIREN]',
-    hint: 'Numéro d’identification INSEE.',
+    defaultValue: '814 648 663',
+    hint: 'Numéro d’identification INSEE à neuf chiffres. La clé de contrôle est vérifiée au démarrage.',
+  },
+  {
+    key: 'LEGAL_SIRET',
+    label: 'SIRET du siège',
+    required: true,
+    placeholder: '[A CONFIGURER — SIRET]',
+    defaultValue: '814 648 663 00031',
+    hint: 'SIREN suivi du NIC de l’établissement. Doit commencer par le SIREN déclaré.',
   },
   {
     key: 'LEGAL_RCS',
     label: 'RCS',
-    required: false,
+    required: true,
     placeholder: '[A CONFIGURER — RCS]',
-    hint: 'Ville d’immatriculation et numéro, si applicable.',
+    defaultValue: 'RCS Paris 814 648 663',
+    hint: 'Ville d’immatriculation et numéro (article R.123-237 du Code de commerce).',
   },
   {
     key: 'LEGAL_VAT',
     label: 'TVA intracommunautaire',
-    required: false,
+    required: true,
     placeholder: '[A CONFIGURER — numero de TVA]',
-    hint: 'Laisser vide si franchise en base de TVA (article 293 B du CGI).',
+    defaultValue: 'FR58814648663',
+    hint: 'Calculé depuis le SIREN et vérifié au démarrage. Laisser vide uniquement en franchise en base de TVA (article 293 B du CGI).',
   },
   {
     key: 'LEGAL_DIRECTOR',
     label: 'Directeur de la publication',
     required: true,
     placeholder: '[A CONFIGURER — directeur de la publication]',
-    hint: 'Personne physique responsable au sens de la loi du 21 juin 2004 (LCEN).',
+    hint: 'Personne physique responsable au sens de la loi du 21 juin 2004 (LCEN). Pour une SAS, le président, sauf désignation expresse.',
   },
   {
     key: 'LEGAL_HOST',
     label: 'Hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — hebergeur]',
-    hint: 'Raison sociale de l’hébergeur (Cloudflare, Inc. et Supabase, Inc. pour StaX).',
+    defaultValue: 'Cloudflare, Inc. (diffusion) et Supabase, Inc. (base de données et fichiers)',
+    hint: 'Raison sociale de l’hébergeur, obligatoire au titre de l’article 6 III de la LCEN.',
   },
   {
     key: 'LEGAL_HOST_ADDRESS',
     label: 'Adresse de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — adresse de l’hebergeur]',
+    defaultValue:
+      'Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis — Supabase, Inc., 970 Toa Payoh North, Singapour',
     hint: 'Adresse postale et moyen de contact de l’hébergeur.',
   },
   {
@@ -147,6 +188,8 @@ export interface LegalStatus {
   configured: boolean;
   missingRequired: LegalKey[];
   missingOptional: LegalKey[];
+  /** Identifiants mal formes : cle de controle fausse, SIRET etranger au SIREN. */
+  identityProblems: IdentityProblem[];
   reviewRequired: true;
 }
 
@@ -162,19 +205,25 @@ function fieldFor(key: LegalKey): LegalField {
  * address or director name can ever reach a rendered page.
  */
 export function legalConfig(): LegalConfig {
-  const entries = LEGAL_FIELDS.map((field) => {
-    const value = readEnv(field.key);
-    return [field.key, value ?? field.placeholder] as const;
-  });
+  const entries = LEGAL_FIELDS.map((field) => [field.key, legalValue(field.key)] as const);
   return Object.fromEntries(entries) as LegalConfig;
 }
 
+/**
+ * Ordre de resolution : secret de deploiement, puis valeur publique connue,
+ * puis marqueur de substitution.
+ *
+ * Le marqueur est volontairement impossible a confondre avec une vraie valeur :
+ * il vaut mieux qu'une page affiche « [A CONFIGURER] » qu'un SIREN invente.
+ */
 export function legalValue(key: LegalKey): string {
-  return readEnv(key) ?? fieldFor(key).placeholder;
+  const field = fieldFor(key);
+  return readEnv(key) ?? field.defaultValue ?? field.placeholder;
 }
 
 export function isLegalValueConfigured(key: LegalKey): boolean {
-  return readEnv(key) !== undefined;
+  const field = fieldFor(key);
+  return readEnv(key) !== undefined || field.defaultValue !== undefined;
 }
 
 export function legalStatus(): LegalStatus {
@@ -185,10 +234,20 @@ export function legalStatus(): LegalStatus {
     if (field.required) missingRequired.push(field.key);
     else missingOptional.push(field.key);
   }
+  // Un identifiant renseigne mais faux est un probleme DIFFERENT d'un
+  // identifiant absent, et tout aussi bloquant : il serait imprime sur chaque
+  // facture et chaque page de mentions legales.
+  const identityProblems = checkLegalIdentity({
+    siren: legalValue('LEGAL_SIREN'),
+    siret: legalValue('LEGAL_SIRET'),
+    vat: legalValue('LEGAL_VAT'),
+  });
+
   return {
-    configured: missingRequired.length === 0,
+    configured: missingRequired.length === 0 && identityProblems.length === 0,
     missingRequired,
     missingOptional,
+    identityProblems,
     reviewRequired: LEGAL_REVIEW_REQUIRED,
   };
 }
@@ -204,18 +263,32 @@ export function legalStatus(): LegalStatus {
 export function assertLegalConfigured(): void {
   const status = legalStatus();
   if (status.configured) return;
+
+  const details = [
+    status.missingRequired.length > 0 ? `manquantes : ${status.missingRequired.join(', ')}` : null,
+    ...status.identityProblems.map((problem) => `${problem.field} — ${problem.message}`),
+  ].filter((entry): entry is string => entry !== null);
+
+  // Une cle de controle fausse n'est JAMAIS tolerable, meme en developpement :
+  // c'est une faute de frappe, pas une configuration incomplete, et elle ne se
+  // verrait qu'une fois imprimee sur une facture.
+  if (status.identityProblems.length > 0) {
+    throw new Error(`[StaX] Identite commerciale invalide : ${details.join(' | ')}`);
+  }
+
   if (deployEnvironment() !== 'production') return;
+
   if (readEnv('LEGAL_ALLOW_INCOMPLETE') === 'true') {
     console.warn(
-      `[StaX] Mentions légales incomplètes en production : ${status.missingRequired.join(', ')}. ` +
+      `[StaX] Mentions légales incomplètes en production : ${details.join(' | ')}. ` +
         'LEGAL_ALLOW_INCOMPLETE=true est actif — a retirer avant ouverture commerciale.',
     );
     return;
   }
+
   throw new Error(
-    `[StaX] Demarrage refuse : informations legales obligatoires manquantes (${status.missingRequired.join(
-      ', ',
-    )}). Renseignez-les dans les secrets de production ou definissez LEGAL_ALLOW_INCOMPLETE=true ` +
+    `[StaX] Demarrage refuse : informations legales obligatoires ${details.join(' | ')}. ` +
+      'Renseignez-les dans les secrets de production ou definissez LEGAL_ALLOW_INCOMPLETE=true ' +
       'tant que le deploiement reste prive. Voir docs/legal-configuration.md.',
   );
 }
@@ -239,6 +312,44 @@ export function refundPolicyConfig(): RefundPolicyConfig {
     windowDays: Number.isFinite(windowDays) && windowDays > 0 ? windowDays : 15,
     domainDeductionCents: Number.isFinite(deduction) && deduction >= 0 ? deduction : 1000,
     currency: 'EUR',
+  };
+}
+
+/**
+ * Delai de realisation annonce commercialement.
+ *
+ * Un delai annonce engage le vendeur : l'article L.216-1 du Code de la
+ * consommation impose d'indiquer une date de livraison, et le droit commun des
+ * contrats fait de meme entre professionnels. Le delai vit donc ici, en un seul
+ * endroit, plutot que d'etre recopie dans une page de vente ou personne ne le
+ * remettrait a jour.
+ *
+ * Il court a partir de la reception des elements du client, pas de la commande :
+ * c'est la realite du travail, et le dire evite une promesse intenable.
+ */
+export interface DeliveryPolicyConfig {
+  minWeeks: number;
+  maxWeeks: number;
+  /** Formulation prete a afficher : « 1 à 3 semaines ». */
+  label: string;
+}
+
+export function deliveryPolicyConfig(): DeliveryPolicyConfig {
+  const int = (key: string, fallback: number): number => {
+    const parsed = Number.parseInt(readEnv(key) ?? '', 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+
+  const minWeeks = int('DELIVERY_MIN_WEEKS', 1);
+  const maxWeeks = Math.max(int('DELIVERY_MAX_WEEKS', 3), minWeeks);
+
+  return {
+    minWeeks,
+    maxWeeks,
+    label:
+      minWeeks === maxWeeks
+        ? `${minWeeks} semaine${minWeeks > 1 ? 's' : ''}`
+        : `${minWeeks} à ${maxWeeks} semaines`,
   };
 }
 

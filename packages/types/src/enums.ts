@@ -233,4 +233,4 @@ export const LIMIT_KEYS = [
 ] as const;
 export type LimitKey = (typeof LIMIT_KEYS)[number];
 
-export type PlanSlug = 'classique' | 'premium' | 'signature' | 'sur-mesure';
+export type PlanSlug = 'essentiel' | 'premium' | 'ultra-premium' | 'sur-mesure';

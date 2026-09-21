@@ -7,7 +7,7 @@ import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
  *
  * Une seule session de paiement couvre les deux engagements, pour qu'aucun
  * cout ne soit cache : le paiement initial de creation ET l'abonnement
- * mensuel de maintenance apparaissent dans le meme recapitulatif Stripe.
+ * annuel de maintenance apparaissent dans le meme recapitulatif Stripe.
  *
  * La maintenance ne demarre PAS le jour de la commande : une periode sans
  * facturation (MAINTENANCE_TRIAL_DAYS, 30 jours par defaut) laisse le temps
@@ -19,10 +19,10 @@ export interface CheckoutPlanPrices {
   planSlug: string;
   planName: string;
   setupPriceCents: Cents;
-  monthlyPriceCents: Cents;
+  maintenancePriceCents: Cents;
   currency: Currency;
   stripeSetupPriceId: string | null;
-  stripeMonthlyPriceId: string | null;
+  stripeMaintenancePriceId: string | null;
 }
 
 export interface CreateCheckoutInput {
@@ -69,18 +69,18 @@ function lineItemForSetup(
 function lineItemForMaintenance(
   plan: CheckoutPlanPrices,
 ): Stripe.Checkout.SessionCreateParams.LineItem | null {
-  if (plan.monthlyPriceCents <= 0) return null;
-  if (plan.stripeMonthlyPriceId) {
-    return { price: plan.stripeMonthlyPriceId, quantity: 1 };
+  if (plan.maintenancePriceCents <= 0) return null;
+  if (plan.stripeMaintenancePriceId) {
+    return { price: plan.stripeMaintenancePriceId, quantity: 1 };
   }
   return {
     quantity: 1,
     price_data: {
       currency: plan.currency.toLowerCase(),
-      unit_amount: plan.monthlyPriceCents,
-      recurring: { interval: 'month' },
+      unit_amount: plan.maintenancePriceCents,
+      recurring: { interval: 'year' },
       product_data: {
-        name: `Maintenance mensuelle — offre ${plan.planName}`,
+        name: `Maintenance annuelle — offre ${plan.planName}`,
         description:
           'Hébergement, certificat HTTPS, sauvegardes, mises a jour de sécurité et support.',
       },

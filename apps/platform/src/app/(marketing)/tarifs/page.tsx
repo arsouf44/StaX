@@ -10,7 +10,7 @@ import { FAQ_ITEMS } from '~/content/faq';
 export const metadata: Metadata = {
   title: 'Tarifs',
   description:
-    'Un prix de création, puis une maintenance mensuelle. À partir de 239,99 € HT puis 14 €/mois. ' +
+    'Un prix de création, puis une maintenance annuelle. À partir de 300 € HT puis 22 € HT par an. ' +
     'Pas de commission sur vos ventes, pas de coût caché.',
   alternates: { canonical: '/tarifs' },
 };
@@ -33,7 +33,7 @@ export default async function PricingPage() {
             align="center"
             eyebrow="Tarifs"
             title="Un prix clair, sans surprise"
-            description="Vous payez la création de votre site, puis une maintenance mensuelle qui couvre l’hébergement, la sécurité, les sauvegardes et le support. Rien d’autre."
+            description="Vous payez la création de votre site, puis une maintenance annuelle qui couvre l’hébergement, la sécurité, les sauvegardes et le support. Rien d’autre."
             className="mx-auto"
           />
         </Container>

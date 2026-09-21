@@ -52,7 +52,7 @@ const PROCESS = [
   {
     title: 'Nous établissons un devis détaillé',
     description:
-      'Chaque ligne est chiffrée séparément : vous voyez ce que coûte chaque fonctionnalité et vous pouvez en retirer. Le devis précise aussi la maintenance mensuelle associée.',
+      'Chaque ligne est chiffrée séparément : vous voyez ce que coûte chaque fonctionnalité et vous pouvez en retirer. Le devis précise aussi la maintenance annuelle associée.',
     detail: 'Valable 30 jours',
   },
   {

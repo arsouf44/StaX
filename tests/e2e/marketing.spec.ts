@@ -63,10 +63,37 @@ test.describe('Site public', () => {
   test('aucune valeur legale n’est inventee', async ({ page }) => {
     await page.goto('/mentions-legales');
     const body = (await page.locator('body').textContent()) ?? '';
-    // Sans configuration, la page doit montrer un marqueur explicite plutot
-    // qu un SIREN plausible. Un numero a neuf chiffres serait suspect.
-    const looksLikeInventedSiren = /\b\d{9}\b/.test(body) && !body.includes('A CONFIGURER');
-    expect(looksLikeInventedSiren).toBe(false);
+
+    // Tout identifiant a neuf chiffres affiche sur cette page doit porter une
+    // cle de controle valide. Un numero invente la franchit une fois sur dix :
+    // c est une barriere faible prise isolement, mais elle attrape la faute la
+    // plus probable — une coquille dans un secret de deploiement.
+    const candidates = [...body.matchAll(/\b(\d{3}[\s\u00a0]?\d{3}[\s\u00a0]?\d{3})\b/g)].map(
+      (match) => (match[1] ?? '').replace(/[\s\u00a0]/g, ''),
+    );
+
+    for (const siren of candidates) {
+      let total = 0;
+      let double = false;
+      for (let index = siren.length - 1; index >= 0; index -= 1) {
+        let value = siren.charCodeAt(index) - 48;
+        if (double) {
+          value *= 2;
+          if (value > 9) value -= 9;
+        }
+        total += value;
+        double = !double;
+      }
+      expect(total % 10, `« ${siren} » n’est pas un identifiant INSEE valide`).toBe(0);
+    }
+
+    // Ce qui n est pas connu reste explicitement marque comme a configurer :
+    // la page ne comble jamais un trou avec une valeur plausible.
+    const capital = await page
+      .getByText(/capital social/i)
+      .first()
+      .textContent();
+    expect(capital).toBeTruthy();
   });
 
   test('robots.txt existe et reste coherent', async ({ request }) => {

@@ -4,7 +4,7 @@ import {
   applyBasisPoints,
   assertCents,
   formatMoney,
-  formatMonthly,
+  formatMaintenance,
   moneyInputValue,
   parseMoneyInput,
   fromMajorUnits,
@@ -64,7 +64,9 @@ describe('arithmetique monetaire', () => {
     const normalize = (value: string) => value.replace(/\u202f|\u00a0/g, ' ');
     expect(normalize(formatMoney(23999))).toBe('239,99 \u20ac');
     expect(normalize(formatMoney(1400, 'EUR', { hideDecimalsWhenRound: true }))).toBe('14 \u20ac');
-    expect(normalize(formatMonthly(3200))).toBe('32 \u20ac / mois');
+    // La maintenance StaX est ANNUELLE : ce libelle ne doit jamais dire « mois ».
+    expect(normalize(formatMaintenance(3200))).toBe('32 \u20ac / an');
+    expect(normalize(formatMaintenance(2200))).toBe('22 \u20ac / an');
   });
   it('lit un montant saisi a la main sans jamais passer par un flottant', () => {
     expect(parseMoneyInput('12,50')).toBe(1250);

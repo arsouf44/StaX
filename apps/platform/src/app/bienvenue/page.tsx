@@ -43,7 +43,7 @@ export default async function WelcomePage() {
           <div className="max-w-xl">
             <h1 className="text-3xl font-medium tracking-[-0.03em]">Votre compte est prêt</h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
-              Il ne lui manque qu’un site. Deux possibilités, selon votre situation.
+              Il ne lui manque qu’un site. Trois possibilités, selon votre situation.
             </p>
 
             <div className="mt-8 space-y-4">
@@ -55,6 +55,17 @@ export default async function WelcomePage() {
                 </p>
                 <ButtonLink href="/commander" className="mt-4">
                   Commander mon site
+                </ButtonLink>
+              </Panel>
+
+              <Panel level={1} padding="lg">
+                <h2 className="text-base font-medium">J’ai reçu une facture</h2>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                  Si nous avons convenu de votre site par téléphone, vous avez reçu une facture par
+                  e-mail. Son numéro suffit à retrouver votre commande.
+                </p>
+                <ButtonLink href="/facture" variant="secondary" className="mt-4">
+                  Saisir mon numéro de facture
                 </ButtonLink>
               </Panel>
 

@@ -44,7 +44,7 @@ const SHOWCASES = [
     variant: 'artisan' as const,
     name: 'Martin Plomberie',
     sector: 'Artisanat & bâtiment',
-    plan: 'Classique',
+    plan: 'Essentiel',
     host: 'martin-plomberie.fr',
     tone: 'dark' as const,
     features: ['Prestations', 'Zones d’intervention', 'Réalisations', 'Demande de devis'],

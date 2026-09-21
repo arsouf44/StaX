@@ -238,8 +238,8 @@ export default async function DashboardPage() {
                 {workspace.subscription ? (
                   <span className="text-sm text-[var(--foreground-muted)]">
                     Maintenance {subscriptionLabel(workspace.subscription.status)}
-                    {workspace.subscription.monthly_price_cents
-                      ? ` — ${formatMoney(workspace.subscription.monthly_price_cents, 'EUR', { hideDecimalsWhenRound: true })} / mois`
+                    {workspace.subscription.maintenance_price_cents
+                      ? ` — ${formatMoney(workspace.subscription.maintenance_price_cents, 'EUR', { hideDecimalsWhenRound: true })} / mois`
                       : ''}
                   </span>
                 ) : null}

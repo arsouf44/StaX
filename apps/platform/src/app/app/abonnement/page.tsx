@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { formatMonthly, SUBSCRIPTION_STATUS_LABELS } from '@stax/payments';
+import { formatMaintenance, SUBSCRIPTION_STATUS_LABELS } from '@stax/payments';
 import { refundPolicyConfig } from '@stax/config';
 import { EmptyState, Icon, Panel, PermissionDenied } from '@stax/ui';
 import type { StatusTone } from '@stax/ui';
@@ -39,7 +39,7 @@ export default async function SubscriptionPage() {
         id: subscription.id,
         statusLabel: SUBSCRIPTION_STATUS_LABELS[subscription.status] ?? subscription.status,
         statusTone: TONES[subscription.status] ?? 'neutral',
-        priceLabel: formatMonthly(subscription.monthly_price_cents, 'EUR'),
+        priceLabel: formatMaintenance(subscription.maintenance_price_cents, 'EUR'),
         periodEndLabel: subscription.current_period_end
           ? DATE.format(new Date(subscription.current_period_end))
           : null,

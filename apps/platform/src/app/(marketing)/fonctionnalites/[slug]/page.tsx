@@ -43,8 +43,8 @@ export async function generateMetadata({
 
 const PLAN_LABELS: Record<string, string> = {
   premium: 'Inclus à partir de Premium',
-  signature: 'Inclus avec Signature',
-  classique: 'Inclus dès Classique',
+  'ultra-premium': 'Inclus avec Ultra Premium',
+  essentiel: 'Inclus dès l’offre Essentiel',
 };
 
 export default async function FeatureDetailPage({ params }: { params: Promise<{ slug: string }> }) {

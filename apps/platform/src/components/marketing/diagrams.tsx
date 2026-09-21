@@ -200,7 +200,7 @@ export function PaymentRoutingDiagram({ className }: { className?: string }) {
         <p className="mt-2.5 text-xs leading-relaxed text-[var(--muted)]">
           Les encaissements de votre activité passent par votre propre compte Stripe connecté. StaX
           ne les détient jamais et ne prélève aucune commission dessus. Vous ne payez à StaX que la
-          création du site et la maintenance mensuelle.
+          création du site et la maintenance annuelle.
         </p>
       </div>
       <figcaption className="sr-only">

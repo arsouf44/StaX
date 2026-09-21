@@ -10,7 +10,8 @@ import { ButtonLink, cn } from '@stax/ui';
  * module que celui utilise au paiement. Aucun prix n est ecrit en dur ici.
  *
  * Le cout reel de la premiere annee est affiche explicitement : le client doit
- * voir ce qu il paiera sur douze mois, pas seulement le prix d appel.
+ * voir ce qu il paiera sur douze mois, pas seulement le prix d appel. La
+ * maintenance StaX est ANNUELLE : une seule echeance la premiere annee.
  */
 
 interface PricingCardsProps {
@@ -20,35 +21,40 @@ interface PricingCardsProps {
   className?: string;
 }
 
-/** Fonctionnalites mises en avant par offre, dans l ordre de lecture. */
+/**
+ * Fonctionnalites mises en avant par offre, dans l ordre de lecture.
+ *
+ * Cette liste doit rester le reflet exact des droits accordes dans la migration
+ * de donnees de reference. Annoncer ici une fonction que l offre n ouvre pas
+ * serait une pratique commerciale trompeuse, pas une maladresse de redaction.
+ */
 const HIGHLIGHTS: Record<string, string[]> = {
-  classique: [
-    'Site professionnel sur mesure, conçu par notre équipe',
-    'Nom de domaine connecté et HTTPS automatique',
-    'Hébergement et sauvegardes inclus',
+  essentiel: [
+    'Site professionnel conçu par notre équipe, livré en 1 à 3 semaines',
+    'Votre nom de domaine connecté, HTTPS automatique',
+    'Hébergement, sauvegardes et surveillance inclus',
     'Formulaire de contact et boîte de réception',
     'Référencement technique complet',
-    'Éditeur de contenu : textes, photos, horaires',
-    'Statistiques de fréquentation',
-    'Maintenance, mises à jour et support',
+    'Vous modifiez textes, photos et horaires vous-même',
+    'Chaque modification est réversible',
+    'Jusqu’à 8 pages, 2 collaborateurs',
   ],
   premium: [
-    'Tout ce que comprend l’offre Classique',
-    'Réservations ou prises de rendez-vous en ligne',
-    'Paiement en ligne sur votre propre compte',
-    'Modules métier avancés selon votre activité',
-    'Comptes clients sur votre site',
-    'Vente en ligne et catalogue produits',
+    'Tout ce que comprend l’offre Essentiel',
+    'Réservations et prises de rendez-vous en ligne',
     'Actualités et publication programmée',
-    'Statistiques détaillées : sources et conversions',
+    'Statistiques détaillées de fréquentation',
+    'Modules métier avancés selon votre activité',
+    'Jusqu’à 25 pages, 6 collaborateurs',
+    'Sans encaissement en ligne — voir Ultra Premium',
   ],
-  signature: [
+  'ultra-premium': [
     'Tout ce que comprend l’offre Premium',
+    'Boutique en ligne et encaissement sur votre propre compte',
+    'Comptes clients sur votre site',
     'Design entièrement personnalisé, pas un modèle',
     'Animations et interactions travaillées',
-    'Architecture métier complexe',
-    'Nombre de pages illimité',
-    'Site multilingue',
+    'Site multilingue, nombre de pages illimité',
     'Jusqu’à 3 sites et 15 collaborateurs',
     'Support prioritaire',
   ],
@@ -96,7 +102,8 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
     : computeOrderPricing({
         slug: plan.slug,
         setupPriceCents: plan.setupPriceCents,
-        monthlyPriceCents: plan.monthlyPriceCents,
+        maintenancePriceCents: plan.maintenancePriceCents,
+        billingInterval: plan.billingInterval,
         vatRateBps: plan.vatRateBps,
         pricesIncludeVat: plan.pricesIncludeVat,
         currency: plan.currency,
@@ -142,11 +149,11 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
             <p className="mt-1.5 text-sm text-[var(--foreground-muted)] tabular-nums">
               puis{' '}
               <span className="font-medium text-[var(--foreground)]">
-                {formatMoney(plan.monthlyPriceCents, plan.currency, {
+                {formatMoney(plan.maintenancePriceCents, plan.currency, {
                   hideDecimalsWhenRound: true,
                 })}
               </span>{' '}
-              par mois
+              par an
             </p>
             {pricing ? (
               <p className="mt-2 text-xs text-[var(--muted)] tabular-nums">
@@ -155,7 +162,8 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
                   firstYearTotal({
                     slug: plan.slug,
                     setupPriceCents: plan.setupPriceCents,
-                    monthlyPriceCents: plan.monthlyPriceCents,
+                    maintenancePriceCents: plan.maintenancePriceCents,
+                    billingInterval: plan.billingInterval,
                     vatRateBps: plan.vatRateBps,
                     pricesIncludeVat: plan.pricesIncludeVat,
                     currency: plan.currency,

@@ -34,7 +34,7 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
     );
     return rows[0] as {
       setup_cents: number;
-      monthly_cents: number;
+      maintenance_cents: number;
       discount_cents: number;
       vat_cents: number;
       total_cents: number;
@@ -45,15 +45,16 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
 
   async function plans(): Promise<Array<PricingPlanInput & { id: string }>> {
     const { rows } = await client.query(
-      `select id, slug, setup_price_cents, monthly_price_cents, vat_rate_bps,
-              prices_include_vat, currency, is_quote_only
+      `select id, slug, setup_price_cents, maintenance_price_cents, billing_interval,
+              vat_rate_bps, prices_include_vat, currency, is_quote_only
          from public.plans where is_active and not is_quote_only order by sort_order`,
     );
     return rows.map((r) => ({
       id: r.id,
       slug: r.slug,
       setupPriceCents: r.setup_price_cents,
-      monthlyPriceCents: r.monthly_price_cents,
+      maintenancePriceCents: r.maintenance_price_cents,
+      billingInterval: r.billing_interval,
       vatRateBps: r.vat_rate_bps,
       pricesIncludeVat: r.prices_include_vat,
       currency: r.currency,
@@ -71,7 +72,7 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
       expect({ plan: plan.slug, ...pick(ts) }).toEqual({
         plan: plan.slug,
         setupCents: sql.setup_cents,
-        monthlyCents: sql.monthly_cents,
+        maintenanceCents: sql.maintenance_cents,
         discountCents: sql.discount_cents,
         vatCents: sql.vat_cents,
         totalCents: sql.total_cents,
@@ -96,7 +97,7 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
       });
       expect(pick(ts)).toEqual({
         setupCents: sql.setup_cents,
-        monthlyCents: sql.monthly_cents,
+        maintenanceCents: sql.maintenance_cents,
         discountCents: sql.discount_cents,
         vatCents: sql.vat_cents,
         totalCents: sql.total_cents,
@@ -107,16 +108,16 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
   it('applique la meme troncature que PostgreSQL sur des montants non ronds', async () => {
     const { rows } = await client.query(
       `insert into public.plans
-         (slug, version, name, setup_price_cents, monthly_price_cents, vat_rate_bps, is_public)
+         (slug, version, name, setup_price_cents, maintenance_price_cents, vat_rate_bps, is_public)
        values ('parite-troncature', 99, 'Parite', 33333, 777, 2000, false)
-       returning id, slug, setup_price_cents, monthly_price_cents, vat_rate_bps,
+       returning id, slug, setup_price_cents, maintenance_price_cents, vat_rate_bps,
                  prices_include_vat, currency, is_quote_only`,
     );
     const row = rows[0];
     const plan: PricingPlanInput = {
       slug: row.slug,
       setupPriceCents: row.setup_price_cents,
-      monthlyPriceCents: row.monthly_price_cents,
+      maintenancePriceCents: row.maintenance_price_cents,
       vatRateBps: row.vat_rate_bps,
       pricesIncludeVat: row.prices_include_vat,
       currency: row.currency,
@@ -133,7 +134,7 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
 function pick(p: ReturnType<typeof computeOrderPricing>) {
   return {
     setupCents: p.setupCents,
-    monthlyCents: p.monthlyCents,
+    maintenanceCents: p.maintenanceCents,
     discountCents: p.discountCents,
     vatCents: p.vatCents,
     totalCents: p.totalCents,

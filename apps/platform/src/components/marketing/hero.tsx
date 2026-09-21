@@ -81,7 +81,7 @@ export function Hero() {
               </ButtonLink>
             </div>
             <p className="mt-4 text-xs text-[var(--muted)]">
-              À partir de 239,99 € puis 14 € par mois · Sans engagement de durée
+              À partir de 300 € HT puis 22 € HT par an · Sans engagement de durée
             </p>
           </Reveal>
         </div>

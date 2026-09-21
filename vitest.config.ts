@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@stax/types': r('./packages/types/src/index.ts'),
+      '@stax/config/identity': r('./packages/config/src/identity.ts'),
       '@stax/config': r('./packages/config/src/index.ts'),
       '@stax/validation': r('./packages/validation/src/index.ts'),
       // Le sous-chemin doit venir AVANT le module racine : vite applique la

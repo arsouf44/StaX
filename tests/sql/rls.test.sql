@@ -93,11 +93,11 @@ begin
 
   insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug)
        values (v_org_a, 'Site A', 'site-a',
-               (select id from public.plans where slug='premium'), 'premium', 'restaurant')
+               (select id from public.plans where slug='ultra-premium'), 'ultra-premium', 'restaurant')
     returning id into v_site_a;
   insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug)
        values (v_org_b, 'Site B', 'site-b',
-               (select id from public.plans where slug='classique'), 'classique', 'plombier')
+               (select id from public.plans where slug='essentiel'), 'essentiel', 'plombier')
     returning id into v_site_b;
 
   insert into public.site_settings (site_id, business_name) values
@@ -119,9 +119,9 @@ begin
   values (v_org_a, v_site_a, 'platform', 'setup', 'succeeded', 49900),
          (v_org_b, v_site_b, 'platform', 'setup', 'succeeded', 23999);
 
-  insert into public.subscriptions (organization_id, site_id, plan_slug, monthly_price_cents, status)
-  values (v_org_a, v_site_a, 'premium', 3200, 'active'),
-         (v_org_b, v_site_b, 'classique', 1400, 'active');
+  insert into public.subscriptions (organization_id, site_id, plan_slug, maintenance_price_cents, status)
+  values (v_org_a, v_site_a, 'ultra-premium', 8800, 'active'),
+         (v_org_b, v_site_b, 'essentiel', 2200, 'active');
 
   -- Memorise les identifiants pour les assertions.
   create table if not exists t.fixtures (k text primary key, v uuid);
@@ -296,10 +296,10 @@ begin
      values (''FORGE-1'', %L, %L, ''paid'', 1, 1)', org_a, a)),
     'Un client ne peut pas creer une commande a son propre prix');
   perform t.assert(t.denied_as(a, format(
-    'update subscriptions set monthly_price_cents = 1 where organization_id=%L', org_a)),
+    'update subscriptions set maintenance_price_cents = 1 where organization_id=%L', org_a)),
     'Un client ne peut pas changer le prix de son abonnement');
   perform t.assert(t.denied_as(a, format(
-    'update sites set plan_slug=''signature'' where id=%L', site_a)),
+    'update sites set plan_slug=''premium'' where id=%L', site_a)),
     'Un client ne peut pas changer son offre');
   perform t.assert(t.denied_as(a, format(
     'update organizations set status=''active'', is_demo=true where id=%L', org_a)),
@@ -527,16 +527,26 @@ declare
   org_a uuid := (select v from t.fixtures where k='org_a');
   org_b uuid := (select v from t.fixtures where k='org_b');
 begin
+  -- L'encaissement en ligne est reserve a l'Ultra Premium : c'est ce qui
+  -- justifie l'ecart de prix, et c'est la base qui le fait respecter.
   perform t.assert(app.has_feature(org_a, 'online_payments'),
-    'Premium donne acces au paiement en ligne');
+    'Ultra Premium donne acces au paiement en ligne');
   perform t.assert(not app.has_feature(org_b, 'online_payments'),
-    'Classique ne donne PAS acces au paiement en ligne');
+    'Essentiel ne donne PAS acces au paiement en ligne');
+  perform t.assert(
+    not app.has_feature(
+      (select organization_id from public.sites
+        where plan_slug = 'premium' limit 1), 'online_payments')
+    or not exists (select 1 from public.sites where plan_slug = 'premium'),
+    'Premium ne donne PAS acces au paiement en ligne');
   perform t.assert(not app.has_feature(org_b, 'customer_accounts'),
-    'Classique ne donne PAS acces aux comptes clients');
-  perform t.assert(app.feature_limit(org_a, 'max_pages') = 25,
-    'La limite de pages Premium est de 25');
+    'Essentiel ne donne PAS acces aux comptes clients');
+  -- NULL = illimite, -1 = fonctionnalite absente de l'offre. Les deux ne
+  -- veulent pas dire la meme chose et ne doivent jamais etre confondus.
+  perform t.assert(app.feature_limit(org_a, 'max_pages') is null,
+    'Ultra Premium n''impose aucune limite de pages');
   perform t.assert(app.feature_limit(org_b, 'max_pages') = 8,
-    'La limite de pages Classique est de 8');
+    'La limite de pages Essentiel est de 8');
   perform t.assert(app.feature_limit(org_b, 'max_products') = -1,
     'Une fonctionnalite absente de l''offre renvoie -1');
 
@@ -562,17 +572,18 @@ $$;
 do $$
 declare
   v_price app.price_breakdown;
-  v_plan uuid := (select id from plans where slug='classique');
+  v_plan uuid := (select id from plans where slug='essentiel');
 begin
   v_price := app.compute_order_pricing(v_plan, null);
-  perform t.assert(v_price.setup_cents = 23999, 'Prix Classique = 239,99 EUR');
-  perform t.assert(v_price.vat_cents = 4799, 'TVA 20 % sur 239,99 EUR = 47,99 EUR');
-  perform t.assert(v_price.total_cents = 28798, 'Total TTC = 287,98 EUR');
+  perform t.assert(v_price.setup_cents = 30000, 'Prix Essentiel = 300,00 EUR HT');
+  perform t.assert(v_price.vat_cents = 6000, 'TVA 20 % sur 300,00 EUR = 60,00 EUR');
+  perform t.assert(v_price.total_cents = 36000, 'Total TTC = 360,00 EUR');
+  perform t.assert(v_price.maintenance_cents = 2200, 'Maintenance Essentiel = 22,00 EUR HT par an');
 
   insert into coupons (code, kind, value, applies_to) values ('BIENVENUE10', 'percent', 1000, 'setup');
   v_price := app.compute_order_pricing(v_plan, 'BIENVENUE10');
-  perform t.assert(v_price.discount_cents = 2399, 'Remise de 10 % = 23,99 EUR');
-  perform t.assert(v_price.total_cents = 25920, 'Total TTC apres remise = 259,20 EUR');
+  perform t.assert(v_price.discount_cents = 3000, 'Remise de 10 % = 30,00 EUR');
+  perform t.assert(v_price.total_cents = 32400, 'Total TTC apres remise = 324,00 EUR');
 
   -- Une offre sur devis ne peut pas etre commandee directement.
   begin
@@ -993,16 +1004,16 @@ declare
   v_amount int;
   v_site   uuid;
 begin
-  select id into plan_id from public.plans where slug = 'classique' and is_active limit 1;
+  select id into plan_id from public.plans where slug = 'essentiel' and is_active limit 1;
 
   -- Commande creee par la fonction serveur : le prix vient du catalogue.
   v_ref := 'TEST-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8);
   insert into public.orders
     (reference, organization_id, created_by, status, plan_id, plan_slug, plan_version,
-     setup_price_cents, monthly_price_cents, vat_rate_bps, vat_cents, total_cents,
+     setup_price_cents, maintenance_price_cents, vat_rate_bps, vat_cents, total_cents,
      business_type_slug, questionnaire, terms_version, terms_accepted_at)
   values
-    (v_ref, org_a, alice, 'checkout_pending', plan_id, 'classique', 1,
+    (v_ref, org_a, alice, 'checkout_pending', plan_id, 'essentiel', 1,
      23999, 1400, 2000, 4799, 28798, 'restaurant',
      jsonb_build_object('businessName', 'Chez Test'), '2026-01', now())
   returning id into v_order;
@@ -1066,7 +1077,7 @@ begin
   v_ref := 'TEST-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8);
   insert into public.orders
     (reference, organization_id, created_by, status, plan_id, plan_slug, plan_version,
-     setup_price_cents, monthly_price_cents, vat_rate_bps, vat_cents, total_cents,
+     setup_price_cents, maintenance_price_cents, vat_rate_bps, vat_cents, total_cents,
      terms_version, terms_accepted_at)
   values
     (v_ref, org_a, alice, 'checkout_pending', plan_id, 'premium', 1,
@@ -1083,7 +1094,7 @@ begin
 
   -- Le prix mensuel est celui de la commande : un changement du tarif public
   -- ne doit jamais toucher un contrat en cours.
-  select monthly_price_cents into v_price
+  select maintenance_price_cents into v_price
     from public.subscriptions where stripe_subscription_id = 'sub_test_1';
   perform t.assert(v_price = 3200, 'Le prix mensuel est fige au tarif de la commande');
 
@@ -1184,6 +1195,88 @@ begin
     'Le createur devient proprietaire dans la meme transaction');
   perform t.assert(v_can, 'Il peut immediatement commander');
   perform t.assert(v_count = 1, 'Aucune autre appartenance n est creee');
+end;
+$$;
+
+
+-- -----------------------------------------------------------------------------
+--  Factures de vente : un numero ne suffit jamais
+-- -----------------------------------------------------------------------------
+\echo '--- Rattachement de facture ---'
+do $$
+declare
+  alice   uuid := (select v from t.fixtures where k='alice');
+  bob     uuid := (select v from t.fixtures where k='bob');
+  org_a   uuid := (select v from t.fixtures where k='org_a');
+  org_b   uuid := (select v from t.fixtures where k='org_b');
+  v_plan  uuid := (select id from plans where slug='essentiel' and is_active limit 1);
+  v_res   jsonb;
+  v_count int;
+begin
+  insert into public.sales_invoices
+    (number, plan_id, plan_slug, setup_price_cents, maintenance_price_cents,
+     vat_rate_bps, vat_cents, total_cents, customer_email, company_name)
+  values ('F-2026-0001', v_plan, 'essentiel', 30000, 2200, 2000, 6000, 36000,
+          'alice@tenant-a.test', 'Tenant A');
+
+  -- Bob connait le numero mais la facture n'est pas la sienne.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', bob, 'role', 'authenticated')::text, true);
+  v_res := app.claim_sales_invoice('F-2026-0001', org_b, '2026-01', null);
+  perform t.assert((v_res->>'ok')::boolean is false,
+    'Un numero de facture seul ne permet pas de rattacher la commande d''un autre');
+  perform t.assert(v_res->>'code' = 'email_mismatch',
+    'Le refus vient bien du controle d''adresse, pas d''un hasard');
+
+  -- Meme refus pour un numero inexistant, avec le MEME code cote client.
+  v_res := app.claim_sales_invoice('F-2026-9999', org_b, '2026-01', null);
+  perform t.assert((v_res->>'ok')::boolean is false,
+    'Un numero inexistant est refuse');
+
+  -- La tentative de Bob a ete comptee : une enumeration laisse une trace.
+  select attempt_count into v_count from public.sales_invoices where number = 'F-2026-0001';
+  perform t.assert(v_count >= 1, 'Chaque tentative de rattachement est comptee');
+
+  -- Alice, destinataire reelle, peut rattacher.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', alice, 'role', 'authenticated')::text, true);
+  v_res := app.claim_sales_invoice('F-2026-0001', org_a, '2026-01', null);
+  perform t.assert((v_res->>'ok')::boolean, 'La destinataire de la facture peut la rattacher');
+  perform t.assert(v_res->>'code' = 'claimed', 'La facture passe a l''etat rattache');
+
+  -- La commande creee porte EXACTEMENT les montants de la facture.
+  perform t.assert(
+    exists (select 1 from public.orders
+             where id = (v_res->>'orderId')::uuid
+               and setup_price_cents = 30000
+               and maintenance_price_cents = 2200
+               and billing_interval = 'year'
+               and total_cents = 36000),
+    'La commande reprend les montants figes de la facture');
+
+  -- Une commande rattachee n'est PAS payee : le reglement se constate ailleurs.
+  perform t.assert(
+    exists (select 1 from public.orders
+             where id = (v_res->>'orderId')::uuid and status = 'draft'),
+    'Le rattachement ne marque jamais la commande comme payee');
+
+  -- Rejouer la meme facture ne cree pas de seconde commande.
+  v_res := app.claim_sales_invoice('F-2026-0001', org_a, '2026-01', null);
+  perform t.assert(v_res->>'code' = 'already_claimed',
+    'Rejouer un rattachement est sans effet');
+  select count(*) into v_count from public.orders
+   where customer_notes like '%F-2026-0001%';
+  perform t.assert(v_count = 1, 'Une facture ne produit qu''une seule commande');
+
+  -- Bob ne voit pas la facture d'Alice, meme rattachee.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', bob, 'role', 'authenticated')::text, true);
+  perform t.assert(
+    t.denied_as(bob, 'select * from sales_invoices')
+    or not exists (select 1 from public.sales_invoices where number = 'F-2026-0001'),
+    'Un client ne voit pas les factures d''une autre organisation');
+
+  perform set_config('request.jwt.claims', null, true);
 end;
 $$;
 

@@ -11,7 +11,7 @@
 -- -----------------------------------------------------------------------------
 create type app.price_breakdown as (
   setup_cents     integer,
-  monthly_cents   integer,
+  maintenance_cents   integer,
   discount_cents  integer,
   vat_cents       integer,
   total_cents     integer,
@@ -67,12 +67,12 @@ begin
   if v_plan.prices_include_vat then
     -- Les montants affiches sont TTC : on extrait la part de TVA.
     v_vat := v_net - (v_net * 10000) / (10000 + v_plan.vat_rate_bps);
-    return (v_plan.setup_price_cents, v_plan.monthly_price_cents, v_discount,
+    return (v_plan.setup_price_cents, v_plan.maintenance_price_cents, v_discount,
             v_vat, v_net, v_plan.vat_rate_bps, v_plan.currency)::app.price_breakdown;
   end if;
 
   v_vat := (v_net * v_plan.vat_rate_bps) / 10000;
-  return (v_plan.setup_price_cents, v_plan.monthly_price_cents, v_discount,
+  return (v_plan.setup_price_cents, v_plan.maintenance_price_cents, v_discount,
           v_vat, v_net + v_vat, v_plan.vat_rate_bps, v_plan.currency)::app.price_breakdown;
 end;
 $$;
@@ -124,7 +124,7 @@ begin
   insert into public.orders (
     reference, organization_id, created_by, status,
     plan_id, plan_slug, plan_version,
-    setup_price_cents, monthly_price_cents, discount_cents,
+    setup_price_cents, maintenance_price_cents, billing_interval, discount_cents,
     vat_rate_bps, vat_cents, total_cents, currency, coupon_code,
     sector_slug, business_type_slug, questionnaire,
     requested_domain, domain_handling, customer_notes,
@@ -132,7 +132,8 @@ begin
   ) values (
     v_ref, p_organization_id, v_actor, 'draft',
     v_plan.id, v_plan.slug, v_plan.version,
-    v_price.setup_cents, v_price.monthly_cents, v_price.discount_cents,
+    v_price.setup_cents, v_price.maintenance_cents, v_plan.billing_interval,
+    v_price.discount_cents,
     v_price.vat_rate_bps, v_price.vat_cents, v_price.total_cents,
     v_price.currency, upper(nullif(p_coupon_code, '')),
     p_sector_slug, p_business_type, coalesce(p_questionnaire, '{}'::jsonb),
@@ -154,12 +155,12 @@ begin
             1, -v_price.discount_cents, -v_price.discount_cents, 20);
   end if;
 
-  if v_price.monthly_cents > 0 then
+  if v_price.maintenance_cents > 0 then
     insert into public.order_items (order_id, kind, label, quantity, unit_price_cents,
                                     total_cents, sort_order)
     values (v_order_id, 'plan_maintenance',
-            'Maintenance mensuelle — offre ' || v_plan.name,
-            1, v_price.monthly_cents, v_price.monthly_cents, 30);
+            'Maintenance annuelle — offre ' || v_plan.name,
+            1, v_price.maintenance_cents, v_price.maintenance_cents, 30);
   end if;
 
   insert into public.consents (user_id, organization_id, kind, document_version,
@@ -190,7 +191,7 @@ as $$
 begin
   if old.status in ('paid', 'refunded', 'partially_refunded') then
     if new.setup_price_cents is distinct from old.setup_price_cents
-       or new.monthly_price_cents is distinct from old.monthly_price_cents
+       or new.maintenance_price_cents is distinct from old.maintenance_price_cents
        or new.discount_cents is distinct from old.discount_cents
        or new.total_cents is distinct from old.total_cents
        or new.vat_cents is distinct from old.vat_cents
@@ -338,7 +339,7 @@ begin
     return new;
   end if;
   if new.status is distinct from old.status
-     or new.monthly_price_cents is distinct from old.monthly_price_cents
+     or new.maintenance_price_cents is distinct from old.maintenance_price_cents
      or new.plan_id is distinct from old.plan_id
      or new.stripe_subscription_id is distinct from old.stripe_subscription_id then
     raise exception 'Le statut et le tarif d''un abonnement proviennent exclusivement de Stripe'

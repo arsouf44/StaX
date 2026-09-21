@@ -42,7 +42,7 @@ export default async function OrderConfirmationPage({
     status: string;
     plan_slug: string | null;
     total_cents: number;
-    monthly_price_cents: number;
+    maintenance_price_cents: number;
     currency: string;
     created_at: string;
     site_id: string | null;
@@ -50,7 +50,7 @@ export default async function OrderConfirmationPage({
     (await db
       .from('orders')
       .select(
-        'id, reference, status, plan_slug, total_cents, monthly_price_cents, currency, created_at, site_id',
+        'id, reference, status, plan_slug, total_cents, maintenance_price_cents, currency, created_at, site_id',
       )
       .eq('id', id)
       .maybeSingle()) as never,
@@ -117,11 +117,11 @@ export default async function OrderConfirmationPage({
               {formatMoney(order.total_cents, order.currency as 'EUR')}
             </dd>
           </div>
-          {order.monthly_price_cents > 0 ? (
+          {order.maintenance_price_cents > 0 ? (
             <div className="flex justify-between gap-4">
               <dt className="text-[var(--foreground-muted)]">Maintenance</dt>
               <dd className="tabular-nums">
-                {formatMoney(order.monthly_price_cents, order.currency as 'EUR', {
+                {formatMoney(order.maintenance_price_cents, order.currency as 'EUR', {
                   hideDecimalsWhenRound: true,
                 })}{' '}
                 / mois, à partir de la mise en ligne

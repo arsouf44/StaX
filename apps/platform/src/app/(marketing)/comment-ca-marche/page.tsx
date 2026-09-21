@@ -22,7 +22,7 @@ const STEPS = [
     title: 'Vous payez et votre projet s’ouvre',
     description:
       'Le paiement se fait sur une page Stripe sécurisée. Aucun numéro de carte ne transite par nos serveurs. Dès la confirmation, votre espace client s’ouvre avec le suivi de votre projet.',
-    detail: 'Paiement initial + maintenance mensuelle',
+    detail: 'Paiement initial + maintenance annuelle',
   },
   {
     title: 'Vous complétez le questionnaire',

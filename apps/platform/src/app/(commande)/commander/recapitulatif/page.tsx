@@ -46,7 +46,7 @@ export default async function OrderSummaryPage() {
   const setupNet = plan.setupPriceCents;
   const setupVat = vatFromNet(setupNet, plan.vatRateBps);
   const setupGross = grossFromNet(setupNet, plan.vatRateBps);
-  const monthlyGross = grossFromNet(plan.monthlyPriceCents, plan.vatRateBps);
+  const monthlyGross = grossFromNet(plan.maintenancePriceCents, plan.vatRateBps);
 
   const address =
     draft.domainHandling === 'subdomain_only'

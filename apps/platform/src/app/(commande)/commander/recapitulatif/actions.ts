@@ -123,15 +123,15 @@ export async function startCheckoutAction(
     id: string;
     name: string;
     setup_price_cents: number;
-    monthly_price_cents: number;
+    maintenance_price_cents: number;
     currency: string;
     stripe_setup_price_id: string | null;
-    stripe_monthly_price_id: string | null;
+    stripe_maintenance_price_id: string | null;
   }>(
     (await db
       .from('plans')
       .select(
-        'id, name, setup_price_cents, monthly_price_cents, currency, stripe_setup_price_id, stripe_monthly_price_id',
+        'id, name, setup_price_cents, maintenance_price_cents, currency, stripe_setup_price_id, stripe_maintenance_price_id',
       )
       .eq('slug', draft.planSlug)
       .eq('is_active', true)
@@ -180,7 +180,7 @@ export async function startCheckoutAction(
     id: string;
     reference: string;
     setup_price_cents: number;
-    monthly_price_cents: number;
+    maintenance_price_cents: number;
     discount_cents: number;
     currency: string;
     coupon_code: string | null;
@@ -188,7 +188,7 @@ export async function startCheckoutAction(
     (await db
       .from('orders')
       .select(
-        'id, reference, setup_price_cents, monthly_price_cents, discount_cents, currency, coupon_code',
+        'id, reference, setup_price_cents, maintenance_price_cents, discount_cents, currency, coupon_code',
       )
       .eq('id', orderId)
       .single()) as never,
@@ -232,10 +232,10 @@ export async function startCheckoutAction(
         planSlug: draft.planSlug,
         planName: plan.name,
         setupPriceCents: order.setup_price_cents,
-        monthlyPriceCents: order.monthly_price_cents,
+        maintenancePriceCents: order.maintenance_price_cents,
         currency: order.currency as 'EUR',
         stripeSetupPriceId: plan.stripe_setup_price_id,
-        stripeMonthlyPriceId: plan.stripe_monthly_price_id,
+        stripeMaintenancePriceId: plan.stripe_maintenance_price_id,
       },
       discountCents: order.discount_cents,
       couponCode: order.coupon_code,

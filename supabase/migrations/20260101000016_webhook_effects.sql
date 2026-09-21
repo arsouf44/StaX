@@ -277,16 +277,18 @@ begin
     return jsonb_build_object('ok', false, 'code', 'order_not_found');
   end if;
 
-  -- Le prix mensuel vient de la commande : un changement du tarif public ne
-  -- modifie jamais un contrat en cours (grandfathering).
+  -- Le prix de maintenance ET sa periodicite viennent de la commande : un
+  -- changement du tarif public ne modifie jamais un contrat en cours
+  -- (grandfathering).
   insert into public.subscriptions
     (organization_id, site_id, order_id, status, maintenance_state, plan_id, plan_slug,
-     monthly_price_cents, vat_rate_bps, currency,
+     maintenance_price_cents, billing_interval, vat_rate_bps, currency,
      stripe_subscription_id, stripe_customer_id, stripe_price_id,
      current_period_start, current_period_end, cancel_at_period_end)
   values
     (v_order.organization_id, v_order.site_id, v_order.id, v_status, v_state,
-     v_order.plan_id, v_order.plan_slug, v_order.monthly_price_cents, v_order.vat_rate_bps,
+     v_order.plan_id, v_order.plan_slug, v_order.maintenance_price_cents,
+     v_order.billing_interval, v_order.vat_rate_bps,
      v_order.currency, p_stripe_subscription_id, p_stripe_customer_id, p_price_id,
      p_period_start, p_period_end, coalesce(p_cancel_at_period_end, false))
   returning * into v_subscription;
