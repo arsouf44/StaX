@@ -23,6 +23,7 @@
     "@stax/infrastructure": "workspace:*",
     "@stax/payments": "workspace:*",
     "@stax/security": "workspace:*",
+    "@stax/site-data": "workspace:*",
     "@stax/site-engine": "workspace:*",
     "@stax/types": "workspace:*",
     "@stax/ui": "workspace:*",

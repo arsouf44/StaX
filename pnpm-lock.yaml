@@ -95,6 +95,9 @@ importers:
       '@stax/security':
         specifier: workspace:*
         version: link:../../packages/security
+      '@stax/site-data':
+        specifier: workspace:*
+        version: link:../../packages/site-data
       '@stax/site-engine':
         specifier: workspace:*
         version: link:../../packages/site-engine
@@ -177,6 +180,9 @@ importers:
       '@stax/security':
         specifier: workspace:*
         version: link:../../packages/security
+      '@stax/site-data':
+        specifier: workspace:*
+        version: link:../../packages/site-data
       '@stax/site-engine':
         specifier: workspace:*
         version: link:../../packages/site-engine
@@ -382,6 +388,22 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/site-data:
+    dependencies:
+      '@stax/database':
+        specifier: workspace:*
+        version: link:../database
+      '@stax/site-engine':
+        specifier: workspace:*
+        version: link:../site-engine
+    devDependencies:
+      '@stax/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 5.9.3
         version: 5.9.3

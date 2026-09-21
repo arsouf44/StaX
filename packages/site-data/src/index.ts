@@ -20,13 +20,20 @@ import {
 /**
  * Chargement des donnees vivantes d un site.
  *
- * Deux principes :
+ * Partage entre le runtime public (qui sert les sites en ligne) et l apercu de
+ * l editeur (qui montre le brouillon) : les deux doivent afficher EXACTEMENT
+ * les memes donnees, sans quoi l apercu mentirait.
+ *
+ * Trois principes :
  *  1. On ne charge QUE ce dont la page a besoin. Une page « Accueil » sans bloc
  *     « carte » ne declenche aucune lecture des menus.
  *  2. Toutes les requetes sont filtrees par `site_id` COTE SERVEUR, a partir du
- *     site resolu par le nom d hote. Le client de service contourne la RLS :
- *     ce filtre est donc la garantie d isolation, et il n est jamais construit
- *     a partir d une valeur fournie par le navigateur.
+ *     site resolu par le nom d hote (runtime) ou par l espace de travail de la
+ *     personne connectee (apercu). Ce filtre n est JAMAIS construit a partir
+ *     d une valeur fournie par le navigateur.
+ *  3. Le client de lecture est injectable. Le runtime public utilise le role de
+ *     service, faute de session ; l apercu passe le jeton de la personne, si
+ *     bien que la RLS reste active et constitue une seconde barriere.
  */
 
 type Collection = keyof SiteData;
@@ -334,10 +341,14 @@ async function loadBookingServices(db: Db, siteId: string): Promise<BookingServi
  * Les lectures sont lancees en parallele : sur un reseau edge, la latence
  * domine, et serialiser six requetes couterait six aller-retours.
  */
-export async function loadSiteData(siteId: string, needed: Set<Collection>): Promise<SiteData> {
+export async function loadSiteData(
+  siteId: string,
+  needed: Set<Collection>,
+  client?: Db,
+): Promise<SiteData> {
   const data = emptySiteData();
   if (needed.size === 0) return data;
-  const db = createServiceClient();
+  const db = client ?? createServiceClient();
 
   const tasks: Array<Promise<void>> = [];
 

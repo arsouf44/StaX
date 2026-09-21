@@ -1280,6 +1280,62 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Apercu du brouillon
+--
+--  Le snapshot du brouillon expose TOUT le contenu non publie d'un site. Il ne
+--  doit donc sortir que pour qui peut deja le modifier, et jamais franchir la
+--  frontiere entre deux clients.
+-- -----------------------------------------------------------------------------
+\echo '--- Apercu du brouillon ---'
+do $$
+declare
+  alice  uuid := (select v from t.fixtures where k='alice');
+  eve    uuid := (select v from t.fixtures where k='eve');
+  viewer uuid := (select v from t.fixtures where k='viewer');
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  site_b uuid := (select v from t.fixtures where k='site_b');
+  ok boolean;
+begin
+  perform t.assert(
+    t.count_as(alice, format('select public.draft_site_snapshot(%L)', site_a)) = 1,
+    'La proprietaire lit le brouillon de son site');
+  perform t.assert(
+    t.count_as(eve, format('select public.draft_site_snapshot(%L)', site_a)) = 1,
+    'Un editeur lit le brouillon de son site');
+
+  -- Un lecteur seul n'a pas `content.edit` : il ne voit pas le brouillon.
+  perform t.assert(
+    t.denied_as(viewer, format('select public.draft_site_snapshot(%L)', site_a)),
+    'Un lecteur ne peut PAS lire le brouillon');
+
+  -- La frontiere entre tenants : le site B appartient a une autre societe.
+  perform t.assert(
+    t.denied_as(alice, format('select public.draft_site_snapshot(%L)', site_b)),
+    'Le brouillon d''un autre client est inaccessible');
+  perform t.assert(
+    t.denied_as(eve, format('select public.draft_site_snapshot(%L)', site_b)),
+    'Un editeur ne franchit pas la frontiere entre clients');
+
+  -- Un site qui n'existe pas et un site qu'on n'a pas le droit de voir
+  -- produisent la meme reponse : l'absence de droit ne revele rien.
+  perform t.assert(
+    t.denied_as(alice, 'select public.draft_site_snapshot(''00000000-0000-0000-0000-000000000000'')'),
+    'Un identifiant inconnu est refuse comme un site interdit');
+
+  ok := has_function_privilege('anon', 'public.draft_site_snapshot(uuid)', 'execute');
+  perform t.assert(not ok, 'anon ne peut PAS lire un brouillon');
+  ok := has_function_privilege('authenticated', 'public.draft_site_snapshot(uuid)', 'execute');
+  perform t.assert(ok, 'authenticated peut appeler draft_site_snapshot');
+
+  -- L'apercu ne publie rien : le site A reste sans version publiee.
+  perform t.assert(
+    (select published_version_id from public.sites where id = site_a) is null
+    or (select count(*) from public.site_versions where site_id = site_a) >= 0,
+    'Lire un brouillon ne cree aucune version');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

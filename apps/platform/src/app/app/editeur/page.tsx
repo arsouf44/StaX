@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { unwrapList, unwrapMaybe } from '@stax/database';
-import { editorFieldsFor, getBlockDefinition } from '@stax/site-engine';
+import { availableBlocks, editorFieldsFor, getBlockDefinition } from '@stax/site-engine';
 import { Alert, ButtonLink, EmptyState, Icon, PermissionDenied } from '@stax/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { Editor } from './editor';
+import type { BlockChoice } from './block-picker';
+import type { SiteVersionView } from './version-history';
 
 export const metadata: Metadata = { title: 'Modifier mon site' };
 
@@ -129,6 +131,55 @@ export default async function EditorPage_({
       .filter((block): block is EditorBlock => block !== null),
   };
 
+  // Sections proposables : filtrees par les modules actifs du site, puis
+  // desactivees une a une si la page en contient deja un exemplaire unique.
+  const presentTypes = new Set(blocks.map((block) => block.type));
+  const choices: BlockChoice[] = availableBlocks(site.enabledModules).map((definition) => ({
+    type: definition.type,
+    label: definition.label,
+    description: definition.description,
+    icon: definition.icon,
+    category: definition.category,
+    disabled: Boolean(definition.singleton) && presentTypes.has(definition.type),
+  }));
+
+  const versionRows = unwrapList<{
+    id: string;
+    version_number: number;
+    label: string | null;
+    published_at: string | null;
+    author: { full_name: string | null } | { full_name: string | null }[] | null;
+  }>(
+    (await db
+      .from('site_versions')
+      .select('id, version_number, label, published_at, author:published_by ( full_name )')
+      .eq('site_id', site.id)
+      .not('published_at', 'is', null)
+      .order('version_number', { ascending: false })
+      .limit(20)) as never,
+  );
+
+  const versionDate = new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
+
+  const versions: SiteVersionView[] = versionRows.flatMap((row) => {
+    if (!row.published_at) return [];
+    const author = Array.isArray(row.author) ? row.author[0] : row.author;
+    return [
+      {
+        id: row.id,
+        number: row.version_number,
+        label: row.label,
+        publishedAtIso: row.published_at,
+        publishedAtLabel: versionDate.format(new Date(row.published_at)),
+        authorName: author?.full_name ?? null,
+        isCurrent: row.id === site.publishedVersionId,
+      },
+    ];
+  });
+
   return (
     <Editor
       siteId={site.id}
@@ -139,6 +190,8 @@ export default async function EditorPage_({
       lastEditedAt={draftChanged?.updated_at ?? null}
       pages={pages.map((page) => ({ id: page.id, path: page.path, title: page.title }))}
       page={editorPage}
+      choices={choices}
+      versions={versions}
     />
   );
 }

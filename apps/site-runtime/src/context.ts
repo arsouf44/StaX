@@ -9,7 +9,7 @@ import {
   type RenderContext,
   type RenderablePage,
 } from '@stax/site-engine';
-import { loadSiteData, requiredCollections } from './data';
+import { loadSiteData, requiredCollections } from '@stax/site-data';
 import type { ResolvedSite } from './resolve';
 
 /**

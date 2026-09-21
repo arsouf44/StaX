@@ -1,7 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useCallback, useEffect, useState, useTransition, type FormEvent } from 'react';
 import { Alert, Button, Field, Input, Panel, Select, Switch, Textarea } from '@stax/ui';
 import type { EditorField } from '@stax/site-engine';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
@@ -21,14 +20,13 @@ import { updateBlockAction } from './actions';
 
 type Value = unknown;
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" loading={pending} loadingLabel="Enregistrement">
-      Enregistrer
-    </Button>
-  );
-}
+/**
+ * Delai avant enregistrement automatique.
+ *
+ * Assez court pour qu on ne perde jamais une phrase en fermant l onglet, assez
+ * long pour ne pas envoyer une requete a chaque lettre tapee.
+ */
+const AUTOSAVE_DELAY_MS = 1200;
 
 function asString(value: Value): string {
   if (typeof value === 'string') return value;
@@ -308,12 +306,58 @@ function FieldEditor({
   }
 }
 
-export function BlockForm({ block }: { block: EditorBlock }) {
+export function BlockForm({ block, onSaved }: { block: EditorBlock; onSaved?: () => void }) {
   const [props, setProps] = useState<Record<string, Value>>(block.props);
-  const [state, action] = useActionState<ActionState, FormData>(updateBlockAction, IDLE_STATE);
+  const [state, setState] = useState<ActionState>(IDLE_STATE);
+  const [dirty, setDirty] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const save = useCallback(
+    (values: Record<string, Value>) => {
+      const formData = new FormData();
+      formData.set('payload', JSON.stringify({ blockId: block.id, props: values }));
+      startTransition(() => {
+        void updateBlockAction(IDLE_STATE, formData).then((result) => {
+          setState(result);
+          if (result.status !== 'success') return;
+          // Seul un succes efface le marqueur : si le serveur refuse, la
+          // personne doit continuer a voir que son texte n est pas enregistre.
+          setDirty(false);
+          setSavedAt(new Date());
+          onSaved?.();
+        });
+      });
+    },
+    [block.id, onSaved],
+  );
+
+  /**
+   * Enregistrement automatique.
+   *
+   * Le bouton « Enregistrer » reste la : l enregistrement automatique est un
+   * filet, pas un remplacement. Beaucoup de gens ont besoin de voir qu ils ont
+   * valide quelque chose, et une sauvegarde invisible ne rassure personne.
+   */
+  useEffect(() => {
+    if (!dirty || pending) return;
+    const timer = setTimeout(() => save(props), AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [dirty, pending, props, save]);
+
+  const change = (name: string, next: Value) => {
+    setProps((current) => ({ ...current, [name]: next }));
+    setDirty(true);
+    setState(IDLE_STATE);
+  };
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    save(props);
+  };
 
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={submit} className="space-y-5">
       {state.status === 'error' && state.message ? (
         <Alert tone="danger" live="alert">
           {state.message}
@@ -326,24 +370,30 @@ export function BlockForm({ block }: { block: EditorBlock }) {
           ) : null}
         </Alert>
       ) : null}
-      {state.status === 'success' && state.message ? (
-        <Alert tone="success" live="status">
-          {state.message}
-        </Alert>
-      ) : null}
-
-      <input type="hidden" name="payload" value={JSON.stringify({ blockId: block.id, props })} />
 
       {block.fields.map((field) => (
         <FieldEditor
           key={field.name}
           field={field}
           value={props[field.name]}
-          onChange={(next) => setProps((current) => ({ ...current, [field.name]: next }))}
+          onChange={(next) => change(field.name, next)}
         />
       ))}
 
-      <SubmitButton />
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" loading={pending} loadingLabel="Enregistrement">
+          Enregistrer
+        </Button>
+        <p aria-live="polite" className="text-xs text-[var(--foreground-muted)]">
+          {pending
+            ? 'Enregistrement…'
+            : dirty
+              ? 'Modifications non enregistrées — enregistrement automatique dans un instant.'
+              : savedAt
+                ? `Enregistré à ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(savedAt)}. Visible du public après publication.`
+                : 'Vos modifications restent dans votre brouillon jusqu’à la publication.'}
+        </p>
+      </div>
     </form>
   );
 }
