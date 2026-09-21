@@ -120,7 +120,7 @@ begin
          (v_org_b, v_site_b, 'platform', 'setup', 'succeeded', 23999);
 
   insert into public.subscriptions (organization_id, site_id, plan_slug, maintenance_price_cents, status)
-  values (v_org_a, v_site_a, 'ultra-premium', 8800, 'active'),
+  values (v_org_a, v_site_a, 'ultra-premium', 8200, 'active'),
          (v_org_b, v_site_b, 'essentiel', 2200, 'active');
 
   -- Memorise les identifiants pour les assertions.

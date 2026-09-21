@@ -29,7 +29,7 @@ const ESSENTIEL: PricingPlanInput = {
 const PREMIUM: PricingPlanInput = {
   ...ESSENTIEL,
   slug: 'premium',
-  setupPriceCents: 50_000,
+  setupPriceCents: 55_000,
   maintenancePriceCents: 3_200,
 };
 
@@ -37,7 +37,7 @@ const ULTRA: PricingPlanInput = {
   ...ESSENTIEL,
   slug: 'ultra-premium',
   setupPriceCents: 109_900,
-  maintenancePriceCents: 8_800,
+  maintenancePriceCents: 8_200,
 };
 
 describe('tarification des offres', () => {
@@ -52,14 +52,14 @@ describe('tarification des offres', () => {
 
   it('chiffre l’offre Premium', () => {
     const p = computeOrderPricing(PREMIUM);
-    expect(p.totalCents).toBe(60_000);
+    expect(p.totalCents).toBe(66_000);
     expect(p.maintenanceTotalCents).toBe(3_840);
   });
 
   it('chiffre l’offre Ultra Premium', () => {
     const p = computeOrderPricing(ULTRA);
     expect(p.totalCents).toBe(131_880);
-    expect(p.maintenanceTotalCents).toBe(10_560);
+    expect(p.maintenanceTotalCents).toBe(9_840);
   });
 
   it('refuse de chiffrer une offre sur devis', () => {
@@ -70,8 +70,8 @@ describe('tarification des offres', () => {
     // Maintenance ANNUELLE : une seule echeance la premiere annee.
     // 360,00 € + 26,40 € = 386,40 €
     expect(firstYearTotal(ESSENTIEL)).toBe(36_000 + 2_640);
-    expect(firstYearTotal(PREMIUM)).toBe(60_000 + 3_840);
-    expect(firstYearTotal(ULTRA)).toBe(131_880 + 10_560);
+    expect(firstYearTotal(PREMIUM)).toBe(66_000 + 3_840);
+    expect(firstYearTotal(ULTRA)).toBe(131_880 + 9_840);
   });
 
   it('compte douze echeances si une offre passait au mois', () => {
@@ -115,7 +115,7 @@ describe('codes promotionnels', () => {
   it('ignore un code reserve a une autre offre', () => {
     const scoped: CouponInput = { ...percent, planSlugs: ['premium'] };
     expect(computeDiscount(ESSENTIEL, scoped)).toBe(0);
-    expect(computeDiscount(PREMIUM, scoped)).toBe(5_000);
+    expect(computeDiscount(PREMIUM, scoped)).toBe(5_500);
   });
 
   it('n’applique pas une remise « maintenance » au prix de creation', () => {

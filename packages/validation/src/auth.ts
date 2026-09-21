@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import { boundedText, emailSchema, honeypotSchema, localeSchema, phoneSchema } from './common';
+import {
+  boundedText,
+  checkboxSchema,
+  consentCheckbox,
+  emailSchema,
+  honeypotSchema,
+  localeSchema,
+  phoneSchema,
+} from './common';
 
 /**
  * Schemas d authentification et d activation.
@@ -47,10 +55,10 @@ export const signUpSchema = z
     password: passwordSchema,
     phone: phoneSchema.optional(),
     locale: localeSchema.default('fr'),
-    acceptTerms: z.literal(true, {
-      message: 'Vous devez accepter les conditions générales pour créer un compte.',
-    }),
-    marketingOptIn: z.boolean().default(false),
+    acceptTerms: consentCheckbox(
+      'Vous devez accepter les conditions générales pour créer un compte.',
+    ),
+    marketingOptIn: checkboxSchema,
     website: honeypotSchema,
     turnstileToken: z.string().max(4096).optional(),
   })
@@ -129,9 +137,7 @@ export const activationCompleteSchema = z
     firstName: boundedText(1, 60, 'Le prenom'),
     lastName: boundedText(1, 60, 'Le nom'),
     password: passwordSchema,
-    acceptTerms: z.literal(true, {
-      message: 'Vous devez accepter les conditions générales.',
-    }),
+    acceptTerms: consentCheckbox('Vous devez accepter les conditions générales.'),
   })
   .strict();
 

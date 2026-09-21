@@ -116,14 +116,7 @@ create table public.plans (
 
   -- Argent : toujours en unites mineures entieres, jamais en flottant.
   setup_price_cents      integer not null,
-  /** Frais d'entretien recurrents, preleves selon `billing_interval`. */
-  maintenance_price_cents integer not null,
-  /**
-   * Periodicite de la maintenance. `year` aujourd'hui : la colonne existe pour
-   * que basculer une offre au mois ne demande pas de migration de schema, et
-   * pour qu'aucun ecran ne suppose une periodicite qui ne serait pas ecrite.
-   */
-  billing_interval       text not null default 'year',
+  monthly_price_cents    integer not null,
   currency               char(3) not null default 'EUR',
   /** Taux de TVA en points de base : 2000 = 20,00 %. */
   vat_rate_bps           integer not null default 2000,
@@ -137,7 +130,7 @@ create table public.plans (
   sort_order             int not null default 100,
 
   stripe_setup_price_id   text,
-  stripe_maintenance_price_id text,
+  stripe_monthly_price_id text,
   stripe_product_id       text,
 
   valid_from             timestamptz not null default now(),
@@ -148,12 +141,11 @@ create table public.plans (
 
   constraint plans_slug_format check (slug ~ '^[a-z0-9][a-z0-9-]{1,48}$'),
   constraint plans_prices_non_negative
-    check (setup_price_cents >= 0 and maintenance_price_cents >= 0),
-  constraint plans_billing_interval_valid check (billing_interval in ('year', 'month')),
+    check (setup_price_cents >= 0 and monthly_price_cents >= 0),
   constraint plans_vat_sane check (vat_rate_bps between 0 and 10000),
   constraint plans_currency_iso check (currency ~ '^[A-Z]{3}$'),
   constraint plans_quote_has_no_price
-    check (not is_quote_only or (setup_price_cents = 0 and maintenance_price_cents = 0))
+    check (not is_quote_only or (setup_price_cents = 0 and monthly_price_cents = 0))
 );
 
 create unique index plans_slug_version_key on public.plans (slug, version);
@@ -219,7 +211,7 @@ create table public.coupons (
   updated_at       timestamptz not null default now(),
 
   constraint coupons_kind_valid check (kind in ('percent', 'amount')),
-  constraint coupons_applies_to_valid check (applies_to in ('setup', 'maintenance', 'both')),
+  constraint coupons_applies_to_valid check (applies_to in ('setup', 'monthly', 'both')),
   constraint coupons_value_positive check (value > 0),
   constraint coupons_percent_range check (kind <> 'percent' or value <= 10000),
   constraint coupons_redemptions_sane

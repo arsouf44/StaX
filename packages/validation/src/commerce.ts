@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   boundedText,
+  consentCheckbox,
   emailSchema,
   hostnameSchema,
   honeypotSchema,
@@ -168,9 +169,7 @@ export const quoteBriefSchema = z
     budgetRange: z.enum(['under_1k', '1k_3k', '3k_10k', '10k_plus', 'undecided']),
     comments: optionalText(3000),
 
-    acceptPrivacy: z.literal(true, {
-      message: 'Vous devez accepter la politique de confidentialite.',
-    }),
+    acceptPrivacy: consentCheckbox('Vous devez accepter la politique de confidentialité.'),
     website: honeypotSchema,
     turnstileToken: z.string().max(4096).optional(),
   })
@@ -207,9 +206,7 @@ export const contactFormSchema = z
     company: optionalText(120),
     subject: z.enum(['sales', 'support', 'partnership', 'press', 'other']).default('sales'),
     message: boundedText(20, 5000, 'Votre message'),
-    acceptPrivacy: z.literal(true, {
-      message: 'Vous devez accepter la politique de confidentialite.',
-    }),
+    acceptPrivacy: consentCheckbox('Vous devez accepter la politique de confidentialité.'),
     website: honeypotSchema,
     elapsedMs: z.coerce.number().int().min(0).max(86_400_000).optional(),
     turnstileToken: z.string().max(4096).optional(),

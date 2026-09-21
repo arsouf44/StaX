@@ -234,7 +234,7 @@ export default async function DashboardPage() {
             </h2>
             <Panel level={1} padding="lg">
               <div className="flex flex-wrap items-center gap-3">
-                <StatusPill tone="accent">{planLabel(site.planSlug)}</StatusPill>
+                <StatusPill tone="accent">{planLabel(site.planName, site.planSlug)}</StatusPill>
                 {workspace.subscription ? (
                   <span className="text-sm text-[var(--foreground-muted)]">
                     Maintenance {subscriptionLabel(workspace.subscription.status)}
@@ -266,14 +266,16 @@ export default async function DashboardPage() {
   );
 }
 
-function planLabel(slug: string | null): string {
-  const labels: Record<string, string> = {
-    classique: 'Classique',
-    premium: 'Premium',
-    signature: 'Signature',
-    'sur-mesure': 'Sur mesure',
-  };
-  return slug ? (labels[slug] ?? slug) : 'Offre en cours de définition';
+/**
+ * Nom d'offre affiche au client.
+ *
+ * Aucune table de correspondance en dur : le nom vient de la base, qui est la
+ * seule source du catalogue. Une offre renommee ou ajoutee s'affiche donc
+ * correctement sans toucher a ce fichier — et une offre archivee garde le nom
+ * sous lequel elle a ete vendue.
+ */
+function planLabel(name: string | null, slug: string | null): string {
+  return name ?? slug ?? 'Offre en cours de définition';
 }
 
 function subscriptionLabel(status: string): string {

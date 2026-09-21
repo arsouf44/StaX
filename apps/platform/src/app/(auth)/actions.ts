@@ -180,12 +180,9 @@ export async function signUpAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const raw = formDataToObject(formData);
-  const parsed = signUpSchema.safeParse({
-    ...raw,
-    acceptTerms: raw.acceptTerms === 'on' || raw.acceptTerms === 'true' || raw.acceptTerms === true,
-    marketingOptIn: raw.marketingOptIn === 'on' || raw.marketingOptIn === 'true',
-  });
+  // Les cases a cocher sont converties par le schema lui-meme : une case
+  // arrive sous la forme « on », ou pas du tout. Voir `checkboxSchema`.
+  const parsed = signUpSchema.safeParse(formDataToObject(formData));
 
   if (!parsed.success) {
     return {
@@ -393,11 +390,10 @@ export async function completeActivationAction(
   _previous: ActivationState,
   formData: FormData,
 ): Promise<ActivationState> {
+  // `raw` est conserve pour reafficher ce que la personne avait saisi : un
+  // formulaire qui se vide apres une erreur fait recommencer a zero.
   const raw = formDataToObject(formData);
-  const parsed = activationCompleteSchema.safeParse({
-    ...raw,
-    acceptTerms: raw.acceptTerms === 'on' || raw.acceptTerms === 'true' || raw.acceptTerms === true,
-  });
+  const parsed = activationCompleteSchema.safeParse(raw);
 
   if (!parsed.success) {
     return {

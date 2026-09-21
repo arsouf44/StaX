@@ -1,4 +1,4 @@
-import { readEnv } from '@stax/config';
+import { isProduction, readEnv } from '@stax/config';
 
 /**
  * Primitives cryptographiques.
@@ -9,15 +9,55 @@ import { readEnv } from '@stax/config';
 
 const encoder = new TextEncoder();
 
-function secretKeyMaterial(): Uint8Array {
-  const secret = readEnv('STAX_SECRET_KEY');
-  if (!secret || secret.length < 32) {
-    throw new Error(
-      '[StaX] STAX_SECRET_KEY absent ou trop court (32 caracteres minimum). ' +
-        'Generez-le avec : openssl rand -base64 48',
+/**
+ * Cle de developpement, ephemere et volontairement reconnaissable.
+ *
+ * Elle n'existe QUE hors production, et seulement pour qu'un `pnpm dev` ou un
+ * lancement de tests fonctionne sans configuration prealable. Sans elle, le
+ * moindre formulaire echouait par une exception non rattrapee, et l'ecran
+ * affichait une erreur anonyme qui n'apprenait rien a personne.
+ *
+ * Elle change a chaque demarrage : rien de ce qu'elle signe ne survit au
+ * redemarrage, ce qui est exactement ce qu'on veut d'une cle jetable.
+ */
+let developmentKey: string | null = null;
+let developmentKeyAnnounced = false;
+
+function developmentFallbackKey(): string {
+  if (!developmentKey) {
+    const random = crypto.getRandomValues(new Uint8Array(32));
+    developmentKey =
+      'dev-ephemere-' + [...random].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  if (!developmentKeyAnnounced) {
+    developmentKeyAnnounced = true;
+    console.warn(
+      '[StaX] STAX_SECRET_KEY absent : une cle ephemere de developpement est utilisee. ' +
+        'Les jetons signes ne survivront pas au redemarrage. ' +
+        'Generez une vraie cle avec : openssl rand -base64 48',
     );
   }
-  return encoder.encode(secret);
+
+  return developmentKey;
+}
+
+function secretKeyMaterial(): Uint8Array {
+  const secret = readEnv('STAX_SECRET_KEY');
+
+  if (secret && secret.length >= 32) return encoder.encode(secret);
+
+  // En production, une cle absente est une faute de deploiement : mieux vaut
+  // refuser bruyamment que signer avec une cle devinable.
+  if (isProduction()) {
+    throw new Error(
+      '[StaX] STAX_SECRET_KEY absent ou trop court (32 caracteres minimum). ' +
+        'Generez-le avec : openssl rand -base64 48, puis ajoutez-le aux secrets ' +
+        'de deploiement. Sans cette cle, aucun formulaire ne peut fonctionner.',
+    );
+  }
+
+  return encoder.encode(developmentFallbackKey());
 }
 
 function toHex(buffer: ArrayBuffer): string {

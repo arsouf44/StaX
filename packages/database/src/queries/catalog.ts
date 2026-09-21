@@ -5,7 +5,7 @@ import { type Db, unwrapList } from '../client';
  * Catalogue commercial.
  *
  * Source unique des offres et des tarifs. Aucun composant n affiche un prix
- * qui ne vienne pas d ici — pas de « 239,99 € » code en dur dans une page.
+ * qui ne vienne pas d ici — pas de « 300 € » code en dur dans une page.
  */
 
 export interface PlanFeatureView {

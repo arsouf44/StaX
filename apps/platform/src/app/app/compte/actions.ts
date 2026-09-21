@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createUserClient } from '@stax/database';
-import { boundedText, fieldErrors, formDataToObject, phoneSchema } from '@stax/validation';
+import {
+  boundedText,
+  checkboxSchema,
+  fieldErrors,
+  formDataToObject,
+  phoneSchema,
+} from '@stax/validation';
 import { requireSession } from '~/lib/session';
 import type { ActionState } from '~/lib/form-state';
 
@@ -20,7 +26,7 @@ const profileSchema = z
     firstName: boundedText(1, 60, 'Le prénom'),
     lastName: boundedText(1, 60, 'Le nom'),
     phone: phoneSchema.optional().or(z.literal('')),
-    marketingOptIn: z.boolean().default(false),
+    marketingOptIn: checkboxSchema,
   })
   .strict();
 
@@ -28,11 +34,7 @@ export async function updateProfileAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const raw = formDataToObject(formData);
-  const parsed = profileSchema.safeParse({
-    ...raw,
-    marketingOptIn: raw.marketingOptIn === 'on' || raw.marketingOptIn === 'true',
-  });
+  const parsed = profileSchema.safeParse(formDataToObject(formData));
 
   if (!parsed.success) {
     return {

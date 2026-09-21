@@ -122,7 +122,7 @@ const DEMOS: DemoSite[] = [
     slug: 'demo-coiffeur',
     organizationName: 'Démonstration — Salon de coiffure',
     businessType: 'coiffeur',
-    planSlug: 'classique',
+    planSlug: 'essentiel',
     settings: {
       business_name: 'Atelier de Démonstration',
       tagline: 'Coupe, couleur et conseil',
@@ -162,7 +162,7 @@ const DEMOS: DemoSite[] = [
     slug: 'demo-artisan',
     organizationName: 'Démonstration — Artisan',
     businessType: 'plombier',
-    planSlug: 'classique',
+    planSlug: 'essentiel',
     settings: {
       business_name: 'Démonstration Plomberie',
       tagline: 'Dépannage, installation, rénovation',

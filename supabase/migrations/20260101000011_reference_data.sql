@@ -278,67 +278,60 @@ insert into public.features (key, label, description, category, kind, unit) valu
 --  Montants en centimes. Aucune duplication ailleurs dans le code.
 -- -----------------------------------------------------------------------------
 insert into public.plans
-  (slug, version, name, tagline, description, badge, setup_price_cents, maintenance_price_cents,
-   billing_interval, vat_rate_bps, prices_include_vat, is_quote_only, sort_order)
+  (slug, version, name, tagline, description, badge, setup_price_cents, monthly_price_cents,
+   vat_rate_bps, is_quote_only, sort_order)
 values
-  ('essentiel', 1, 'Essentiel',
+  ('classique', 1, 'Classique',
    'Le site vitrine professionnel, complet et rapide.',
-   'Un site clair et performant pour présenter votre activité, être trouvé sur Google et recevoir vos premiers contacts. Vous le modifiez vous-même, autant de fois que vous voulez.',
-   null, 30000, 2200, 'year', 2000, false, false, 10),
+   'Un site clair et performant pour présenter votre activité, être trouve sur Google et recevoir vos premiers contacts.',
+   null, 23999, 1400, 2000, false, 10),
   ('premium', 1, 'Premium',
    'Votre site devient un outil de travail.',
-   'Tout l''Essentiel, plus les réservations en ligne, les actualités, les statistiques détaillées et la publication programmée. Sans encaissement en ligne.',
-   'Le plus choisi', 50000, 3200, 'year', 2000, false, false, 20),
-  ('ultra-premium', 1, 'Ultra Premium',
-   'Tout inclus, sans compromis.',
-   'Design entièrement sur mesure, boutique et encaissement en ligne, comptes clients, multilingue, animations avancées et support prioritaire. Tout ce que StaX sait faire.',
-   'Tout inclus', 109900, 8800, 'year', 2000, false, false, 30),
+   'Réservations, paiement en ligne, modules métier et tableau de bord enrichi : votre site travaille pour vous.',
+   'Le plus choisi', 49900, 3200, 2000, false, 20),
+  ('signature', 1, 'Signature',
+   'Une réalisation sur mesure, sans compromis.',
+   'Design entièrement personnalisé, animations avancées, architecture métier complexe et accompagnement rapproche.',
+   null, 99900, 4000, 2000, false, 30),
   ('sur-mesure', 1, 'Sur mesure',
-   'Un projet spécifique, chiffré précisément.',
+   'Un projet spécifique, chiffre précisément.',
    'Application métier, intégrations, volumétries importantes ou contraintes particulières : nous étudions votre besoin et établissons un devis détaillé.',
-   null, 0, 0, 'year', 2000, false, true, 40);
+   null, 0, 0, 2000, true, 40);
 
--- -----------------------------------------------------------------------------
---  Droits par offre
---
---  L'encaissement en ligne (`online_payments`, `ecommerce`, `customer_accounts`)
---  est reserve a l'Ultra Premium : c'est ce qui justifie l'ecart de prix, et
---  cela evite d'engager LallianSe sur de la conformite paiement pour des
---  clients qui ne vendent pas en ligne.
--- -----------------------------------------------------------------------------
+-- Droits par offre
 do $$
 declare
-  v_essentiel uuid := (select id from public.plans where slug = 'essentiel' and version = 1);
+  v_classique uuid := (select id from public.plans where slug = 'classique' and version = 1);
   v_premium   uuid := (select id from public.plans where slug = 'premium' and version = 1);
-  v_ultra     uuid := (select id from public.plans where slug = 'ultra-premium' and version = 1);
+  v_signature uuid := (select id from public.plans where slug = 'signature' and version = 1);
 begin
-  -- Essentiel : la vitrine, bien faite. Aucune fonction transactionnelle.
+  -- Classique : vitrine optimisee, sans compte client ni paiement en ligne.
   insert into public.plan_features (plan_id, feature_key, enabled, limit_value) values
-    (v_essentiel, 'custom_domain', true, null),
-    (v_essentiel, 'seo_tools', true, null),
-    (v_essentiel, 'content_editor', true, null),
-    (v_essentiel, 'version_history', true, null),
-    (v_essentiel, 'scheduled_publishing', false, null),
-    (v_essentiel, 'advanced_animations', false, null),
-    (v_essentiel, 'custom_design', false, null),
-    (v_essentiel, 'bookings', false, null),
-    (v_essentiel, 'ecommerce', false, null),
-    (v_essentiel, 'online_payments', false, null),
-    (v_essentiel, 'customer_accounts', false, null),
-    (v_essentiel, 'blog', false, null),
-    (v_essentiel, 'advanced_analytics', false, null),
-    (v_essentiel, 'multi_language', false, null),
-    (v_essentiel, 'team_collaboration', true, null),
-    (v_essentiel, 'priority_support', false, null),
-    (v_essentiel, 'max_sites', true, 1),
-    (v_essentiel, 'max_pages', true, 8),
-    (v_essentiel, 'max_team_members', true, 2),
-    (v_essentiel, 'max_products', false, 0),
-    (v_essentiel, 'max_media_mb', true, 1024),
-    (v_essentiel, 'max_monthly_submissions', true, 500),
-    (v_essentiel, 'max_forms', true, 2);
+    (v_classique, 'custom_domain', true, null),
+    (v_classique, 'seo_tools', true, null),
+    (v_classique, 'content_editor', true, null),
+    (v_classique, 'version_history', true, null),
+    (v_classique, 'scheduled_publishing', false, null),
+    (v_classique, 'advanced_animations', false, null),
+    (v_classique, 'custom_design', false, null),
+    (v_classique, 'bookings', false, null),
+    (v_classique, 'ecommerce', false, null),
+    (v_classique, 'online_payments', false, null),
+    (v_classique, 'customer_accounts', false, null),
+    (v_classique, 'blog', false, null),
+    (v_classique, 'advanced_analytics', false, null),
+    (v_classique, 'multi_language', false, null),
+    (v_classique, 'team_collaboration', true, null),
+    (v_classique, 'priority_support', false, null),
+    (v_classique, 'max_sites', true, 1),
+    (v_classique, 'max_pages', true, 8),
+    (v_classique, 'max_team_members', true, 2),
+    (v_classique, 'max_products', false, 0),
+    (v_classique, 'max_media_mb', true, 1024),
+    (v_classique, 'max_monthly_submissions', true, 500),
+    (v_classique, 'max_forms', true, 2);
 
-  -- Premium : reservations, actualites, statistiques. Toujours sans paiement.
+  -- Premium : modules metier, reservations, paiement, comptes clients.
   insert into public.plan_features (plan_id, feature_key, enabled, limit_value) values
     (v_premium, 'custom_domain', true, null),
     (v_premium, 'seo_tools', true, null),
@@ -348,9 +341,9 @@ begin
     (v_premium, 'advanced_animations', false, null),
     (v_premium, 'custom_design', false, null),
     (v_premium, 'bookings', true, null),
-    (v_premium, 'ecommerce', false, null),
-    (v_premium, 'online_payments', false, null),
-    (v_premium, 'customer_accounts', false, null),
+    (v_premium, 'ecommerce', true, null),
+    (v_premium, 'online_payments', true, null),
+    (v_premium, 'customer_accounts', true, null),
     (v_premium, 'blog', true, null),
     (v_premium, 'advanced_analytics', true, null),
     (v_premium, 'multi_language', false, null),
@@ -359,36 +352,36 @@ begin
     (v_premium, 'max_sites', true, 1),
     (v_premium, 'max_pages', true, 25),
     (v_premium, 'max_team_members', true, 6),
-    (v_premium, 'max_products', false, 0),
+    (v_premium, 'max_products', true, 300),
     (v_premium, 'max_media_mb', true, 5120),
     (v_premium, 'max_monthly_submissions', true, 3000),
     (v_premium, 'max_forms', true, 8);
 
-  -- Ultra Premium : tout, y compris la boutique et l'encaissement en ligne.
+  -- Signature : tout Premium, plus le design sur mesure et les animations.
   insert into public.plan_features (plan_id, feature_key, enabled, limit_value) values
-    (v_ultra, 'custom_domain', true, null),
-    (v_ultra, 'seo_tools', true, null),
-    (v_ultra, 'content_editor', true, null),
-    (v_ultra, 'version_history', true, null),
-    (v_ultra, 'scheduled_publishing', true, null),
-    (v_ultra, 'advanced_animations', true, null),
-    (v_ultra, 'custom_design', true, null),
-    (v_ultra, 'bookings', true, null),
-    (v_ultra, 'ecommerce', true, null),
-    (v_ultra, 'online_payments', true, null),
-    (v_ultra, 'customer_accounts', true, null),
-    (v_ultra, 'blog', true, null),
-    (v_ultra, 'advanced_analytics', true, null),
-    (v_ultra, 'multi_language', true, null),
-    (v_ultra, 'team_collaboration', true, null),
-    (v_ultra, 'priority_support', true, null),
-    (v_ultra, 'max_sites', true, 3),
-    (v_ultra, 'max_pages', true, null),
-    (v_ultra, 'max_team_members', true, 15),
-    (v_ultra, 'max_products', true, null),
-    (v_ultra, 'max_media_mb', true, 20480),
-    (v_ultra, 'max_monthly_submissions', true, null),
-    (v_ultra, 'max_forms', true, null);
+    (v_signature, 'custom_domain', true, null),
+    (v_signature, 'seo_tools', true, null),
+    (v_signature, 'content_editor', true, null),
+    (v_signature, 'version_history', true, null),
+    (v_signature, 'scheduled_publishing', true, null),
+    (v_signature, 'advanced_animations', true, null),
+    (v_signature, 'custom_design', true, null),
+    (v_signature, 'bookings', true, null),
+    (v_signature, 'ecommerce', true, null),
+    (v_signature, 'online_payments', true, null),
+    (v_signature, 'customer_accounts', true, null),
+    (v_signature, 'blog', true, null),
+    (v_signature, 'advanced_analytics', true, null),
+    (v_signature, 'multi_language', true, null),
+    (v_signature, 'team_collaboration', true, null),
+    (v_signature, 'priority_support', true, null),
+    (v_signature, 'max_sites', true, 3),
+    (v_signature, 'max_pages', true, null),
+    (v_signature, 'max_team_members', true, 15),
+    (v_signature, 'max_products', true, null),
+    (v_signature, 'max_media_mb', true, 20480),
+    (v_signature, 'max_monthly_submissions', true, null),
+    (v_signature, 'max_forms', true, null);
 end;
 $$;
 
@@ -427,7 +420,7 @@ insert into public.system_health (key, label, status, detail) values
 -- -----------------------------------------------------------------------------
 insert into public.feature_flags (key, label, description, enabled_globally, rules) values
   ('editor.drag_and_drop', 'Éditeur — glisser-déposer', 'Reordonnancement des sections par glisser-déposer.', true, '{}'),
-  ('editor.scheduled_publish', 'Éditeur — publication programmée', 'Programmation d''une publication future.', false, '{"plans":["premium","ultra-premium"]}'),
-  ('sites.multi_language', 'Sites multilingues', 'Gestion de plusieurs langues sur un site client.', false, '{"plans":["ultra-premium"]}'),
+  ('editor.scheduled_publish', 'Éditeur — publication programmée', 'Programmation d''une publication future.', false, '{"plans":["premium","signature"]}'),
+  ('sites.multi_language', 'Sites multilingues', 'Gestion de plusieurs langues sur un site client.', false, '{"plans":["signature"]}'),
   ('billing.customer_portal', 'Portail de facturation Stripe', 'Accès au portail client Stripe depuis l''espace.', true, '{}'),
   ('connect.instant_payouts', 'Virements instantanes Connect', 'Option de virement instantane pour les comptes connectes.', false, '{}');

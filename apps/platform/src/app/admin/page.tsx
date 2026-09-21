@@ -140,9 +140,9 @@ export default async function AdminHomePage() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat
-            label="Revenu récurrent mensuel"
-            value={formatMoney(overview.mrrCents, 'EUR', { hideDecimalsWhenRound: true })}
-            hint={`${overview.activeSubscriptions} abonnement(s) actif(s)`}
+            label="Revenu récurrent annuel"
+            value={formatMoney(overview.arrCents, 'EUR', { hideDecimalsWhenRound: true })}
+            hint={`${overview.activeSubscriptions} abonnement(s) actif(s) · maintenance facturée à l’année`}
           />
           <Stat
             label="Encaissé sur 30 jours"

@@ -53,7 +53,7 @@ export default async function SubscriptionPage() {
     <>
       <PageHeader
         title="Maintenance"
-        description="Ce que couvre votre abonnement mensuel, et comment le gérer."
+        description="Ce que couvre votre abonnement annuel de maintenance, et comment le gérer."
       />
 
       {view ? (

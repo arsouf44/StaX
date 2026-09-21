@@ -202,7 +202,7 @@ export function orderConfirmedEmail(
     reference: string;
     planName: string;
     setupAmount: string;
-    monthlyAmount: string;
+    maintenanceAmount: string;
     firstMaintenanceDate: string;
     orderUrl: string;
   },
@@ -220,7 +220,7 @@ export function orderConfirmedEmail(
         ['Reference', ctx.reference],
         ['Offre', ctx.planName],
         ['Paiement initial', ctx.setupAmount],
-        ['Maintenance mensuelle', ctx.monthlyAmount],
+        ['Maintenance annuelle', ctx.maintenanceAmount],
         ['Première échéance de maintenance', ctx.firstMaintenanceDate],
       ]),
       paragraph(
@@ -231,7 +231,7 @@ export function orderConfirmedEmail(
     bodyText: [
       hello(ctx.firstName),
       `Commande ${ctx.reference} confirmée.`,
-      `Offre : ${ctx.planName} — ${ctx.setupAmount} puis ${ctx.monthlyAmount}.`,
+      `Offre : ${ctx.planName} — ${ctx.setupAmount} puis ${ctx.maintenanceAmount} par an.`,
       `Première échéance de maintenance : ${ctx.firstMaintenanceDate}.`,
     ],
     action: { label: 'Compléter mon questionnaire', url: ctx.orderUrl },

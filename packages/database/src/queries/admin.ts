@@ -10,7 +10,15 @@ import { type Db, unwrapList } from '../client';
  */
 
 export interface AdminOverview {
-  mrrCents: Cents;
+  /**
+   * Revenu recurrent ANNUEL contractualise.
+   *
+   * La maintenance StaX est facturee a l'annee. Additionner 22 EUR et 82 EUR
+   * puis appeler le resultat « MRR » donnerait un chiffre faux d'un facteur
+   * douze, et une decision commerciale prise dessus serait fausse aussi. La
+   * periodicite de chaque contrat est donc lue, jamais supposee.
+   */
+  arrCents: Cents;
   activeSubscriptions: number;
   revenueLast30dCents: Cents;
   ordersToProcess: number;
@@ -42,10 +50,10 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
   const [subscriptions, payments] = await Promise.all([
-    unwrapList<{ maintenance_price_cents: number; status: string }>(
+    unwrapList<{ maintenance_price_cents: number; billing_interval: string; status: string }>(
       (await db
         .from('subscriptions')
-        .select('maintenance_price_cents, status')
+        .select('maintenance_price_cents, billing_interval, status')
         .in('status', ['active', 'trialing', 'past_due', 'cancel_at_period_end'])) as never,
     ),
     unwrapList<{ amount_cents: number; amount_refunded_cents: number }>(
@@ -58,11 +66,16 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
     ),
   ]);
 
-  // Revenu recurrent mensuel : seuls les contrats reellement facturables.
+  // Revenu recurrent annuel : seuls les contrats reellement facturables, et
+  // chacun ramene a l'annee selon SA periodicite. Un contrat mensuel compte
+  // douze fois, un contrat annuel une seule.
   const billable = subscriptions.filter(
     (s) => s.status === 'active' || s.status === 'cancel_at_period_end',
   );
-  const mrrCents = billable.reduce((total, s) => total + s.maintenance_price_cents, 0);
+  const arrCents = billable.reduce(
+    (total, s) => total + s.maintenance_price_cents * (s.billing_interval === 'month' ? 12 : 1),
+    0,
+  );
   const revenueLast30dCents = payments.reduce(
     (total, p) => total + p.amount_cents - p.amount_refunded_cents,
     0,
@@ -160,7 +173,7 @@ export async function loadAdminOverview(db: Db): Promise<AdminOverview> {
   ]);
 
   return {
-    mrrCents,
+    arrCents,
     activeSubscriptions: billable.length,
     revenueLast30dCents,
     ordersToProcess,

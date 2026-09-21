@@ -123,6 +123,34 @@ export const httpsUrlSchema = z
 export const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide.');
 export const isoDateTimeSchema = z.string().datetime({ offset: true });
 
+/**
+ * Case a cocher HTML.
+ *
+ * Une case cochee arrive dans un FormData sous la forme de la chaine « on ».
+ * Une case DECOCHEE n'arrive pas du tout : la cle est absente. Un
+ * `z.boolean()` nu ne peut donc jamais valider un formulaire reel, et un
+ * `z.literal(true)` encore moins — la condition est litteralement
+ * insatisfiable depuis un navigateur.
+ *
+ * Ce schema accepte les trois formes rencontrees (booleen d'un appel
+ * programmatique, « on » d'une case HTML, « true » d'un JSON) et traite
+ * l'absence comme un refus.
+ */
+export const checkboxSchema = z
+  .union([z.boolean(), z.string()])
+  .optional()
+  .transform((value) => value === true || value === 'on' || value === 'true');
+
+/**
+ * Case a cocher de consentement, obligatoire.
+ *
+ * Le message est exige : une acceptation de CGV refusee sans explication est
+ * un formulaire qui bloque sans dire pourquoi.
+ */
+export function consentCheckbox(message: string) {
+  return checkboxSchema.refine((value) => value === true, { message });
+}
+
 /** Champ piege anti-robot : doit rester vide. */
 export const honeypotSchema = z.string().max(0, 'Requête refusée.').optional().or(z.literal(''));
 
@@ -164,9 +192,27 @@ export function validate<T extends z.ZodTypeAny>(
 }
 
 /** Lit un FormData en objet simple, en conservant les champs multiples. */
+/**
+ * Champs internes injectes par le framework dans le FormData d'une action
+ * serveur : `$ACTION_ID_…`, `$ACTION_REF_1`, `$ACTION_1:0`, `$ACTION_KEY`…
+ *
+ * Ils n'ont jamais ete saisis par un humain et n'appartiennent a aucun schema.
+ * Les laisser passer fait echouer TOUT schema `.strict()` avec un message
+ * incomprehensible (« Unrecognized keys »), et rend chaque formulaire du
+ * produit inutilisable.
+ *
+ * Le filtre porte sur le prefixe `$` plutot que sur la liste exacte des noms :
+ * aucun de nos champs ne commence par `$`, et le framework peut en ajouter
+ * d'autres sans prevenir.
+ */
+function isFrameworkField(key: string): boolean {
+  return key.startsWith('$');
+}
+
 export function formDataToObject(formData: FormData): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
+    if (isFrameworkField(key)) continue;
     const normalized = value instanceof File ? value : String(value);
     if (key in result) {
       const existing = result[key];

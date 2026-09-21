@@ -24,6 +24,7 @@ export interface WorkspaceSite {
   status: Site['status'];
   businessTypeSlug: string | null;
   planSlug: string | null;
+  planName: string | null;
   publishedVersionId: UUID | null;
   firstPublishedAt: string | null;
   lastPublishedAt: string | null;
@@ -87,6 +88,7 @@ export async function listSites(db: Db, organizationId: UUID): Promise<Workspace
         Pick<SiteDomain, 'id' | 'hostname' | 'status' | 'kind' | 'is_primary' | 'ssl_status'>
       > | null;
       site_settings: { enabled_modules: string[] } | null;
+      plans: { name: string } | null;
     }
   >(
     (await db
@@ -94,7 +96,8 @@ export async function listSites(db: Db, organizationId: UUID): Promise<Workspace
       .select(
         `*,
          site_domains ( id, hostname, status, kind, is_primary, ssl_status ),
-         site_settings ( enabled_modules )`,
+         site_settings ( enabled_modules ),
+         plans ( name )`,
       )
       .eq('organization_id', organizationId)
       .is('archived_at', null)
@@ -115,6 +118,9 @@ export async function listSites(db: Db, organizationId: UUID): Promise<Workspace
       status: row.status,
       businessTypeSlug: row.business_type_slug,
       planSlug: row.plan_slug,
+      // Le NOM commercial vient du catalogue : une offre archivee garde le nom
+      // sous lequel elle a ete vendue, et un renommage n'exige aucun deploiement.
+      planName: row.plans?.name ?? null,
       publishedVersionId: row.published_version_id,
       firstPublishedAt: row.first_published_at,
       lastPublishedAt: row.last_published_at,
