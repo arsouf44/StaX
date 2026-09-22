@@ -1,3 +1,4 @@
+import { deliveryPolicyConfig } from '@stax/config';
 /**
  * Questions frequentes.
  *
@@ -16,8 +17,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   {
     category: 'general',
     question: 'Combien de temps faut-il pour avoir mon site en ligne ?',
-    answer:
-      'Comptez 1 à 3 semaines entre le moment où nous avons tous vos éléments (textes, photos, logo) et la mise en ligne. Le délai court à partir de la réception de ces éléments, pas de la commande : c’est souvent ce qui fait la différence entre une et trois semaines. Vous relisez une version privée avant toute publication, et vos demandes de correction sont incluses.',
+    answer: `Comptez ${deliveryPolicyConfig().label} entre le moment où nous avons tous vos éléments (textes, photos, logo) et la mise en ligne. Le délai court à partir de la réception de ces éléments, pas de la commande : c’est souvent ce qui fait la différence entre une et trois semaines. Vous relisez une version privée avant toute publication, et vos demandes de correction sont incluses.`,
   },
   {
     category: 'general',

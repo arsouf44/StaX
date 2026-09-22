@@ -1,4 +1,4 @@
-import { legalValue, platformUrl } from '@stax/config';
+import { deliveryPolicyConfig, legalValue, platformUrl } from '@stax/config';
 import {
   codeBlock,
   definitionList,
@@ -491,8 +491,8 @@ export function salesInvoiceIssuedEmail(
     ],
     action: { label: 'Rattacher ma facture', url: ctx.claimUrl },
     footerNote:
-      'Le délai de livraison de votre site est de 1 à 3 semaines à compter de la réception ' +
-      'de vos contenus.',
+      `Le délai de livraison de votre site est de ${deliveryPolicyConfig().label} à compter ` +
+      'de la réception de vos contenus.',
   });
 }
 

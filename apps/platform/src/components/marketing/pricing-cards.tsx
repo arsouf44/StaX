@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { PlanView } from '@stax/database';
 import { computeOrderPricing, firstYearTotal, formatMoney } from '@stax/payments';
 import { ButtonLink, cn } from '@stax/ui';
+import { deliveryPolicyConfig } from '@stax/config';
 
 /**
  * Cartes tarifaires.
@@ -28,9 +29,14 @@ interface PricingCardsProps {
  * de donnees de reference. Annoncer ici une fonction que l offre n ouvre pas
  * serait une pratique commerciale trompeuse, pas une maladresse de redaction.
  */
+// Le delai annonce ENGAGE le vendeur (article L.216-1 du Code de la
+// consommation). Il vit dans la configuration, pas dans une chaine recopiee
+// qu'un changement de politique laisserait derriere lui.
+const DELIVERY = deliveryPolicyConfig().label;
+
 const HIGHLIGHTS: Record<string, string[]> = {
   essentiel: [
-    'Site professionnel conçu par notre équipe, livré en 1 à 3 semaines',
+    `Site professionnel conçu par notre équipe, livré en ${DELIVERY}`,
     'Votre nom de domaine connecté, HTTPS automatique',
     'Hébergement, sauvegardes et surveillance inclus',
     'Formulaire de contact et boîte de réception',
