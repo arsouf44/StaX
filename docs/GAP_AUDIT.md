@@ -129,7 +129,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | 13 listes (sites, utilisateurs, domaines, projets, devis, abonnements, remboursements, tickets, offres, sécurité, journal, factures, santé) | **OK** |
 | Assistance client (impersonation) | **OK** — motif obligatoire, durée plafonnée, bannière, 14 opérations interdites |
 | Émission de factures | **OK** — montant repris du catalogue, numérotation continue |
-| **`/admin/sites/[id]`** | **MANQUE** — aucune vue détaillée, aucune action preview/publish/rollback/suspend/code d'activation |
+| **`/admin/sites/[id]`** | **OK** — fiche complète (offre, métier, dates, projet, maintenance, compteurs), domaines et état DNS réel, 15 dernières versions, codes d'activation. Actions : changement d'état limité aux transitions réellement permises par `app.guard_site_status`, remise en ligne d'une version, émission et révocation de codes. Motif obligatoire, trace nominative, rôle `platform_admin` exigé |
 | Paramètres, feature flags, templates, métiers/modules, coupons, contenu | **MANQUE** — tables et logique présentes, aucune interface |
 
 ---
@@ -191,8 +191,8 @@ confirmer celle écrite avant l'appel à Stripe.
 
 ## Ce qui reste non terminé, sans détour
 
-1. `/admin/sites/[id]` et les écrans d'administration restants
-3. E-mail d'envoi de facture
-4. Registre des traitements et outillage de violation de données
+1. Écrans d'administration restants (paramètres, feature flags, templates, coupons)
+2. E-mail d'envoi de facture au client
+3. Registre des traitements (art. 30) et outillage de violation de données
+4. Comptes clients sur le site final (droit Ultra Premium déclaré, non implémenté)
 5. E2E des parcours critiques
-

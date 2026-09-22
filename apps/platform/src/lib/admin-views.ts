@@ -56,6 +56,14 @@ export interface AdminView {
   emptyTitle: string;
   emptyDescription: string;
   icon: string;
+  /**
+   * Prefixe de la fiche detaillee, si elle existe.
+   *
+   * La premiere colonne devient alors un lien vers `<detailRoute>/<id>`. Un
+   * ecran sans fiche n'en declare pas : il ne faut pas proposer un lien qui
+   * menerait a une page introuvable.
+   */
+  detailRoute?: string;
   /** Ce que l'ecran ne permet PAS de faire, et pourquoi. */
   note?: string;
 }
@@ -210,6 +218,7 @@ export const ADMIN_VIEWS = {
     emptyTitle: 'Aucun site',
     emptyDescription: 'Les sites apparaissent ici dès la première commande payée.',
     icon: 'globe',
+    detailRoute: '/admin/sites',
   },
 
   utilisateurs: {

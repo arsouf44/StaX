@@ -209,24 +209,44 @@ export async function AdminTable({
             <TBody>
               {rows.map((row, index) => (
                 <TR key={typeof row.id === 'string' ? row.id : String(index)}>
-                  {view.columns.map((column) => (
-                    <TD
-                      key={column.key}
-                      className={
-                        [
-                          column.kind === 'mono' ? 'font-mono text-xs' : '',
-                          column.kind === 'money' ? 'tabular-nums' : '',
-                          column.secondary
-                            ? 'hidden text-[var(--foreground-muted)] sm:table-cell'
-                            : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ') || undefined
-                      }
-                    >
-                      {renderCell(column, row)}
-                    </TD>
-                  ))}
+                  {view.columns.map((column, columnIndex) => {
+                    // Le lien porte sur la PREMIERE colonne, pas sur la ligne
+                    // entiere : une ligne cliquable rend impossible la
+                    // selection d'un texte et surprend au clavier.
+                    const detailHref =
+                      columnIndex === 0 && view.detailRoute && typeof row.id === 'string'
+                        ? `${view.detailRoute}/${row.id}`
+                        : null;
+                    const content = renderCell(column, row);
+
+                    return (
+                      <TD
+                        key={column.key}
+                        className={
+                          [
+                            column.kind === 'mono' ? 'font-mono text-xs' : '',
+                            column.kind === 'money' ? 'tabular-nums' : '',
+                            column.secondary
+                              ? 'hidden text-[var(--foreground-muted)] sm:table-cell'
+                              : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ') || undefined
+                        }
+                      >
+                        {detailHref ? (
+                          <Link
+                            href={detailHref}
+                            className="underline decoration-[var(--border-strong)] underline-offset-4 hover:decoration-[var(--foreground)]"
+                          >
+                            {content}
+                          </Link>
+                        ) : (
+                          content
+                        )}
+                      </TD>
+                    );
+                  })}
                 </TR>
               ))}
             </TBody>
