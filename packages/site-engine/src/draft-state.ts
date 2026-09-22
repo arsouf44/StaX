@@ -84,3 +84,58 @@ export function parseDraftState(raw: unknown): DraftState {
   if (parsed.success) return parsed.data;
   return draftStateSchema.parse({});
 }
+
+/**
+ * Instantane affichable a partir d un etat de brouillon (point de sauvegarde).
+ * Memes regles que la publication : pages publiees et sections visibles
+ * seulement. Le logo n est pas repris (il est designe par un fichier).
+ */
+export function draftStateToSnapshot(
+  state: DraftState,
+  site: { id: string; name: string; slug: string; businessType: string | null },
+): Record<string, unknown> {
+  return {
+    site: {
+      id: site.id,
+      name: site.name,
+      slug: site.slug,
+      businessType: site.businessType,
+      defaultLocale: 'fr',
+      enabledLocales: ['fr'],
+      timezone: 'Europe/Paris',
+      isDemo: false,
+    },
+    theme: {
+      preset: state.theme.preset ?? 'graphite',
+      tokens: state.theme.tokens ?? {},
+      fontHeading: state.theme.font_heading ?? 'geist',
+      fontBody: state.theme.font_body ?? 'geist',
+      logoUrl: null,
+    },
+    settings: state.settings,
+    pages: state.pages
+      .filter((page) => page.is_published)
+      .map((page) => ({
+        id: page.id,
+        path: page.path,
+        title: page.title,
+        kind: page.kind,
+        locale: page.locale,
+        seoTitle: page.seo_title ?? null,
+        seoDescription: page.seo_description ?? null,
+        robotsIndexable: page.robots_indexable,
+        showInNav: page.is_visible_in_nav,
+        sortOrder: page.sort_order,
+        blocks: (page.blocks ?? [])
+          .filter((block) => block.visible)
+          .map((block) => ({
+            id: block.id,
+            type: block.type,
+            version: block.version,
+            props: block.props,
+            settings: block.settings,
+          })),
+      })),
+    redirects: [],
+  };
+}

@@ -39,11 +39,12 @@ export default async function MediaPage() {
     storage_path: string;
     is_public: boolean;
     created_at: string;
+    deleted_at: string | null;
   }>(
     (await db
       .from('media')
       .select(
-        'id, file_name, mime_type, size_bytes, width, height, alt_text, caption, storage_bucket, storage_path, is_public, created_at',
+        'id, file_name, mime_type, size_bytes, width, height, alt_text, caption, storage_bucket, storage_path, is_public, created_at, deleted_at',
       )
       .eq('organization_id', workspace.organization.id)
       .order('created_at', { ascending: false })
@@ -62,6 +63,7 @@ export default async function MediaPage() {
     altText: row.alt_text ?? '',
     caption: row.caption ?? '',
     addedLabel: DATE.format(new Date(row.created_at)),
+    trashedLabel: row.deleted_at ? DATE.format(new Date(row.deleted_at)) : null,
   }));
 
   const access = featureAccess(await loadFeatureSnapshot(db, workspace.organization.id));
@@ -81,6 +83,7 @@ export default async function MediaPage() {
           limitMb: access.limit('max_media_mb'),
         }}
         canManage={workspace.capabilities.includes('media.manage')}
+        canPurge={workspace.capabilities.includes('content.publish')}
       />
     </>
   );

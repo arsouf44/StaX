@@ -16,6 +16,7 @@ import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getAdminContext, requireAdminRole } from '~/lib/admin';
 import { requireSession } from '~/lib/session';
+import { SITE_COOKIE } from '~/lib/workspace';
 
 /**
  * Assistance client : ouvrir et fermer une session « voir comme ce client ».
@@ -53,6 +54,10 @@ export async function startImpersonationAction(
     reason: formData.get('reason'),
     durationMinutes: formData.get('durationMinutes') ?? 30,
   });
+  // Intervention directe sur un site : on ouvre l'editeur de CE site.
+  const rawSite = formData.get('siteId');
+  const siteId =
+    typeof rawSite === 'string' && uuidSchema.safeParse(rawSite).success ? rawSite : null;
 
   if (!parsed.success) {
     return {
@@ -83,6 +88,17 @@ export async function startImpersonationAction(
     path: '/',
     expires: new Date(result.data.expiresAt),
   });
+
+  if (siteId) {
+    store.set(SITE_COOKIE, siteId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      expires: new Date(result.data.expiresAt),
+    });
+    redirect('/app/editeur');
+  }
 
   redirect('/app?assistance=ouverte');
 }

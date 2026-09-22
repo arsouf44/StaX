@@ -187,6 +187,20 @@ export function sitesDomain(): string {
   return readEnv('SITES_DOMAIN') ?? publicEnv().NEXT_PUBLIC_SITES_DOMAIN;
 }
 
+/**
+ * Adresse publique d un site a partir de son nom d hote.
+ *
+ * En production : `https://<hote>`. En developpement et en test, le moteur
+ * des sites tourne en local (`wrangler dev`) : `SITES_PUBLIC_SCHEME` et
+ * `SITES_PUBLIC_PORT` permettent aux liens « Voir mon site » de rester vrais.
+ */
+export function publicSiteUrl(hostname: string, path = '/'): string {
+  const scheme = readEnv('SITES_PUBLIC_SCHEME') === 'http' ? 'http' : 'https';
+  const port = readEnv('SITES_PUBLIC_PORT');
+  const suffix = port && /^[0-9]{2,5}$/.test(port) ? `:${port}` : '';
+  return `${scheme}://${hostname}${suffix}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 export function previewDomain(): string {
   return readEnv('PREVIEW_DOMAIN') ?? `preview.${sitesDomain()}`;
 }

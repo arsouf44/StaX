@@ -1,50 +1,34 @@
 import type { Metadata } from 'next';
+import { publicSiteUrl } from '@stax/config';
 import { unwrapList, unwrapMaybe } from '@stax/database';
-import { availableBlocks, editorFieldsFor, getBlockDefinition } from '@stax/site-engine';
 import { Alert, ButtonLink, EmptyState, Icon, PermissionDenied } from '@stax/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
-import { Editor } from './editor';
-import type { BlockChoice } from './block-picker';
-import type { SiteVersionView } from './version-history';
+import { blockMetas, loadEditorStatus, loadPageBlocks, loadPageTrash } from './data';
+import { PrepareSiteButton } from './prepare-site';
+import type { EditorPageRef } from './types';
+import { VisualEditor } from './visual-editor';
 
 export const metadata: Metadata = { title: 'Modifier mon site' };
 
-export interface EditorBlock {
-  id: string;
-  type: string;
-  label: string;
-  description: string;
-  icon: string;
-  visible: boolean;
-  props: Record<string, unknown>;
-  fields: ReturnType<typeof editorFieldsFor>;
-}
-
-export interface EditorPage {
-  id: string;
-  path: string;
-  title: string;
-  blocks: EditorBlock[];
-}
-
 /**
- * Editeur de contenu.
+ * Editeur visuel.
  *
- * Le client modifie ce qui EST : chaque section correspond a un bloc reel de
- * sa page, et chaque champ a une propriete de son schema. Il n existe pas de
- * champ decoratif qui n irait nulle part.
+ * Trois zones : a gauche la structure de la page (sections, ajout, corbeille),
+ * au centre l apercu reel du site — rendu par le meme moteur que le site
+ * public —, a droite les proprietes de l element choisi. Un clic dans
+ * l apercu selectionne la section et le champ correspondant.
  *
- * Les champs sont derives des schemas : l editeur ne peut pas proposer une
- * saisie que l enregistrement refuserait.
+ * Tout se modifie dans le BROUILLON, enregistre automatiquement. Le site en
+ * ligne ne change qu au clic sur « Publier », apres verification.
  */
-export default async function EditorPage_({
+export default async function EditorPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const { workspace, db } = await getWorkspace();
+  const { workspace, db, userId } = await getWorkspace();
 
   if (!workspace.capabilities.includes('content.edit')) {
     return (
@@ -67,11 +51,12 @@ export default async function EditorPage_({
     );
   }
 
-  const pages = unwrapList<{ id: string; path: string; title: string; sort_order: number }>(
+  const pages = unwrapList<{ id: string; path: string; title: string; kind: string }>(
     (await db
       .from('site_pages')
-      .select('id, path, title, sort_order')
+      .select('id, path, title, kind')
       .eq('site_id', site.id)
+      .is('deleted_at', null)
       .order('sort_order')) as never,
   );
 
@@ -79,10 +64,14 @@ export default async function EditorPage_({
     return (
       <>
         <PageHeader title="Modifier mon site" />
-        <Alert tone="info" live="status" title="Votre site est en cours de préparation">
-          Nous construisons vos pages à partir des informations que vous nous avez transmises. Vous
-          pourrez les modifier ici dès qu’elles seront prêtes.
+        <Alert tone="info" live="status" title="Votre site n’a pas encore de pages">
+          Nous pouvons le préparer tout de suite à partir de votre métier : des pages, des textes
+          d’exemple adaptés à votre activité et un formulaire de contact. Vous pourrez tout modifier
+          ensuite.
         </Alert>
+        <div className="mt-6">
+          <PrepareSiteButton />
+        </div>
       </>
     );
   }
@@ -91,107 +80,54 @@ export default async function EditorPage_({
   const current = pages.find((page) => page.id === requested) ?? pages[0];
   if (!current) return null;
 
-  const blocks = unwrapList<{
-    id: string;
-    type: string;
-    props: Record<string, unknown>;
-    is_visible: boolean;
-    sort_order: number;
-  }>(
-    (await db
-      .from('page_blocks')
-      .select('id, type, props, is_visible, sort_order')
-      .eq('page_id', current.id)
-      .order('sort_order')) as never,
-  );
+  const [blocks, trash, status, siteRow] = await Promise.all([
+    loadPageBlocks(db, current.id),
+    loadPageTrash(db, current.id),
+    loadEditorStatus(db, current.id),
+    unwrapMaybe<{ draft_updated_at: string | null; last_published_at: string | null }>(
+      (await db
+        .from('sites')
+        .select('draft_updated_at, last_published_at')
+        .eq('id', site.id)
+        .maybeSingle()) as never,
+    ),
+  ]);
 
-  const draftChanged = unwrapMaybe<{ updated_at: string }>(
-    (await db.from('sites').select('updated_at').eq('id', site.id).maybeSingle()) as never,
-  );
-
-  const editorPage: EditorPage = {
-    id: current.id,
-    path: current.path,
-    title: current.title,
-    blocks: blocks
-      .map((block) => {
-        const definition = getBlockDefinition(block.type);
-        if (!definition) return null;
-        return {
-          id: block.id,
-          type: block.type,
-          label: definition.label,
-          description: definition.description,
-          icon: definition.icon,
-          visible: block.is_visible,
-          props: block.props ?? {},
-          fields: editorFieldsFor(block.type),
-        } satisfies EditorBlock;
-      })
-      .filter((block): block is EditorBlock => block !== null),
-  };
-
-  // Sections proposables : filtrees par les modules actifs du site, puis
-  // desactivees une a une si la page en contient deja un exemplaire unique.
-  const presentTypes = new Set(blocks.map((block) => block.type));
-  const choices: BlockChoice[] = availableBlocks(site.enabledModules).map((definition) => ({
-    type: definition.type,
-    label: definition.label,
-    description: definition.description,
-    icon: definition.icon,
-    category: definition.category,
-    disabled: Boolean(definition.singleton) && presentTypes.has(definition.type),
+  const pageRefs: EditorPageRef[] = pages.map((page) => ({
+    id: page.id,
+    title: page.title,
+    path: page.path,
+    isHome: page.path === '/',
   }));
 
-  const versionRows = unwrapList<{
-    id: string;
-    version_number: number;
-    label: string | null;
-    published_at: string | null;
-    author: { full_name: string | null } | { full_name: string | null }[] | null;
-  }>(
-    (await db
-      .from('site_versions')
-      .select('id, version_number, label, published_at, author:published_by ( full_name )')
-      .eq('site_id', site.id)
-      .not('published_at', 'is', null)
-      .order('version_number', { ascending: false })
-      .limit(20)) as never,
+  const hasUnpublishedChanges = Boolean(
+    siteRow?.draft_updated_at &&
+    (!siteRow.last_published_at || siteRow.draft_updated_at > siteRow.last_published_at),
   );
 
-  const versionDate = new Intl.DateTimeFormat('fr-FR', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-  });
-
-  const versions: SiteVersionView[] = versionRows.flatMap((row) => {
-    if (!row.published_at) return [];
-    const author = Array.isArray(row.author) ? row.author[0] : row.author;
-    return [
-      {
-        id: row.id,
-        number: row.version_number,
-        label: row.label,
-        publishedAtIso: row.published_at,
-        publishedAtLabel: versionDate.format(new Date(row.published_at)),
-        authorName: author?.full_name ?? null,
-        isCurrent: row.id === site.publishedVersionId,
-      },
-    ];
-  });
+  const liveHost =
+    site.domains.find((domain) => domain.is_primary && domain.status === 'active')?.hostname ??
+    site.domains.find((domain) => domain.status === 'active')?.hostname ??
+    null;
 
   return (
-    <Editor
+    <VisualEditor
       siteId={site.id}
       siteName={site.name}
+      viewerId={userId}
       canPublish={workspace.capabilities.includes('content.publish')}
-      isLive={site.status === 'live'}
-      previewHost={site.primaryHostname}
-      lastEditedAt={draftChanged?.updated_at ?? null}
-      pages={pages.map((page) => ({ id: page.id, path: page.path, title: page.title }))}
-      page={editorPage}
-      choices={choices}
-      versions={versions}
+      canManageMedia={workspace.capabilities.includes('media.manage')}
+      isLive={site.status === 'live' && site.publishedVersionId !== null}
+      liveUrl={liveHost ? publicSiteUrl(liveHost) : null}
+      liveHost={liveHost}
+      hasUnpublishedChanges={hasUnpublishedChanges}
+      pages={pageRefs}
+      page={pageRefs.find((page) => page.id === current.id) ?? pageRefs[0]!}
+      initialBlocks={blocks}
+      initialTrash={trash}
+      initialStatus={status}
+      metas={blockMetas(site.enabledModules, site.businessTypeSlug)}
+      staffMode={workspace.staffMode ?? false}
     />
   );
 }

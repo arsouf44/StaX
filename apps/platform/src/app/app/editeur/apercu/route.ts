@@ -4,14 +4,19 @@ import { mediaPublicUrl } from '@stax/database';
 import { generateNonce, issueCsrfToken } from '@stax/security';
 import { loadSiteData, requiredCollections } from '@stax/site-data';
 import {
+  draftStateToSnapshot,
   normalizePath,
+  parseBlock,
+  parseDraftState,
   parseSiteSettings,
   parseSnapshot,
   renderDocument,
   resolveTheme,
+  type ParsedBlock,
   type RenderContext,
 } from '@stax/site-engine';
 import { getWorkspace } from '~/lib/workspace';
+import { loadPageBlocks } from '../data';
 
 /**
  * Apercu du brouillon.
@@ -83,11 +88,47 @@ export async function GET(request: Request): Promise<Response> {
   const site = workspace.currentSite;
   if (!site) return refuse(404, 'Aucun site à prévisualiser.');
 
-  // Snapshot du BROUILLON, lu avec le jeton de la personne : la fonction SQL
-  // verifie `content.edit`, et la RLS s applique par-dessus.
-  const { data: raw, error } = await db.rpc('draft_site_snapshot', { p_site: site.id });
-  if (error || !raw) {
-    return refuse(503, 'L’aperçu n’a pas pu être généré. Réessayez dans un instant.');
+  const url = new URL(request.url);
+  const versionId = url.searchParams.get('version');
+  const checkpointId = url.searchParams.get('checkpoint');
+  const editorMode = url.searchParams.get('mode') === 'editor' && !versionId && !checkpointId;
+  const isUuid = (value: string | null) =>
+    value !== null && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+  // Trois sources possibles, toutes lues avec le jeton de la personne et
+  // verifiees en base pour CE site : le brouillon (par defaut), une version
+  // publiee (« Voir » dans l historique) ou un point de sauvegarde.
+  let raw: unknown = null;
+  if (versionId) {
+    if (!isUuid(versionId)) return refuse(404, 'Version introuvable.');
+    const { data, error } = await db.rpc('version_snapshot', {
+      p_site: site.id,
+      p_version: versionId,
+    });
+    if (error || !data) return refuse(404, 'Version introuvable.');
+    raw = data;
+  } else if (checkpointId) {
+    if (!isUuid(checkpointId)) return refuse(404, 'Sauvegarde introuvable.');
+    const { data, error } = await db.rpc('history_state', {
+      p_site: site.id,
+      p_kind: 'checkpoint',
+      p_id: checkpointId,
+    });
+    if (error || !data) return refuse(404, 'Sauvegarde introuvable.');
+    raw = draftStateToSnapshot(parseDraftState(data), {
+      id: site.id,
+      name: site.name,
+      slug: site.slug,
+      businessType: site.businessTypeSlug,
+    });
+  } else {
+    // Snapshot du BROUILLON : la fonction SQL verifie `content.edit`, et la
+    // RLS s applique par-dessus.
+    const { data, error } = await db.rpc('draft_site_snapshot', { p_site: site.id });
+    if (error || !data) {
+      return refuse(503, 'L’aperçu n’a pas pu être généré. Réessayez dans un instant.');
+    }
+    raw = data;
   }
 
   const snapshot = parseSnapshot(raw);
@@ -101,12 +142,53 @@ export async function GET(request: Request): Promise<Response> {
   // Le parametre `page` ne designe qu une page DANS le site deja resolu. Un
   // identifiant inconnu retombe sur l accueil plutot que de reveler quoi que
   // ce soit.
-  const url = new URL(request.url);
   const requestedId = url.searchParams.get('page');
-  const page =
+  let page =
     (requestedId ? snapshot.pages.find((entry) => entry.id === requestedId) : undefined) ??
     snapshot.pagesByPath.get('/') ??
     snapshot.pages[0];
+
+  // Mode editeur : les sections MASQUEES sont montrees (grisees) pour rester
+  // selectionnables — un client doit pouvoir retrouver ce qu il a masque.
+  const hiddenBlockIds = new Set<string>();
+  if (editorMode && requestedId && isUuid(requestedId)) {
+    const all = await loadPageBlocks(db, requestedId);
+    const parsed: ParsedBlock[] = [];
+    for (const block of all) {
+      const result = parseBlock(block);
+      if (!result.block) continue;
+      parsed.push(result.block);
+      if (!block.visible) hiddenBlockIds.add(block.id);
+    }
+    const base = snapshot.pages.find((entry) => entry.id === requestedId);
+    if (base) {
+      page = { ...base, blocks: parsed };
+    } else {
+      // Page non publiee (retiree du site) : absente du snapshot, mais on
+      // doit pouvoir la modifier et la voir.
+      const { data: row } = await db
+        .from('site_pages')
+        .select('id, path, title, kind, locale')
+        .eq('id', requestedId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (row) {
+        page = {
+          id: row.id as string,
+          path: row.path as string,
+          title: row.title as string,
+          kind: row.kind as string,
+          locale: (row.locale as string) || 'fr',
+          seoTitle: null,
+          seoDescription: null,
+          robotsIndexable: false,
+          showInNav: false,
+          blocks: parsed,
+          droppedBlocks: [],
+        };
+      }
+    }
+  }
 
   if (!page) return refuse(200, 'Cette page n’a pas encore de contenu affichable.');
 
@@ -153,6 +235,18 @@ export async function GET(request: Request): Promise<Response> {
     formToken: token.value,
     turnstileSiteKey: null,
     now: new Date(),
+    ...(editorMode
+      ? {
+          editor: {
+            hiddenBlockIds,
+            parentOrigin: url.origin,
+            selectedBlockId: isUuid(url.searchParams.get('sel'))
+              ? url.searchParams.get('sel')
+              : null,
+            scrollY: Math.max(0, Math.min(Number(url.searchParams.get('y')) || 0, 500000)),
+          },
+        }
+      : {}),
   };
 
   const html = renderDocument({

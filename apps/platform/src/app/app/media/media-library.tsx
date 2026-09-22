@@ -16,7 +16,13 @@ import {
   Textarea,
 } from '@stax/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
-import { deleteMediaAction, describeMediaAction, uploadMediaAction } from './actions';
+import {
+  deleteMediaAction,
+  describeMediaAction,
+  purgeMediaAction,
+  restoreMediaAction,
+  uploadMediaAction,
+} from './actions';
 
 export interface MediaItem {
   id: string;
@@ -29,6 +35,8 @@ export interface MediaItem {
   altText: string;
   caption: string;
   addedLabel: string;
+  /** Date de mise a la corbeille, ou `null` pour un fichier actif. */
+  trashedLabel: string | null;
 }
 
 export interface MediaQuota {
@@ -54,14 +62,19 @@ function SubmitButton({
 }
 
 export function MediaLibrary({
-  items,
+  items: allItems,
   quota,
   canManage,
+  canPurge,
 }: {
   items: MediaItem[];
   quota: MediaQuota;
   canManage: boolean;
+  canPurge: boolean;
 }) {
+  const items = allItems.filter((item) => item.trashedLabel === null);
+  const trashed = allItems.filter((item) => item.trashedLabel !== null);
+  const [pendingPurge, setPendingPurge] = useState<MediaItem | null>(null);
   const [editing, setEditing] = useState<MediaItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<MediaItem | null>(null);
   const [uploadState, setUploadState] = useState<ActionState>(IDLE_STATE);
@@ -83,6 +96,25 @@ export function MediaLibrary({
       setDeleteState(result);
       if (result.status === 'success') setPendingDelete(null);
     });
+
+  const restore = (item: MediaItem) => {
+    const payload = new FormData();
+    payload.set('mediaId', item.id);
+    startTransition(() => {
+      void restoreMediaAction(IDLE_STATE, payload).then(setDeleteState);
+    });
+  };
+
+  const purge = (item: MediaItem) => {
+    const payload = new FormData();
+    payload.set('mediaId', item.id);
+    startTransition(() => {
+      void purgeMediaAction(IDLE_STATE, payload).then((result) => {
+        setDeleteState(result);
+        if (result.status === 'success') setPendingPurge(null);
+      });
+    });
+  };
 
   const missingAlt = items.filter((item) => item.isImage && item.altText.trim() === '').length;
 
@@ -217,6 +249,49 @@ export function MediaLibrary({
         </ul>
       )}
 
+      {trashed.length > 0 ? (
+        <details className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            Corbeille ({trashed.length})
+          </summary>
+          <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+            Les fichiers supprimés restent ici. Restaurez-les d’un clic : ils retrouvent leur place
+            partout où ils étaient utilisés.
+          </p>
+          <ul className="mt-4 divide-y divide-[var(--border)]">
+            {trashed.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate">{item.fileName}</span>
+                <span className="text-xs text-[var(--muted)]">Supprimé le {item.trashedLabel}</span>
+                {canManage ? (
+                  <Button variant="secondary" size="sm" onClick={() => restore(item)}>
+                    Restaurer
+                  </Button>
+                ) : null}
+                {canPurge ? (
+                  <Button variant="ghost" size="sm" onClick={() => setPendingPurge(item)}>
+                    Supprimer définitivement
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
+      <ConfirmDialog
+        open={pendingPurge !== null}
+        onClose={() => setPendingPurge(null)}
+        onConfirm={() => {
+          if (pendingPurge) purge(pendingPurge);
+        }}
+        tone="danger"
+        confirmLabel="Supprimer définitivement"
+        confirmationText="SUPPRIMER"
+        title="Supprimer définitivement ce fichier ?"
+        description="Il disparaîtra de vos fichiers ET de toutes les pages qui l’utilisent encore. Cette action ne peut pas être annulée."
+      />
+
       <Dialog
         open={editing !== null}
         onClose={() => setEditing(null)}
@@ -275,9 +350,9 @@ export function MediaLibrary({
           });
         }}
         tone="danger"
-        confirmLabel="Supprimer le fichier"
+        confirmLabel="Mettre à la corbeille"
         title="Supprimer ce fichier ?"
-        description="S’il est utilisé sur une de vos pages, l’emplacement deviendra vide. Cette suppression est définitive."
+        description="Il part dans la corbeille : vous pourrez le restaurer à tout moment. Vos pages déjà publiées continuent de l’afficher."
       />
     </div>
   );
