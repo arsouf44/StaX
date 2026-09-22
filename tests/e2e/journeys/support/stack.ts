@@ -224,7 +224,7 @@ export function provisionInternalAccount(email: string): { email: string; passwo
       SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY,
       INTERNAL_OWNER_EMAIL: email,
       INTERNAL_OWNER_PASSWORD: password,
-      INTERNAL_OWNER_RESET_PASSWORD: '1',
+      INTERNAL_OWNER_RESET_PASSWORD: 'true',
     },
     stdio: 'pipe',
   });
