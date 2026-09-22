@@ -19,6 +19,15 @@ import {
   MODULES,
 } from '@stax/business';
 import { BrowserFrame, SitePreview } from '~/components/marketing/product-visuals';
+import { entryPriceLabel } from '~/lib/catalog';
+
+/**
+ * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
+ * compilation : un changement de catalogue resterait invisible jusqu'au
+ * deploiement suivant. Une heure de cache suffit a garder la page rapide tout
+ * en la laissant se corriger seule.
+ */
+export const revalidate = 3600;
 
 /** Les 82 pages métier sont pré-rendues : ce sont des pages d’entrée SEO. */
 export function generateStaticParams() {
@@ -68,6 +77,7 @@ export default async function BusinessPage({
     .map((id) => MODULES[id])
     .filter((mod): mod is NonNullable<typeof mod> => Boolean(mod));
   const siblings = listBusinessesBySector(secteur).filter((item) => item.id !== business.id);
+  const entry = await entryPriceLabel();
 
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -90,7 +100,13 @@ export default async function BusinessPage({
         name: 'Combien coûte un site pour ce métier ?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'À partir de 300 € hors taxes à la commande, puis 22 € hors taxes par an de maintenance. L’offre Premium ajoute les réservations et les actualités ; l’offre Ultra Premium ajoute la boutique, l’encaissement en ligne et un design entièrement sur mesure.',
+          // Le tarif vient du catalogue : cette reponse est publiee en
+          // donnees structurees, donc reprise telle quelle par les moteurs de
+          // recherche. Un prix perime y reste visible longtemps.
+          text:
+            (entry ? `${entry} à la commande, puis la maintenance. ` : '') +
+            'L’offre Premium ajoute les réservations et les actualités ; l’offre Ultra Premium ' +
+            'ajoute la boutique, l’encaissement en ligne et un design entièrement sur mesure.',
         },
       },
     ],

@@ -3,11 +3,19 @@ import Link from 'next/link';
 import { Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@stax/ui';
 import { listSectors, listBusinessesBySector } from '@stax/business';
 
+// Les comptes viennent du REGISTRE : ajouter un metier ne doit pas laisser une
+// page vitrine annoncer l'ancien chiffre.
+const SECTOR_COUNT = listSectors().length;
+const BUSINESS_COUNT = listSectors().reduce(
+  (sum, sector) => sum + listBusinessesBySector(sector.id).length,
+  0,
+);
+
 export const metadata: Metadata = {
   title: 'Métiers',
   description:
-    'StaX couvre 82 métiers répartis en 14 secteurs : restauration, beauté, artisanat, ' +
-    'commerce, immobilier, santé, hébergement, sport, éducation et plus encore.',
+    `StaX couvre ${BUSINESS_COUNT} métiers répartis en ${SECTOR_COUNT} secteurs : restauration, ` +
+    'beauté, artisanat, commerce, immobilier, santé, hébergement, sport, éducation et plus encore.',
   alternates: { canonical: '/metiers' },
 };
 

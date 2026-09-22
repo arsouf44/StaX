@@ -7,6 +7,7 @@ import {
   listSubprocessors,
 } from '@stax/database';
 import type { BusinessTypeView, PlanView, SectorView, SubprocessorView } from '@stax/database';
+import { formatMoney } from '@stax/payments';
 
 /**
  * Acces au catalogue public.
@@ -61,4 +62,34 @@ export const getSubprocessors = cache(async (): Promise<SubprocessorView[] | nul
   } catch {
     return null;
   }
+});
+
+/**
+ * « À partir de 300 € HT puis 22 € HT par an ».
+ *
+ * Ce libelle etait recopie a la main sur quatre pages. Un prix ecrit en dur
+ * dans une page vitrine ne se met pas a jour tout seul : il devient faux le
+ * jour ou le catalogue change, et il est faux SUR LA PAGE QUI SERT A VENDRE.
+ *
+ * Renvoie `null` si le catalogue est injoignable : mieux vaut ne rien annoncer
+ * qu annoncer un prix perime.
+ */
+export const entryPriceLabel = cache(async (): Promise<string | null> => {
+  const plans = await getPlans();
+  const purchasable = plans
+    .filter((plan) => !plan.isQuoteOnly)
+    .sort((a, b) => a.setupPriceCents - b.setupPriceCents);
+
+  const cheapest = purchasable[0];
+  if (!cheapest) return null;
+
+  const setup = formatMoney(cheapest.setupPriceCents, cheapest.currency, {
+    hideDecimalsWhenRound: true,
+  });
+  const maintenance = formatMoney(cheapest.maintenancePriceCents, cheapest.currency, {
+    hideDecimalsWhenRound: true,
+  });
+  const period = cheapest.billingInterval === 'month' ? 'par mois' : 'par an';
+
+  return `À partir de ${setup} HT puis ${maintenance} HT ${period}`;
 });

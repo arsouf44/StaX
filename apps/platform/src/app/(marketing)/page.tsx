@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { listBusinesses } from '@stax/business';
 import { refundPolicyConfig } from '@stax/config';
 import { formatMoney } from '@stax/payments';
 import {
@@ -22,24 +23,45 @@ import {
   PaymentRoutingDiagram,
 } from '~/components/marketing/diagrams';
 import { BrowserFrame, EditorMock } from '~/components/marketing/product-visuals';
-import { getPlans, listSectorsSafe } from '~/lib/catalog';
+import { entryPriceLabel, getPlans, listSectorsSafe } from '~/lib/catalog';
 import { HOMEPAGE_FAQ } from '~/content/faq';
 
-export const metadata: Metadata = {
-  title: 'Votre site professionnel, construit pour votre métier',
-  description:
-    'StaX conçoit, héberge et maintient le site de votre entreprise. Réservations, messages, ' +
-    'paiements et contenus : un seul espace, adapte a votre metier. A partir de 300 € HT puis 22 € HT par an.',
-  alternates: { canonical: '/' },
-};
+/**
+ * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
+ * compilation : un changement de catalogue resterait invisible jusqu'au
+ * deploiement suivant. Une heure de cache suffit a garder la page rapide tout
+ * en la laissant se corriger seule.
+ */
+export const revalidate = 3600;
+
+/**
+ * Le tarif d'appel vient du CATALOGUE, jamais d'une chaine recopiee : une
+ * description de page qui annonce un prix perime le fait la ou les moteurs de
+ * recherche la citent.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const entry = await entryPriceLabel();
+  return {
+    title: 'Votre site professionnel, construit pour votre métier',
+    description:
+      'StaX conçoit, héberge et maintient le site de votre entreprise. Réservations, messages, ' +
+      'paiements et contenus : un seul espace, adapté à votre métier.' +
+      (entry ? ` ${entry}.` : ''),
+    alternates: { canonical: '/' },
+  };
+}
 
 export default async function HomePage() {
-  const [plans, sectors] = await Promise.all([getPlans(), listSectorsSafe()]);
+  const [plans, sectors, entry] = await Promise.all([
+    getPlans(),
+    listSectorsSafe(),
+    entryPriceLabel(),
+  ]);
   const refund = refundPolicyConfig();
 
   return (
     <>
-      <Hero />
+      <Hero entryPrice={entry} businessCount={listBusinesses().length} />
 
       {/* --- Secteurs ---------------------------------------------------- */}
       <Section spacing="compact" className="border-y border-[var(--border)]">

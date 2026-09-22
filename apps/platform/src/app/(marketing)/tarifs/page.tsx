@@ -4,16 +4,28 @@ import { refundPolicyConfig } from '@stax/config';
 import { formatMoney } from '@stax/payments';
 import { Alert, Container, Panel, Section, SectionHeading, ButtonLink } from '@stax/ui';
 import { PlanComparisonTable, PricingCards } from '~/components/marketing/pricing-cards';
-import { getPlans } from '~/lib/catalog';
+import { entryPriceLabel, getPlans } from '~/lib/catalog';
 import { FAQ_ITEMS } from '~/content/faq';
 
-export const metadata: Metadata = {
-  title: 'Tarifs',
-  description:
-    'Un prix de création, puis une maintenance annuelle. À partir de 300 € HT puis 22 € HT par an. ' +
-    'Pas de commission sur vos ventes, pas de coût caché.',
-  alternates: { canonical: '/tarifs' },
-};
+/**
+ * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
+ * compilation : un changement de catalogue resterait invisible jusqu'au
+ * deploiement suivant. Une heure de cache suffit a garder la page rapide tout
+ * en la laissant se corriger seule.
+ */
+export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const entry = await entryPriceLabel();
+  return {
+    title: 'Tarifs',
+    description:
+      'Un prix de création, puis une maintenance annuelle.' +
+      (entry ? ` ${entry}.` : '') +
+      ' Pas de commission sur vos ventes, pas de coût caché.',
+    alternates: { canonical: '/tarifs' },
+  };
+}
 
 export default async function PricingPage() {
   const plans = await getPlans();

@@ -18,7 +18,19 @@ import {
  * panneaux de verre qui flottent au-dessus. Le tout en HTML et SVG — rien a
  * telecharger, rien a maintenir en capture d ecran.
  */
-export function Hero() {
+export function Hero({
+  entryPrice,
+  businessCount,
+}: {
+  /**
+   * Libelle tarifaire calcule depuis le catalogue, ou `null` s il est
+   * injoignable : mieux vaut ne rien annoncer qu annoncer un prix perime sur
+   * la page qui sert a vendre.
+   */
+  entryPrice: string | null;
+  /** Nombre reel de metiers configures, lu dans le registre. */
+  businessCount: number;
+}) {
   return (
     <section className="relative overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-24">
       {/* Fond : grille + halo, purement decoratifs */}
@@ -36,7 +48,7 @@ export function Hero() {
               className="glass-edge inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-[var(--foreground-muted)] glass-2 transition-colors hover:text-[var(--foreground)]"
             >
               <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--success)]" />
-              82 métiers configurés, du restaurant au plombier
+              {businessCount} métiers configurés, du restaurant au plombier
               <svg
                 aria-hidden="true"
                 viewBox="0 0 16 16"
@@ -81,7 +93,7 @@ export function Hero() {
               </ButtonLink>
             </div>
             <p className="mt-4 text-xs text-[var(--muted)]">
-              À partir de 300 € HT puis 22 € HT par an · Sans engagement de durée
+              {entryPrice ? `${entryPrice} · ` : ''}Sans engagement de durée
             </p>
           </Reveal>
         </div>
