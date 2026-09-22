@@ -43,7 +43,6 @@ const HIGHLIGHTS: Record<string, string[]> = {
     'Référencement technique complet',
     'Vous modifiez textes, photos et horaires vous-même',
     'Chaque modification est réversible',
-    'Jusqu’à 8 pages, 2 collaborateurs',
   ],
   premium: [
     'Tout ce que comprend l’offre Essentiel',
@@ -51,17 +50,15 @@ const HIGHLIGHTS: Record<string, string[]> = {
     'Actualités et publication programmée',
     'Statistiques détaillées de fréquentation',
     'Modules métier avancés selon votre activité',
-    'Jusqu’à 25 pages, 6 collaborateurs',
     'Sans encaissement en ligne — voir Ultra Premium',
   ],
   'ultra-premium': [
     'Tout ce que comprend l’offre Premium',
+    'Site multilingue',
     'Boutique en ligne et encaissement sur votre propre compte',
     'Comptes clients sur votre site',
     'Design entièrement personnalisé, pas un modèle',
     'Animations et interactions travaillées',
-    'Site multilingue, nombre de pages illimité',
-    'Jusqu’à 3 sites et 15 collaborateurs',
     'Support prioritaire',
   ],
   'sur-mesure': [
@@ -98,9 +95,44 @@ export function PricingCards({ plans, compact = false, className }: PricingCards
   );
 }
 
+/**
+ * Ligne de quotas, DERIVEE du catalogue.
+ *
+ * « Jusqu'a 8 pages, 2 collaborateurs » etait ecrit a la main sous chaque
+ * offre. Ces chiffres sont factuels et opposables : une carte qui en annonce
+ * un que la base n'accorde pas est une pratique commerciale trompeuse. Ils
+ * sont donc lus, jamais recopies.
+ */
+function quotaLine(plan: PlanView): string | null {
+  const limit = (key: string) => plan.features.find((feature) => feature.key === key) ?? null;
+
+  const parts: string[] = [];
+
+  const pages = limit('max_pages');
+  if (pages?.enabled) {
+    // `enabled` avec une limite absente signifie « illimite » : c'est la
+    // convention de `app.feature_limit`, et elle se lit ici a l'identique.
+    parts.push(pages.limitValue === null ? 'pages illimitées' : `${pages.limitValue} pages`);
+  }
+
+  const members = limit('max_team_members');
+  if (members?.enabled && members.limitValue !== null) {
+    parts.push(`${members.limitValue} collaborateurs`);
+  }
+
+  const sites = limit('max_sites');
+  if (sites?.enabled && sites.limitValue !== null && sites.limitValue > 1) {
+    parts.push(`${sites.limitValue} sites`);
+  }
+
+  if (parts.length === 0) return null;
+  return `Jusqu’à ${parts.join(', ')}`;
+}
+
 function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
   const featured = Boolean(plan.badge);
-  const highlights = HIGHLIGHTS[plan.slug] ?? [];
+  const quota = quotaLine(plan);
+  const highlights = [...(HIGHLIGHTS[plan.slug] ?? []), ...(quota ? [quota] : [])];
   const visible = compact ? highlights.slice(0, 5) : highlights;
 
   const pricing = plan.isQuoteOnly
