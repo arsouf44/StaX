@@ -44,3 +44,6 @@ Thumbs.db
 
 # generated
 packages/database/src/generated/database.types.ts.bak
+# Next.js 16 ecrit ces deux fichiers a chaque `next dev` / `next build`.
+apps/*/AGENTS.md
+apps/*/CLAUDE.md

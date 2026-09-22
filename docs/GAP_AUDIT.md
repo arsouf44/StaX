@@ -238,8 +238,94 @@ revient.
 
 ---
 
+## 10. Installation réelle — le défaut que seul le déploiement révèle
+
+Le produit était testé, typé, audité… et **installé nulle part**. Aucune base
+de données StaX n'existait : ni en production, ni ailleurs. Un client arrivait
+donc sur « Catalogue tarifaire momentanément indisponible » et ne pouvait pas
+créer de compte. Aucun test ne pouvait le voir : les tests parlent au code, pas
+à une installation.
+
+### Ce qui a été installé
+
+| Élément | État |
+|---|---|
+| Projet Supabase | `eu-west-3` (Paris), actif |
+| Migrations `0001` → `0025` | **25 appliquées**, tracées dans `app.schema_migrations` avec leur empreinte SHA-256 — `pnpm db:migrate` les voit déjà passées et ne les rejouera pas |
+| Schéma | 83 tables, **RLS active sur 83**, 167 policies, 74 fonctions `app.`, 37 fonctions `public.`, 71 déclencheurs |
+| Catalogue | 14 secteurs, 82 métiers, 22 modules, 23 fonctionnalités, 138 lignes `plan_features` |
+| Offres publiées | Essentiel 300 € + 22 €/an · Premium 550 € + 32 €/an · Ultra Premium 1 099 € + 82 €/an — **HT, `billing_interval = 'year'`**. Les anciennes offres sont désactivées, pas supprimées |
+| Compte `platform_owner` | Créé pour `ADMIN_EMAIL`, `mfa_enforced = true`. Le mot de passe initial a été **généré hors du dépôt**, haché en bcrypt localement, et seule l'empreinte a été écrite en base |
+
+### Ce qui a été vérifié sur l'installation, pas sur le code
+
+- Un visiteur **anonyme** lit le catalogue (4 offres, 14 secteurs, 82 métiers)
+  et **rien d'autre** : `profiles`, `organizations`, `sites`, `orders`,
+  `audit_logs`, `sales_invoices` renvoient 0 ligne.
+- Une **inscription réelle** aboutit, le déclencheur crée le profil, et ce
+  profil sort avec `platform_role = null` : **s'inscrire ne donne aucun droit**.
+- La **connexion** du compte propriétaire aboutit, le jeton porte
+  `role = authenticated`, et c'est la colonne `platform_role` — pas l'adresse
+  e-mail — qui ouvre les tables réservées au staff.
+- Les 20 pages publiques répondent `200`, sans message de panne.
+- La page tarifaire affiche 300,00 € / 550,00 € / 1 099,00 €, les TTC
+  correspondants (360,00 / 660,00 / 1 318,80) et les totaux première année
+  (386,40 / 698,40 / 1 417,20). **Zéro occurrence de « mois ».**
+
+### Le défaut de fond : la configuration n'était jamais lue
+
+`.env.example` vit à la racine et demande de le copier en `.env.local`. Mais
+Next.js ne lit les fichiers `.env*` que dans le répertoire de l'application
+(`apps/platform`), et les scripts `tsx` n'en lisent **aucun** : ils se
+contentent de `process.env`. En suivant la documentation à la lettre, la
+configuration était donc **ignorée en silence** — `NEXT_PUBLIC_SUPABASE_URL`
+retombait sur `http://127.0.0.1:54321`, la lecture du catalogue échouait, et le
+`catch` de `getPlans()` transformait cet échec en section vide. Aucune
+exception, aucun journal, aucun test rouge : exactement le symptôme remonté.
+
+Ce n'est pas un détail d'environnement : c'est le chemin d'installation
+documenté qui ne fonctionnait pas.
+
+| Correction | Verrou |
+|---|---|
+| `@stax/config/dotenv` charge `.env.local` puis `.env` depuis la racine de l'espace de travail | `tests/unit/dotenv.test.ts` — 13 tests |
+| `apps/platform/next.config.ts` et les 5 scripts d'exploitation l'appellent avant toute autre chose | — |
+| Une variable déjà définie n'est **jamais** écrasée : secret Cloudflare et variable de CI gardent la priorité | test dédié |
+
+### Durcissement relevé par l'analyseur sur la base réelle (migration `0025`)
+
+| Constat | Réalité | Correction |
+|---|---|---|
+| `claim_sales_invoice` et `peek_sales_invoice` exécutables par `anon` | Supabase applique `alter default privileges … grant all on functions to anon`. Un `revoke … from public` ne retire pas ce droit : il faut nommer `anon`. Les deux fonctions refusaient déjà un appelant anonyme, mais la barrière manquait | `revoke … from anon` |
+| `touch_updated_at`, `freeze_published_version`, `forbid_mutation` sans `search_path` figé | Une fonction sans `search_path` résout ses appels dans le chemin de l'appelant : `now()` pouvait être détourné | `set search_path = pg_catalog` |
+| `rate_limit_counters` sans policy | Voulu — écrite seulement par `app.bump_rate_limit()` | privilège retiré en plus du RLS, et l'intention écrite dans un `comment on table` |
+
+---
+
 ## Ce qui reste non terminé, sans détour
 
 1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
    est prouvée par 270 assertions SQL et 12 parcours d'intégration, mais pas
    encore par deux sessions réelles ouvertes en parallèle.
+
+2. **Envoi des e-mails.** L'inscription aboutit et Supabase accepte l'e-mail de
+   confirmation, mais le serveur SMTP par défaut de Supabase est limité à
+   quelques envois par heure et ne livre pas fiablement à des adresses
+   extérieures. Tant qu'un fournisseur n'est pas configuré
+   (`EMAIL_PROVIDER` + `EMAIL_API_KEY`, et le SMTP du projet Supabase), un
+   client peut créer son compte sans jamais recevoir le lien de confirmation.
+   **Le produit paraîtra cassé pour la même raison qu'avant.**
+
+3. **Réglages Supabase hors SQL**, à faire dans le tableau de bord : protection
+   contre les mots de passe compromis (HaveIBeenPwned) désactivée ; sauvegardes
+   et PITR à vérifier.
+
+4. **Clé de service.** `SUPABASE_SERVICE_ROLE_KEY` n'est pas lisible par
+   l'outillage : elle doit être recopiée depuis le tableau de bord vers
+   `.env.local` et les secrets Cloudflare. Sans elle, les webhooks Stripe, le
+   moteur des sites clients et `pnpm admin:bootstrap` ne fonctionnent pas.
+
+5. **Stripe, Cloudflare, Turnstile** ne sont pas configurés : les capacités
+   correspondantes se déclarent indisponibles au lieu d'échouer, et
+   `/admin/systeme` les affiche comme telles. Aucun paiement n'est donc
+   possible en l'état.
