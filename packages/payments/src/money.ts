@@ -106,14 +106,25 @@ export function formatMoney(
 }
 
 /**
- * Maintenance annuelle : « 22 € / an ».
+ * Maintenance : « 22 € / an ».
  *
- * La maintenance StaX est facturee une fois par an, pas par mois. Ce libelle
- * est le seul endroit du code ou la periodicite s'ecrit : la changer ici la
- * change partout, sans risque d'afficher « par mois » sur un ecran oublie.
+ * SEUL endroit du code ou la periodicite d'un abonnement s'ecrit. Ce n'est pas
+ * une coquetterie : afficher « / mois » sur un contrat annuel annonce un prix
+ * douze fois trop eleve au moment ou la personne decide d'acheter. La
+ * periodicite est lue sur le contrat, jamais supposee.
  */
-export function formatMaintenance(amountCents: Cents, currency: Currency = 'EUR'): string {
-  return `${formatMoney(amountCents, currency, { hideDecimalsWhenRound: true })} / an`;
+export function formatMaintenance(
+  amountCents: Cents,
+  currency: Currency = 'EUR',
+  interval: 'month' | 'year' = 'year',
+): string {
+  const amount = formatMoney(amountCents, currency, { hideDecimalsWhenRound: true });
+  return `${amount} / ${interval === 'month' ? 'mois' : 'an'}`;
+}
+
+/** « par an » / « par mois », pour une phrase qui porte deja le montant. */
+export function maintenancePeriodLabel(interval: 'month' | 'year' = 'year'): string {
+  return interval === 'month' ? 'par mois' : 'par an';
 }
 
 /** « 20 % » a partir de points de base. */

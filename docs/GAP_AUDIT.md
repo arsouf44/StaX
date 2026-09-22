@@ -37,7 +37,7 @@ désormais le FormData réel du framework.
 | Source canonique unique | **OK** — table `plans`, lue par `listPublicPlans`; aucun prix en dur | — | `packages/database/src/queries/catalog.ts` | — |
 | 300 € + 22 €/an · 550 € + 32 €/an · 1099 € + 82 €/an, HT | **OK** | — | `…20_annual_maintenance.sql` | Appliqué |
 | Stripe **hors** Premium | **OK** — `online_payments` refusé par la base aux deux premières offres, vérifié par assertion SQL | — | `…20`, `tests/sql/rls.test.sql` | — |
-| Aucun `/mois`, `mensuel`, `classique`, `signature`, ancien prix | **OK** — balayage complet du dépôt | — | e-mails, dashboard, marketing, seed | Corrigé |
+| Aucun `/mois`, `mensuel`, `classique`, `signature`, ancien prix | **CORRIGÉ TARDIVEMENT** — cette ligne affirmait « balayage complet » alors que **neuf écrans** affichaient encore « / mois », dont le tunnel de commande, le récapitulatif, la confirmation, la facturation et la FAQ publique. Un client lisait « 32 € / mois » pour un contrat à 32 € / an | — | `commander/`, `facturation`, `app/page`, `admin/commandes`, `content/faq`, `content/features` | `formatMaintenance(montant, devise, périodicité)` est désormais le seul endroit où la périodicité s'écrit, et `tests/unit/billing-wording.test.ts` échoue si « / mois » réapparaît ailleurs |
 | Métriques : ne jamais traiter l'annuel comme du MRR | **OK** — `arrCents`, périodicité lue par contrat | — | `packages/database/src/queries/admin.ts` | Corrigé |
 | Grandfathering | **OK** — anciennes offres archivées, non supprimées | — | `…20` | — |
 

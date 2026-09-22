@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { resolveBusiness } from '@stax/business';
 import { unwrapList } from '@stax/database';
-import { formatMoney } from '@stax/payments';
+import { formatMaintenance } from '@stax/payments';
 import {
   Alert,
   ButtonLink,
@@ -239,7 +239,11 @@ export default async function DashboardPage() {
                   <span className="text-sm text-[var(--foreground-muted)]">
                     Maintenance {subscriptionLabel(workspace.subscription.status)}
                     {workspace.subscription.maintenance_price_cents
-                      ? ` — ${formatMoney(workspace.subscription.maintenance_price_cents, 'EUR', { hideDecimalsWhenRound: true })} / mois`
+                      ? ` — ${formatMaintenance(
+                          workspace.subscription.maintenance_price_cents,
+                          'EUR',
+                          workspace.subscription.billing_interval,
+                        )}`
                       : ''}
                   </span>
                 ) : null}

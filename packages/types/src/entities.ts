@@ -421,6 +421,9 @@ export interface Subscription {
   plan_id: UUID | null;
   plan_slug: string | null;
   maintenance_price_cents: Cents;
+  /** Periodicite du contrat. Lue, jamais supposee : « / mois » sur un contrat
+   *  annuel annonce un prix douze fois trop eleve. */
+  billing_interval: BillingInterval;
   vat_rate_bps: number;
   currency: Currency;
   stripe_subscription_id: string | null;

@@ -272,7 +272,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Ce que vous payez',
-        body: 'À StaX : la création du site et la maintenance mensuelle. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
+        body: 'À StaX : la création du site, puis la maintenance annuelle. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
       },
     ],
     limits: [

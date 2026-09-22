@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { unwrapMaybe } from '@stax/database';
-import { formatMoney } from '@stax/payments';
+import { formatMaintenance, formatMoney } from '@stax/payments';
 import { Alert, ButtonLink, Panel, StatusPill } from '@stax/ui';
 import { getWorkspace } from '~/lib/workspace';
 
@@ -43,6 +43,7 @@ export default async function OrderConfirmationPage({
     plan_slug: string | null;
     total_cents: number;
     maintenance_price_cents: number;
+    billing_interval: string;
     currency: string;
     created_at: string;
     site_id: string | null;
@@ -50,7 +51,7 @@ export default async function OrderConfirmationPage({
     (await db
       .from('orders')
       .select(
-        'id, reference, status, plan_slug, total_cents, maintenance_price_cents, currency, created_at, site_id',
+        'id, reference, status, plan_slug, total_cents, maintenance_price_cents, billing_interval, currency, created_at, site_id',
       )
       .eq('id', id)
       .maybeSingle()) as never,
@@ -121,10 +122,12 @@ export default async function OrderConfirmationPage({
             <div className="flex justify-between gap-4">
               <dt className="text-[var(--foreground-muted)]">Maintenance</dt>
               <dd className="tabular-nums">
-                {formatMoney(order.maintenance_price_cents, order.currency as 'EUR', {
-                  hideDecimalsWhenRound: true,
-                })}{' '}
-                / mois, à partir de la mise en ligne
+                {formatMaintenance(
+                  order.maintenance_price_cents,
+                  order.currency as 'EUR',
+                  order.billing_interval === 'month' ? 'month' : 'year',
+                )}
+                , à partir de la mise en ligne
               </dd>
             </div>
           ) : null}

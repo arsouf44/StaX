@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { formatMoney } from '@stax/payments';
+import { formatMaintenance, formatMoney } from '@stax/payments';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
 import { getPlans } from '~/lib/catalog';
@@ -49,9 +49,14 @@ export default async function OrderPlanPage() {
             setupPrice: formatMoney(plan.setupPriceCents, plan.currency, {
               hideDecimalsWhenRound: true,
             }),
-            monthlyPrice: formatMoney(plan.maintenancePriceCents, plan.currency, {
-              hideDecimalsWhenRound: true,
-            }),
+            // La periodicite vient du CONTRAT, jamais d'un libelle en dur :
+            // afficher « / mois » sur une maintenance annuelle annoncerait un
+            // prix douze fois trop eleve, au moment de la decision d'achat.
+            maintenancePrice: formatMaintenance(
+              plan.maintenancePriceCents,
+              plan.currency,
+              plan.billingInterval,
+            ),
             features: plan.features
               .filter((feature) => feature.enabled && feature.kind === 'boolean')
               .slice(0, 6)

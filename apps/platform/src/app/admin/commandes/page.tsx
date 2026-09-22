@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { unwrapList } from '@stax/database';
-import { formatMoney, ORDER_STATUS_LABELS } from '@stax/payments';
+import { formatMaintenance, formatMoney, ORDER_STATUS_LABELS } from '@stax/payments';
 import {
   EmptyState,
   Icon,
@@ -55,7 +55,7 @@ export default async function AdminOrdersPage({
   let query = db
     .from('orders')
     .select(
-      'id, reference, status, plan_slug, total_cents, maintenance_price_cents, currency, created_at, paid_at, organizations ( name )',
+      'id, reference, status, plan_slug, total_cents, maintenance_price_cents, billing_interval, currency, created_at, paid_at, organizations ( name )',
     )
     .order('created_at', { ascending: false })
     .limit(150);
@@ -70,6 +70,7 @@ export default async function AdminOrdersPage({
     plan_slug: string | null;
     total_cents: number;
     maintenance_price_cents: number;
+    billing_interval: string;
     currency: string;
     created_at: string;
     paid_at: string | null;
@@ -131,10 +132,11 @@ export default async function AdminOrdersPage({
                       {row.maintenance_price_cents > 0 ? (
                         <span className="block text-2xs text-[var(--muted)]">
                           puis{' '}
-                          {formatMoney(row.maintenance_price_cents, row.currency as 'EUR', {
-                            hideDecimalsWhenRound: true,
-                          })}{' '}
-                          / mois
+                          {formatMaintenance(
+                            row.maintenance_price_cents,
+                            row.currency as 'EUR',
+                            row.billing_interval === 'month' ? 'month' : 'year',
+                          )}
                         </span>
                       ) : null}
                     </TD>

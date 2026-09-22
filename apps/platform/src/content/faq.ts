@@ -41,13 +41,13 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'contenu',
     question: 'Et si je veux une modification importante que je ne sais pas faire ?',
     answer:
-      'La maintenance mensuelle inclut notre accompagnement. Vous nous écrivez depuis votre espace, nous intervenons. Pour une refonte de section ou l’ajout d’une fonctionnalité nouvelle, nous vous proposons un devis avant toute intervention.',
+      'La maintenance annuelle inclut notre accompagnement. Vous nous écrivez depuis votre espace, nous intervenons. Pour une refonte de section ou l’ajout d’une fonctionnalité nouvelle, nous vous proposons un devis avant toute intervention.',
   },
   {
     category: 'tarifs',
     question: 'Pourquoi un paiement initial ET un abonnement mensuel ?',
     answer:
-      'Le paiement initial couvre la conception et la réalisation de votre site : c’est un travail sur mesure. La maintenance mensuelle couvre l’hébergement, le nom de domaine, le certificat HTTPS, les sauvegardes, les mises à jour de sécurité, la surveillance et le support. Un site web n’est pas un objet qu’on livré et qu’on oublie : il doit rester à jour et disponible.',
+      'Le paiement initial couvre la conception et la réalisation de votre site : c’est un travail sur mesure. La maintenance annuelle couvre l’hébergement, le nom de domaine, le certificat HTTPS, les sauvegardes, les mises à jour de sécurité, la surveillance et le support. Un site web n’est pas un objet qu’on livre et qu’on oublie : il doit rester à jour et disponible.',
   },
   {
     category: 'tarifs',

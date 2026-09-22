@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { resolveBusiness } from '@stax/business';
-import { formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
+import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
 import { refundPolicyConfig, sitesDomain } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
@@ -46,7 +46,7 @@ export default async function OrderSummaryPage() {
   const setupNet = plan.setupPriceCents;
   const setupVat = vatFromNet(setupNet, plan.vatRateBps);
   const setupGross = grossFromNet(setupNet, plan.vatRateBps);
-  const monthlyGross = grossFromNet(plan.maintenancePriceCents, plan.vatRateBps);
+  const maintenanceGross = grossFromNet(plan.maintenancePriceCents, plan.vatRateBps);
 
   const address =
     draft.domainHandling === 'subdomain_only'
@@ -134,7 +134,7 @@ export default async function OrderSummaryPage() {
             <p className="mt-5 border-t border-[var(--border)] pt-4 text-sm text-[var(--foreground-muted)]">
               Puis{' '}
               <strong className="text-[var(--foreground)]">
-                {formatMoney(monthlyGross, plan.currency, { hideDecimalsWhenRound: true })} / mois
+                {formatMaintenance(maintenanceGross, plan.currency, plan.billingInterval)}
               </strong>{' '}
               de maintenance, prélevée à partir de la mise en ligne de votre site. Résiliable à tout
               moment depuis votre espace.

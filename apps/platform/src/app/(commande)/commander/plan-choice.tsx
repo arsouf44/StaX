@@ -12,7 +12,8 @@ export interface PlanOption {
   tagline: string | null;
   badge: string | null;
   setupPrice: string;
-  monthlyPrice: string;
+  /** Deja formate avec sa periodicite : « 32 € / an ». */
+  maintenancePrice: string;
   features: string[];
 }
 
@@ -83,7 +84,7 @@ export function PlanChoice({ plans, selected }: { plans: PlanOption[]; selected:
 
                 <p className="mt-5 text-2xl font-medium tracking-[-0.02em]">{plan.setupPrice}</p>
                 <p className="text-sm text-[var(--foreground-muted)]">
-                  puis {plan.monthlyPrice} / mois de maintenance
+                  puis {plan.maintenancePrice} de maintenance
                 </p>
 
                 <ul className="mt-5 space-y-2 text-sm text-[var(--foreground-muted)]">

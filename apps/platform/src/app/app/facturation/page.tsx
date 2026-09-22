@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { unwrapList } from '@stax/database';
-import { formatMoney, SUBSCRIPTION_STATUS_LABELS } from '@stax/payments';
+import { formatMaintenance, formatMoney, SUBSCRIPTION_STATUS_LABELS } from '@stax/payments';
 import { refundPolicyConfig } from '@stax/config';
 import {
   Alert,
@@ -112,10 +112,11 @@ export default async function BillingPage() {
                   {SUBSCRIPTION_STATUS_LABELS[subscription.status] ?? subscription.status}
                 </StatusPill>
                 <span className="text-sm">
-                  {formatMoney(subscription.maintenance_price_cents, subscription.currency, {
-                    hideDecimalsWhenRound: true,
-                  })}{' '}
-                  / mois
+                  {formatMaintenance(
+                    subscription.maintenance_price_cents,
+                    subscription.currency,
+                    subscription.billing_interval,
+                  )}
                 </span>
               </div>
 
