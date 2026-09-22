@@ -13,9 +13,12 @@ import { requireSession, type AuthenticatedSession } from './session';
  *  1. une session valide ;
  *  2. un role inscrit dans `profiles.platform_role` — jamais deduit de
  *     l adresse e-mail ;
- *  3. un second facteur REELLEMENT VALIDE pour la session en cours (`aal2`),
- *     pas seulement enrole. Le back-office donne acces aux donnees de tous les
- *     clients : un mot de passe seul ne suffit pas.
+ *  3. si le compte porte `mfa_enforced`, un second facteur REELLEMENT VALIDE
+ *     pour la session en cours (`aal2`), pas seulement enrole.
+ *
+ * Le back-office donne acces aux donnees de tous les clients. Retirer
+ * `mfa_enforced` d un compte interne revient donc a les ouvrir avec un mot de
+ * passe seul : c est une decision d exploitation, prise compte par compte.
  *
  * Un compte non habilite recoit une page introuvable. On ne confirme pas
  * l existence du back-office a qui n y a pas droit.
@@ -41,17 +44,25 @@ export const getAdminContext = cache(async (): Promise<AdminContext> => {
     notFound();
   }
 
-  // Le role y est, mais la session n a pas de second facteur valide.
+  // Second facteur : exige quand le compte le porte, et pas de facon absolue.
   //
-  // Renvoyer 404 ici disait a un membre de l equipe que SON PROPRE
-  // back-office n existe pas, sans lui dire quoi faire — une impasse, sans
-  // indice. Le niveau d assurance exige ne bouge pas pour autant : on
-  // conduit a l enrolement au lieu de mentir.
+  // Ce garde suivait sa propre regle, independante de `profiles.mfa_enforced`,
+  // et contredisait donc `requirePlatformStaff()`, qui s appuie dessus depuis
+  // toujours. Deux verrous pour la meme porte, qui ne s ouvraient pas avec la
+  // meme clef : le compte proprietaire se retrouvait devant un 404 apres avoir
+  // leve son obligation de second facteur.
   //
-  // Ce controle est independant de `profiles.mfa_enforced` : le back-office
-  // ouvre les donnees de TOUS les clients, un mot de passe seul n y suffit
-  // jamais, meme si le compte n a plus l obligation de second facteur.
-  if (session.user.assuranceLevel !== 'aal2') {
+  // La colonne `mfa_enforced` fait desormais foi partout. C est le
+  // proprietaire de la plateforme qui decide, compte par compte, et
+  // `pnpm admin:bootstrap` la pose a `true` sur tout nouveau platform_owner.
+  //
+  // CE QUE CELA COUTE, ECRIT NOIR SUR BLANC : sur un compte ou cette colonne
+  // vaut `false`, le mot de passe seul ouvre le back-office — donc les donnees
+  // de TOUS les clients. C est un choix d exploitation, assume et revocable
+  // depuis /app/securite, pas un defaut.
+  if (session.profile.mfa_enforced && session.user.assuranceLevel !== 'aal2') {
+    // Conduire a l enrolement plutot que renvoyer 404 : dire a un membre de
+    // l equipe que SON back-office n existe pas etait une impasse sans indice.
     redirect('/mfa/configuration?raison=obligatoire');
   }
 

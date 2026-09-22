@@ -15,9 +15,11 @@ export async function adminSearchAction(query: string): Promise<AdminSearchResul
   const session = await requireSession();
 
   if (!hasPlatformRole(session.profile, 'support')) return [];
-  // Le second facteur doit etre valide pour la session en cours, pas seulement
-  // enrole : la recherche expose des donnees de tous les clients.
-  if (session.user.assuranceLevel !== 'aal2') return [];
+  // Meme regle que l acces aux pages du back-office : le second facteur est
+  // exige quand le compte porte `mfa_enforced`. Sans cet alignement, la
+  // recherche renverrait vide pour quelqu un a qui les pages s ouvrent — deux
+  // reponses differentes a la meme question.
+  if (session.profile.mfa_enforced && session.user.assuranceLevel !== 'aal2') return [];
 
   try {
     return await adminSearch(createUserClient(session.user.accessToken), query.slice(0, 120));

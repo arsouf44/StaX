@@ -104,8 +104,13 @@ export function hasPlatformRole(
  * Trois conditions cumulatives, verifiees cote serveur :
  *  1. une session valide ;
  *  2. un role plateforme inscrit EN BASE — jamais deduit de l adresse e-mail ;
- *  3. un second facteur valide (aal2) : le back-office donne acces aux donnees
- *     de tous les clients, un mot de passe seul ne suffit pas.
+ *  3. un second facteur valide (aal2) SI le compte porte `mfa_enforced`.
+ *
+ * Le back-office donne acces aux donnees de tous les clients. Laisser
+ * `mfa_enforced` a `false` sur un compte interne revient donc a les ouvrir
+ * avec un mot de passe seul : c est un choix d exploitation, pris compte par
+ * compte, et un appelant peut toujours exiger le second facteur quoi qu il
+ * arrive via `requireMfa: true`.
  */
 export function requirePlatformRole(
   context: AuthContext & { assuranceLevel?: 'aal1' | 'aal2' | null },
@@ -117,7 +122,7 @@ export function requirePlatformRole(
     // meme du back-office n a pas a etre confirmee a un compte non habilite.
     throw new AuthorizationError(appError('not_found', 'Page introuvable.'));
   }
-  const mfaRequired = options.requireMfa ?? true;
+  const mfaRequired = options.requireMfa ?? context.profile?.mfa_enforced === true;
   if (mfaRequired && context.assuranceLevel !== 'aal2') {
     throw new AuthorizationError(
       appError(
