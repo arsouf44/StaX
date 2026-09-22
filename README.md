@@ -78,6 +78,13 @@ scripts/db-test.sh         # 175 assertions de sécurité SQL
 pnpm build:cf              # build Cloudflare des deux applications
 ```
 
+### Où tourne quoi
+
+| Application         | Cible             | Note                                                                                                                               |
+| ------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/platform`     | **Vercel**        | `vercel.json` à la racine. Voir [vercel.md](./docs/vercel.md)                                                                      |
+| `apps/site-runtime` | Cloudflare Worker | Sert les sites clients. **Pas d'équivalent Vercel en l'état** — la dernière section de [vercel.md](./docs/vercel.md) pose le choix |
+
 ---
 
 ## Architecture
@@ -105,21 +112,22 @@ tests/                 unitaires, intégration, sécurité, SQL, E2E
 
 Documentation détaillée dans [`docs/`](./docs) :
 
-| Document                                                | Contenu                             |
-| ------------------------------------------------------- | ----------------------------------- |
-| [architecture.md](./docs/architecture.md)               | Choix structurants et leurs raisons |
-| [database.md](./docs/database.md)                       | Schéma, RLS, fonctions, invariants  |
-| [security.md](./docs/security.md)                       | Modèle de menace et défenses        |
-| [deployment.md](./docs/deployment.md)                   | Mise en production, étape par étape |
-| [cloudflare.md](./docs/cloudflare.md)                   | Workers, domaines, cache, DNS       |
-| [supabase.md](./docs/supabase.md)                       | Projet, rôles, sauvegardes          |
-| [stripe.md](./docs/stripe.md)                           | Produits, prix, webhooks            |
-| [stripe-connect.md](./docs/stripe-connect.md)           | Encaissements des clients           |
-| [domains.md](./docs/domains.md)                         | Connexion d’un domaine client       |
-| [admin-bootstrap.md](./docs/admin-bootstrap.md)         | Création du compte propriétaire     |
-| [backup-recovery.md](./docs/backup-recovery.md)         | Sauvegardes et restauration         |
-| [incident-response.md](./docs/incident-response.md)     | Conduite en cas d’incident          |
-| [legal-configuration.md](./docs/legal-configuration.md) | Mentions légales obligatoires       |
+| Document                                                | Contenu                                                         |
+| ------------------------------------------------------- | --------------------------------------------------------------- |
+| [architecture.md](./docs/architecture.md)               | Choix structurants et leurs raisons                             |
+| [database.md](./docs/database.md)                       | Schéma, RLS, fonctions, invariants                              |
+| [security.md](./docs/security.md)                       | Modèle de menace et défenses                                    |
+| [vercel.md](./docs/vercel.md)                           | **Plateforme sur Vercel** — variables, symptômes, vérifications |
+| [deployment.md](./docs/deployment.md)                   | Mise en production, étape par étape                             |
+| [cloudflare.md](./docs/cloudflare.md)                   | Workers, domaines, cache, DNS — moteur des sites clients        |
+| [supabase.md](./docs/supabase.md)                       | Projet, rôles, sauvegardes                                      |
+| [stripe.md](./docs/stripe.md)                           | Produits, prix, webhooks                                        |
+| [stripe-connect.md](./docs/stripe-connect.md)           | Encaissements des clients                                       |
+| [domains.md](./docs/domains.md)                         | Connexion d’un domaine client                                   |
+| [admin-bootstrap.md](./docs/admin-bootstrap.md)         | Création du compte propriétaire                                 |
+| [backup-recovery.md](./docs/backup-recovery.md)         | Sauvegardes et restauration                                     |
+| [incident-response.md](./docs/incident-response.md)     | Conduite en cas d’incident                                      |
+| [legal-configuration.md](./docs/legal-configuration.md) | Mentions légales obligatoires                                   |
 
 ---
 
