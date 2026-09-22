@@ -210,6 +210,34 @@ confirmer celle écrite avant l'appel à Stripe.
 
 ---
 
+## 9. Cohérence commerciale — ce que le balayage final a trouvé
+
+Le produit marchait. Ce qu'il **annonçait** ne correspondait pas toujours à ce
+qu'il **fait**. Aucun de ces défauts ne lève d'exception, n'échoue au type, ni
+ne casse un test : ils se contentent de mentir au client, sur les pages qui
+servent à vendre.
+
+| Défaut | Ce que lisait le client | Ce que fait la base | Verrou posé |
+|---|---|---|---|
+| « / mois » sur 9 écrans dont le tunnel de commande | 32 € **par mois** | 32 € par **an** | `formatMaintenance()` seul autorisé + `tests/unit/billing-wording.test.ts` |
+| Encaissement en ligne et boutique annoncés « Premium » | inclus dans Premium | réservés à l'**Ultra Premium** | `tests/integration/plan-promises.test.ts` |
+| Tarif d'appel recopié sur 4 pages | figé au jour de l'écriture | table `plans` | `entryPriceLabel()` + revalidation horaire |
+| Quotas écrits à la main sous chaque offre | figés | `plan_features` | ligne dérivée du catalogue |
+| Délai de livraison recopié à 3 endroits | figé | `deliveryPolicyConfig()` | lecture de la configuration |
+| Script anti-flash lisant une clé accentuée | thème clair choisi, sombre affiché | — | `tests/unit/theme-script.test.ts` |
+| Aucune CSP sur la plateforme | — | — | CSP à nonce (`src/proxy.ts`) + test d'en-têtes |
+| Ajout au panier sans jeton anti-CSRF | bouton sans effet (403) | — | jeton porté par le document |
+| Don réussi laissé en « pending » pour toujours | — | — | webhook confirme la ligne d'origine |
+
+**Ce que cela dit de la méthode.** Sept de ces neuf défauts se trouvaient dans
+du code qu'un audit précédent avait déclaré conforme — et la ligne
+« Aucun `/mois` : balayage complet du dépôt » de ce document même était fausse
+quand elle a été écrite. Un audit qui se relit lui-même ne vaut rien ; c'est
+pourquoi chaque correction repart ici avec un test qui échoue si le défaut
+revient.
+
+---
+
 ## Ce qui reste non terminé, sans détour
 
 1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle

@@ -10,21 +10,30 @@ photos, horaires, messages reçus, réservations, commandes et encaissements.
 
 ## Ce que le produit fait réellement
 
-| Capacité                                           | État | Où c’est implémenté                                      |
-| -------------------------------------------------- | ---- | -------------------------------------------------------- |
-| Vendre des sites (offres, panier, paiement)        | ✅   | `apps/platform/src/app/(commande)` + `packages/payments` |
-| Recevoir commandes et paiements                    | ✅   | webhooks Stripe signés + `app.apply_order_paid`          |
-| Créer et publier des sites clients                 | ✅   | `app.publish_site` (instantané figé, immuable)           |
-| Héberger et servir les sites publiés               | ✅   | `apps/site-runtime` (Worker multi-tenant)                |
-| Espace client (contenus, messages, factures)       | ✅   | `apps/platform/src/app/app`                              |
-| Formulaires, prospects, réservations sur les sites | ✅   | `app.submit_form`, `app.create_booking`                  |
-| Domaine propre par client                          | ✅   | `site_domains` + résolution par nom d’hôte               |
-| Encaissements sur les sites clients                | ✅   | Stripe Connect, commission à zéro                        |
-| Abonnement de maintenance                          | ✅   | `subscriptions` + webhooks                               |
-| Projets sur mesure sur devis                       | ✅   | `/devis` → `quotes`                                      |
+| Capacité                                                        | État | Où c’est implémenté                                      |
+| --------------------------------------------------------------- | ---- | -------------------------------------------------------- |
+| Vendre des sites (offres, panier, paiement)                     | ✅   | `apps/platform/src/app/(commande)` + `packages/payments` |
+| Recevoir commandes et paiements                                 | ✅   | webhooks Stripe signés + `app.apply_order_paid`          |
+| Créer et publier des sites clients                              | ✅   | `app.publish_site` (instantané figé, immuable)           |
+| Héberger et servir les sites publiés                            | ✅   | `apps/site-runtime` (Worker multi-tenant)                |
+| Espace client (contenus, messages, factures)                    | ✅   | `apps/platform/src/app/app`                              |
+| Formulaires, prospects, réservations sur les sites              | ✅   | `app.submit_form`, `app.create_booking`                  |
+| Domaine propre par client                                       | ✅   | `site_domains` + résolution par nom d’hôte               |
+| Encaissements sur les sites clients                             | ✅   | Stripe Connect, commission à zéro                        |
+| Abonnement de maintenance                                       | ✅   | `subscriptions` + webhooks                               |
+| Projets sur mesure sur devis                                    | ✅   | `/devis` → `quotes`                                      |
+| Éditeur complet : ajout, duplication, ordre, aperçu, historique | ✅   | `apps/platform/src/app/app/editeur`                      |
+| Boutique en ligne, du panier à l’encaissement                   | ✅   | `app.create_shop_order`, `/api/checkout`                 |
+| Comptes client sur les sites, sans mot de passe                 | ✅   | `site_customers` + `/compte`                             |
+| Registre des violations de données (art. 33.5)                  | ✅   | `data_breaches` + `/admin/securite/violations`           |
 
 > Aucune ligne de ce tableau n’est une intention : chacune correspond à du code
 > exécuté et, pour les points sensibles, à une assertion de test.
+
+**Ce qui n’est pas terminé est écrit noir sur blanc** dans
+[`docs/GAP_AUDIT.md`](./docs/GAP_AUDIT.md), avec ce qui a été trouvé en cours de
+route — y compris les défauts que ce README avait laissés passer. Lisez-le avant
+de vous fier à ce tableau.
 
 ---
 
@@ -141,6 +150,12 @@ Documentation détaillée dans [`docs/`](./docs) :
 | Assertions de sécurité SQL                 | `scripts/db-test.sh` | ✅   |
 | Build production                           | `pnpm build`         | ✅   |
 | Build Cloudflare                           | `pnpm build:cf`      | ✅   |
+| Parcours navigateur                        | `pnpm test:e2e`      | ✅   |
+
+Les tests d’intégration et les assertions SQL ont besoin d’une base :
+`STAX_TEST_DATABASE_URL=… pnpm test`. **Sans elle, ils sont sautés, jamais
+passés en silence** — un test vert sur une suite sautée est pire qu’un test
+rouge.
 
 ---
 
