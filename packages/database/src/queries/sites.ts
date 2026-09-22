@@ -20,6 +20,7 @@ export async function listPages(db: Db, siteId: UUID): Promise<SitePage[]> {
       .from('site_pages')
       .select('*')
       .eq('site_id', siteId)
+      .is('deleted_at', null)
       .order('sort_order', { ascending: true })) as never,
   );
 }
@@ -44,6 +45,7 @@ export async function getPageWithBlocks(
       .from('page_blocks')
       .select('*')
       .eq('page_id', pageId)
+      .is('deleted_at', null)
       .order('sort_order', { ascending: true })) as never,
   );
   return { page, blocks };
@@ -116,8 +118,21 @@ export async function updatePage(
   );
 }
 
+/**
+ * « Supprimer » une page la place dans la corbeille (restaurable). La
+ * suppression definitive passe par `purge_trash_item`, jamais par ici.
+ */
 export async function deletePage(db: Db, siteId: UUID, pageId: UUID): Promise<void> {
-  const { error } = await db.from('site_pages').delete().eq('id', pageId).eq('site_id', siteId);
+  const page = unwrapMaybe<{ id: string }>(
+    (await db
+      .from('site_pages')
+      .select('id')
+      .eq('id', pageId)
+      .eq('site_id', siteId)
+      .maybeSingle()) as never,
+  );
+  if (!page) return;
+  const { error } = await db.rpc('trash_page', { p_page: page.id });
   if (error) throw error;
 }
 
@@ -178,8 +193,13 @@ export async function updateBlock(
   );
 }
 
+/** « Supprimer » une section la place dans la corbeille (restaurable). */
 export async function deleteBlock(db: Db, siteId: UUID, blockId: UUID): Promise<void> {
-  const { error } = await db.from('page_blocks').delete().eq('id', blockId).eq('site_id', siteId);
+  const { error } = await db
+    .from('page_blocks')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', blockId)
+    .eq('site_id', siteId);
   if (error) throw error;
 }
 
@@ -238,36 +258,19 @@ export async function rollbackSite(db: Db, siteId: UUID, versionId: UUID): Promi
   return data as UUID;
 }
 
-/** Le brouillon differe-t-il de la version en ligne ? */
+/**
+ * Le brouillon differe-t-il de la version en ligne ?
+ * `draft_updated_at` est tenu par la base a chaque modification du contenu.
+ */
 export async function hasUnpublishedChanges(db: Db, siteId: UUID): Promise<boolean> {
-  const site = unwrapMaybe<{ last_published_at: string | null; updated_at: string }>(
+  const site = unwrapMaybe<{ last_published_at: string | null; draft_updated_at: string | null }>(
     (await db
       .from('sites')
-      .select('last_published_at, updated_at')
+      .select('last_published_at, draft_updated_at')
       .eq('id', siteId)
       .single()) as never,
   );
   if (!site || !site.last_published_at) return true;
-
-  const published = new Date(site.last_published_at).getTime();
-  const [pages, blocks] = await Promise.all([
-    db
-      .from('site_pages')
-      .select('updated_at')
-      .eq('site_id', siteId)
-      .gt('updated_at', site.last_published_at)
-      .limit(1),
-    db
-      .from('page_blocks')
-      .select('updated_at')
-      .eq('site_id', siteId)
-      .gt('updated_at', site.last_published_at)
-      .limit(1),
-  ]);
-
-  return (
-    new Date(site.updated_at).getTime() > published ||
-    (pages.data?.length ?? 0) > 0 ||
-    (blocks.data?.length ?? 0) > 0
-  );
+  if (!site.draft_updated_at) return false;
+  return new Date(site.draft_updated_at).getTime() > new Date(site.last_published_at).getTime();
 }

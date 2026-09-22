@@ -5,6 +5,7 @@ import {
   WebhookVerificationError,
   type Stripe,
 } from '@stax/payments';
+import { provisionExistingSite } from '~/lib/site-provisioning';
 
 /**
  * Webhook Stripe de la plateforme.
@@ -176,9 +177,19 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
   });
 
   if (error) throw new Error(error.message);
-  const result = data as { ok: boolean; code?: string } | null;
+  const result = data as { ok: boolean; code?: string; siteId?: string } | null;
   if (!result?.ok) {
     throw new Error(`Commande non appliquee : ${result?.code ?? 'inconnu'}`);
+  }
+
+  // Le site est prepare DES le paiement : le client le trouve dans son espace,
+  // avec des pages et des textes adaptes a son metier, pret a etre relu. Un
+  // echec ici n annule pas la commande (elle est payee) : l espace client
+  // propose « Préparer mon site » et la fonction SQL est idempotente.
+  if (result.code === 'applied' && result.siteId) {
+    await prepareOrderedSite(db, orderId, result.siteId).catch((error: unknown) => {
+      console.error('[stax:webhook] preparation du site differee', error);
+    });
   }
 
   // L abonnement de maintenance arrive aussi par `customer.subscription.created`,
@@ -261,4 +272,59 @@ async function onChargeRefunded(db: Db, charge: Stripe.Charge): Promise<void> {
     });
     if (error) throw new Error(error.message);
   }
+}
+
+/** Prepare le site d une commande payee, a partir de son metier et de son offre. */
+async function prepareOrderedSite(db: Db, orderId: string, siteId: string): Promise<void> {
+  const { data: order } = await db
+    .from('orders')
+    .select('organization_id, business_type_slug, requested_domain, domain_handling, questionnaire')
+    .eq('id', orderId)
+    .maybeSingle();
+  const { data: site } = await db.from('sites').select('id, name').eq('id', siteId).maybeSingle();
+  if (!order || !site) return;
+
+  const answers = (order.questionnaire ?? {}) as Record<string, unknown>;
+  const features = new Map<string, boolean>();
+  const hasFeature = (feature: string) => features.get(feature) === true;
+  for (const feature of [
+    'bookings',
+    'ecommerce',
+    'online_payments',
+    'customer_accounts',
+    'blog',
+    'multi_language',
+  ]) {
+    // `site_has_feature` est la variante reservee a la cle de service : la
+    // version publique ne repond qu aux membres de l organisation.
+    const { data: enabled } = await db.rpc('site_has_feature', {
+      p_site: siteId,
+      p_feature: feature,
+    });
+    features.set(feature, enabled === true);
+  }
+
+  await provisionExistingSite(
+    db,
+    {
+      id: site.id as string,
+      name: site.name as string,
+      businessTypeSlug: (order.business_type_slug as string | null) ?? null,
+      organizationId: order.organization_id as string,
+    },
+    {
+      hasFeature,
+      subdomain:
+        order.domain_handling === 'subdomain_only' && typeof order.requested_domain === 'string'
+          ? order.requested_domain.split('.')[0]
+          : null,
+      details: {
+        email: typeof answers['contactEmail'] === 'string' ? answers['contactEmail'] : null,
+        phone: typeof answers['contactPhone'] === 'string' ? answers['contactPhone'] : null,
+        city: typeof answers['city'] === 'string' ? answers['city'] : null,
+        pitch: typeof answers['pitch'] === 'string' ? answers['pitch'] : null,
+        description: typeof answers['pitch'] === 'string' ? answers['pitch'] : null,
+      },
+    },
+  );
 }

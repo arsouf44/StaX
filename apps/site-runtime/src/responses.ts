@@ -11,13 +11,20 @@ import { SITE_STYLESHEET, resolveTheme } from '@stax/site-engine';
 
 export function htmlResponse(
   body: string,
-  init: { status?: number; nonce: string; cache?: string; allowMaps?: boolean },
+  init: {
+    status?: number;
+    nonce: string;
+    cache?: string;
+    allowMaps?: boolean;
+    headers?: Record<string, string>;
+  },
 ): Response {
   return new Response(body, {
     status: init.status ?? 200,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': init.cache ?? CACHE_POLICIES.private,
+      ...(init.headers ?? {}),
       ...securityHeaders({
         profile: 'tenant-site',
         nonce: init.nonce,

@@ -76,6 +76,7 @@ export default async function NavigationPage() {
           .from('site_pages')
           .select('path, title, is_published')
           .eq('site_id', site.id)
+          .is('deleted_at', null)
           .order('sort_order', { ascending: true })
           .limit(100)) as never,
       )

@@ -50,31 +50,38 @@ export default async function SitePagesPage() {
     robots_indexable: boolean;
     seo_title: string | null;
     seo_description: string | null;
+    deleted_at: string | null;
     page_blocks: Array<{ count: number }> | null;
   }>(
     (await db
       .from('site_pages')
       .select(
-        'id, title, path, kind, is_published, is_visible_in_nav, robots_indexable, seo_title, seo_description, page_blocks ( count )',
+        'id, title, path, kind, is_published, is_visible_in_nav, robots_indexable, seo_title, seo_description, deleted_at, page_blocks ( count )',
       )
       .eq('site_id', site.id)
       .order('sort_order', { ascending: true })
       .limit(200)) as never,
   );
 
-  const pages: PageRow[] = rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    path: row.path,
-    kindLabel: KIND_LABELS[row.kind] ?? '',
-    isHome: row.kind === 'home',
-    isPublished: row.is_published,
-    showInNav: row.is_visible_in_nav,
-    indexable: row.robots_indexable,
-    seoTitle: row.seo_title ?? '',
-    seoDescription: row.seo_description ?? '',
-    blockCount: row.page_blocks?.[0]?.count ?? 0,
-  }));
+  const pages: PageRow[] = rows
+    .filter((row) => row.deleted_at === null)
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      path: row.path,
+      kindLabel: KIND_LABELS[row.kind] ?? '',
+      isHome: row.kind === 'home',
+      isPublished: row.is_published,
+      showInNav: row.is_visible_in_nav,
+      indexable: row.robots_indexable,
+      seoTitle: row.seo_title ?? '',
+      seoDescription: row.seo_description ?? '',
+      blockCount: row.page_blocks?.[0]?.count ?? 0,
+    }));
+
+  const trashed = rows
+    .filter((row) => row.deleted_at !== null)
+    .map((row) => ({ id: row.id, title: row.title, path: row.path }));
 
   return (
     <>
@@ -82,7 +89,7 @@ export default async function SitePagesPage() {
         title="Pages"
         description="Les pages qui composent votre site, leur adresse et leur visibilité."
       />
-      <PageManager pages={pages} canEdit={canEdit} />
+      <PageManager pages={pages} trashed={trashed} canEdit={canEdit} />
     </>
   );
 }

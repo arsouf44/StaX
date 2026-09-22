@@ -19,7 +19,7 @@ import {
 } from '@stax/ui';
 import { FieldControl, SubmitButton, type ClientField } from '~/components/app/form-fields';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
-import { deletePageAction, savePageAction } from '../actions';
+import { deletePageAction, restorePageAction, savePageAction } from '../actions';
 
 export interface PageRow {
   id: string;
@@ -98,7 +98,15 @@ const KIND_FIELD: ClientField = {
   ],
 };
 
-export function PageManager({ pages, canEdit }: { pages: PageRow[]; canEdit: boolean }) {
+export function PageManager({
+  pages,
+  trashed,
+  canEdit,
+}: {
+  pages: PageRow[];
+  trashed: Array<{ id: string; title: string; path: string }>;
+  canEdit: boolean;
+}) {
   const [editing, setEditing] = useState<PageRow | 'new' | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PageRow | null>(null);
   const [saveState, setSaveState] = useState<ActionState>(IDLE_STATE);
@@ -285,11 +293,42 @@ export function PageManager({ pages, canEdit }: { pages: PageRow[]; canEdit: boo
           });
         }}
         tone="danger"
-        confirmLabel="Supprimer la page"
-        confirmationText={pendingDelete?.path}
+        confirmLabel="Mettre à la corbeille"
         title="Supprimer cette page ?"
-        description="Son contenu sera perdu et son adresse renverra une page introuvable. Si vous voulez seulement la retirer du site, dépubliez-la plutôt. Recopiez son adresse pour confirmer."
+        description="Elle part dans la corbeille avec tout son contenu : vous pourrez la restaurer à tout moment. Votre site en ligne ne change qu’à la prochaine publication. Pensez à retirer les boutons qui mènent vers elle : la vérification avant publication vous les signalera."
       />
+
+      {trashed.length > 0 ? (
+        <details className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            Corbeille ({trashed.length})
+          </summary>
+          <ul className="mt-3 divide-y divide-[var(--border)]">
+            {trashed.map((page) => (
+              <li key={page.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
+                <span className="min-w-0 flex-1">
+                  {page.title} <span className="text-[var(--muted)]">{page.path}</span>
+                </span>
+                {canEdit ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const payload = new FormData();
+                      payload.set('pageId', page.id);
+                      startTransition(() => {
+                        void restorePageAction(IDLE_STATE, payload).then(setDeleteState);
+                      });
+                    }}
+                  >
+                    Restaurer
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </div>
   );
 }

@@ -149,6 +149,14 @@ async function handlePage(request: Request, site: ResolvedSite, path: string): P
     // enregistrement et ne doit pas fuiter hors de son destinataire.
     cache: site.hostname.isPreview ? CACHE_POLICIES.private : CACHE_POLICIES.publishedPage,
     allowMaps,
+    // Version servie, et etiquette de cache par site : la publication peut
+    // purger toutes les pages d un site d un coup (offres Cloudflare qui
+    // permettent la purge par etiquette), et le support voit en un coup
+    // d oeil quelle version un visiteur a recue.
+    headers: {
+      ...(site.versionNumber !== null ? { 'x-stax-version': String(site.versionNumber) } : {}),
+      'cache-tag': `stax-site-${site.siteId}`,
+    },
   });
 }
 
