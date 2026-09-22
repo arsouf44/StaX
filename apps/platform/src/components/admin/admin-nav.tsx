@@ -97,6 +97,22 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
         icon: 'shield-check',
         minimum: 'platform_admin',
       },
+      {
+        href: '/admin/confidentialite',
+        label: 'Demandes RGPD',
+        icon: 'file-text',
+        minimum: 'platform_admin',
+      },
+      { href: '/admin/coupons', label: 'Codes promo', icon: 'badge', minimum: 'platform_admin' },
+      {
+        href: '/admin/feature-flags',
+        label: 'Activations',
+        icon: 'zap',
+        minimum: 'platform_admin',
+      },
+      { href: '/admin/templates', label: 'Modèles', icon: 'layout-grid', minimum: 'designer' },
+      { href: '/admin/metiers', label: 'Métiers', icon: 'briefcase', minimum: 'support' },
+      { href: '/admin/taches', label: 'Tâches de fond', icon: 'clock', minimum: 'developer' },
     ],
   },
 ];

@@ -130,7 +130,11 @@ confirmer celle écrite avant l'appel à Stripe.
 | Assistance client (impersonation) | **OK** — motif obligatoire, durée plafonnée, bannière, 14 opérations interdites |
 | Émission de factures | **OK** — montant repris du catalogue, numérotation continue |
 | **`/admin/sites/[id]`** | **OK** — fiche complète (offre, métier, dates, projet, maintenance, compteurs), domaines et état DNS réel, 15 dernières versions, codes d'activation. Actions : changement d'état limité aux transitions réellement permises par `app.guard_site_status`, remise en ligne d'une version, émission et révocation de codes. Motif obligatoire, trace nominative, rôle `platform_admin` exigé |
-| Paramètres, feature flags, templates, métiers/modules, coupons, contenu | **MANQUE** — tables et logique présentes, aucune interface |
+| Codes promotionnels | **OK** — création et désactivation. Un code déclare une règle, jamais un montant : la remise est recalculée par la base à chaque commande |
+| Activations progressives | **OK** — bascule globale, distincte des droits d'offre (un drapeau déploie, il ne vend pas) |
+| Demandes RGPD | **OK** — tri par échéance, compte à rebours du délai d'un mois, et **l'ordre est imposé** : une demande ne peut pas être marquée traitée sans identité vérifiée |
+| Tâches de fond | **OK** — ce qui échoue là ne se voyait nulle part ailleurs |
+| Modèles de site, métiers et modules | **OK, en lecture seule** — ce sont du code versionné (`@stax/business`, migrations de référence). Les modifier depuis une interface les désynchroniserait du dépôt, et c'est écrit sur l'écran |
 
 ---
 
@@ -193,6 +197,9 @@ confirmer celle écrite avant l'appel à Stripe.
 
 ## Ce qui reste non terminé, sans détour
 
-1. Écrans d'administration restants (paramètres, feature flags, templates, coupons)
-2. Comptes clients sur le site final (droit Ultra Premium déclaré, non implémenté)
-3. E2E « deux navigateurs connectés » pour l'isolation (prouvée en SQL et en intégration, pas encore par l'interface)
+1. **Comptes clients sur le site final** — droit déclaré dans l'offre Ultra
+   Premium, non implémenté. Le suivi de commande par lien signé couvre le
+   besoin courant d'un acheteur ; un espace visiteur avec mot de passe, non.
+2. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
+   est prouvée par 188 assertions SQL et 12 parcours d'intégration, mais pas
+   encore par deux sessions réelles ouvertes en parallèle.

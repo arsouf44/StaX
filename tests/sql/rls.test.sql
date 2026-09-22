@@ -1597,6 +1597,71 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Surface d'administration
+--
+--  Chaque ecran ajoute au back-office ouvre une table de plus. Cette section
+--  verifie qu'aucune d'elles ne devient lisible par un client.
+-- -----------------------------------------------------------------------------
+\echo '--- Tables du back-office ---'
+do $$
+declare
+  alice uuid := (select v from t.fixtures where k='alice');
+  bob   uuid := (select v from t.fixtures where k='bob');
+  staff uuid := (select v from t.fixtures where k='staff');
+  org_a uuid := (select v from t.fixtures where k='org_a');
+  org_b uuid := (select v from t.fixtures where k='org_b');
+begin
+  insert into public.background_jobs (kind, payload) values ('domain.verify', '{}'::jsonb);
+
+  insert into public.privacy_requests
+    (reference, requester_email, organization_id, kind, status, due_at)
+  values ('RGPD-2026-001', 'alice@tenant-a.test', org_a, 'export', 'received',
+          now() + interval '30 days');
+
+  -- Les taches de fond decrivent notre infrastructure : jamais un client.
+  perform t.assert(t.count_as(alice, 'select 1 from background_jobs') = 0,
+    'Un client ne voit pas les taches de fond');
+  perform t.assert(t.count_as(staff, 'select 1 from background_jobs') >= 1,
+    'Le personnel plateforme voit les taches de fond');
+
+  -- Les codes promotionnels ne sont jamais enumerables : la liste des remises
+  -- en cours est une information commerciale.
+  perform t.assert(t.count_as(alice, 'select 1 from coupons') = 0,
+    'Un client ne peut pas enumerer les codes promotionnels');
+  perform t.assert(
+    t.denied_as(alice,
+      'insert into coupons (code, kind, value, applies_to) ' ||
+      'values (''AUTOREMISE'', ''percent'', 90, ''both'')'),
+    'Un client ne peut pas se creer une remise');
+
+  -- Une demande RGPD appartient a son auteur : elle ne traverse pas les
+  -- organisations.
+  perform t.assert(t.count_as(bob, format(
+    'select 1 from privacy_requests where organization_id = %L', org_a)) = 0,
+    'Un client ne voit pas la demande RGPD d''un autre');
+  perform t.assert(t.count_as(staff, 'select 1 from privacy_requests') >= 1,
+    'Le personnel plateforme traite les demandes RGPD');
+
+  -- Un drapeau d'activation se lit, mais ne se bascule pas par un client.
+  perform t.assert(
+    t.denied_as(alice, 'update feature_flags set enabled_globally = true'),
+    'Un client ne peut pas activer une fonctionnalite pour tout le monde');
+
+  -- Un droit d'offre ne s'accorde pas depuis un compte client.
+  perform t.assert(
+    t.denied_as(alice, format(
+      'insert into organization_feature_overrides (organization_id, feature_key, enabled) ' ||
+      'values (%L, ''ecommerce'', true)', org_a)),
+    'Un client ne peut pas s''accorder un droit d''offre');
+  perform t.assert(
+    t.denied_as(bob, format(
+      'insert into organization_feature_overrides (organization_id, feature_key, enabled) ' ||
+      'values (%L, ''ecommerce'', true)', org_b)),
+    'Meme pour sa propre organisation, un client ne s''accorde aucun droit');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

@@ -34,7 +34,7 @@ export interface AdminFilter {
   value: string;
   label: string;
   column: string;
-  operator: 'eq' | 'in' | 'notNull';
+  operator: 'eq' | 'in' | 'notNull' | 'isNull';
   match?: string | readonly string[];
 }
 
@@ -168,6 +168,34 @@ export const INVOICE_STATUSES: Record<string, StatusLabel> = {
   issued: label('Émise', 'warning', 'En attente de rattachement par le client.'),
   claimed: label('Rattachée', 'accent', 'Le client a retrouvé sa commande.'),
   paid: label('Payée', 'success'),
+  cancelled: label('Annulée', 'neutral'),
+};
+
+const PRIVACY_KINDS: Record<string, StatusLabel> = {
+  export: label('Accès / portabilité', 'info'),
+  deletion: label('Effacement', 'warning'),
+  rectification: label('Rectification', 'accent'),
+  objection: label('Opposition', 'neutral'),
+};
+
+const PRIVACY_STATUSES: Record<string, StatusLabel> = {
+  received: label('Reçue', 'warning', 'Le délai d’un mois court déjà.'),
+  verifying: label('Identité à vérifier', 'warning', 'Ne rien livrer avant vérification.'),
+  in_progress: label('En cours', 'info'),
+  completed: label('Traitée', 'success'),
+  refused: label('Refusée', 'neutral', 'Un refus doit être motivé et notifié.'),
+};
+
+const COUPON_KINDS: Record<string, StatusLabel> = {
+  percent: label('Pourcentage', 'info'),
+  amount: label('Montant fixe', 'accent'),
+};
+
+const JOB_STATUSES: Record<string, StatusLabel> = {
+  queued: label('En attente', 'neutral'),
+  running: label('En cours', 'info'),
+  completed: label('Terminée', 'success'),
+  failed: label('En échec', 'danger', 'Essais épuisés : reprise manuelle nécessaire.'),
   cancelled: label('Annulée', 'neutral'),
 };
 
@@ -681,6 +709,193 @@ export const ADMIN_VIEWS = {
       'Émettez une facture après un accord commercial pour que le client puisse rattacher sa commande.',
     icon: 'receipt',
     note: 'Un nombre de tentatives élevé sur une facture non rattachée signale une énumération de numéros.',
+  },
+
+  confidentialite: {
+    id: 'confidentialite',
+    route: '/admin/confidentialite',
+    table: 'privacy_requests',
+    title: 'Demandes RGPD',
+    description:
+      'Accès, effacement, rectification, opposition. Le règlement impose une réponse sous un mois.',
+    minimum: 'platform_admin',
+    select:
+      'id, reference, kind, status, requester_email, due_at, identity_verified_at, created_at, ' +
+      'organizations ( name )',
+    orderColumn: 'due_at',
+    ascending: true,
+    searchColumn: 'requester_email',
+    searchLabel: 'Rechercher une adresse',
+    filters: [
+      {
+        value: 'a-traiter',
+        label: 'À traiter',
+        column: 'status',
+        operator: 'in',
+        match: ['received', 'verifying', 'in_progress'],
+      },
+      {
+        value: 'identite-a-verifier',
+        label: 'Identité à vérifier',
+        column: 'identity_verified_at',
+        operator: 'isNull',
+      },
+    ],
+    columns: [
+      { key: 'due_at', label: 'Échéance', kind: 'date' },
+      { key: 'reference', label: 'Référence', kind: 'mono' },
+      { key: 'kind', label: 'Demande', kind: 'status', statuses: PRIVACY_KINDS },
+      { key: 'requester_email', label: 'Demandeur', kind: 'text' },
+      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name', secondary: true },
+      { key: 'status', label: 'État', kind: 'status', statuses: PRIVACY_STATUSES },
+      { key: 'created_at', label: 'Reçue le', kind: 'date', secondary: true },
+    ],
+    emptyTitle: 'Aucune demande',
+    emptyDescription: 'Les demandes d’exercice des droits arrivent ici dès leur dépôt.',
+    icon: 'shield-check',
+    note: 'Trié par échéance, la plus proche en premier. Une demande sans identité vérifiée ne doit jamais être exécutée : c’est ainsi qu’on livre les données de quelqu’un d’autre.',
+  },
+
+  coupons: {
+    id: 'coupons',
+    route: '/admin/coupons',
+    table: 'coupons',
+    title: 'Codes promotionnels',
+    description: 'Remises applicables à la création du site ou à la maintenance.',
+    minimum: 'platform_admin',
+    select:
+      'id, code, label, kind, value, applies_to, max_redemptions, redeemed_count, ' +
+      'valid_until, is_active, created_at',
+    orderColumn: 'created_at',
+    ascending: false,
+    searchColumn: 'code',
+    searchLabel: 'Rechercher un code',
+    filters: [
+      { value: 'actifs', label: 'Actifs', column: 'is_active', operator: 'eq', match: 'true' },
+    ],
+    columns: [
+      { key: 'code', label: 'Code', kind: 'mono' },
+      { key: 'label', label: 'Libellé', kind: 'text' },
+      { key: 'kind', label: 'Type', kind: 'status', statuses: COUPON_KINDS },
+      { key: 'applies_to', label: 'Porte sur', kind: 'text', secondary: true },
+      { key: 'redeemed_count', label: 'Utilisé', kind: 'text' },
+      { key: 'valid_until', label: 'Jusqu’au', kind: 'date', secondary: true },
+      { key: 'is_active', label: 'Actif', kind: 'boolean' },
+    ],
+    emptyTitle: 'Aucun code',
+    emptyDescription: 'Créez un code pour accorder une remise sur une commande.',
+    icon: 'badge',
+    note: 'La remise est toujours recalculée par la base au moment de la commande : un code affiché ici ne fixe jamais un montant à lui seul.',
+  },
+
+  'feature-flags': {
+    id: 'feature-flags',
+    route: '/admin/feature-flags',
+    table: 'feature_flags',
+    title: 'Activations progressives',
+    description:
+      'Fonctionnalités activables globalement ou par règle, indépendamment des droits d’offre.',
+    minimum: 'platform_admin',
+    select: 'key, label, description, enabled_globally, updated_at',
+    orderColumn: 'key',
+    ascending: true,
+    columns: [
+      { key: 'key', label: 'Clé', kind: 'mono' },
+      { key: 'label', label: 'Nom', kind: 'text' },
+      { key: 'enabled_globally', label: 'Actif partout', kind: 'boolean' },
+      { key: 'description', label: 'Rôle', kind: 'text', secondary: true },
+      { key: 'updated_at', label: 'Modifié le', kind: 'datetime', secondary: true },
+    ],
+    emptyTitle: 'Aucune activation progressive',
+    emptyDescription: 'Les drapeaux déclarés par le produit apparaissent ici.',
+    icon: 'zap',
+    note: 'À ne pas confondre avec les droits d’offre : un drapeau sert à déployer progressivement, pas à vendre. Les droits d’offre se règlent par client depuis sa fiche.',
+  },
+
+  templates: {
+    id: 'templates',
+    route: '/admin/templates',
+    table: 'site_templates',
+    title: 'Modèles de site',
+    description: 'Structures de départ proposées à la création d’un site.',
+    minimum: 'designer',
+    select: 'slug, name, description, is_active, sort_order, updated_at',
+    orderColumn: 'sort_order',
+    ascending: true,
+    columns: [
+      { key: 'name', label: 'Modèle', kind: 'text' },
+      { key: 'slug', label: 'Identifiant', kind: 'mono', secondary: true },
+      { key: 'description', label: 'Description', kind: 'text', secondary: true },
+      { key: 'is_active', label: 'Proposé', kind: 'boolean' },
+    ],
+    emptyTitle: 'Aucun modèle',
+    emptyDescription: 'Les modèles de site sont livrés par migration de données de référence.',
+    icon: 'layout-grid',
+    note: 'Lecture seule. Un modèle est du code versionné : le modifier depuis une interface le désynchroniserait du dépôt.',
+  },
+
+  metiers: {
+    id: 'metiers',
+    route: '/admin/metiers',
+    table: 'business_types',
+    title: 'Métiers',
+    description: 'Les métiers proposés à la commande, et les modules que chacun active.',
+    minimum: 'support',
+    select: 'slug, name, sector_slug, is_active, sort_order, business_sectors ( name )',
+    orderColumn: 'sort_order',
+    ascending: true,
+    searchColumn: 'name',
+    searchLabel: 'Rechercher un métier',
+    columns: [
+      { key: 'name', label: 'Métier', kind: 'text' },
+      { key: 'business_sectors', label: 'Secteur', kind: 'relation', path: 'name' },
+      { key: 'slug', label: 'Identifiant', kind: 'mono', secondary: true },
+      { key: 'is_active', label: 'Proposé', kind: 'boolean' },
+    ],
+    emptyTitle: 'Aucun métier',
+    emptyDescription: 'Les métiers sont livrés par migration de données de référence.',
+    icon: 'briefcase',
+    note: 'Lecture seule. Les métiers et leurs modules sont définis dans @stax/business, en même temps que les blocs et les questionnaires qui en dépendent.',
+  },
+
+  taches: {
+    id: 'taches',
+    route: '/admin/taches',
+    table: 'background_jobs',
+    title: 'Tâches de fond',
+    description:
+      'Vérifications DNS, agrégations, publications programmées. Ce qui échoue ici ne se voit nulle part ailleurs.',
+    minimum: 'developer',
+    select: 'id, kind, status, attempts, max_attempts, run_after, last_error, created_at',
+    orderColumn: 'created_at',
+    ascending: false,
+    filters: [
+      {
+        value: 'en-echec',
+        label: 'En échec',
+        column: 'status',
+        operator: 'eq',
+        match: 'failed',
+      },
+      {
+        value: 'en-attente',
+        label: 'En attente',
+        column: 'status',
+        operator: 'in',
+        match: ['queued', 'running'],
+      },
+    ],
+    columns: [
+      { key: 'created_at', label: 'Créée', kind: 'datetime' },
+      { key: 'kind', label: 'Tâche', kind: 'mono' },
+      { key: 'status', label: 'État', kind: 'status', statuses: JOB_STATUSES },
+      { key: 'attempts', label: 'Essais', kind: 'text', secondary: true },
+      { key: 'last_error', label: 'Dernière erreur', kind: 'text', secondary: true },
+    ],
+    emptyTitle: 'Aucune tâche',
+    emptyDescription: 'Aucune tâche de fond enregistrée pour l’instant.',
+    icon: 'clock',
+    note: 'Une tâche qui a épuisé ses essais ne sera plus reprise toute seule : elle attend une intervention.',
   },
 } as const satisfies Record<string, Omit<AdminView, 'id'> & { id: string }>;
 

@@ -109,6 +109,10 @@ export async function AdminTable({
   if (filter) {
     if (filter.operator === 'notNull') {
       query = query.not(filter.column, 'is', null);
+    } else if (filter.operator === 'isNull') {
+      // `eq(colonne, 'null')` comparerait a la CHAINE « null ». Une colonne
+      // vide se filtre avec `is`, jamais avec une egalite.
+      query = query.is(filter.column, null);
     } else if (filter.operator === 'in' && Array.isArray(filter.match)) {
       query = query.in(filter.column, [...filter.match]);
     } else if (typeof filter.match === 'string') {
