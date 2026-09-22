@@ -1,19 +1,7 @@
-/**
- * Applique le theme avant le premier rendu.
- *
- * Injecte en ligne et execute de maniere synchrone : c est le seul moyen
- * d eviter le flash de theme clair sur une interface concue en sombre. Le
- * script ne lit qu une valeur locale, n envoie rien et ne depend d aucune
- * bibliotheque.
- */
-const SCRIPT = `(function(){try{
-var s=localStorage.getItem('stax-thème');
-var m=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
-document.documentElement.setAttribute('data-thème', s==='light'||s==='dark'?s:(s==='system'?m:'dark'));
-}catch(e){}})();`;
+import { THEME_SCRIPT } from '~/lib/theme-script';
+
+export { THEME_SCRIPT, THEME_SCRIPT_CSP_HASH, THEME_STORAGE_KEY } from '~/lib/theme-script';
 
 export function ThemeScript() {
-  return <script dangerouslySetInnerHTML={{ __html: SCRIPT }} />;
+  return <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />;
 }
-
-export const THEME_STORAGE_KEY = 'stax-theme';

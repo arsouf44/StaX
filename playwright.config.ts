@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -42,5 +43,30 @@ export default defineConfig({
         url: 'http://127.0.0.1:3100',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
+        env: {
+          /*
+           * Secrets JETABLES, regeneres a chaque execution.
+           *
+           * Le build de production exige une cle de signature : sans elle,
+           * toute soumission de formulaire leve une exception et rend la page
+           * d'erreur. Les tests verifieraient alors le comportement d'une
+           * plateforme mal configuree, pas celui du produit.
+           *
+           * Aucune valeur reelle n'entre ici, et rien n'est lu depuis
+           * l'environnement : ces cles ne valent que pour ce processus.
+           */
+          STAX_SECRET_KEY: randomBytes(48).toString('base64'),
+          /*
+           * Supabase pointe volontairement vers un port ferme. L'appel echoue
+           * au reseau, ce qui est exactement le cas que les tests doivent
+           * couvrir : une panne du fournisseur ne doit jamais reveler si une
+           * adresse est connue, ni casser la page.
+           */
+          NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54399',
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-anon-key-not-a-real-secret',
+          SUPABASE_URL: 'http://127.0.0.1:54399',
+          SUPABASE_ANON_KEY: 'e2e-anon-key-not-a-real-secret',
+          SUPABASE_SERVICE_ROLE_KEY: 'e2e-service-key-not-a-real-secret',
+        },
       },
 });

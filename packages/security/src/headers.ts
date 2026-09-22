@@ -22,6 +22,15 @@ export interface SecurityHeaderOptions {
   nonce?: string;
   /** Origines supplementaires autorisees (Stripe, Turnstile, Supabase…). */
   connectSrc?: readonly string[];
+  /**
+   * Empreintes de scripts inline connus, au format `'sha256-…'`.
+   *
+   * Sert aux scripts constants qui doivent s'executer avant le premier rendu
+   * (application du theme) : un nonce y obligerait a rendre dynamique chaque
+   * page prerendue, alors qu'une empreinte reste valable indefiniment. Les
+   * empreintes restent honorees en presence de `'strict-dynamic'`.
+   */
+  scriptHashes?: readonly string[];
   frameSrc?: readonly string[];
   /** Desactive `upgrade-insecure-requests` en developpement local. */
   allowInsecure?: boolean;
@@ -42,7 +51,14 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
   const nonce = options.nonce ? `'nonce-${options.nonce}'` : '';
   const isPlatform = options.profile === 'platform';
 
-  const scriptSrc = ["'self'", nonce, "'strict-dynamic'", STRIPE_SCRIPT, TURNSTILE]
+  const scriptSrc = [
+    "'self'",
+    nonce,
+    ...(options.scriptHashes ?? []),
+    "'strict-dynamic'",
+    STRIPE_SCRIPT,
+    TURNSTILE,
+  ]
     .filter(Boolean)
     .join(' ');
 

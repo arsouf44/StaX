@@ -5,7 +5,10 @@
     "types": ["node", "vitest/globals"],
     // `DOM` fournit les types web standards (BufferSource, Blob, fetch) que
     // Node 22 implemente reellement et que @stax/security utilise.
-    "lib": ["ES2023", "DOM"],
+    // `DOM.Iterable` y ajoute les iterateurs (`FormData.entries()`), sans
+    // lesquels @stax/validation ne se typecheck pas ici alors qu'il se
+    // typecheck dans son propre paquet.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     // Les scripts et les tests ne sont pas des paquets de l espace de travail :
@@ -14,6 +17,7 @@
     "paths": {
       "@stax/types": ["./packages/types/src/index.ts"],
       "@stax/config": ["./packages/config/src/index.ts"],
+      "@stax/config/*": ["./packages/config/src/*.ts"],
       "@stax/validation": ["./packages/validation/src/index.ts"],
       "@stax/payments": ["./packages/payments/src/index.ts"],
       "@stax/payments/*": ["./packages/payments/src/*.ts"],

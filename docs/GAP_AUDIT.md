@@ -159,7 +159,8 @@ confirmer celle écrite avant l'appel à Stripe.
 | MFA obligatoire admin (`aal2`) | **OK** |
 | Secrets hors bundle | **OK** — `.env.example` sans valeurs |
 | Brute-force activation / facture | **OK** — débit limité, tentatives comptées |
-| **E2E d'isolation inter-tenant** | **MANQUE** — prouvé en SQL, pas par un parcours navigateur |
+| **CSP sur la plateforme** | **OK** — était **totalement absente**. CSP à nonce + `strict-dynamic` sur tout ce qui porte une session (`src/proxy.ts`) ; CSP fixe sur les pages publiques prérendues |
+| **E2E d'isolation inter-tenant** | **PARTIEL** — prouvé en SQL (188 assertions) et par 12 parcours d'intégration contre une vraie base. Pas encore par deux navigateurs connectés en parallèle |
 
 ---
 
@@ -184,7 +185,8 @@ confirmer celle écrite avant l'appel à Stripe.
 | `format:check`, `lint`, `typecheck` | **OK** — 0 |
 | Tests unitaires + sécurité + intégration | **OK** |
 | Assertions SQL / RLS | **OK** — 188 |
-| E2E | **PARTIEL** — 48 tests couvrent marketing, accessibilité, auth. **Manquent** : inscription complète, facture, commande, activation, édition, publication, rollback, réservation, e-commerce, domaine, admin, isolation |
+| E2E | **OK** — 54 tests (marketing, accessibilité, auth, intégrité des liens, en-têtes de sécurité). Les 4 tests d'authentification **passaient à côté du produit** : sans `STAX_SECRET_KEY`, le build de production levait une exception et ils vérifiaient le comportement d'une plateforme mal configurée. Le serveur de test reçoit désormais des secrets jetables, régénérés à chaque exécution |
+| Parcours critiques | **OK** — 12 parcours d'intégration contre une vraie base : commande → paiement → création du site → édition → publication → brouillon indépendant → retour arrière → résolution du tenant → formulaire → réservation → activation → suspension |
 | Build production + Cloudflare | **OK** |
 
 ---
@@ -193,4 +195,4 @@ confirmer celle écrite avant l'appel à Stripe.
 
 1. Écrans d'administration restants (paramètres, feature flags, templates, coupons)
 2. Comptes clients sur le site final (droit Ultra Premium déclaré, non implémenté)
-3. E2E des parcours critiques
+3. E2E « deux navigateurs connectés » pour l'isolation (prouvée en SQL et en intégration, pas encore par l'interface)

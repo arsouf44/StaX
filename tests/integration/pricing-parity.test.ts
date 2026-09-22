@@ -110,14 +110,15 @@ describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {
       `insert into public.plans
          (slug, version, name, setup_price_cents, maintenance_price_cents, vat_rate_bps, is_public)
        values ('parite-troncature', 99, 'Parite', 33333, 777, 2000, false)
-       returning id, slug, setup_price_cents, maintenance_price_cents, vat_rate_bps,
-                 prices_include_vat, currency, is_quote_only`,
+       returning id, slug, setup_price_cents, maintenance_price_cents, billing_interval,
+                 vat_rate_bps, prices_include_vat, currency, is_quote_only`,
     );
     const row = rows[0];
     const plan: PricingPlanInput = {
       slug: row.slug,
       setupPriceCents: row.setup_price_cents,
       maintenancePriceCents: row.maintenance_price_cents,
+      billingInterval: row.billing_interval === 'month' ? 'month' : 'year',
       vatRateBps: row.vat_rate_bps,
       pricesIncludeVat: row.prices_include_vat,
       currency: row.currency,
