@@ -24,8 +24,17 @@ export interface FeaturePage {
   sections: readonly FeatureSection[];
   /** Ce que la fonctionnalité ne fait PAS : dit franchement, pas caché. */
   limits?: readonly string[];
-  /** Offre minimale requise, ou null si incluse partout. */
-  requiredPlan: 'classique' | 'premium' | 'signature' | null;
+  /**
+   * Offre minimale requise, ou `null` si incluse partout.
+   *
+   * Ces valeurs sont les slugs REELS du catalogue. Elles ont porte des noms
+   * d'offres disparus (« classique », « signature ») pendant que la base
+   * accordait deja autre chose : une page vitrine annoncait alors une
+   * fonctionnalite dans une offre qui ne la comportait pas.
+   * `tests/integration/plan-promises.test.ts` compare desormais ces valeurs
+   * a la grille `plan_features`.
+   */
+  requiredPlan: 'essentiel' | 'premium' | 'ultra-premium' | null;
   related: readonly string[];
 }
 
@@ -255,7 +264,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Acomptes, commandes, dons. L’argent va directement de votre client à votre compte bancaire. StaX n’est pas dans ce circuit.',
     visual: 'payments',
-    requiredPlan: 'premium',
+    requiredPlan: 'ultra-premium',
     sections: [
       {
         title: 'Votre compte, à votre nom',
@@ -323,7 +332,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Un catalogue, un panier, des commandes. Pensé pour les petits volumes d’un commerce de proximité, pas pour concurrencer une place de marché.',
     visual: 'site',
-    requiredPlan: 'premium',
+    requiredPlan: 'ultra-premium',
     sections: [
       {
         title: 'Un catalogue simple',
