@@ -44,7 +44,7 @@ de vous fier à ce tableau.
 corepack enable
 pnpm install
 
-# 2. Configuration — copiez et renseignez
+# 2. Configuration — copiez et renseignez (a la RACINE du depot)
 cp .env.example .env.local
 
 # 3. Base de données
@@ -58,6 +58,17 @@ ADMIN_BOOTSTRAP_PASSWORD="$(openssl rand -base64 24)" pnpm admin:bootstrap
 pnpm dev                   # plateforme, http://localhost:3000
 pnpm dev:site              # moteur des sites clients, http://localhost:3001
 ```
+
+> **`.env.local` se trouve a la racine, pas dans `apps/platform`.**
+> Next.js ne lit nativement les fichiers `.env*` que dans le repertoire de
+> l'application, et les scripts `tsx` n'en lisent aucun. `@stax/config/dotenv`
+> comble cet ecart : `next.config.ts` et chaque script chargent le `.env.local`
+> (puis le `.env`) de la racine avant toute autre chose. Une variable deja
+> definie — `VAR=... pnpm <script>`, secret Cloudflare, variable de CI — n'est
+> jamais ecrasee.
+>
+> Le moteur des sites clients fait exception : c'est un Worker Cloudflare, sa
+> configuration arrive par les bindings `wrangler` (`.dev.vars` en local).
 
 ### Vérification complète
 

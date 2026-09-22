@@ -19,8 +19,16 @@
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { assertServerOnly, deployEnvironment, readEnv } from '@stax/config';
+import { loadRootEnv } from '@stax/config/dotenv';
 import { resolveBusiness } from '@stax/business';
 import { createBlock } from '@stax/site-engine';
+
+/**
+ * Les variables viennent de `.env.local` a la racine du depot (copie de
+ * `.env.example`) ou de l environnement d execution. Une variable deja definie
+ * — `VAR=... pnpm <script>`, secret de CI — n est jamais ecrasee.
+ */
+loadRootEnv(import.meta.dirname);
 
 assertServerOnly('scripts/seed-demo');
 

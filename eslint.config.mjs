@@ -92,9 +92,12 @@ export default tseslint.config(
   },
   {
     // The env module itself, config scripts and tests are allowed raw access.
+    // `dotenv.ts` a pour role exact de REMPLIR process.env depuis les fichiers
+    // de la racine : c'est le seul module autorise a y ecrire.
     files: [
       'packages/config/src/env.ts',
       'packages/config/src/runtime.ts',
+      'packages/config/src/dotenv.ts',
       'scripts/**/*.ts',
       'tests/**/*.ts',
       '**/*.config.{ts,mjs,js}',

@@ -1,4 +1,21 @@
 import type { NextConfig } from 'next';
+import { loadRootEnv } from '@stax/config/dotenv';
+
+/**
+ * `.env.local` vit a la racine du depot, pas dans `apps/platform`.
+ *
+ * Next.js ne lit les fichiers `.env*` que dans le repertoire de l application.
+ * Sans cet appel, la configuration copiee depuis `.env.example` — a la racine,
+ * comme ce fichier le demande — est silencieusement ignoree : l application
+ * retombe sur ses valeurs de repli locales et les pages publiques affichent
+ * « catalogue indisponible » sans qu aucune erreur ne soit levee.
+ *
+ * L appel a lieu ici, avant toute evaluation de route, parce que Next charge
+ * ce fichier en premier et que les processus de build qu il lance ensuite
+ * heritent de `process.env`. Une variable deja definie n est jamais ecrasee :
+ * les secrets Cloudflare et GitHub Actions gardent la priorite.
+ */
+loadRootEnv(import.meta.dirname);
 
 /**
  * CSP des pages publiques prerendues.

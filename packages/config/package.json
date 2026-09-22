@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./dotenv": "./src/dotenv.ts",
     "./env": "./src/env.ts",
     "./legal": "./src/legal.ts",
     "./runtime": "./src/runtime.ts",

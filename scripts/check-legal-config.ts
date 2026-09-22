@@ -12,6 +12,14 @@
  * Usage : pnpm legal:check
  */
 import { LEGAL_FIELDS, deployEnvironment, legalStatus, readEnv } from '@stax/config';
+import { loadRootEnv } from '@stax/config/dotenv';
+
+/**
+ * Les variables viennent de `.env.local` a la racine du depot (copie de
+ * `.env.example`) ou de l environnement d execution. Une variable deja definie
+ * — `VAR=... pnpm <script>`, secret de CI — n est jamais ecrasee.
+ */
+loadRootEnv(import.meta.dirname);
 
 const status = legalStatus();
 const environment = deployEnvironment();

@@ -31,8 +31,15 @@
  */
 import { createClient } from '@supabase/supabase-js';
 import { assertServerOnly, readEnv } from '@stax/config';
+import { loadRootEnv } from '@stax/config/dotenv';
 
 assertServerOnly('scripts/bootstrap-admin');
+/**
+ * Les variables viennent de `.env.local` a la racine du depot (copie de
+ * `.env.example`) ou de l environnement d execution. Une variable deja definie
+ * — `VAR=... pnpm <script>`, secret de CI — n est jamais ecrasee.
+ */
+loadRootEnv(import.meta.dirname);
 
 /** Sortie sure : aucune valeur sensible n arrive jamais ici. */
 function say(message: string): void {

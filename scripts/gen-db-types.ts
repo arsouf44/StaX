@@ -14,6 +14,14 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { assertServerOnly, readEnv } from '@stax/config';
+import { loadRootEnv } from '@stax/config/dotenv';
+
+/**
+ * Les variables viennent de `.env.local` a la racine du depot (copie de
+ * `.env.example`) ou de l environnement d execution. Une variable deja definie
+ * — `VAR=... pnpm <script>`, secret de CI — n est jamais ecrasee.
+ */
+loadRootEnv(import.meta.dirname);
 
 assertServerOnly('scripts/gen-db-types');
 
