@@ -99,6 +99,12 @@ export default async function EditorPage({
     path: page.path,
     isHome: page.path === '/',
   }));
+  const currentRef: EditorPageRef = pageRefs.find((page) => page.id === current.id) ?? {
+    id: current.id,
+    title: current.title,
+    path: current.path,
+    isHome: current.path === '/',
+  };
 
   const hasUnpublishedChanges = Boolean(
     siteRow?.draft_updated_at &&
@@ -122,7 +128,7 @@ export default async function EditorPage({
       liveHost={liveHost}
       hasUnpublishedChanges={hasUnpublishedChanges}
       pages={pageRefs}
-      page={pageRefs.find((page) => page.id === current.id) ?? pageRefs[0]!}
+      page={currentRef}
       initialBlocks={blocks}
       initialTrash={trash}
       initialStatus={status}

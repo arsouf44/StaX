@@ -370,7 +370,7 @@ function legalPages(businessName: string, sortOrder: number): TemplatePage[] {
       title: 'Mentions légales',
       kind: 'legal',
       showInNav: false,
-      sortOrder: sortOrder,
+      sortOrder,
       blocks: [legalHeading, legal],
     });
   }

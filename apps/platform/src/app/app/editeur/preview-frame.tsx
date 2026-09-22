@@ -54,13 +54,20 @@ export function PreviewFrame({
 }) {
   const frames = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
   const [front, setFront] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<[string | null, string | null]>([null, null]);
+  // Adresse la plus recente demandee, et celles effectivement chargees :
+  // l apercu est « en cours de chargement » tant que la derniere n est pas
+  // arrivee.
+  const [requested, setRequested] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<string | null>(null);
+  const loading = requested === null || requested !== loaded;
   const scrollRef = useRef(0);
   const selectedRef = useRef(selectedId);
-  selectedRef.current = selectedId;
   const onSelectRef = useRef(onSelect);
-  onSelectRef.current = onSelect;
+  useEffect(() => {
+    selectedRef.current = selectedId;
+    onSelectRef.current = onSelect;
+  });
   const stageRef = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState<number | null>(null);
 
@@ -92,7 +99,7 @@ export function PreviewFrame({
     });
     if (selectedRef.current) params.set('sel', selectedRef.current);
     const src = `/app/editeur/apercu?${params.toString()}`;
-    setLoading(true);
+    setRequested(src);
     setSources((current) => {
       const back = current[0] === null && current[1] === null ? 0 : front === 0 ? 1 : 0;
       const next: [string | null, string | null] = [...current];
@@ -181,7 +188,7 @@ export function PreviewFrame({
               }}
               onLoad={() => {
                 if (index !== front) setFront(index);
-                setLoading(false);
+                setLoaded(src);
               }}
             />
           ) : null,

@@ -41,12 +41,10 @@ export function PublishDialog({
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  // Le dialogue est monte a chaque ouverture (voir l editeur) : son etat
+  // repart de « on verifie » sans remise a zero dans un effet.
   useEffect(() => {
     if (!open) return;
-    setStep('checking');
-    setReport(null);
-    setOutcome(null);
-    setError(null);
     let cancelled = false;
     void flush()
       .then(() => checkPublicationAction({ siteId }))

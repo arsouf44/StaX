@@ -1027,6 +1027,11 @@ begin
 
   select status::text, site_id into strict v_ref, v_site from public.orders where id = v_order;
   perform t.assert(v_ref = 'paid', 'La commande est marquee payee');
+  perform t.assert(
+    (select s.plan_id from public.sites s where s.id = v_site) = plan_id,
+    'Le site cree au paiement porte la version exacte de l''offre achetee');
+  perform t.assert(app.has_feature(org_a, 'version_history'),
+    'Les droits de l''offre achetee s''appliquent des le paiement');
 
   -- Le montant credite est celui de la commande, pas une valeur exterieure.
   select amount_cents into v_amount
@@ -1836,6 +1841,295 @@ begin
     'Le journal d''audit survit a la suppression et conserve l''organisation concernee');
 
   delete from auth.users where id = v_user;
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Comptes internes : le privilege est une regle de la BASE
+-- -----------------------------------------------------------------------------
+\echo '--- Comptes internes (commande sans paiement) ---'
+do $$
+declare
+  alice      uuid := (select v from t.fixtures where k='alice');
+  v_internal uuid;
+  v_plan     uuid := (select id from public.plans where slug = 'ultra-premium' and is_active and valid_until is null);
+  v_result   jsonb;
+  v_order    public.orders%rowtype;
+  v_refuse   boolean := false;
+begin
+  -- Un client ordinaire ne peut ni commander sans payer...
+  perform t.assert(t.denied_as(alice, format(
+    'select public.create_internal_order(%L::uuid, %L, %L, %L)',
+    v_plan, 'restauration', 'restaurant', 'Tentative gratuite')),
+    'Un client ordinaire ne peut pas passer de commande interne');
+
+  -- ... ni s'attribuer le statut interne.
+  perform t.assert(t.denied_as(alice, format(
+    'update public.profiles set account_type = %L, billing_exempt = true where id = %L',
+    'internal', alice)),
+    'Un client ne peut pas s''attribuer le statut de compte interne');
+  perform t.assert(
+    (select account_type from public.profiles where id = alice) = 'customer',
+    'Le profil du client est inchange');
+
+  -- Compte interne, attribue par l'approvisionnement serveur (sans jeton
+  -- utilisateur : c'est la cle de service qui agit).
+  perform set_config('request.jwt.claims', null, true);
+  insert into auth.users (email) values ('interne@stax.test') returning id into v_internal;
+  update public.profiles
+     set account_type = 'internal', billing_exempt = true, unlimited_sites = true, all_features = true
+   where id = v_internal;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_internal, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_result := public.create_internal_order(v_plan, 'restauration', 'restaurant', 'Site interne');
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert((v_result ->> 'ok')::boolean, 'Le compte interne commande sans paiement');
+  select * into v_order from public.orders where id = (v_result ->> 'orderId')::uuid;
+  perform t.assert(v_order.status::text = 'internal' and v_order.billing_mode = 'internal',
+    'La commande est marquee interne');
+  perform t.assert(v_order.total_cents = 0 and v_order.discount_cents = v_order.setup_price_cents,
+    'La commande interne est a 0 EUR, prix catalogue integralement remis');
+  perform t.assert(
+    not exists (select 1 from public.payments where order_id = v_order.id),
+    'Aucun encaissement n''est cree pour une commande interne');
+  perform t.assert(
+    (select plan_id from public.sites where id = (v_result ->> 'siteId')::uuid) = v_plan,
+    'Le site interne porte l''offre choisie');
+  perform t.assert(
+    app.has_feature((v_result ->> 'organizationId')::uuid, 'ecommerce')
+      and app.feature_limit((v_result ->> 'organizationId')::uuid, 'max_pages') is null,
+    'Toutes les fonctionnalites, sans limite, pour l''organisation interne');
+
+  -- Une commande interne ne devient jamais payee (aucun paiement n'a eu lieu).
+  begin
+    update public.orders set status = 'paid' where id = v_order.id;
+  exception when others then
+    v_refuse := true;
+  end;
+  perform t.assert(v_refuse, 'Une commande interne ne peut pas basculer en payee');
+
+  -- Sites illimites : une seconde commande interne passe aussi.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_internal, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_result := public.create_internal_order(
+    (select id from public.plans where slug = 'essentiel' and is_active and valid_until is null),
+    'artisanat', 'plombier', 'Second site interne');
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((v_result ->> 'ok')::boolean, 'Le compte interne cree autant de sites qu''il veut');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Editeur : isolation, annulation, corbeille, versions immuables
+-- -----------------------------------------------------------------------------
+\echo '--- Editeur et versions ---'
+do $$
+declare
+  alice   uuid := (select v from t.fixtures where k='alice');
+  eve     uuid := (select v from t.fixtures where k='eve');
+  viewer  uuid := (select v from t.fixtures where k='viewer');
+  bob     uuid := (select v from t.fixtures where k='bob');
+  site_a  uuid := (select v from t.fixtures where k='site_a');
+  site_b  uuid := (select v from t.fixtures where k='site_b');
+  page_a  uuid := (select id from public.site_pages where site_id = (select v from t.fixtures where k='site_a') and path = '/');
+  page_b  uuid := (select id from public.site_pages where site_id = (select v from t.fixtures where k='site_b') and path = '/');
+  v_block uuid := gen_random_uuid();
+  v_foreign uuid := gen_random_uuid();
+  v_v1 uuid; v_v2 uuid; v_v3 uuid;
+  v_refuse boolean;
+  v_title text;
+  v_before int := (select count(*) from public.site_versions where site_id = (select v from t.fixtures where k='site_a'));
+begin
+  -- Une section existe sur le site du voisin.
+  insert into public.page_blocks (id, page_id, site_id, type, props, sort_order)
+  values (v_foreign, page_b, site_b, 'hero', '{"title":"Voisin"}', 10);
+
+  -- L'editrice de A enregistre une section.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', eve, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.editor_commit(page_a,
+    jsonb_build_array(jsonb_build_object('id', v_block, 'type', 'hero',
+      'props', jsonb_build_object('title', 'Premier titre'))),
+    'block.add', 'Ajout de la bannière', v_block);
+  perform public.editor_commit(page_a,
+    jsonb_build_array(jsonb_build_object('id', v_block, 'type', 'hero',
+      'props', jsonb_build_object('title', 'Second titre'))),
+    'block.edit', 'Titre modifié', v_block);
+  reset role;
+  perform t.assert(
+    (select props ->> 'title' from public.page_blocks where id = v_block) = 'Second titre',
+    'L''editeur enregistre les modifications du brouillon');
+
+  -- Annuler, retablir.
+  set local role authenticated;
+  perform public.editor_undo(page_a);
+  reset role;
+  perform t.assert(
+    (select props ->> 'title' from public.page_blocks where id = v_block) = 'Premier titre',
+    'Annuler revient a l''etat precedent');
+  set local role authenticated;
+  perform public.editor_redo(page_a);
+  reset role;
+  perform t.assert(
+    (select props ->> 'title' from public.page_blocks where id = v_block) = 'Second titre',
+    'Retablir reapplique la modification');
+
+  -- Supprimer = corbeille, jamais une destruction.
+  set local role authenticated;
+  perform public.editor_commit(page_a, '[]'::jsonb, 'block.delete', 'Section supprimée', v_block);
+  reset role;
+  perform t.assert(
+    (select deleted_at is not null from public.page_blocks where id = v_block),
+    'Une section supprimee part a la corbeille, elle n''est pas effacee');
+  set local role authenticated;
+  perform public.editor_commit(page_a,
+    jsonb_build_array(jsonb_build_object('id', v_block, 'type', 'hero',
+      'props', jsonb_build_object('title', 'Second titre'))),
+    'block.restore', 'Section restaurée', v_block);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(
+    (select deleted_at is null from public.page_blocks where id = v_block),
+    'Une section de la corbeille se restaure');
+
+  -- Isolation : ni un autre tenant, ni un lecteur, ni une section volee.
+  perform t.assert(t.denied_as(bob, format(
+    'select public.editor_commit(%L::uuid, %L::jsonb, %L, %L)',
+    page_a, '[]', 'block.delete', 'Vandalisme')),
+    'Un autre client ne peut pas modifier le brouillon d''un site qui n''est pas le sien');
+  perform t.assert(t.denied_as(viewer, format(
+    'select public.editor_commit(%L::uuid, %L::jsonb, %L, %L)',
+    page_a, '[]', 'block.delete', 'Lecteur')),
+    'Un membre en lecture seule ne modifie pas le site');
+  perform t.assert(t.denied_as(alice, format(
+    'select public.editor_commit(%L::uuid, %L::jsonb, %L, %L)',
+    page_a,
+    jsonb_build_array(jsonb_build_object('id', v_foreign, 'type', 'hero', 'props', '{}'::jsonb)),
+    'block.add', 'Section d''un autre site')),
+    'Une section d''un autre site ne peut pas etre rattachee a sa propre page');
+  perform t.assert(
+    (select page_id from public.page_blocks where id = v_foreign) = page_b
+      and (select props ->> 'title' from public.page_blocks where id = v_foreign) = 'Voisin',
+    'La section du voisin est intacte');
+
+  -- Publication : versions numerotees et immuables.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_v1 := public.publish_site(site_a);
+  reset role;
+  perform t.assert(
+    (select published_version_id from public.sites where id = site_a) = v_v1,
+    'La publication rend la nouvelle version visible');
+
+  v_refuse := false;
+  begin
+    update public.site_versions set snapshot = '{}'::jsonb where id = v_v1;
+  exception when others then
+    v_refuse := true;
+  end;
+  perform t.assert(v_refuse, 'Une version publiee est immuable, meme pour la base');
+
+  set local role authenticated;
+  perform public.editor_commit(page_a,
+    jsonb_build_array(jsonb_build_object('id', v_block, 'type', 'hero',
+      'props', jsonb_build_object('title', 'Titre de la version 2'))),
+    'block.edit', 'Titre modifié', v_block);
+  reset role;
+  perform t.assert(
+    (select snapshot::text from public.site_versions where id = v_v1) not like '%version 2%',
+    'Le brouillon ne touche jamais la version en ligne');
+
+  set local role authenticated;
+  v_v2 := public.publish_site(site_a);
+  v_v3 := public.rollback_site(site_a, v_v1);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(
+    (select published_version_id from public.sites where id = site_a) = v_v3
+      and (select version_number from public.site_versions where id = v_v3)
+        = (select version_number from public.site_versions where id = v_v2) + 1,
+    'Revenir a une version anterieure la republie sous un nouveau numero');
+  perform t.assert(
+    (select count(*) from public.site_versions where site_id = site_a) = v_before + 3,
+    'Revenir en arriere ne detruit aucune version');
+  select snapshot #>> '{pages,0,blocks,0,props,title}' into v_title
+    from public.site_versions where id = v_v3;
+  perform t.assert(v_title = 'Second titre', 'La version republiee est bien le contenu de la version choisie');
+
+  perform t.assert(t.denied_as(bob, format(
+    'select public.rollback_site(%L::uuid, %L::uuid)', site_a, v_v2)),
+    'Un autre client ne peut pas republier une version de ce site');
+  perform t.assert(t.denied_as(eve, format(
+    'select public.purge_trash_item(%L, %L::uuid)', 'block', v_foreign)),
+    'On ne purge pas la corbeille d''un autre site');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Equipe StaX : acces au site d'un client UNIQUEMENT en session d'assistance
+-- -----------------------------------------------------------------------------
+\echo '--- Intervention de l equipe StaX ---'
+do $$
+declare
+  org_a    uuid := (select v from t.fixtures where k='org_a');
+  site_a   uuid := (select v from t.fixtures where k='site_a');
+  page_a   uuid := (select id from public.site_pages where site_id = (select v from t.fixtures where k='site_a') and path = '/');
+  v_support uuid;
+  v_session uuid;
+  v_blocks jsonb;
+begin
+  insert into auth.users (email) values ('support@stax.test') returning id into v_support;
+  update public.profiles set platform_role = 'support' where id = v_support;
+
+  select coalesce(jsonb_agg(jsonb_build_object('id', id, 'type', type, 'props', props)
+                            order by sort_order), '[]'::jsonb)
+    into v_blocks
+    from public.page_blocks where page_id = page_a and deleted_at is null;
+
+  perform t.assert(t.denied_as(v_support, format(
+    'select public.editor_commit(%L::uuid, %L::jsonb, %L, %L)',
+    page_a, v_blocks, 'block.edit', 'Sans session')),
+    'Sans session d''assistance, l''equipe ne modifie pas le site d''un client');
+
+  insert into public.impersonation_sessions (staff_id, organization_id, reason, token_hash, expires_at)
+  values (v_support, org_a, 'Correction demandee par le client (ticket)', 'hash-test', now() + interval '1 hour')
+  returning id into v_session;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_support, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.editor_commit(page_a, v_blocks, 'block.edit', 'Correction par l''equipe');
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(
+    (select actor_kind from public.editor_revisions
+      where page_id = page_a order by created_at desc, seq desc limit 1) = 'stax',
+    'La modification est attribuee a l''equipe StaX, visible par le client');
+  perform t.assert(not app.org_can(org_a, 'billing.manage') ,
+    'La session n''accorde aucun droit financier (contexte sans jeton)');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_support, 'role', 'authenticated')::text, true);
+  perform t.assert(not app.org_can(org_a, 'billing.manage')
+                   and not app.org_can(org_a, 'members.manage'),
+    'En session, l''equipe n''a ni droits financiers ni gestion des membres');
+  perform set_config('request.jwt.claims', null, true);
+
+  update public.impersonation_sessions set ended_at = now(), ended_reason = 'fin' where id = v_session;
+  perform t.assert(t.denied_as(v_support, format(
+    'select public.editor_commit(%L::uuid, %L::jsonb, %L, %L)',
+    page_a, v_blocks, 'block.edit', 'Apres la session')),
+    'La session terminee, l''acces s''arrete');
 end;
 $$;
 

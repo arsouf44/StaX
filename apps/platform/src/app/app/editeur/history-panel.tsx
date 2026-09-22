@@ -66,17 +66,23 @@ export function HistoryPanel({
   const [republishing, setRepublishing] = useState<HistoryEntry | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const load = useCallback(() => {
-    setEntries(null);
-    void loadHistoryAction({ siteId }).then((result) => {
-      if (result.status === 'success') setEntries(result.entries);
-      else setEntries([]);
-    });
-  }, [siteId]);
+  // Rechargee a chaque ouverture et apres chaque restauration : `reloads`
+  // change, l effet relit l historique. Les mises a jour d etat n ont lieu
+  // qu a l arrivee de la reponse.
+  const [reloads, setReloads] = useState(0);
+  const load = useCallback(() => setReloads((value) => value + 1), []);
 
   useEffect(() => {
-    if (open) load();
-  }, [open, load]);
+    if (!open) return;
+    let cancelled = false;
+    void loadHistoryAction({ siteId }).then((result) => {
+      if (cancelled) return;
+      setEntries(result.status === 'success' ? result.entries : []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, siteId, reloads]);
 
   const compare = (entry: HistoryEntry) => {
     setComparing({ entry, changes: null });

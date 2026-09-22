@@ -28,7 +28,7 @@
  *   pnpm internal:bootstrap
  * ==========================================================================
  */
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { assertServerOnly, readEnv } from '@stax/config';
 import { loadRootEnv } from '@stax/config/dotenv';
 
@@ -58,7 +58,7 @@ function assertPasswordStrength(password: string): void {
 }
 
 async function findUserByEmail(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   email: string,
 ): Promise<{ id: string } | null> {
   for (let page = 1; page <= 50; page += 1) {
@@ -89,7 +89,7 @@ async function main(): Promise<void> {
     );
   }
 
-  const admin = createClient(supabaseUrl, serviceKey, {
+  const admin: SupabaseClient = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

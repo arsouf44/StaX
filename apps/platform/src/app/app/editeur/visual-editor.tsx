@@ -118,7 +118,9 @@ export function VisualEditor({
 
   // References : la file d envoi lit toujours l etat le plus recent.
   const blocksRef = useRef(blocks);
-  blocksRef.current = blocks;
+  useEffect(() => {
+    blocksRef.current = blocks;
+  }, [blocks]);
   const seqRef = useRef(initialStatus.seq);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const pendingRef = useRef<{
@@ -942,29 +944,31 @@ export function VisualEditor({
         }}
       />
 
-      <PublishDialog
-        open={publishOpen}
-        siteId={siteId}
-        isLive={live}
-        flush={flush}
-        onClose={() => setPublishOpen(false)}
-        onPublished={(_outcome: PublishOutcome) => {
-          setUnpublished(false);
-          setLive(true);
-          router.refresh();
-        }}
-        onFix={(pageId, blockId) => {
-          setPublishOpen(false);
-          if (pageId && pageId !== page.id) {
-            router.push(`/app/editeur?page=${pageId}`);
-            return;
-          }
-          if (blockId) {
-            setSelectedId(blockId);
-            setMobilePane('properties');
-          }
-        }}
-      />
+      {publishOpen ? (
+        <PublishDialog
+          open={publishOpen}
+          siteId={siteId}
+          isLive={live}
+          flush={flush}
+          onClose={() => setPublishOpen(false)}
+          onPublished={(_outcome: PublishOutcome) => {
+            setUnpublished(false);
+            setLive(true);
+            router.refresh();
+          }}
+          onFix={(pageId, blockId) => {
+            setPublishOpen(false);
+            if (pageId && pageId !== page.id) {
+              router.push(`/app/editeur?page=${pageId}`);
+              return;
+            }
+            if (blockId) {
+              setSelectedId(blockId);
+              setMobilePane('properties');
+            }
+          }}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={confirmDelete !== null}
