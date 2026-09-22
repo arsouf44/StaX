@@ -10,17 +10,33 @@
 
 | Réglage | Valeur |
 | --- | --- |
-| Root Directory | **la racine du dépôt** (pas `apps/platform`) |
+| Root Directory | **`apps/platform`** |
+| Include files outside the Root Directory | **activé** (obligatoire) |
 | Framework | Next.js — détecté |
-| Install / Build / Output | définis par `vercel.json`, ne rien saisir à la main |
+| Build Command | laisser vide (`next build` par défaut) |
+| Output Directory | **laisser vide** |
+| Install Command | laisser vide |
 | Node.js | 22.x |
-| Région | `cdg1` (Paris) — fixée dans `vercel.json` |
 
-La racine du dépôt est utilisée comme répertoire de travail parce que
+`apps/platform/vercel.json` ne fixe que la région (`cdg1`, Paris). **Il ne
+redéfinit aucun chemin, et c'est volontaire :** avec un Root Directory, Vercel
+résout `outputDirectory` *à partir de ce répertoire*. Un `vercel.json` à la
+racine du dépôt qui annonce `apps/platform/.next` produit donc :
+
+```
+The Next.js output directory "apps/platform/.next" was not found at
+"/vercel/path0/apps/platform/apps/platform/.next"
+```
+
+Le chemin est double. Si vous avez saisi quoi que ce soit dans « Build Command »
+ou « Output Directory », **videz ces champs** : les valeurs par défaut sont les
+bonnes.
+
 `apps/platform` dépend de quatorze paquets de l'espace de travail publiés en
-TypeScript source : pnpm doit voir le `pnpm-workspace.yaml` pour les lier.
-
----
+TypeScript source et compilés par Next (`transpilePackages`). D'où les deux
+exigences : « Include files outside the Root Directory » activé, pour que pnpm
+voie le `pnpm-workspace.yaml`, et aucune étape de build préalable — `next build`
+seul suffit.
 
 ## 2. Variables d'environnement
 
