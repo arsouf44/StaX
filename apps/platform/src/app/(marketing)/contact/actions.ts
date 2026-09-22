@@ -1,6 +1,6 @@
 'use server';
 
-import { createServiceClient } from '@stax/database';
+import { tryCreateServiceClient } from '@stax/database';
 import { scoreSubmission } from '@stax/security';
 import {
   contactFormSchema,
@@ -32,6 +32,18 @@ export interface LeadState {
 function checkbox(value: unknown): boolean {
   return value === 'on' || value === 'true' || value === true;
 }
+
+/**
+ * Configuration incomplete cote serveur.
+ *
+ * On ne fait jamais croire que la demande est partie : elle ne l est pas. Mais
+ * le visiteur n a pas a lire un numero d incident pour un formulaire de
+ * contact — on lui donne la seule chose qui lui sert, l autre moyen de nous
+ * joindre.
+ */
+const FORM_UNAVAILABLE =
+  'Votre demande n’a pas pu être enregistrée : notre formulaire est momentanément ' +
+  'indisponible. Écrivez-nous directement, nous répondons de la même façon.';
 
 export async function sendContactAction(
   _previous: LeadState,
@@ -65,7 +77,14 @@ export async function sendContactAction(
     email: parsed.data.email,
   });
 
-  const { data, error } = await createServiceClient().rpc('record_platform_lead', {
+  // Sans cle de service, on ne peut rien enregistrer. On le DIT, au lieu de
+  // laisser l exception remonter jusqu a la page « Une erreur est survenue ».
+  const service = tryCreateServiceClient();
+  if (service === null) {
+    return { status: 'error', message: FORM_UNAVAILABLE };
+  }
+
+  const { data, error } = await service.rpc('record_platform_lead', {
     p_kind: 'contact',
     p_name: parsed.data.name,
     p_email: parsed.data.email,
@@ -144,7 +163,12 @@ export async function sendQuoteRequestAction(
     comments: parsed.data.comments ?? null,
   };
 
-  const { data, error } = await createServiceClient().rpc('record_platform_lead', {
+  const service = tryCreateServiceClient();
+  if (service === null) {
+    return { status: 'error', message: FORM_UNAVAILABLE };
+  }
+
+  const { data, error } = await service.rpc('record_platform_lead', {
     p_kind: 'quote',
     p_name: parsed.data.contactName,
     p_email: parsed.data.contactEmail,

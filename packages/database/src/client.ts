@@ -76,6 +76,37 @@ export function resetServiceClient(): void {
   serviceClient = null;
 }
 
+/**
+ * Meme client, mais une CONFIGURATION ABSENTE devient une valeur, pas une
+ * exception.
+ *
+ * `createServiceClient()` leve : c est le bon comportement pour un webhook ou
+ * un script, ou un secret manquant doit arreter net. Mais sur une page
+ * publique, cette exception remonte jusqu a `error.tsx` et le visiteur recoit
+ * « Une erreur est survenue » avec un numero d incident — pour un formulaire
+ * de contact. Il ne peut ni comprendre, ni contourner, ni reessayer utilement.
+ *
+ * Les appels ouverts au public passent donc par ici et repondent eux-memes,
+ * avec une phrase qui dit quoi faire. L incident reste journalise bruyamment
+ * cote serveur : la panne ne devient pas silencieuse, elle cesse seulement
+ * d etre presentee au visiteur comme un plantage de l application.
+ *
+ * Ne JAMAIS s en servir pour faire comme si l ecriture avait eu lieu : un
+ * appelant qui recoit `null` doit renvoyer une erreur, jamais un succes.
+ */
+export function tryCreateServiceClient(): Db | null {
+  try {
+    return createServiceClient();
+  } catch (error) {
+    console.error(
+      '[stax:config] cle de service indisponible — les ecritures reservees au ' +
+        'role de service sont impossibles',
+      error,
+    );
+    return null;
+  }
+}
+
 /** Erreur de base normalisee, sans fuite de detail technique cote client. */
 export class DatabaseError extends Error {
   constructor(

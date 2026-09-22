@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSessionClient, peekActivationCode, redeemActivationCode } from '@stax/auth';
-import { createServiceClient } from '@stax/database';
+import { tryCreateServiceClient } from '@stax/database';
 import {
   activationCompleteSchema,
   activationSchema,
@@ -344,6 +344,16 @@ export interface ActivationState extends AuthFormState {
   organizationName?: string;
 }
 
+/**
+ * Configuration incomplete cote serveur.
+ *
+ * Le code d activation reste valide et utilisable : rien n est consomme, rien
+ * n est perdu. Le message le dit, au lieu d afficher un numero d incident.
+ */
+const ACTIVATION_UNAVAILABLE =
+  'Nous ne pouvons pas vérifier votre code pour le moment. Votre code reste valide : ' +
+  'réessayez dans quelques minutes, ou contactez-nous.';
+
 export async function verifyActivationCodeAction(
   _previous: ActivationState,
   formData: FormData,
@@ -367,7 +377,16 @@ export async function verifyActivationCodeAction(
   // Verification SANS consommation : le compte n est cree qu une fois le code
   // reconnu valide. La tentative est tout de meme comptee en base, donc un
   // code ne peut pas etre teste indefiniment.
-  const preview = await peekActivationCode(createServiceClient(), {
+  // Sans cle de service, on ne peut pas verifier le code. On le dit, plutot
+  // que de laisser l exception remonter jusqu a « Une erreur est survenue » :
+  // la personne tient un code valide et doit savoir que le defaut est chez
+  // nous, pas dans ce qu elle a saisi.
+  const service = tryCreateServiceClient();
+  if (service === null) {
+    return { status: 'error', step: 'verify', message: ACTIVATION_UNAVAILABLE };
+  }
+
+  const preview = await peekActivationCode(service, {
     code: parsed.data.code,
     email: parsed.data.email,
   });
@@ -409,7 +428,16 @@ export async function completeActivationAction(
   const guard = await guardAction({ limit: 'activation' });
   if (!guard.ok) return { status: 'error', step: 'complete', message: guard.message };
 
-  const service = createServiceClient();
+  const service = tryCreateServiceClient();
+  if (service === null) {
+    return {
+      status: 'error',
+      step: 'complete',
+      code: parsed.data.code,
+      email: parsed.data.email,
+      message: ACTIVATION_UNAVAILABLE,
+    };
+  }
 
   // Le code prouve que la personne a recu notre e-mail : l adresse est donc
   // deja verifiee, et lui redemander une confirmation n apporterait rien.

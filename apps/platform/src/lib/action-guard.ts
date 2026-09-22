@@ -1,6 +1,6 @@
 import 'server-only';
 import { headers } from 'next/headers';
-import { createServiceClient, PostgresRateLimitStore } from '@stax/database';
+import { PostgresRateLimitStore, tryCreateServiceClient } from '@stax/database';
 import { platformUrl } from '@stax/config';
 import {
   enforceRateLimit,
@@ -63,6 +63,24 @@ export interface ActionGuardInput {
 export type ActionGuardResult =
   { ok: true; ipHash: string | null } | { ok: false; message: string };
 
+/**
+ * Message rendu quand un secret de deploiement manque.
+ *
+ * On ne laisse pas passer la requete et on ne fait croire a aucun succes : la
+ * garde ne peut pas faire son travail, donc l'action n'a pas lieu. Mais le
+ * visiteur lit une phrase, pas un numero d'incident.
+ */
+const CONFIGURATION_INCOMPLETE =
+  'Ce formulaire est momentanément indisponible. Réessayez dans quelques minutes, ou ' +
+  'contactez-nous directement.';
+
+/** Le compteur de debit s'accommode d'une absence : voir le `catch` ci-dessous. */
+function requireServiceClient() {
+  const client = tryCreateServiceClient();
+  if (client === null) throw new Error('cle de service indisponible');
+  return client;
+}
+
 export async function guardAction(input: ActionGuardInput): Promise<ActionGuardResult> {
   // Le champ piege est invisible pour un humain : rempli, la requete vient
   // d un robot. On repond comme a une requete normale pour ne pas l informer.
@@ -76,7 +94,27 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
     store.get('x-real-ip') ??
     store.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     null;
-  const ipHash = await hashIp(ip);
+
+  // `hashIp` refuse de signer sans STAX_SECRET_KEY en production, et c'est la
+  // bonne regle : une empreinte calculee avec une cle devinable ne protege
+  // rien. Mais l'exception remontait jusqu'a `error.tsx`, et un secret de
+  // deploiement absent se presentait au visiteur comme « Une erreur est
+  // survenue » — sur TOUS les formulaires du site a la fois, sans que rien
+  // n'indique ou etait le probleme.
+  //
+  // On refuse toujours l'action, on ne la laisse pas passer : c'est une panne
+  // de configuration, pas une requete invalide. Mais on la nomme.
+  let ipHash: string | null;
+  try {
+    ipHash = await hashIp(ip);
+  } catch (error) {
+    console.error(
+      '[stax:config] STAX_SECRET_KEY absent ou trop court : aucun formulaire ne ' +
+        'peut fonctionner tant que ce secret n est pas fourni',
+      error,
+    );
+    return { ok: false, message: CONFIGURATION_INCOMPLETE };
+  }
 
   // Le compteur est en base. S il est injoignable — base coupee, secret absent —
   // on laisse passer plutot que de bloquer tout le monde : la limitation de
@@ -85,7 +123,7 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
   try {
     const decision = await withinBudget(
       enforceRateLimit(
-        new PostgresRateLimitStore(createServiceClient()),
+        new PostgresRateLimitStore(requireServiceClient()),
         input.limit,
         rateLimitIdentity({ userId: input.userId ?? null, ipHash }),
       ),
