@@ -215,6 +215,15 @@ export interface DocumentInput {
   schemaOrgType: string;
   logoUrl: string | null;
   ogImageUrl: string | null;
+  /**
+   * Contenu produit par le moteur plutot que par le snapshot.
+   *
+   * Sert aux pages qui n appartiennent pas au contenu editorial du client — la
+   * confirmation de commande, par exemple. Elles doivent rester dans SON
+   * identite : un acheteur qui vient de payer ne doit pas atterrir sur une page
+   * systeme anonyme qui ressemble a une erreur.
+   */
+  mainOverride?: RawHtml;
 }
 
 /** Assemble le document HTML complet d une page. */
@@ -290,7 +299,7 @@ export function renderDocument(input: DocumentInput): string {
     ${context.isPreview ? previewBanner() : ''}${context.isDemo ? demoBanner() : ''}
     <a class="skip" href="#contenu">Aller au contenu</a>
     ${header(context, input.logoUrl)}
-    <main id="contenu">${renderBlocks(page.blocks, context)}</main>
+    <main id="contenu">${input.mainOverride ?? renderBlocks(page.blocks, context)}</main>
     ${footer(context)}
   `);
 
@@ -354,10 +363,15 @@ export function renderDocument(input: DocumentInput): string {
     )}
   `;
 
+  // Le jeton anti-CSRF est porte par le document, pas par chaque bouton : les
+  // interactions sans formulaire (ajout au panier) en ont besoin elles aussi,
+  // et le repeter partout multiplierait les occasions de l oublier.
+  const tokenAttribute = renderToString(html`${context.formToken}`);
+
   return `<!doctype html>
 <html lang="${page.locale}" data-scheme="${context.theme.scheme}">
 <head>${renderToString(head)}</head>
-<body>
+<body data-stax-token="${tokenAttribute}">
 ${body}
 <script nonce="${context.nonce}" defer>${SITE_SCRIPT}</script>
 ${needsTurnstile ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}

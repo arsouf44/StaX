@@ -206,8 +206,16 @@ export const SITE_SCRIPT = String.raw`
     });
   });
 
-  /* --- Panier ------------------------------------------------------------- */
+  /* --- Panier et commande ------------------------------------------------- */
+  /*
+   * Le jeton anti-CSRF est lu sur le document : l ajout au panier n est pas un
+   * formulaire, il n a donc pas de champ cache ou le trouver. Sans ce jeton le
+   * serveur refuse l ecriture, et le bouton resterait sans effet.
+   */
+  var siteToken = (d.body && d.body.getAttribute('data-stax-token')) || '';
   var cart = d.querySelector('[data-stax-cart]');
+  var checkout = cart ? cart.querySelector('form[data-stax-checkout]') : null;
+
   var renderCart = function (state) {
     if (!cart) return;
     var empty = cart.querySelector('[data-stax-cart-empty]');
@@ -216,10 +224,12 @@ export const SITE_SCRIPT = String.raw`
     if (!state || !state.items || state.items.length === 0) {
       empty.hidden = false;
       bodyEl.hidden = true;
+      if (checkout) checkout.hidden = true;
       return;
     }
     empty.hidden = true;
     bodyEl.hidden = false;
+    if (checkout) checkout.hidden = false;
     var rows = state.items
       .map(function (item) {
         return (
@@ -232,9 +242,7 @@ export const SITE_SCRIPT = String.raw`
     bodyEl.innerHTML =
       '<div class="price-list">' + rows + '</div>' +
       '<p class="price-row"><strong>Total</strong><span class="dots"></span>' +
-      '<span class="price-amt">' + state.total + '</span></p>' +
-      '<div class="row" style="margin-top:1.5rem">' +
-      '<a class="btn btn-primary" href="/commande">Passer commande</a></div>';
+      '<span class="price-amt">' + state.total + '</span></p>';
   };
 
   var refreshCart = function () {
@@ -247,24 +255,61 @@ export const SITE_SCRIPT = String.raw`
   refreshCart();
 
   d.querySelectorAll('[data-stax-add-to-cart]').forEach(function (button) {
+    var label = button.textContent;
     button.addEventListener('click', function () {
       button.disabled = true;
       fetch('/api/cart', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ productId: button.getAttribute('data-stax-add-to-cart'), quantity: 1 }),
+        body: JSON.stringify({
+          productId: button.getAttribute('data-stax-add-to-cart'),
+          quantity: 1,
+          _token: siteToken,
+        }),
       })
         .then(function (r) { return r.json(); })
         .then(function (state) {
+          if (!state || state.ok === false) { button.textContent = 'Réessayer'; return; }
           renderCart(state);
           button.textContent = 'Ajouté au panier';
-          window.setTimeout(function () { button.textContent = 'Ajouter au panier'; }, 2200);
+          window.setTimeout(function () { button.textContent = label; }, 2200);
         })
         .catch(function () { button.textContent = 'Réessayer'; })
         .finally(function () { button.disabled = false; });
     });
   });
+
+  if (checkout) {
+    /* L adresse n est demandee que si elle sert : personne ne remplit un champ
+       inutile de bonne grace, et un champ obligatoire hors sujet fait renoncer. */
+    var addressBox = checkout.querySelector('[data-stax-checkout-address]');
+    var addressLine = checkout.querySelector('[name="addressLine1"]');
+    var syncAddress = function () {
+      var choice = checkout.querySelector('[name="fulfillment"]:checked');
+      var needed = !!choice && (choice.value === 'shipping' || choice.value === 'delivery');
+      if (addressBox) addressBox.hidden = !needed;
+      if (addressLine) {
+        if (needed) addressLine.setAttribute('required', 'required');
+        else addressLine.removeAttribute('required');
+      }
+    };
+    checkout.querySelectorAll('[name="fulfillment"]').forEach(function (input) {
+      input.addEventListener('change', syncAddress);
+    });
+    syncAddress();
+
+    checkout.addEventListener('submit', function (event) {
+      if (!checkout.checkValidity()) return;
+      event.preventDefault();
+      submitJson(checkout, '/api/checkout', serialize(checkout), function (body) {
+        /* La commande existe deja en base. On emmene la personne vers le
+           paiement, ou vers sa confirmation si le reglement se fait sur place. */
+        if (body && body.url) { window.location.href = body.url; return; }
+        setStatus(checkout, 'ok', (body && body.message) || 'Votre commande est enregistrée.');
+      });
+    });
+  }
 
   /* --- Mesure d audience sans cookie -------------------------------------- */
   if (navigator.sendBeacon) {

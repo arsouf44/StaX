@@ -86,8 +86,38 @@ depuis `/app/site/referencement`.
 | Immobilier (biens) | **OK** | **OK** | — |
 | Hôtel (chambres) | **OK** | **OK** | — |
 | Association (dons) | **OK** | **OK** | Corrigé pendant l'audit : `/api/donations` |
-| **Commerce (e-commerce)** | **PARTIEL** | **MANQUE** | Panier présent, **aucun checkout**. `apps/site-runtime/src/api/` n'a pas de route de commande ; aucune écriture dans `shop_orders` depuis le site public |
-| Comptes clients du site final | **MANQUE** | **MANQUE** | Droit d'offre déclaré, aucune implémentation |
+| **Commerce (e-commerce)** | **OK** | **OK** | Checkout complet : `/api/checkout`, `app.create_shop_order`, paiement Stripe Connect, encaissement par webhook, page de suivi `/commande` |
+| Comptes clients du site final | **MANQUE** | **MANQUE** | Droit d'offre déclaré, aucune implémentation. Le suivi de commande sans compte couvre le besoin courant (lien signé) |
+
+### Chaîne de commande — ce qui la rend sûre
+
+| Règle | Où elle est appliquée | Vérifiée par |
+|---|---|---|
+| Le navigateur n'envoie **jamais** un montant | `app.create_shop_order` relit les prix en base | « Le prix est relu en base : un panier trafiqué ne change pas le montant » |
+| Le panier vient du **cookie signé**, pas du corps de la requête | `handleCheckout` | — |
+| Stock décrémenté dans la **même transaction**, sous verrou de ligne | `for update` + `pg_advisory_xact_lock` | « Le dernier exemplaire part une seule fois » |
+| Une commande naît `pending`, **jamais** `paid` | `app.create_shop_order` | assertion SQL |
+| Le retour du navigateur ne paie rien | seul le webhook Connect signé appelle `mark_shop_order_paid` | assertion SQL |
+| Un montant encaissé ≠ montant figé **ne paie pas** et laisse une trace | `app.mark_shop_order_paid` | « L'écart de montant est tracé » |
+| Rejeu de webhook sans effet | idempotence + `on conflict` sur le payment intent | « Aucun paiement en double après rejeu » |
+| Le commerçant ne peut pas se déclarer payé | `app.guard_shop_order_state` | assertion SQL |
+| Montants d'une commande payée immuables, **pour tout le monde** | même déclencheur | assertion SQL |
+| Un panier abandonné rend son stock | `app.release_expired_shop_orders` | assertion SQL |
+| Le produit d'un autre client n'existe pas depuis ce site | filtre `site_id` côté serveur | assertion SQL |
+| La vente en ligne est un droit d'offre | `app.has_feature(org,'ecommerce')` | assertion SQL |
+| Aucune donnée bancaire ne touche StaX | Stripe Connect, page hébergée par Stripe | — |
+
+32 assertions SQL sur cette chaîne.
+
+**Défaut trouvé au passage** : l'ajout au panier était **cassé en production**.
+Le script client postait sur `/api/cart` sans le jeton anti-CSRF, que la garde
+exige — le bouton « Ajouter au panier » répondait donc toujours 403. Le jeton
+est maintenant porté par le document (`<body data-stax-token>`), là où les
+interactions sans formulaire peuvent le lire.
+
+**Second défaut** : un don réussi laissait sa ligne de paiement en `pending`
+pour toujours — le webhook Connect créait une ligne parallèle au lieu de
+confirmer celle écrite avant l'appel à Stripe.
 
 ---
 
@@ -161,8 +191,7 @@ depuis `/app/site/referencement`.
 
 ## Ce qui reste non terminé, sans détour
 
-1. E-commerce : checkout public, commandes, stock fiable, comptes clients
-2. `/admin/sites/[id]` et les écrans d'administration restants
+1. `/admin/sites/[id]` et les écrans d'administration restants
 3. E-mail d'envoi de facture
 4. Registre des traitements et outillage de violation de données
 5. E2E des parcours critiques

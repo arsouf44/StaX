@@ -145,10 +145,13 @@ async function handleConnectEvent(
 }
 
 /**
- * Trace un encaissement realise sur le site d un client.
+ * Applique un encaissement realise sur le site d un client.
  *
- * StaX ne prend aucune commission : `application_fee_cents` vaut zero. La ligne
- * sert au client pour son suivi, et a nous pour l assistance.
+ * C est ICI, et nulle part ailleurs, qu une commande devient payee. Le retour
+ * du navigateur apres Stripe ne prouve rien : il peut etre forge, rejoue, ou
+ * ne jamais arriver. Seul cet evenement signe fait foi.
+ *
+ * StaX ne prend aucune commission : `application_fee_cents` vaut zero.
  */
 async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: string): Promise<void> {
   const object = event.data.object as Stripe.PaymentIntent | Stripe.Checkout.Session;
@@ -166,6 +169,34 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
     : object.id;
   if (!paymentIntentId) return;
 
+  const metadata = (object.metadata ?? {}) as Record<string, string | undefined>;
+  const currency = (object.currency ?? 'eur').toUpperCase();
+
+  // Une commande de boutique : la base verifie que le montant encaisse est
+  // EXACTEMENT celui fige a la commande, et refuse de payer sinon. Elle est
+  // idempotente : un rejeu de l evenement ne cree pas un second paiement.
+  if (metadata['stax_kind'] === 'shop_order') {
+    const orderId = metadata['stax_order_id'] ?? metadata['stax_reference_id'] ?? null;
+    if (!orderId) return;
+
+    const { data, error } = await db.rpc('mark_shop_order_paid', {
+      p_order: orderId,
+      p_payment_intent: paymentIntentId,
+      p_amount_cents: amount,
+      p_account: accountId,
+      p_currency: currency,
+    });
+    if (error) throw new Error(error.message);
+
+    const result = (data ?? {}) as { ok?: boolean; code?: string };
+    if (result.ok !== true) {
+      // L anomalie est deja journalisee en base. On la remonte pour que
+      // l evenement soit marque en echec et rejouable.
+      throw new Error(`Commande non encaissee : ${result.code ?? 'refus'}`);
+    }
+    return;
+  }
+
   const { data: account } = await db
     .from('connected_accounts')
     .select('organization_id')
@@ -174,6 +205,25 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
 
   if (!account) return;
 
+  // Un don : la ligne a ete ecrite AVANT l appel a Stripe, avec son propre
+  // identifiant. On la confirme plutot que d en creer une seconde.
+  if (metadata['stax_kind'] === 'donation' && metadata['stax_reference_id']) {
+    const { error } = await db
+      .from('payments')
+      .update({
+        status: 'succeeded',
+        amount_cents: amount,
+        currency,
+        stripe_payment_intent_id: paymentIntentId,
+        succeeded_at: new Date().toISOString(),
+      })
+      .eq('id', metadata['stax_reference_id'])
+      .eq('organization_id', account.organization_id)
+      .eq('status', 'pending');
+    if (error) throw new Error(error.message);
+    return;
+  }
+
   const { error } = await db.from('payments').upsert(
     {
       organization_id: account.organization_id,
@@ -181,7 +231,7 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
       status: 'succeeded',
       kind: 'shop_order',
       amount_cents: amount,
-      currency: (object.currency ?? 'eur').toUpperCase(),
+      currency,
       application_fee_cents: 0,
       stripe_payment_intent_id: paymentIntentId,
       stripe_account_id: accountId,

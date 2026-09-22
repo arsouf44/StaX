@@ -21,7 +21,7 @@ const COOKIE_NAME = '__stax_cart';
 const MAX_LINES = 30;
 const MAX_QUANTITY = 99;
 
-interface CartLine {
+export interface CartLine {
   productId: string;
   quantity: number;
 }
@@ -39,7 +39,7 @@ function parseCookies(header: string | null): Record<string, string> {
   return out;
 }
 
-async function readCart(request: Request, siteId: string): Promise<CartLine[]> {
+export async function readCart(request: Request, siteId: string): Promise<CartLine[]> {
   const cookie = parseCookies(request.headers.get('cookie'))[COOKIE_NAME];
   if (!cookie) return [];
   const separator = cookie.lastIndexOf('.');
@@ -71,7 +71,7 @@ async function readCart(request: Request, siteId: string): Promise<CartLine[]> {
   }
 }
 
-async function cartCookie(siteId: string, lines: CartLine[]): Promise<string> {
+export async function cartCookie(siteId: string, lines: CartLine[]): Promise<string> {
   const body = btoa(JSON.stringify(lines));
   const signature = await hmacHex(`${siteId}.${body}`, 'cart');
   return [
@@ -82,6 +82,18 @@ async function cartCookie(siteId: string, lines: CartLine[]): Promise<string> {
     'Secure',
     'Max-Age=604800',
   ].join('; ');
+}
+
+/**
+ * Cookie d effacement.
+ *
+ * Emis une fois la commande enregistree : le panier ne doit pas survivre a la
+ * commande, sinon la personne la repasserait sans s en rendre compte.
+ */
+export function clearedCartCookie(): string {
+  return [`${COOKIE_NAME}=`, 'Path=/', 'SameSite=Lax', 'HttpOnly', 'Secure', 'Max-Age=0'].join(
+    '; ',
+  );
 }
 
 export interface PricedCart {

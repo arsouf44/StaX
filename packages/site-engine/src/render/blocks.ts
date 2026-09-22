@@ -1295,6 +1295,14 @@ function renderProducts(props: Props, context: RenderContext): RawHtml {
   `;
 }
 
+/**
+ * Panier et commande.
+ *
+ * Le formulaire ne porte AUCUN montant : il n envoie que les coordonnees de
+ * l acheteur. Le contenu du panier vient du cookie signe, les prix de la base.
+ * Un navigateur ne peut donc influencer que ce qu il commande, jamais ce qu il
+ * paie.
+ */
 function renderCart(props: Props, context: RenderContext): RawHtml {
   if (!context.enabledModules.has('orders')) return raw('');
   return html`
@@ -1302,6 +1310,105 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
     <div data-stax-cart style="margin-top:2rem">
       <p class="muted" data-stax-cart-empty>Votre panier est vide pour le moment.</p>
       <div data-stax-cart-body hidden></div>
+
+      <form data-stax-checkout class="form" style="margin-top:2.5rem" hidden novalidate>
+        <h3>Vos coordonnées</h3>
+        <p class="muted" style="margin-top:.25rem">
+          Nous en avons besoin pour préparer votre commande et vous tenir informé.
+        </p>
+
+        <div class="field">
+          <label for="stax-order-name">Nom et prénom</label>
+          <input
+            id="stax-order-name"
+            name="name"
+            type="text"
+            autocomplete="name"
+            maxlength="120"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="stax-order-email">Adresse e-mail</label>
+          <input
+            id="stax-order-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="200"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="stax-order-phone">Téléphone <span class="muted">(facultatif)</span></label>
+          <input id="stax-order-phone" name="phone" type="tel" autocomplete="tel" maxlength="40" />
+        </div>
+
+        <fieldset class="field">
+          <legend>Comment souhaitez-vous recevoir votre commande&nbsp;?</legend>
+          <label
+            ><input type="radio" name="fulfillment" value="pickup" checked /> Retrait sur
+            place</label
+          >
+          <label
+            ><input type="radio" name="fulfillment" value="shipping" /> Livraison à mon
+            adresse</label
+          >
+        </fieldset>
+
+        <div data-stax-checkout-address hidden>
+          <div class="field">
+            <label for="stax-order-address">Adresse</label>
+            <input
+              id="stax-order-address"
+              name="addressLine1"
+              type="text"
+              autocomplete="address-line1"
+              maxlength="120"
+            />
+          </div>
+          <div class="field">
+            <label for="stax-order-postal">Code postal</label>
+            <input
+              id="stax-order-postal"
+              name="postalCode"
+              type="text"
+              autocomplete="postal-code"
+              maxlength="12"
+              inputmode="numeric"
+            />
+          </div>
+          <div class="field">
+            <label for="stax-order-city">Ville</label>
+            <input
+              id="stax-order-city"
+              name="city"
+              type="text"
+              autocomplete="address-level2"
+              maxlength="80"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="stax-order-note">Précisions <span class="muted">(facultatif)</span></label>
+          <textarea id="stax-order-note" name="note" rows="3" maxlength="1000"></textarea>
+        </div>
+
+        <input type="hidden" name="_token" value="${context.formToken}" />
+        ${
+          context.turnstileSiteKey
+            ? html`<div class="cf-turnstile" data-sitekey="${context.turnstileSiteKey}"></div>`
+            : ''
+        }
+
+        <div class="form-status" data-stax-status hidden role="status"></div>
+        <button type="submit" class="btn btn-primary">Valider ma commande</button>
+        <p class="muted" style="margin-top:.75rem;font-size:.8125rem">
+          Le paiement se fait sur une page sécurisée. Aucune donnée bancaire ne transite par ce
+          site.
+        </p>
+      </form>
     </div>
     <noscript>
       <p class="muted" style="margin-top:1rem">

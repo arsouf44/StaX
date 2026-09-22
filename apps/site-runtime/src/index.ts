@@ -13,6 +13,8 @@ import {
 import { handleFormSubmit } from './api/forms';
 import { handleBookingCreate, handleBookingSlots } from './api/bookings';
 import { handleCartRead, handleCartWrite } from './api/cart';
+import { handleCheckout } from './api/checkout';
+import { handleOrderStatus } from './api/order-status';
 import { handleCollect } from './api/collect';
 import { handleDonation } from './api/donations';
 import type { WorkerEnv } from './env';
@@ -208,6 +210,18 @@ async function route(request: Request): Promise<Response> {
     if (request.method === 'GET') return handleCartRead(request, site);
     if (request.method === 'POST') return handleCartWrite(request, site);
     return jsonResponse({ ok: false, code: 'method_not_allowed' }, 405);
+  }
+
+  // Page de suivi de commande : produite par le moteur, dans l'identite du
+  // site. Elle n'appartient pas au contenu editorial du client, mais elle doit
+  // rester chez lui — un acheteur qui vient de payer ne doit pas atterrir sur
+  // une page systeme anonyme.
+  if (path === '/commande' && (request.method === 'GET' || request.method === 'HEAD')) {
+    return handleOrderStatus(request, site);
+  }
+
+  if (path === '/api/checkout' && request.method === 'POST') {
+    return handleCheckout(request, site);
   }
 
   if (path === '/api/donations' && request.method === 'POST') {

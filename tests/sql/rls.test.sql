@@ -1336,6 +1336,173 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Commande sur le site public
+--
+--  Le navigateur envoie des identifiants et des quantites. Tout le reste —
+--  prix, stock, TVA, statut de paiement — est decide ici.
+-- -----------------------------------------------------------------------------
+\echo '--- Commande e-commerce ---'
+do $$
+declare
+  org_a uuid := (select v from t.fixtures where k='org_a');
+  org_b uuid := (select v from t.fixtures where k='org_b');
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  site_b uuid := (select v from t.fixtures where k='site_b');
+  alice uuid := (select v from t.fixtures where k='alice');
+  v_product uuid;
+  v_rare    uuid;
+  v_res     jsonb;
+  v_order   uuid;
+  v_stock   int;
+  v_status  text;
+  v_total   int;
+  v_count   int;
+begin
+  insert into public.products
+    (site_id, organization_id, name, slug, price_cents, currency, vat_rate_bps,
+     track_inventory, stock_quantity)
+  values (site_a, org_a, 'Miel de lavande', 'miel-de-lavande', 1200, 'EUR', 550, true, 3)
+  returning id into v_product;
+
+  insert into public.products
+    (site_id, organization_id, name, slug, price_cents, currency, vat_rate_bps,
+     track_inventory, stock_quantity)
+  values (site_a, org_a, 'Piece unique', 'piece-unique', 9900, 'EUR', 2000, true, 1)
+  returning id into v_rare;
+
+  -- 1. Le prix vient de la base, jamais de la charge utile.
+  v_res := app.create_shop_order(
+    site_a,
+    jsonb_build_array(jsonb_build_object(
+      'productId', v_product, 'quantity', 2,
+      'unitPriceCents', 1, 'totalCents', 2)),
+    'Claire Dubois', 'claire@example.test');
+
+  perform t.assert(v_res->>'ok' = 'true', 'La commande est creee');
+  perform t.assert((v_res->>'totalCents')::int = 2400,
+    'Le prix est relu en base : un panier trafique ne change pas le montant');
+  -- TVA 5,5 % EXTRAITE d'un prix TTC : 2400 x 550 / 10550 = 125.
+  perform t.assert((v_res->>'vatCents')::int = 125,
+    'La TVA est extraite du prix affiche, jamais ajoutee par-dessus');
+
+  v_order := (v_res->>'orderId')::uuid;
+  select status, total_cents into v_status, v_total
+    from public.shop_orders where id = v_order;
+  perform t.assert(v_status = 'pending', 'Une commande nait « pending », jamais « paid »');
+  perform t.assert(v_total = 2400, 'Le montant fige est celui calcule en base');
+
+  select stock_quantity into v_stock from public.products where id = v_product;
+  perform t.assert(v_stock = 1, 'Le stock est decremente dans la meme transaction');
+
+  -- 2. Le stock fait loi : on ne vend pas ce qu'on n'a pas.
+  v_res := app.create_shop_order(
+    site_a, jsonb_build_array(jsonb_build_object('productId', v_rare, 'quantity', 5)),
+    'Marc Petit', 'marc@example.test');
+  perform t.assert(v_res->>'ok' = 'true', 'La commande partielle est acceptee');
+  perform t.assert((v_res->>'totalCents')::int = 9900,
+    'Seule la quantite disponible est facturee');
+  select stock_quantity into v_stock from public.products where id = v_rare;
+  perform t.assert(v_stock = 0, 'Le dernier exemplaire part une seule fois');
+
+  v_res := app.create_shop_order(
+    site_a, jsonb_build_array(jsonb_build_object('productId', v_rare, 'quantity', 1)),
+    'Lea Martin', 'lea@example.test');
+  perform t.assert(v_res->>'ok' = 'false' and v_res->>'code' = 'cart_empty',
+    'Un article epuise ne se commande pas');
+
+  -- 3. Le produit d'un autre client n'existe pas depuis ce site.
+  v_res := app.create_shop_order(
+    site_b, jsonb_build_array(jsonb_build_object('productId', v_product, 'quantity', 1)),
+    'Pirate', 'pirate@example.test');
+  perform t.assert(v_res->>'ok' = 'false',
+    'Un produit d''un autre client ne peut pas etre commande');
+
+  -- 4. La vente en ligne est un droit d'offre, applique par la base.
+  perform t.assert(not app.has_feature(org_b, 'ecommerce'),
+    'L''offre Essentiel n''a pas la vente en ligne');
+  perform t.assert(app.has_feature(org_a, 'ecommerce'),
+    'L''offre Ultra Premium a la vente en ligne');
+
+  -- 5. Un panier vide ou demesure est refuse.
+  perform t.assert(
+    (app.create_shop_order(site_a, '[]'::jsonb, 'X', 'x@example.test'))->>'code' = 'cart_empty',
+    'Un panier vide est refuse');
+  perform t.assert(
+    (app.create_shop_order(site_a,
+      jsonb_build_array(jsonb_build_object('productId', v_product, 'quantity', 1)),
+      'X', 'pas-une-adresse'))->>'code' = 'email_invalid',
+    'Une adresse invalide est refusee');
+
+  -- 6. Le paiement ne vient que du webhook, et seulement au bon montant.
+  v_res := app.mark_shop_order_paid(v_order, 'pi_faux', 100, 'acct_test');
+  perform t.assert(v_res->>'code' = 'amount_mismatch',
+    'Un montant different de celui fige ne paie rien');
+  select status into v_status from public.shop_orders where id = v_order;
+  perform t.assert(v_status = 'pending', 'La commande reste impayee apres un ecart de montant');
+  perform t.assert(exists (
+    select 1 from public.audit_logs
+     where action = 'shop_order.amount_mismatch' and target_id = v_order::text),
+    'L''ecart de montant est trace');
+
+  v_res := app.mark_shop_order_paid(v_order, 'pi_ok_1', 2400, 'acct_test');
+  perform t.assert(v_res->>'ok' = 'true', 'Le bon montant encaisse la commande');
+  select status into v_status from public.shop_orders where id = v_order;
+  perform t.assert(v_status = 'paid', 'La commande passe a « paid »');
+
+  -- Rejeu du webhook : sans effet.
+  v_res := app.mark_shop_order_paid(v_order, 'pi_ok_1', 2400, 'acct_test');
+  perform t.assert(v_res->>'duplicate' = 'true', 'Un rejeu de webhook ne change rien');
+  select count(*) into v_count from public.payments where shop_order_id = v_order;
+  perform t.assert(v_count = 1, 'Aucun paiement en double apres rejeu');
+
+  -- 7. Les montants d'une commande payee sont immuables, pour tout le monde.
+  begin
+    update public.shop_orders set total_cents = 1 where id = v_order;
+    perform t.assert(false, 'Les montants d''une commande payee sont immuables');
+  exception when others then
+    perform t.assert(true, 'Les montants d''une commande payee sont immuables');
+  end;
+
+  -- 8. Le commercant ne peut pas declarer une commande payee lui-meme.
+  perform t.assert(
+    t.denied_as(alice, format(
+      'update shop_orders set status = ''paid'' where id = %L',
+      (select id from public.shop_orders where customer_email = 'marc@example.test'))),
+    'Le commercant ne peut pas marquer une commande payee');
+
+  -- 9. Un panier abandonne rend son stock.
+  select stock_quantity into v_stock from public.products where id = v_rare;
+  perform t.assert(v_stock = 0, 'Stock retenu avant liberation');
+  update public.shop_orders set created_at = now() - interval '3 hours'
+   where customer_email = 'marc@example.test';
+  perform t.assert(app.release_expired_shop_orders(60) >= 1,
+    'Les commandes abandonnees sont annulees');
+  select stock_quantity into v_stock from public.products where id = v_rare;
+  perform t.assert(v_stock = 1, 'Le stock d''un panier abandonne revient a la vente');
+  select status into v_status from public.shop_orders where customer_email = 'marc@example.test';
+  perform t.assert(v_status = 'cancelled', 'La commande abandonnee est annulee');
+
+  -- La commande payee n'est jamais liberee.
+  select status into v_status from public.shop_orders where id = v_order;
+  perform t.assert(v_status = 'paid', 'Une commande payee n''est jamais annulee automatiquement');
+
+  -- 10. Surface d'appel : seul le role de service commande ou encaisse.
+  perform t.assert(
+    not has_function_privilege('anon',
+      'public.create_shop_order(uuid, jsonb, text, text, text, text, jsonb, text, text)', 'execute'),
+    'anon ne peut PAS creer de commande');
+  perform t.assert(
+    not has_function_privilege('authenticated',
+      'public.mark_shop_order_paid(uuid, text, int, text, char)', 'execute'),
+    'authenticated ne peut PAS marquer une commande payee');
+  perform t.assert(
+    has_function_privilege('service_role',
+      'public.mark_shop_order_paid(uuid, text, int, text, char)', 'execute'),
+    'service_role peut encaisser depuis le webhook');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'
