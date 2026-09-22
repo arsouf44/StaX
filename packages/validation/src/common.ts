@@ -104,6 +104,29 @@ export const optionalText = (max: number) =>
     .optional()
     .transform((value) => (value === '' ? undefined : value));
 
+/**
+ * Champ FACULTATIF d'un formulaire HTML.
+ *
+ * Un `<input>` ou un `<select>` laisse vide n'envoie pas « rien » : il envoie
+ * une chaine vide. `.optional()` ne s'applique donc jamais — `''` n'est pas
+ * `undefined` — et le schema sous-jacent rejette la valeur avec un message
+ * absurde : « Numero de telephone trop court » sur un champ marque
+ * « facultatif », ou une erreur de format sur un choix « je ne sais pas ».
+ *
+ * Le formulaire devient alors impossible a envoyer sans remplir un champ
+ * presente comme optionnel. Ce defaut a bloque la creation de compte.
+ *
+ * Ce helper traduit la chaine vide en « absent » AVANT la validation. Il est
+ * le seul moyen correct de rendre facultatif un champ de formulaire dont le
+ * schema refuse la chaine vide.
+ */
+export function optionalFromForm<Schema extends z.ZodType>(schema: Schema) {
+  return z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    schema.optional(),
+  );
+}
+
 /** Couleur hexadecimale, seule forme acceptee dans les jetons de theme. */
 export const hexColorSchema = z
   .string()

@@ -5,6 +5,7 @@ import {
   emailSchema,
   hostnameSchema,
   honeypotSchema,
+  optionalFromForm,
   optionalText,
   phoneSchema,
   slugSchema,
@@ -138,8 +139,11 @@ export const quoteBriefSchema = z
     contactEmail: emailSchema,
     contactPhone: phoneSchema.optional().or(z.literal('')),
     companyName: optionalText(120),
-    sectorSlug: slugSchema.optional(),
-    businessTypeSlug: slugSchema.optional(),
+    // Les deux listes proposent « Je prefere l'expliquer plus bas », dont la
+    // valeur est `''`. C'est le choix par defaut du formulaire : sans cette
+    // traduction, une demande de devis laissee telle quelle etait refusee.
+    sectorSlug: optionalFromForm(slugSchema),
+    businessTypeSlug: optionalFromForm(slugSchema),
 
     objective: boundedText(20, 3000, 'Votre objectif'),
     pageCountRange: z.enum(['1-5', '6-15', '16-30', '30+', 'unknown']),

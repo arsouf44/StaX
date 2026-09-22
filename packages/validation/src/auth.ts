@@ -6,6 +6,7 @@ import {
   emailSchema,
   honeypotSchema,
   localeSchema,
+  optionalFromForm,
   phoneSchema,
 } from './common';
 
@@ -53,7 +54,10 @@ export const signUpSchema = z
     lastName: boundedText(1, 60, 'Le nom'),
     email: emailSchema,
     password: passwordSchema,
-    phone: phoneSchema.optional(),
+    // « facultatif » sur le formulaire : un champ laisse vide envoie `''`,
+    // pas `undefined`. Sans cette traduction, toute inscription sans telephone
+    // echouait sur « Numero de telephone trop court ».
+    phone: optionalFromForm(phoneSchema),
     locale: localeSchema.default('fr'),
     acceptTerms: consentCheckbox(
       'Vous devez accepter les conditions générales pour créer un compte.',
