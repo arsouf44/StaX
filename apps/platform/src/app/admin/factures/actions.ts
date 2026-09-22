@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { createServiceClient, unwrapList, unwrapMaybe } from '@stax/database';
-import { computeOrderPricing } from '@stax/payments';
+import { salesInvoiceIssuedEmail, sendEmail } from '@stax/emails';
+import { platformUrl } from '@stax/config';
+import { computeOrderPricing, formatMoney } from '@stax/payments';
 import { boundedText, emailSchema, optionalText, uuidSchema } from '@stax/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
@@ -181,10 +183,44 @@ export async function issueSalesInvoiceAction(
     },
   });
 
+  // L'e-mail part APRES l'ecriture : une facture enregistree sans e-mail se
+  // renvoie, un e-mail parti sans facture est un engagement qu'on ne tient pas.
+  const money = (cents: number) => formatMoney(cents, 'EUR', { hideDecimalsWhenRound: true });
+  const dueLabel = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(dueAt));
+
+  const delivery = await sendEmail(
+    salesInvoiceIssuedEmail({
+      to: parsed.data.customerEmail.trim().toLowerCase(),
+      firstName: parsed.data.customerName ?? null,
+      invoiceNumber: number,
+      companyName: parsed.data.companyName,
+      planName: plan.slug,
+      setupAmount: money(pricing.setupCents),
+      maintenanceAmount: `${money(pricing.maintenanceCents)} / an`,
+      totalAmount: money(pricing.totalCents),
+      dueLabel,
+      claimUrl: `${platformUrl()}/facture?numero=${encodeURIComponent(number)}`,
+    }),
+    { db: service },
+  );
+
   revalidatePath('/admin/factures');
+
+  if (!delivery.ok) {
+    // La facture EXISTE : ne pas le cacher. Une numerotation fiscale sans trou
+    // interdit de « refaire » la facture, il faut donc renvoyer l'e-mail.
+    return {
+      status: 'success',
+      message:
+        `Facture ${number} émise pour ${parsed.data.companyName}, mais l’e-mail n’a pas pu ` +
+        `partir. Transmettez le numéro au client par un autre canal : il lui suffira pour ` +
+        `rattacher sa commande depuis son compte.`,
+    };
+  }
+
   return {
     status: 'success',
-    message: `Facture ${number} émise pour ${parsed.data.companyName}. Transmettez ce numéro au client : il lui suffira pour rattacher sa commande.`,
+    message: `Facture ${number} émise et envoyée à ${parsed.data.customerEmail}. Le numéro seul ne donne accès à rien : c’est son adresse e-mail qui autorisera le rattachement.`,
   };
 }
 

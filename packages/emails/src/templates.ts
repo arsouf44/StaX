@@ -419,15 +419,80 @@ export function invoiceEmail(
   return shell({
     to: ctx.to,
     template: 'invoice',
-    subject: `Votre facturé — ${ctx.periodLabel}`,
+    subject: `Votre facture — ${ctx.periodLabel}`,
     preheader: `Facture de ${ctx.amount}.`,
-    heading: 'Votre facturé est disponible',
+    heading: 'Votre facture est disponible',
     bodyHtml: definitionList([
       ['Période', ctx.periodLabel],
       ['Montant', ctx.amount],
     ]),
     bodyText: [`Facture ${ctx.periodLabel} — ${ctx.amount}.`],
-    action: { label: 'Télécharger ma facturé', url: ctx.invoiceUrl },
+    action: { label: 'Télécharger ma facture', url: ctx.invoiceUrl },
+  });
+}
+
+/**
+ * Facture de vente emise apres un accord commercial hors ligne.
+ *
+ * Le client n'a pas encore de compte : ce message est souvent le premier qu'il
+ * recoit de nous. Il doit donc dire trois choses sans detour : ce qui a ete
+ * convenu, combien, et quoi faire maintenant.
+ *
+ * Le numero de facture n'est PAS un mot de passe. Il est ecrit ici en clair
+ * parce qu'il n'a de valeur qu'associe a cette adresse e-mail : c'est elle qui
+ * autorise le rattachement, et le message le dit pour que personne ne croie
+ * detenir un secret.
+ */
+export function salesInvoiceIssuedEmail(
+  ctx: BaseContext & {
+    invoiceNumber: string;
+    companyName: string;
+    planName: string;
+    setupAmount: string;
+    maintenanceAmount: string;
+    totalAmount: string;
+    dueLabel: string;
+    claimUrl: string;
+  },
+): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'sales_invoice_issued',
+    subject: `Votre facture ${ctx.invoiceNumber} — ${ctx.planName}`,
+    preheader: `${ctx.totalAmount} à régler avant le ${ctx.dueLabel}.`,
+    heading: 'Votre facture est prête',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      // `paragraph` echappe deja : le nom d entreprise vient d une saisie.
+      paragraph(
+        `Voici la facture correspondant à ce que nous avons convenu pour ${ctx.companyName}.`,
+      ),
+      definitionList([
+        ['Numéro de facture', ctx.invoiceNumber],
+        ['Offre', ctx.planName],
+        ['Création du site', ctx.setupAmount],
+        ['Maintenance annuelle', ctx.maintenanceAmount],
+        ['Total à régler', ctx.totalAmount],
+        ['Échéance', ctx.dueLabel],
+      ]),
+      strongLine('Pour démarrer : créez votre compte avec CETTE adresse e-mail.'),
+      paragraph(
+        'Le bouton ci-dessous vous y mène, numéro de facture déjà rempli. Ce numéro ne vaut ' +
+          'que depuis cette adresse : il ne donne accès à rien tout seul, et le règlement reste ' +
+          'à effectuer séparément.',
+      ),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Facture ${ctx.invoiceNumber} — ${ctx.planName}.`,
+      `Création du site : ${ctx.setupAmount}. Maintenance annuelle : ${ctx.maintenanceAmount}.`,
+      `Total à régler : ${ctx.totalAmount}, avant le ${ctx.dueLabel}.`,
+      `Créez votre compte avec cette adresse e-mail, puis saisissez le numéro ${ctx.invoiceNumber}.`,
+    ],
+    action: { label: 'Rattacher ma facture', url: ctx.claimUrl },
+    footerNote:
+      'Le délai de livraison de votre site est de 1 à 3 semaines à compter de la réception ' +
+      'de vos contenus.',
   });
 }
 

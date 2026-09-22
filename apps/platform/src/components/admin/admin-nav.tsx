@@ -91,6 +91,12 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
       { href: '/admin/catalogue', label: 'Offres', icon: 'package', minimum: 'platform_admin' },
       { href: '/admin/webhooks', label: 'Événements', icon: 'zap', minimum: 'developer' },
       { href: '/admin/securite', label: 'Sécurité', icon: 'lock', minimum: 'platform_admin' },
+      {
+        href: '/admin/securite/violations',
+        label: 'Violations de données',
+        icon: 'shield-check',
+        minimum: 'platform_admin',
+      },
     ],
   },
 ];

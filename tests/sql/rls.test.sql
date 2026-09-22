@@ -1503,6 +1503,100 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Registre des violations de donnees (RGPD art. 33.5)
+--
+--  Ce registre est une piece de preuve. Il doit resister a la tentation de
+--  reecrire l'histoire sous pression.
+-- -----------------------------------------------------------------------------
+\echo '--- Registre des violations ---'
+do $$
+declare
+  alice uuid := (select v from t.fixtures where k='alice');
+  staff uuid := (select v from t.fixtures where k='staff');
+  v_id      uuid;
+  v_deadline timestamptz;
+  v_found   timestamptz;
+begin
+  insert into public.data_breaches
+    (reference, discovered_at, nature, description, risk_level,
+     subject_categories, data_categories)
+  values ('VD-2026-001', now() - interval '6 hours', 'confidentiality',
+          'Acces non autorise a une sauvegarde de test contenant des adresses e-mail.',
+          'low', array['clients'], array['identification'])
+  returning id, notify_deadline_at into v_id, v_deadline;
+
+  -- 1. Les 72 heures courent depuis la DECOUVERTE, pas depuis maintenant.
+  perform t.assert(
+    v_deadline = (select discovered_at + interval '72 hours'
+                    from public.data_breaches where id = v_id),
+    'L''echeance court a compter de la decouverte');
+
+  -- 2. On ne repousse pas l'echeance en la reecrivant.
+  update public.data_breaches set notify_deadline_at = now() + interval '30 days'
+   where id = v_id;
+  select notify_deadline_at into v_found from public.data_breaches where id = v_id;
+  perform t.assert(v_found = v_deadline, 'L''echeance des 72 heures ne se repousse pas');
+
+  -- 3. On ne recule pas la date de decouverte.
+  begin
+    update public.data_breaches set discovered_at = now() where id = v_id;
+    perform t.assert(false, 'La date de decouverte ne se modifie pas');
+  exception when others then
+    perform t.assert(true, 'La date de decouverte ne se modifie pas');
+  end;
+
+  -- 4. Conclure « pas de risque » sans le motiver est refuse.
+  begin
+    update public.data_breaches set risk_level = 'none', no_risk_justification = null
+     where id = v_id;
+    perform t.assert(false, 'Conclure « pas de risque » exige une justification ecrite');
+  exception when others then
+    perform t.assert(true, 'Conclure « pas de risque » exige une justification ecrite');
+  end;
+
+  update public.data_breaches
+     set risk_level = 'none',
+         no_risk_justification = 'Donnees chiffrees au repos, cles non compromises, aucun acces effectif.'
+   where id = v_id;
+  perform t.assert(
+    (select risk_level from public.data_breaches where id = v_id) = 'none',
+    'Une absence de risque motivee est acceptee');
+
+  -- 5. Une notification enregistree ne se retire plus.
+  update public.data_breaches set cnil_notified_at = now(), cnil_reference = 'CNIL-XYZ'
+   where id = v_id;
+  begin
+    update public.data_breaches set cnil_notified_at = null where id = v_id;
+    perform t.assert(false, 'Une notification a la CNIL ne s''efface pas');
+  exception when others then
+    perform t.assert(true, 'Une notification a la CNIL ne s''efface pas');
+  end;
+
+  -- 6. Une entree ne se supprime pas : elle se cloture.
+  begin
+    delete from public.data_breaches where id = v_id;
+    perform t.assert(false, 'Une entree du registre ne se supprime pas');
+  exception when others then
+    perform t.assert(true, 'Une entree du registre ne se supprime pas');
+  end;
+
+  -- 7. Le registre decrit nos propres failles : aucun client ne le lit.
+  perform t.assert(t.count_as(alice, 'select 1 from data_breaches') = 0,
+    'Un client ne voit pas le registre des violations');
+  perform t.assert(t.count_as(staff, 'select 1 from data_breaches') = 1,
+    'L''administration de la plateforme lit le registre');
+  perform t.assert(
+    t.denied_as(alice,
+      'insert into data_breaches (reference, nature, description) ' ||
+      'values (''X'', ''confidentiality'', ''Tentative d''''ecriture par un client non habilite.'')'),
+    'Un client ne peut pas ecrire dans le registre');
+  perform t.assert(
+    not has_table_privilege('anon', 'public.data_breaches', 'select'),
+    'anon n''a aucun droit sur le registre');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

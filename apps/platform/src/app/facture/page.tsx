@@ -21,9 +21,21 @@ export const metadata: Metadata = {
  * avec un numero et rien d'autre : la page ne lui demande donc rien de plus que
  * ce numero et le nom de son entreprise.
  */
-export default async function InvoicePage() {
+export default async function InvoicePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  // Le numero peut venir du lien de l'e-mail. Il n'autorise rien a lui seul :
+  // il epargne juste une recopie a la main, source d'erreurs.
+  const suggested = typeof params.numero === 'string' ? params.numero.slice(0, 32) : '';
+
   const session = await getSession();
-  if (!session.user) redirect('/connexion?suivant=%2Ffacture');
+  if (!session.user) {
+    const target = suggested ? `/facture?numero=${encodeURIComponent(suggested)}` : '/facture';
+    redirect(`/connexion?suivant=${encodeURIComponent(target)}`);
+  }
 
   const db = createUserClient(session.user.accessToken);
   const memberships = await listMemberships(db, session.user.id);
@@ -63,6 +75,7 @@ export default async function InvoicePage() {
               <InvoiceForm
                 defaultOrganizationName={first?.name ?? ''}
                 hasOrganization={memberships.length > 0}
+                defaultNumber={suggested}
               />
             </div>
 

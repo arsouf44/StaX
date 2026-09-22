@@ -143,7 +143,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | Le numéro seul n'authentifie jamais | **OK** — l'adresse destinataire fait foi ; réponse identique pour un numéro inexistant et une facture d'autrui ; tentatives comptées |
 | Rattachement atomique | **OK** — une seule commande par facture, vérifié par assertion SQL |
 | Aucun « payé » déduit de la saisie | **OK** — vérifié par assertion SQL |
-| E-mail de facture au client | **MANQUE** — le numéro doit être transmis à la main |
+| E-mail de facture au client | **OK** — envoyé à l'émission, numéro prérempli dans le lien. Si l'envoi échoue, le message le dit au lieu de laisser croire que le client a reçu sa facture |
 
 ---
 
@@ -172,8 +172,8 @@ confirmer celle écrite avant l'appel à Stripe.
 | Capital, directeur de publication | **BLOQUANT VOLONTAIRE** — aucune valeur par défaut, production refusée |
 | 9 pages légales | **OK** |
 | Textes « maintenance mensuelle » | **OK** — corrigés |
-| **Registre des traitements (art. 30 RGPD)** | **MANQUE** |
-| **Procédure de violation outillée (72 h CNIL)** | **MANQUE** — écrite, non outillée |
+| **Registre des traitements (art. 30 RGPD)** | **OK** — `docs/REGISTRE_TRAITEMENTS.md`, responsable **et** sous-traitant, vérifié table par table contre le schéma réel, avec une section « ce que ce registre ne couvre pas » |
+| **Registre des violations (art. 33.5)** | **OK** — table `data_breaches` + `/admin/securite/violations`. Échéance des 72 h calculée depuis la **découverte**, date de découverte non modifiable, notification inscrite non effaçable, suppression impossible, « pas de risque » refusé sans justification écrite, retard refusé sans motif (art. 33.1). 11 assertions SQL |
 
 ---
 
@@ -192,7 +192,5 @@ confirmer celle écrite avant l'appel à Stripe.
 ## Ce qui reste non terminé, sans détour
 
 1. Écrans d'administration restants (paramètres, feature flags, templates, coupons)
-2. E-mail d'envoi de facture au client
-3. Registre des traitements (art. 30) et outillage de violation de données
-4. Comptes clients sur le site final (droit Ultra Premium déclaré, non implémenté)
-5. E2E des parcours critiques
+2. Comptes clients sur le site final (droit Ultra Premium déclaré, non implémenté)
+3. E2E des parcours critiques

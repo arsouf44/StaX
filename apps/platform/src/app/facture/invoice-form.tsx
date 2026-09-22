@@ -19,9 +19,12 @@ function SubmitButton() {
 export function InvoiceForm({
   defaultOrganizationName,
   hasOrganization,
+  defaultNumber = '',
 }: {
   defaultOrganizationName: string;
   hasOrganization: boolean;
+  /** Prerempli depuis le lien de l'e-mail. Le serveur revalide de toute facon. */
+  defaultNumber?: string;
 }) {
   const [state, setState] = useState<ActionState>(IDLE_STATE);
 
@@ -50,6 +53,7 @@ export function InvoiceForm({
             spellCheck={false}
             autoCapitalize="characters"
             placeholder="F-2026-0001"
+            defaultValue={defaultNumber}
             className="font-mono tracking-wide"
           />
         </Field>
