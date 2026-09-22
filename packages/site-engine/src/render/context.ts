@@ -219,6 +219,14 @@ export interface RenderContext {
   isDemo: boolean;
   /** Apercu prive : le site n est pas encore public. */
   isPreview: boolean;
+  /**
+   * Le site propose-t-il un espace client a ses visiteurs ?
+   *
+   * Sert a afficher — ou non — le lien vers `/compte`. Le droit lui-meme est
+   * verifie en base a chaque appel : ce drapeau ne donne acces a rien, il
+   * evite seulement de proposer une porte qui serait fermee.
+   */
+  hasCustomerAccounts: boolean;
   theme: ResolvedTheme;
   settings: SiteSettingsView;
   pages: RenderablePage[];

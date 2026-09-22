@@ -15,6 +15,11 @@ import { handleBookingCreate, handleBookingSlots } from './api/bookings';
 import { handleCartRead, handleCartWrite } from './api/cart';
 import { handleCheckout } from './api/checkout';
 import { handleOrderStatus } from './api/order-status';
+import {
+  handleCustomerAccount,
+  handleCustomerLoginRequest,
+  handleCustomerLogout,
+} from './api/customer-account';
 import { handleCollect } from './api/collect';
 import { handleDonation } from './api/donations';
 import type { WorkerEnv } from './env';
@@ -218,6 +223,20 @@ async function route(request: Request): Promise<Response> {
   // une page systeme anonyme.
   if (path === '/commande' && (request.method === 'GET' || request.method === 'HEAD')) {
     return handleOrderStatus(request, site);
+  }
+
+  // Espace client du site. Reserve aux offres qui le comportent : la base
+  // tranche, la route ne fait que refleter sa reponse.
+  if (path === '/compte' && (request.method === 'GET' || request.method === 'HEAD')) {
+    return handleCustomerAccount(request, site);
+  }
+
+  if (path === '/api/compte/connexion' && request.method === 'POST') {
+    return handleCustomerLoginRequest(request, site);
+  }
+
+  if (path === '/api/compte/deconnexion' && request.method === 'POST') {
+    return handleCustomerLogout(request, site);
   }
 
   if (path === '/api/checkout' && request.method === 'POST') {

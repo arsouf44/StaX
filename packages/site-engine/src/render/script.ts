@@ -311,6 +311,29 @@ export const SITE_SCRIPT = String.raw`
     });
   }
 
+  /* --- Espace client du site ---------------------------------------------- */
+  d.querySelectorAll('form[data-stax-customer-login]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) return;
+      event.preventDefault();
+      submitJson(form, '/api/compte/connexion', serialize(form), function (body) {
+        form.reset();
+        /* La reponse est volontairement la meme dans tous les cas : elle ne
+           dit jamais si l adresse correspond a un compte. */
+        setStatus(form, 'ok', body.message || 'Si un compte existe, un lien vient d’être envoyé.');
+      });
+    });
+  });
+
+  d.querySelectorAll('form[data-stax-customer-logout]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      submitJson(form, '/api/compte/deconnexion', serialize(form), function (body) {
+        window.location.href = (body && body.url) || '/';
+      });
+    });
+  });
+
   /* --- Mesure d audience sans cookie -------------------------------------- */
   if (navigator.sendBeacon) {
     try {

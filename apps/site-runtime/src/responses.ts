@@ -57,10 +57,24 @@ export function textResponse(
   });
 }
 
-export function redirectResponse(location: string, status = 301): Response {
+export function redirectResponse(
+  location: string,
+  status = 301,
+  extra: Record<string, string> = {},
+): Response {
+  // Une redirection qui pose un cookie de session ne doit JAMAIS etre mise en
+  // cache partage : le cache servirait la session d'une personne a la
+  // suivante. Des qu'un en-tete supplementaire est present, on ferme le cache.
+  const cacheable = Object.keys(extra).length === 0;
   return new Response(null, {
     status,
-    headers: { location, 'cache-control': 'public, max-age=0, s-maxage=3600' },
+    headers: {
+      location,
+      'cache-control': cacheable
+        ? 'public, max-age=0, s-maxage=3600'
+        : 'no-store, no-cache, must-revalidate, private',
+      ...extra,
+    },
   });
 }
 

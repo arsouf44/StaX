@@ -175,6 +175,7 @@ function footer(context: RenderContext): RawHtml {
       </div>
       <div class="ftr-btm">
         <p>© ${year} ${settings.businessName || context.siteName}</p>
+        ${context.hasCustomerAccounts ? html`<p><a href="/compte">Mon espace</a></p>` : ''}
         <p>
           Site réalisé et hébergé par
           <a href="https://stax.fr" target="_blank" rel="noopener">StaX</a>

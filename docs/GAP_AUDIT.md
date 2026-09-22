@@ -87,7 +87,7 @@ depuis `/app/site/referencement`.
 | Hôtel (chambres) | **OK** | **OK** | — |
 | Association (dons) | **OK** | **OK** | Corrigé pendant l'audit : `/api/donations` |
 | **Commerce (e-commerce)** | **OK** | **OK** | Checkout complet : `/api/checkout`, `app.create_shop_order`, paiement Stripe Connect, encaissement par webhook, page de suivi `/commande` |
-| Comptes clients du site final | **MANQUE** | **MANQUE** | Droit d'offre déclaré, aucune implémentation. Le suivi de commande sans compte couvre le besoin courant (lien signé) |
+| Comptes clients du site final | **OK** | **OK** | Connexion **sans mot de passe** par lien à usage unique. Un compte appartient à **un site**, jamais à la plateforme. 22 assertions SQL |
 
 ### Chaîne de commande — ce qui la rend sûre
 
@@ -118,6 +118,20 @@ interactions sans formulaire peuvent le lire.
 **Second défaut** : un don réussi laissait sa ligne de paiement en `pending`
 pour toujours — le webhook Connect créait une ligne parallèle au lieu de
 confirmer celle écrite avant l'appel à Stripe.
+
+### Comptes client des sites — pourquoi sans mot de passe
+
+| Décision | Conséquence |
+|---|---|
+| Aucun mot de passe : lien à usage unique valable une heure | Rien à stocker, rien à fuir, aucune réutilisation de mot de passe, aucun formulaire de réinitialisation à sécuriser |
+| Seule l'**empreinte** du lien est stockée | Une fuite de la base ne permet de se connecter à la place de personne |
+| Le compte appartient à **un site** | La même adresse chez deux commerçants donne deux comptes étrangers. Aucune identité ne traverse les tenants |
+| Le cookie de session est signé **avec l'identifiant du site** | Un cookie du site A ne vaut rien sur le site B, bien que le même Worker serve les deux |
+| La demande de lien répond **toujours la même chose** | Le formulaire ne peut pas servir d'annuaire de la clientèle d'un commerçant |
+| Au plus 5 liens par heure et par compte | Le formulaire ne peut pas servir à inonder la boîte de quelqu'un |
+| L'e-mail est signé **par le commerçant**, pas par StaX | Le destinataire est le client d'une boulangerie, pas le nôtre : un message signé par une plateforme inconnue serait pris pour de l'hameçonnage |
+| Le jeton est consommé puis la page **redirige** | Le lien ne survit ni dans l'historique ni dans les référents |
+| Un compte se **bloque**, il ne se supprime pas | Une commande passée doit rester rattachable |
 
 ---
 
@@ -156,7 +170,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | Contrôle | État |
 |---|---|
 | RLS sur 100 % des tables `public` | **OK** |
-| Isolation inter-tenant | **OK** — 188 assertions SQL |
+| Isolation inter-tenant | **OK** — 270 assertions SQL |
 | Mass assignment | **OK** — listes blanches Zod partout |
 | Machines à états financières | **OK** — `payé`/`remboursé` inatteignables depuis un navigateur |
 | Webhooks signés, idempotents | **OK** |
@@ -164,7 +178,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | Secrets hors bundle | **OK** — `.env.example` sans valeurs |
 | Brute-force activation / facture | **OK** — débit limité, tentatives comptées |
 | **CSP sur la plateforme** | **OK** — était **totalement absente**. CSP à nonce + `strict-dynamic` sur tout ce qui porte une session (`src/proxy.ts`) ; CSP fixe sur les pages publiques prérendues |
-| **E2E d'isolation inter-tenant** | **PARTIEL** — prouvé en SQL (188 assertions) et par 12 parcours d'intégration contre une vraie base. Pas encore par deux navigateurs connectés en parallèle |
+| **E2E d'isolation inter-tenant** | **PARTIEL** — prouvé en SQL (270 assertions) et par 12 parcours d'intégration contre une vraie base. Pas encore par deux navigateurs connectés en parallèle |
 
 ---
 
@@ -188,7 +202,7 @@ confirmer celle écrite avant l'appel à Stripe.
 |---|---|
 | `format:check`, `lint`, `typecheck` | **OK** — 0 |
 | Tests unitaires + sécurité + intégration | **OK** |
-| Assertions SQL / RLS | **OK** — 188 |
+| Assertions SQL / RLS | **OK** — 270 |
 | E2E | **OK** — 54 tests (marketing, accessibilité, auth, intégrité des liens, en-têtes de sécurité). Les 4 tests d'authentification **passaient à côté du produit** : sans `STAX_SECRET_KEY`, le build de production levait une exception et ils vérifiaient le comportement d'une plateforme mal configurée. Le serveur de test reçoit désormais des secrets jetables, régénérés à chaque exécution |
 | Parcours critiques | **OK** — 12 parcours d'intégration contre une vraie base : commande → paiement → création du site → édition → publication → brouillon indépendant → retour arrière → résolution du tenant → formulaire → réservation → activation → suspension |
 | Build production + Cloudflare | **OK** |
@@ -197,9 +211,6 @@ confirmer celle écrite avant l'appel à Stripe.
 
 ## Ce qui reste non terminé, sans détour
 
-1. **Comptes clients sur le site final** — droit déclaré dans l'offre Ultra
-   Premium, non implémenté. Le suivi de commande par lien signé couvre le
-   besoin courant d'un acheteur ; un espace visiteur avec mot de passe, non.
-2. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
-   est prouvée par 188 assertions SQL et 12 parcours d'intégration, mais pas
+1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
+   est prouvée par 270 assertions SQL et 12 parcours d'intégration, mais pas
    encore par deux sessions réelles ouvertes en parallèle.

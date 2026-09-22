@@ -141,6 +141,8 @@ export async function GET(request: Request): Promise<Response> {
     timezone: snapshot.snapshot.site.timezone,
     isDemo: snapshot.snapshot.site.isDemo,
     isPreview: true,
+    // L'apercu ne propose pas l'espace client : ses formulaires sont inertes.
+    hasCustomerAccounts: false,
     theme,
     settings,
     pages: snapshot.pages,

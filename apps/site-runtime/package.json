@@ -15,6 +15,7 @@
     "@stax/business": "workspace:*",
     "@stax/config": "workspace:*",
     "@stax/database": "workspace:*",
+    "@stax/emails": "workspace:*",
     "@stax/payments": "workspace:*",
     "@stax/security": "workspace:*",
     "@stax/site-data": "workspace:*",

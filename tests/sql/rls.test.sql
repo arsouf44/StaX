@@ -1662,6 +1662,121 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Comptes client des sites
+--
+--  Un compte appartient a UN SITE. La meme adresse chez deux commercants donne
+--  deux comptes etrangers l'un a l'autre, et aucun lien de connexion ne
+--  traverse cette frontiere.
+-- -----------------------------------------------------------------------------
+\echo '--- Comptes client des sites ---'
+do $$
+declare
+  alice  uuid := (select v from t.fixtures where k='alice');
+  bob    uuid := (select v from t.fixtures where k='bob');
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  site_b uuid := (select v from t.fixtures where k='site_b');
+  org_b  uuid := (select v from t.fixtures where k='org_b');
+  v_res      jsonb;
+  v_customer uuid;
+  v_count    int;
+begin
+  -- 1. Le droit d'offre fait loi : l'Essentiel n'a pas d'espace client.
+  v_res := app.request_customer_login(
+    site_b, 'visiteur@exemple.test', 'hash-refuse', now() + interval '1 hour');
+  perform t.assert(v_res->>'code' = 'module_unavailable',
+    'Une offre sans espace client refuse la demande');
+
+  -- 2. Sur l'Ultra Premium, le compte est cree a la premiere demande.
+  v_res := app.request_customer_login(
+    site_a, 'Visiteur@Exemple.test', 'hash-a-1', now() + interval '1 hour');
+  perform t.assert(v_res->>'sent' = 'true', 'Un lien est emis');
+  select id into v_customer from public.site_customers
+   where site_id = site_a and lower(email) = 'visiteur@exemple.test';
+  perform t.assert(v_customer is not null, 'Le compte est cree a la premiere demande');
+
+  -- 3. Une adresse inconnue et une adresse connue donnent la MEME reponse :
+  --    le formulaire ne sert pas a tester la clientele d'un commercant.
+  v_res := app.request_customer_login(
+    site_a, 'jamais-vu@exemple.test', 'hash-a-2', now() + interval '1 hour');
+  perform t.assert(v_res->>'sent' = 'true',
+    'Une adresse inconnue produit la meme reponse qu''une adresse connue');
+
+  -- 4. Le lien vaut pour SON site, et pour lui seul.
+  v_res := app.redeem_customer_login(site_b, 'hash-a-1');
+  perform t.assert(v_res->>'ok' = 'false',
+    'Un lien emis pour un site ne vaut rien sur un autre');
+
+  v_res := app.redeem_customer_login(site_a, 'hash-a-1');
+  perform t.assert(v_res->>'ok' = 'true', 'Le lien connecte sur son propre site');
+  perform t.assert((v_res->>'customerId')::uuid = v_customer, 'Il designe le bon compte');
+
+  -- 5. Usage unique.
+  v_res := app.redeem_customer_login(site_a, 'hash-a-1');
+  perform t.assert(v_res->>'ok' = 'false', 'Un lien deja utilise ne resservira pas');
+
+  -- 6. Un lien expire ne vaut rien, et le refus est indiscernable des autres.
+  insert into public.site_customer_tokens (site_id, customer_id, token_hash, expires_at)
+  values (site_a, v_customer, 'hash-expire', now() - interval '1 minute');
+  v_res := app.redeem_customer_login(site_a, 'hash-expire');
+  perform t.assert(v_res->>'code' = 'invalid', 'Un lien expire est refuse comme un lien inconnu');
+
+  -- 7. Un compte bloque ne recoit plus rien, sans que la reponse le dise.
+  update public.site_customers set is_blocked = true where id = v_customer;
+  v_res := app.request_customer_login(
+    site_a, 'visiteur@exemple.test', 'hash-a-3', now() + interval '1 hour');
+  perform t.assert(v_res->>'sent' = 'false' and v_res->>'ok' = 'true',
+    'Un compte bloque ne recoit plus de lien, sans reponse distinctive');
+  update public.site_customers set is_blocked = false where id = v_customer;
+
+  -- 8. Plafond d'envoi : le formulaire ne sert pas a inonder une boite.
+  for i in 1..6 loop
+    perform app.request_customer_login(
+      site_a, 'visiteur@exemple.test', 'hash-flood-' || i, now() + interval '1 hour');
+  end loop;
+  select count(*) into v_count from public.site_customer_tokens
+   where customer_id = v_customer and token_hash like 'hash-flood-%';
+  perform t.assert(v_count < 6, 'Le nombre de liens emis par heure est plafonne');
+
+  -- 9. Le commercant voit SES clients ; un autre commercant, jamais.
+  perform t.assert(t.count_as(alice, format(
+    'select 1 from site_customers where site_id = %L', site_a)) >= 1,
+    'Le commercant voit les comptes de son site');
+  perform t.assert(t.count_as(bob, format(
+    'select 1 from site_customers where site_id = %L', site_a)) = 0,
+    'Un autre commercant ne voit pas ces comptes');
+
+  -- 10. Les jetons ne sont lisibles par personne, pas meme par le commercant.
+  -- Le refus est une ERREUR DE PRIVILEGE, pas un resultat vide : le droit de
+  -- lecture n'est accorde a personne sur cette table.
+  perform t.assert(t.denied_as(alice, 'select 1 from site_customer_tokens'),
+    'Les liens de connexion ne sont lisibles par personne');
+  perform t.assert(
+    not has_table_privilege('anon', 'public.site_customer_tokens', 'select'),
+    'anon n''a aucun droit sur les liens de connexion');
+
+  -- 11. La surface d'appel est reservee au role de service.
+  perform t.assert(
+    not has_function_privilege('authenticated',
+      'public.request_customer_login(uuid, text, text, timestamptz, text)', 'execute'),
+    'authenticated ne peut pas demander de lien de connexion');
+  perform t.assert(
+    not has_function_privilege('anon', 'public.redeem_customer_login(uuid, text)', 'execute'),
+    'anon ne consomme aucun lien');
+  perform t.assert(
+    has_function_privilege('service_role', 'public.customer_account_view(uuid, uuid)', 'execute'),
+    'Le Worker lit l''espace client');
+
+  -- 12. L'espace d'un compte ne montre que ce qui est a lui.
+  v_res := app.customer_account_view(site_a, v_customer);
+  perform t.assert(v_res->>'ok' = 'true', 'L''espace client repond');
+  perform t.assert(jsonb_typeof(v_res->'orders') = 'array', 'Il liste des commandes');
+  v_res := app.customer_account_view(site_b, v_customer);
+  perform t.assert(v_res->>'ok' = 'false',
+    'Un compte n''est pas consultable depuis un autre site');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

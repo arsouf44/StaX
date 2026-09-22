@@ -70,6 +70,7 @@ export async function buildPageContext(
     timezone: site.timezone,
     isDemo: site.isDemo,
     isPreview: options.isPreview,
+    hasCustomerAccounts: site.hasCustomerAccounts,
     theme,
     settings: site.settings,
     pages: site.snapshot.pages,
@@ -101,6 +102,7 @@ export function fallbackContext(request: Request, siteName: string): RenderConte
     timezone: 'Europe/Paris',
     isDemo: false,
     isPreview: false,
+    hasCustomerAccounts: false,
     theme: resolveTheme({}),
     settings: {
       businessName: siteName,

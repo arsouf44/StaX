@@ -33,6 +33,8 @@ export interface ResolvedSite {
   enabledModules: Set<string>;
   timezone: string;
   isDemo: boolean;
+  /** L'offre du client comporte-t-elle l'espace client du site ? */
+  hasCustomerAccounts: boolean;
   hostname: ResolvedHostname;
 }
 
@@ -55,6 +57,7 @@ interface ResolveRow {
   enabled_modules: string[] | null;
   timezone: string | null;
   is_demo: boolean | null;
+  has_customer_accounts: boolean | null;
 }
 
 function hostnameConfig() {
@@ -117,6 +120,7 @@ export async function resolveSite(host: string | null): Promise<ResolutionOutcom
       enabledModules: new Set(row.enabled_modules ?? []),
       timezone: row.timezone ?? 'Europe/Paris',
       isDemo: row.is_demo ?? false,
+      hasCustomerAccounts: row.has_customer_accounts ?? false,
       hostname,
     },
   };
