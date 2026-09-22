@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSessionClient, peekActivationCode, redeemActivationCode } from '@stax/auth';
+import { isLegalValueConfigured, legalValue } from '@stax/config';
 import { tryCreateServiceClient } from '@stax/database';
 import {
   activationCompleteSchema,
@@ -350,9 +351,15 @@ export interface ActivationState extends AuthFormState {
  * Le code d activation reste valide et utilisable : rien n est consomme, rien
  * n est perdu. Le message le dit, au lieu d afficher un numero d incident.
  */
-const ACTIVATION_UNAVAILABLE =
-  'Nous ne pouvons pas vérifier votre code pour le moment. Votre code reste valide : ' +
-  'réessayez dans quelques minutes, ou contactez-nous.';
+function activationUnavailable(): string {
+  const support = isLegalValueConfigured('SUPPORT_EMAIL')
+    ? ` ou écrivez-nous à ${legalValue('SUPPORT_EMAIL')}`
+    : '';
+  return (
+    'Nous ne pouvons pas vérifier votre code pour le moment. Votre code reste valide : ' +
+    `réessayez dans quelques minutes${support}.`
+  );
+}
 
 export async function verifyActivationCodeAction(
   _previous: ActivationState,
@@ -383,7 +390,7 @@ export async function verifyActivationCodeAction(
   // nous, pas dans ce qu elle a saisi.
   const service = tryCreateServiceClient();
   if (service === null) {
-    return { status: 'error', step: 'verify', message: ACTIVATION_UNAVAILABLE };
+    return { status: 'error', step: 'verify', message: activationUnavailable() };
   }
 
   const preview = await peekActivationCode(service, {
@@ -435,7 +442,7 @@ export async function completeActivationAction(
       step: 'complete',
       code: parsed.data.code,
       email: parsed.data.email,
-      message: ACTIVATION_UNAVAILABLE,
+      message: activationUnavailable(),
     };
   }
 

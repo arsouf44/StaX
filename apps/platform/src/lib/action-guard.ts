@@ -1,7 +1,7 @@
 import 'server-only';
 import { headers } from 'next/headers';
 import { PostgresRateLimitStore, tryCreateServiceClient } from '@stax/database';
-import { platformUrl } from '@stax/config';
+import { isLegalValueConfigured, legalValue, platformUrl } from '@stax/config';
 import {
   enforceRateLimit,
   hashIp,
@@ -70,9 +70,12 @@ export type ActionGuardResult =
  * garde ne peut pas faire son travail, donc l'action n'a pas lieu. Mais le
  * visiteur lit une phrase, pas un numero d'incident.
  */
-const CONFIGURATION_INCOMPLETE =
-  'Ce formulaire est momentanément indisponible. Réessayez dans quelques minutes, ou ' +
-  'contactez-nous directement.';
+function configurationIncomplete(): string {
+  const support = isLegalValueConfigured('SUPPORT_EMAIL')
+    ? ` ou écrivez-nous à ${legalValue('SUPPORT_EMAIL')}`
+    : '';
+  return `Ce formulaire est momentanément indisponible. Réessayez dans quelques minutes${support}.`;
+}
 
 /** Le compteur de debit s'accommode d'une absence : voir le `catch` ci-dessous. */
 function requireServiceClient() {
@@ -113,7 +116,7 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
         'peut fonctionner tant que ce secret n est pas fourni',
       error,
     );
-    return { ok: false, message: CONFIGURATION_INCOMPLETE };
+    return { ok: false, message: configurationIncomplete() };
   }
 
   // Le compteur est en base. S il est injoignable — base coupee, secret absent —

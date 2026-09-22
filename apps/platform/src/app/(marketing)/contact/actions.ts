@@ -1,5 +1,6 @@
 'use server';
 
+import { isLegalValueConfigured, legalValue } from '@stax/config';
 import { tryCreateServiceClient } from '@stax/database';
 import { scoreSubmission } from '@stax/security';
 import {
@@ -41,9 +42,27 @@ function checkbox(value: unknown): boolean {
  * contact — on lui donne la seule chose qui lui sert, l autre moyen de nous
  * joindre.
  */
-const FORM_UNAVAILABLE =
-  'Votre demande n’a pas pu être enregistrée : notre formulaire est momentanément ' +
-  'indisponible. Écrivez-nous directement, nous répondons de la même façon.';
+/**
+ * Comment nous joindre quand un formulaire ne peut pas aboutir.
+ *
+ * Dire « ecrivez-nous directement » sans donner d adresse n aide personne —
+ * surtout quand le formulaire en panne EST le moyen de nous ecrire. On donne
+ * l adresse de support quand elle est configuree, et rien d autre sinon : le
+ * marqueur « [A CONFIGURER — … ] » ne doit jamais s afficher a un visiteur.
+ */
+function contactFallback(): string {
+  return isLegalValueConfigured('SUPPORT_EMAIL')
+    ? ` Écrivez-nous à ${legalValue('SUPPORT_EMAIL')}, nous répondons de la même façon.`
+    : '';
+}
+
+function formUnavailable(): string {
+  return (
+    'Votre demande n’a pas pu être enregistrée : notre formulaire est momentanément ' +
+    'indisponible.' +
+    contactFallback()
+  );
+}
 
 export async function sendContactAction(
   _previous: LeadState,
@@ -81,7 +100,7 @@ export async function sendContactAction(
   // laisser l exception remonter jusqu a la page « Une erreur est survenue ».
   const service = tryCreateServiceClient();
   if (service === null) {
-    return { status: 'error', message: FORM_UNAVAILABLE };
+    return { status: 'error', message: formUnavailable() };
   }
 
   const { data, error } = await service.rpc('record_platform_lead', {
@@ -165,7 +184,7 @@ export async function sendQuoteRequestAction(
 
   const service = tryCreateServiceClient();
   if (service === null) {
-    return { status: 'error', message: FORM_UNAVAILABLE };
+    return { status: 'error', message: formUnavailable() };
   }
 
   const { data, error } = await service.rpc('record_platform_lead', {
