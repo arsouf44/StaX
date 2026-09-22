@@ -38,7 +38,7 @@ export function AppShell({ groups, header, children }: AppShellProps) {
         {header}
       </header>
 
-      <div className="mx-auto flex w-full max-w-[100rem] flex-1 gap-0 px-4 sm:px-6 lg:gap-8 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[100rem] flex-1 flex-col gap-0 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
         <button
           type="button"
           aria-expanded={open}

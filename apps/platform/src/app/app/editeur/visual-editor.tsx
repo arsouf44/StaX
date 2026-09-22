@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, ConfirmDialog, Icon, cn, useToast } from '@stax/ui';
 import {
   commitPageAction,
@@ -60,6 +60,18 @@ function isTyping(target: EventTarget | null): boolean {
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
+const NARROW_QUERY = '(max-width: 767px)';
+
+function subscribeNarrow(onChange: () => void): () => void {
+  const query = window.matchMedia(NARROW_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+function isNarrow(): boolean {
+  return window.matchMedia(NARROW_QUERY).matches;
+}
+
 export function VisualEditor({
   siteId,
   siteName,
@@ -103,7 +115,12 @@ export function VisualEditor({
   const [selectedId, setSelectedId] = useState<string | null>(initialBlocks[0]?.id ?? null);
   const [focus, setFocus] = useState<FieldContext['focus']>(null);
   const [tab, setTab] = useState<'content' | 'style'>('content');
-  const [viewport, setViewport] = useState<Viewport>('desktop');
+  // Sur un telephone, l apercu s ouvre au format telephone : une page
+  // d ordinateur reduite a la largeur d un ecran de poche serait illisible.
+  // Le choix explicite du client l emporte ensuite.
+  const narrowScreen = useSyncExternalStore(subscribeNarrow, isNarrow, () => false);
+  const [chosenViewport, setViewport] = useState<Viewport | null>(null);
+  const viewport: Viewport = chosenViewport ?? (narrowScreen ? 'mobile' : 'desktop');
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [previewVersion, setPreviewVersion] = useState(0);
   const [unpublished, setUnpublished] = useState(hasUnpublishedChanges);
