@@ -32,6 +32,8 @@ export default function proxy(request: NextRequest) {
     scriptHashes: [THEME_SCRIPT_CSP_HASH],
     // Supabase : authentification et lectures directes depuis le navigateur.
     connectSrc: [readEnv('NEXT_PUBLIC_SUPABASE_URL') ?? ''].filter(Boolean),
+    // Photos des clients (bibliotheque, editeur) servies par le stockage.
+    imgSrc: [readEnv('NEXT_PUBLIC_SUPABASE_URL') ?? ''].filter(Boolean),
     // En developpement, `upgrade-insecure-requests` casserait http://localhost.
     allowInsecure: !isProduction(),
   });

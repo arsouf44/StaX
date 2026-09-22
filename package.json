@@ -24,6 +24,7 @@
     "test:integration": "vitest run tests/integration",
     "test:security": "vitest run tests/security",
     "test:e2e": "playwright test",
+    "test:e2e:stack": "playwright test -c playwright.stack.config.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:reset": "supabase db reset",
     "db:types": "tsx scripts/gen-db-types.ts",

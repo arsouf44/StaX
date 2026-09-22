@@ -4,7 +4,7 @@ import { mediaPublicUrl, unwrapList, type Db } from '@stax/database';
 import {
   BLOCK_DEFINITIONS,
   availableBlocks,
-  createBlock,
+  createStarterBlock,
   editorFieldsFor,
   getBlockDefinition,
   type EditorField,
@@ -92,7 +92,7 @@ export function blockMetas(
       available: available.has(definition.type),
       recommended: recommended.has(definition.type),
       defaults: (() => {
-        const block = createBlock(definition.type);
+        const block = createStarterBlock(definition.type);
         return {
           version: block?.version ?? 1,
           props: block?.props ?? {},

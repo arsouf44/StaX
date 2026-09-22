@@ -129,8 +129,13 @@ export function VisualEditor({
   } | null>(null);
   const inflightRef = useRef(0);
 
-  // Changement de page : l etat vient du serveur.
+  // Changement de page : l etat vient du serveur. Pas au premier rendu : les
+  // etats sont deja initialises, et recharger l apercu ferait un aller-retour
+  // (et un clignotement) pour rien.
+  const loadedPageRef = useRef(page.id);
   useEffect(() => {
+    if (loadedPageRef.current === page.id) return;
+    loadedPageRef.current = page.id;
     setBlocks(initialBlocks);
     setTrash(initialTrash);
     setStatus(initialStatus);

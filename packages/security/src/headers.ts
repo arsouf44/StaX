@@ -32,6 +32,12 @@ export interface SecurityHeaderOptions {
    */
   scriptHashes?: readonly string[];
   frameSrc?: readonly string[];
+  /**
+   * Origines d images supplementaires. En production, le stockage des photos
+   * est en https et deja couvert ; le nommer reste plus precis, et c est ce
+   * qui permet a une pile locale (http) d afficher les photos des clients.
+   */
+  imgSrc?: readonly string[];
   /** Desactive `upgrade-insecure-requests` en developpement local. */
   allowInsecure?: boolean;
   /** Le site autorise-t-il l'intégration d'une carte tierce ? */
@@ -81,7 +87,7 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
     // l'utilisateur : ils sont generes a partir de valeurs validees.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https:",
+    ["img-src 'self' data: blob: https:", ...(options.imgSrc ?? [])].join(' '),
     "media-src 'self' https:",
     `connect-src ${connect}`,
     `frame-src ${frame}`,

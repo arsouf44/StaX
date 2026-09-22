@@ -47,7 +47,7 @@ const LABELS: Record<string, string> = {
   description: 'Description',
   body: 'Texte',
   blocks: 'Paragraphes',
-  media: 'Image',
+  media: 'Photo',
   items: 'Éléments',
   actions: 'Boutons',
   layout: 'Disposition',

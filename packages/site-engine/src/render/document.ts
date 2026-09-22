@@ -372,7 +372,7 @@ export function renderDocument(input: DocumentInput): string {
   const tokenAttribute = renderToString(html`${context.formToken}`);
 
   return `<!doctype html>
-<html lang="${page.locale}" data-scheme="${context.theme.scheme}">
+<html lang="${page.locale}" data-scheme="${context.theme.scheme}"${context.isPreview ? ' data-stax-preview="true"' : ''}>
 <head>${renderToString(head)}</head>
 <body data-stax-token="${tokenAttribute}">
 ${body}

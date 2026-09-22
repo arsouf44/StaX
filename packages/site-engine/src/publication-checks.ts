@@ -71,6 +71,7 @@ const PLACEHOLDERS = [
   'Votre titre principal',
   'Décrivez en une phrase',
   'à compléter',
+  'Remplacez ce texte',
 ];
 
 /** Section liee a une donnee metier : [collection, libelle de la page a ouvrir]. */

@@ -58,6 +58,17 @@ function storedMediaUrl(value: string | null | undefined): string | null {
   return mediaPublicUrl(bucket, rest.join('/'));
 }
 
+/** Origine du stockage des photos : nommee dans `img-src` (http en local). */
+function storageImageOrigin(): string[] {
+  const raw = readEnv('SUPABASE_URL') ?? readEnv('NEXT_PUBLIC_SUPABASE_URL');
+  if (!raw) return [];
+  try {
+    return [new URL(raw).origin];
+  } catch {
+    return [];
+  }
+}
+
 function refuse(status: number, message: string): Response {
   return new Response(
     `<!doctype html><html lang="fr"><head><meta charset="utf-8">` +
@@ -76,6 +87,25 @@ function refuse(status: number, message: string): Response {
       },
     },
   );
+}
+
+/**
+ * Origine de l editeur qui affiche cet apercu.
+ *
+ * L apercu est charge par une adresse RELATIVE depuis l editeur : le nom
+ * d hote que le navigateur envoie ici est donc exactement celui de la page
+ * parente. `request.url`, lui, peut porter le nom interne du serveur
+ * (`localhost` derriere un mandataire) : les messages de l apercu, adresses
+ * a cette origine, seraient alors silencieusement perdus et le clic sur un
+ * titre ne selectionnerait plus rien.
+ */
+function requestOrigin(request: Request, url: URL): string {
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (!host || !/^[a-z0-9.-]+(:\d{1,5})?$/i.test(host)) return url.origin;
+  const forwarded = request.headers.get('x-forwarded-proto');
+  const scheme =
+    forwarded === 'https' || forwarded === 'http' ? forwarded : url.protocol.slice(0, -1);
+  return `${scheme}://${host}`;
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -239,7 +269,7 @@ export async function GET(request: Request): Promise<Response> {
       ? {
           editor: {
             hiddenBlockIds,
-            parentOrigin: url.origin,
+            parentOrigin: requestOrigin(request, url),
             selectedBlockId: isUuid(url.searchParams.get('sel'))
               ? url.searchParams.get('sel')
               : null,
@@ -269,7 +299,7 @@ export async function GET(request: Request): Promise<Response> {
         `script-src 'nonce-${nonce}'`,
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
-        "img-src 'self' https: data:",
+        ["img-src 'self' https: data:", ...storageImageOrigin()].join(' '),
         "connect-src 'none'",
         "form-action 'none'",
         "frame-ancestors 'self'",

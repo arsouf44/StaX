@@ -54,6 +54,7 @@ export function PreviewFrame({
 }) {
   const frames = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
   const [front, setFront] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<[string | null, string | null]>([null, null]);
   const scrollRef = useRef(0);
   const selectedRef = useRef(selectedId);
@@ -91,6 +92,7 @@ export function PreviewFrame({
     });
     if (selectedRef.current) params.set('sel', selectedRef.current);
     const src = `/app/editeur/apercu?${params.toString()}`;
+    setLoading(true);
     setSources((current) => {
       const back = current[0] === null && current[1] === null ? 0 : front === 0 ? 1 : 0;
       const next: [string | null, string | null] = [...current];
@@ -130,12 +132,18 @@ export function PreviewFrame({
   }, []);
 
   // Selection depuis la liste : la section est mise en evidence dans l apercu.
+  // On ne fait defiler l apercu QUE si la selection change : apres un simple
+  // enregistrement, l apercu recharge garde la position du client au lieu de
+  // le ramener en haut de la section a chaque lettre tapee.
+  const scrolledTo = useRef<string | null>(selectedId);
   useEffect(() => {
     const target = frames[front]?.current?.contentWindow;
     if (!target || !selectedId) return;
+    const scroll = scrolledTo.current !== selectedId;
+    scrolledTo.current = selectedId;
     // Origine opaque : `*` est la seule cible possible. Le message ne contient
     // qu un identifiant de section, rien de sensible.
-    target.postMessage({ type: 'stax:select', blockId: selectedId, scroll: true }, '*');
+    target.postMessage({ type: 'stax:select', blockId: selectedId, scroll }, '*');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, front]);
 
@@ -149,6 +157,8 @@ export function PreviewFrame({
         style={{ width: available ? `${Math.round(target * scale)}px` : '100%', maxWidth: '100%' }}
         data-testid="preview-viewport"
         data-viewport={viewport}
+        data-loading={loading ? 'true' : 'false'}
+        aria-busy={loading}
       >
         {sources.map((src, index) =>
           src ? (
@@ -171,6 +181,7 @@ export function PreviewFrame({
               }}
               onLoad={() => {
                 if (index !== front) setFront(index);
+                setLoading(false);
               }}
             />
           ) : null,

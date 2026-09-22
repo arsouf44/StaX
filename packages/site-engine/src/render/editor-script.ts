@@ -22,7 +22,16 @@ export const EDITOR_STYLES = `
 [data-stax-hidden="true"]::after{content:"Masquée — invisible pour vos visiteurs";position:absolute;z-index:40;top:6px;right:6px;background:#1f1f24;color:#fff;font:600 12px/1.2 system-ui,sans-serif;padding:4px 8px;border-radius:6px}
 .stax-empty{border:2px dashed rgba(124,92,255,.35);background:rgba(124,92,255,.04)}
 .stax-field-hover{outline:2px solid rgba(124,92,255,.35);outline-offset:2px;border-radius:4px}
+[data-stax-block]{scroll-margin-top:96px}
+.rv,.rv[data-in]{opacity:1!important;transform:none!important;transition:none!important}
 `;
+
+/*
+ * Les deux dernieres regles : une section amenee a l ecran ne se cache plus
+ * sous l en-tete fixe du site, et les apparitions au defilement sont coupees.
+ * L apercu est recharge a chaque enregistrement : sans cela, toutes les
+ * sections rejoueraient leur animation a chaque lettre tapee.
+ */
 
 /**
  * Le script recoit l origine parente et l etat initial en JSON : aucune valeur
@@ -54,7 +63,9 @@ function select(block,scroll){
   selected=block;
   if(!block)return;
   block.classList.add('stax-selected');
-  if(scroll)block.scrollIntoView({block:'center',behavior:'smooth'});
+  if(!scroll)return;
+  var top=block.getBoundingClientRect().top;
+  if(top<96||top>window.innerHeight*0.6)block.scrollIntoView({block:'start',behavior:'smooth'});
 }
 document.addEventListener('click',function(event){
   var block=blockOf(event.target);

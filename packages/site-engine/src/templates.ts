@@ -69,15 +69,88 @@ export interface TemplateOptions {
   city?: string | null;
 }
 
+/**
+ * Accroches propres a un metier, quand celle du secteur sonnerait faux : une
+ * boulangerie ne « reserve pas de table », un caviste n a pas de « cuisine ».
+ */
+const BUSINESS_HERO: Record<string, string> = {
+  pizzeria: 'Nos pizzas, faites maison',
+  brasserie: 'Une brasserie où l’on se sent bien',
+  bar: 'Un lieu pour se retrouver',
+  cafe: 'Une pause qui fait du bien',
+  boulangerie: 'Du bon pain, chaque matin',
+  patisserie: 'Des pâtisseries faites maison',
+  traiteur: 'Vos réceptions, préparées avec soin',
+  'food-truck': 'Notre cuisine vient à vous',
+  boucherie: 'Des viandes choisies avec soin',
+  caviste: 'Des vins choisis pour vous',
+};
+
+const SHOP_LIKE = new Set(['boulangerie', 'patisserie', 'boucherie', 'caviste']);
+
+/**
+ * Pages du secteur « restauration » renommees pour les metiers qui ne sont
+ * pas des restaurants : une boulangerie a une boutique et des produits, pas
+ * « Le restaurant » et « La carte ».
+ */
+const PAGE_RENAMES: Record<string, Record<string, { path: string; title: string }>> = {
+  boulangerie: {
+    '/le-restaurant': { path: '/la-boutique', title: 'La boutique' },
+    '/carte': { path: '/nos-produits', title: 'Nos produits' },
+  },
+  patisserie: {
+    '/le-restaurant': { path: '/la-boutique', title: 'La boutique' },
+    '/carte': { path: '/nos-creations', title: 'Nos créations' },
+  },
+  boucherie: {
+    '/le-restaurant': { path: '/la-boutique', title: 'La boutique' },
+    '/carte': { path: '/nos-produits', title: 'Nos produits' },
+  },
+  caviste: {
+    '/le-restaurant': { path: '/la-cave', title: 'La cave' },
+    '/carte': { path: '/nos-vins', title: 'Nos vins' },
+  },
+  traiteur: {
+    '/le-restaurant': { path: '/qui-sommes-nous', title: 'Qui sommes-nous' },
+    '/carte': { path: '/nos-formules', title: 'Nos formules' },
+  },
+  'food-truck': { '/le-restaurant': { path: '/notre-histoire', title: 'Notre histoire' } },
+  bar: { '/le-restaurant': { path: '/le-lieu', title: 'Le lieu' } },
+  cafe: { '/le-restaurant': { path: '/le-lieu', title: 'Le lieu' } },
+};
+
 /** Textes d amorce par metier. Jamais de faux chiffre, jamais de Lorem Ipsum. */
-function heroCopy(business: BusinessDefinition): { title: string; subtitle: string } {
+function heroCopy(
+  business: BusinessDefinition,
+  modules: ReadonlySet<string>,
+): { title: string; subtitle: string } {
   const sector = business.sector;
   const name = business.name.toLowerCase();
 
   if (sector === 'restauration') {
+    const title = BUSINESS_HERO[business.id] ?? 'Une cuisine qui vous ressemble';
+    if (SHOP_LIKE.has(business.id)) {
+      return {
+        title,
+        subtitle: modules.has('ecommerce')
+          ? 'Nos produits, nos horaires et la commande en ligne, à retirer en boutique.'
+          : 'Nos produits, nos horaires et comment venir nous voir.',
+      };
+    }
+    if (business.id === 'traiteur') {
+      return {
+        title,
+        subtitle: 'Nos formules, nos réalisations, et un devis rapide pour votre événement.',
+      };
+    }
+    if (business.id === 'food-truck') {
+      return { title, subtitle: 'Nos plats, nos emplacements de la semaine et nos horaires.' };
+    }
     return {
-      title: 'Une cuisine qui vous ressemble',
-      subtitle: 'Découvrez notre carte, nos horaires et réservez votre table en quelques secondes.',
+      title,
+      subtitle: modules.has('booking')
+        ? 'Découvrez notre carte, nos horaires et réservez votre table en quelques secondes.'
+        : 'Découvrez notre carte, nos horaires et comment venir nous voir.',
     };
   }
   if (sector === 'beaute-bien-etre') {
@@ -320,15 +393,19 @@ export function buildTemplateForBusiness(
 ): SiteTemplate {
   const business = resolveBusiness(businessTypeSlug);
   const modules = new Set<string>(options.enabledModules ?? business.modules);
-  const hero = heroCopy(business);
+  const hero = heroCopy(business, modules);
   const cta = ctaCopy(modules);
   const businessName = options.businessName?.trim() || business.name;
   const pitch = options.pitch?.trim() || null;
 
   // Pages retenues : celles dont il reste au moins une section permise.
+  const renames = PAGE_RENAMES[business.id] ?? {};
+  const menuPath = renames['/carte']?.path ?? '/carte';
+  const menuLabel = renames['/carte']?.title ?? 'Voir la carte';
   const blueprints = business.recommendedPages
     .map((blueprint) => ({
       ...blueprint,
+      ...(renames[blueprint.path] ?? {}),
       blocks: blueprint.blocks.filter((type) => blockAllowed(type, modules)),
     }))
     .filter(
@@ -345,8 +422,8 @@ export function buildTemplateForBusiness(
   const secondaryAction =
     modules.has('services') && existingPaths.has('/prestations')
       ? { label: 'Nos prestations', href: '/prestations', style: 'secondary', external: false }
-      : modules.has('restaurant-menu') && existingPaths.has('/carte')
-        ? { label: 'Voir la carte', href: '/carte', style: 'secondary', external: false }
+      : modules.has('restaurant-menu') && existingPaths.has(menuPath)
+        ? { label: menuLabel, href: menuPath, style: 'secondary', external: false }
         : null;
 
   const primaryHref = cta.label === 'Demander un devis' ? quotePath : contactPath;

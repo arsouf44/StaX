@@ -204,7 +204,7 @@ export const processBlock = define({
       .max(8)
       .default([]),
   }),
-  defaults: { title: 'Comment ca se passe', steps: [] },
+  defaults: { title: 'Comment ça se passe', steps: [] },
 });
 
 export const servicesBlock = define({
@@ -397,7 +397,7 @@ export const openingHoursBlock = define({
     showCurrentStatus: z.boolean().default(true),
     showClosures: z.boolean().default(true),
   }),
-  defaults: { title: 'Horaires d ouverture', showCurrentStatus: true, showClosures: true },
+  defaults: { title: 'Horaires d’ouverture', showCurrentStatus: true, showClosures: true },
 });
 
 export const teamBlock = define({
@@ -634,7 +634,7 @@ export const beforeAfterBlock = define({
       .max(12)
       .default([]),
   }),
-  defaults: { title: 'Avant / apres', items: [] },
+  defaults: { title: 'Avant / après', items: [] },
 });
 
 export const serviceAreaBlock = define({
@@ -650,7 +650,7 @@ export const serviceAreaBlock = define({
     subtitle: text(300),
     layout: z.enum(['tags', 'columns', 'map']).default('tags'),
   }),
-  defaults: { title: 'Zones d intervention', subtitle: '', layout: 'tags' },
+  defaults: { title: 'Zones d’intervention', subtitle: '', layout: 'tags' },
 });
 
 export const eventsBlock = define({
@@ -914,6 +914,107 @@ export function parseBlock(input: {
 }
 
 /** Bloc pret a inserer, rempli avec ses valeurs par defaut. */
+/**
+ * Contenu de depart d une section ajoutee depuis l editeur.
+ *
+ * La bibliotheque promet « un contenu d exemple que vous remplacerez » : une
+ * section Questions fréquentes sans aucune question ne s afficherait meme pas
+ * en ligne, et le client croirait que l ajout a echoue.
+ *
+ * Deux regles : les textes sont vrais pour presque tout le monde, ou
+ * signales comme textes d exemple avant publication (voir
+ * publication-checks.ts) ; et JAMAIS de faux avis, de faux chiffres ni de
+ * faux logos de clients — ceux-la restent vides tant que le client ne les a
+ * pas saisis.
+ */
+export const STARTER_PLACEHOLDER = 'Remplacez ce texte';
+
+const STARTERS: Record<string, Record<string, unknown>> = {
+  intro: {
+    body: [
+      {
+        kind: 'paragraph',
+        text:
+          'Présentez votre histoire, votre équipe et ce qui fait votre différence. ' +
+          'Un texte sincère vaut mieux qu’un discours générique.',
+      },
+    ],
+  },
+  'rich-text': {
+    blocks: [
+      {
+        kind: 'paragraph',
+        text: `${STARTER_PLACEHOLDER} par le vôtre : cliquez dessus pour l’écrire.`,
+      },
+    ],
+  },
+  features: {
+    title: 'Pourquoi nous choisir',
+    items: [
+      {
+        icon: 'clock',
+        title: 'Réactivité',
+        description: 'Nous répondons rapidement à chaque demande.',
+      },
+      {
+        icon: 'shield-check',
+        title: 'Travail soigné',
+        description: 'Un résultat à la hauteur de vos attentes.',
+      },
+      {
+        icon: 'handshake',
+        title: 'Conseil personnalisé',
+        description: 'Nous prenons le temps de comprendre votre besoin.',
+      },
+    ],
+  },
+  process: {
+    steps: [
+      { title: 'Vous nous contactez', description: 'Par téléphone ou avec le formulaire.' },
+      { title: 'Nous en parlons', description: 'Nous faisons le point sur votre besoin.' },
+      {
+        title: 'Nous nous occupons de tout',
+        description: 'Et vous tenons informé à chaque étape.',
+      },
+    ],
+  },
+  faq: {
+    items: [
+      {
+        question: 'Comment vous contacter ?',
+        answer:
+          'Par téléphone, par e-mail ou avec le formulaire de contact de ce site. ' +
+          'Nous vous répondons rapidement.',
+      },
+      {
+        question: 'Où vous trouver ?',
+        answer: 'Notre adresse et nos horaires sont indiqués sur la page Contact.',
+      },
+    ],
+  },
+  cta: { subtitle: 'Écrivez-nous ou appelez-nous : nous vous répondons rapidement.' },
+};
+
+/** Section prete a etre ajoutee par le client, avec son contenu de depart. */
+export function createStarterBlock(type: string): ParsedBlock | null {
+  const definition = getBlockDefinition(type);
+  if (!definition) return null;
+  const starter = STARTERS[type];
+  if (!starter) return createBlock(type);
+  const parsed = definition.schema.safeParse({
+    ...(definition.defaults as Record<string, unknown>),
+    ...starter,
+  });
+  if (!parsed.success) return createBlock(type);
+  return {
+    id: '',
+    type: definition.type,
+    version: definition.version,
+    props: parsed.data as Record<string, unknown>,
+    settings: blockSettingsSchema.parse({}),
+  };
+}
+
 export function createBlock(type: string): ParsedBlock | null {
   const definition = getBlockDefinition(type);
   if (!definition) return null;

@@ -335,7 +335,9 @@ export const SITE_SCRIPT = String.raw`
   });
 
   /* --- Mesure d audience sans cookie -------------------------------------- */
-  if (navigator.sendBeacon) {
+  /* Jamais dans un apercu : le client qui relit son site n est pas un
+     visiteur, et l apercu n est pas servi par le moteur des sites. */
+  if (navigator.sendBeacon && !d.documentElement.hasAttribute('data-stax-preview')) {
     try {
       navigator.sendBeacon(
         '/api/collect',

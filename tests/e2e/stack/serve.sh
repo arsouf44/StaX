@@ -24,6 +24,12 @@ export SITES_PUBLIC_SCHEME=http
 export SITES_PUBLIC_PORT=3101
 # Secret jetable, propre a la pile locale : il signe les jetons anti-CSRF.
 export STAX_SECRET_KEY="${STAX_SECRET_KEY:-$(cat "$STACK_DIR/jwt-secret")-stax-e2e-secret}"
+# Stripe n'est jamais joint depuis la pile locale. Ces valeurs jetables
+# permettent seulement de VERIFIER la signature d'un webhook que les tests
+# signent eux-memes (meme derivation que tests/e2e/journeys/support/stack.ts) :
+# c'est le vrai chemin « paiement recu -> site prepare », sans le reseau.
+export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_test_stax_e2e_local_only}"
+export STRIPE_WEBHOOK_SECRET="${STRIPE_WEBHOOK_SECRET:-whsec_$(printf '%s' "$(cat "$STACK_DIR/jwt-secret")-stripe-webhook" | sha256sum | cut -c1-48)}"
 
 case "${1:-}" in
   platform)
