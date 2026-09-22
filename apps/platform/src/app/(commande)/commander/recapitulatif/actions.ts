@@ -1,11 +1,14 @@
 'use server';
 
 import type { ActionState } from '~/lib/form-state';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createUserClient, listMemberships, unwrapMaybe } from '@stax/database';
 import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@stax/payments';
 import { getBusiness } from '@stax/business';
-import { readOrderDraft } from '~/lib/order-draft';
+import { clearOrderDraft, readOrderDraft } from '~/lib/order-draft';
+import { availableSiteHostname, buildSitePlan } from '~/lib/site-provisioning';
+import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 import { getSession } from '~/lib/session';
 import { guardAction } from '~/lib/action-guard';
 import { TERMS_VERSION } from '~/content/legal';
@@ -258,4 +261,138 @@ export async function startCheckoutAction(
   }
 
   redirect(checkoutUrl);
+}
+
+/**
+ * Commande d un compte interne StaX : aucun paiement, site cree tout de suite.
+ *
+ * L interface ne propose ce chemin qu aux comptes internes, mais CE N EST PAS
+ * ELLE QUI DECIDE : `create_internal_order` relit en base le privilege du
+ * compte (colonnes que lui-meme ne peut pas ecrire) et refuse tout autre
+ * appelant. Un client qui invoquerait cette action a la main obtiendrait un
+ * refus, et aucune commande.
+ *
+ * Aucun appel a Stripe n a lieu ici, ni avant ni apres.
+ */
+export async function createInternalOrderAction(
+  _previous: CheckoutState,
+  formData: FormData,
+): Promise<CheckoutState> {
+  const accepted = formData.get('acceptTerms');
+  if (accepted !== 'on' && accepted !== 'true') {
+    return {
+      status: 'error',
+      message: 'Cochez la case de confirmation pour créer ce site.',
+    };
+  }
+
+  const session = await getSession();
+  if (!session.user) {
+    redirect('/connexion?suivant=%2Fcommander%2Frecapitulatif');
+  }
+
+  const guard = await guardAction({ limit: 'checkout', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
+
+  const draft = await readOrderDraft();
+  if (!draft.planSlug || !draft.businessTypeSlug || !draft.sectorSlug || !draft.organizationName) {
+    return {
+      status: 'error',
+      message: 'Votre commande est incomplète. Reprenez le parcours depuis le début.',
+    };
+  }
+
+  const business = getBusiness(draft.businessTypeSlug);
+  if (!business || business.sector !== draft.sectorSlug) {
+    return { status: 'error', message: 'Le métier choisi n’est plus disponible.' };
+  }
+
+  const db = createUserClient(session.user.accessToken);
+
+  const plan = unwrapMaybe<{ id: string }>(
+    (await db
+      .from('plans')
+      .select('id')
+      .eq('slug', draft.planSlug)
+      .eq('is_active', true)
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle()) as never,
+  );
+  if (!plan) return { status: 'error', message: 'Cette offre n’est plus disponible.' };
+
+  const pitch = typeof draft.answers['pitch'] === 'string' ? draft.answers['pitch'] : null;
+  // Organisation interne = toutes les fonctionnalites : le modele complet du
+  // metier est prepare, quelle que soit l offre choisie.
+  const sitePlan = buildSitePlan({
+    businessTypeSlug: business.id,
+    businessName: draft.organizationName,
+    pitch,
+    city: draft.city ?? null,
+    hasFeature: null,
+  });
+  const hostname = await availableSiteHostname(
+    draft.domainHandling === 'subdomain_only' && draft.subdomain
+      ? draft.subdomain
+      : draft.organizationName,
+  );
+
+  const { data, error } = await db.rpc('create_internal_order', {
+    p_plan_id: plan.id,
+    p_sector_slug: draft.sectorSlug,
+    p_business_type: business.id,
+    p_organization_name: draft.organizationName,
+    p_questionnaire: {
+      businessName: draft.organizationName,
+      city: draft.city ?? null,
+      contactEmail: draft.contactEmail ?? null,
+      contactPhone: draft.contactPhone ?? null,
+      ...draft.answers,
+    },
+    p_requested_domain: draft.domainHostname ?? null,
+    p_domain_handling: draft.domainHandling ?? 'subdomain_only',
+    p_customer_notes: draft.customerNotes ?? null,
+    p_terms_version: TERMS_VERSION,
+    p_template: sitePlan.payload,
+    p_hostname: hostname,
+    p_details: {
+      email: draft.contactEmail ?? null,
+      phone: draft.contactPhone ?? null,
+      city: draft.city ?? null,
+      description: pitch,
+    },
+  });
+
+  const result = (data ?? null) as {
+    ok?: boolean;
+    organizationId?: string;
+    siteId?: string;
+  } | null;
+  if (error || !result?.ok || !result.organizationId || !result.siteId) {
+    if (error?.code === '42501') {
+      return {
+        status: 'error',
+        message: 'Ce compte ne peut pas commander sans paiement. Passez par le règlement habituel.',
+      };
+    }
+    console.error('[stax:internal-order]', error?.message);
+    return {
+      status: 'error',
+      message: 'Le site n’a pas pu être créé. Rien n’a été enregistré : réessayez.',
+    };
+  }
+
+  await clearOrderDraft();
+  const store = await cookies();
+  const options = {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: true,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 180,
+  };
+  store.set(ORG_COOKIE, result.organizationId, options);
+  store.set(SITE_COOKIE, result.siteId, options);
+
+  redirect('/app?commande=interne');
 }

@@ -13,6 +13,7 @@ import { attrs, html, join, raw, renderToString, type RawHtml } from './html';
 import type { RenderContext } from './context';
 import { SITE_STYLESHEET } from './styles';
 import { SITE_SCRIPT } from './script';
+import { EDITOR_STYLES, editorScript } from './editor-script';
 
 /**
  * Document complet d une page publique.
@@ -297,7 +298,7 @@ export function renderDocument(input: DocumentInput): string {
   }
 
   const body = renderToString(html`
-    ${context.isPreview ? previewBanner() : ''}${context.isDemo ? demoBanner() : ''}
+    ${context.isPreview && !context.editor ? previewBanner() : ''}${context.isDemo ? demoBanner() : ''}
     <a class="skip" href="#contenu">Aller au contenu</a>
     ${header(context, input.logoUrl)}
     <main id="contenu">${input.mainOverride ?? renderBlocks(page.blocks, context)}</main>
@@ -352,6 +353,7 @@ export function renderDocument(input: DocumentInput): string {
     <style nonce="${context.nonce}">
       :root{${raw(context.theme.cssVariables)}}
       ${raw(SITE_STYLESHEET)}
+      ${context.editor ? raw(EDITOR_STYLES) : ''}
     </style>
     <link rel="alternate" type="application/xml" href="/sitemap.xml" title="Plan du site" />
     ${join(
@@ -375,6 +377,15 @@ export function renderDocument(input: DocumentInput): string {
 <body data-stax-token="${tokenAttribute}">
 ${body}
 <script nonce="${context.nonce}" defer>${SITE_SCRIPT}</script>
+${
+  context.editor
+    ? `<script nonce="${context.nonce}">${editorScript({
+        parentOrigin: context.editor.parentOrigin,
+        selectedBlockId: context.editor.selectedBlockId,
+        scrollY: context.editor.scrollY,
+      })}</script>`
+    : ''
+}
 ${needsTurnstile ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}
 </body>
 </html>`;

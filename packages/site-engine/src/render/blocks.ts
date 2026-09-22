@@ -1,5 +1,5 @@
 import { formatMoney } from '@stax/payments/money';
-import type { ParsedBlock } from '../blocks/registry';
+import { getBlockDefinition, type ParsedBlock } from '../blocks/registry';
 import type { BlockSettings } from '../blocks/primitives';
 import { absoluteUrl } from '../seo';
 import { attrs, cls, html, join, raw, type RawHtml } from './html';
@@ -1999,9 +1999,78 @@ export function renderBlock(block: ParsedBlock, context: RenderContext): RawHtml
   return section(settings, body);
 }
 
+/**
+ * Explication affichee dans l apercu a la place d une section vide.
+ *
+ * Un visiteur ne voit JAMAIS ce texte : en ligne, une section sans contenu ne
+ * rend rien. Dans l editeur, en revanche, une section invisible serait
+ * introuvable — le client ne comprendrait pas pourquoi « rien ne se passe ».
+ */
+function emptyHint(block: ParsedBlock): string {
+  switch (block.type) {
+    case 'menu':
+    case 'menu-preview':
+      return 'Ajoutez vos plats dans « Carte » : ils apparaîtront ici automatiquement.';
+    case 'services':
+      return 'Ajoutez vos prestations dans « Prestations » : elles apparaîtront ici.';
+    case 'opening-hours':
+      return 'Indiquez vos horaires dans « Horaires » : ils apparaîtront ici.';
+    case 'team':
+      return 'Présentez votre équipe dans « Équipe » : elle apparaîtra ici.';
+    case 'products':
+      return 'Ajoutez vos produits dans « Produits » : ils apparaîtront ici.';
+    case 'testimonials':
+      return 'Ajoutez les avis de vos clients : cliquez ici puis « Ajouter un élément ».';
+    case 'gallery':
+    case 'logos':
+      return 'Ajoutez vos photos : cliquez ici puis « Ajouter une photo ».';
+    case 'contact':
+    case 'quote-form':
+    case 'newsletter':
+      return 'Le formulaire de cette section n’existe pas encore. Créez-le dans « Formulaires ».';
+    case 'booking':
+      return 'Créez une prestation réservable dans « Réservations » pour activer cette section.';
+    default:
+      return 'Cette section est vide : cliquez dessus pour ajouter du contenu.';
+  }
+}
+
+/** Pose les marqueurs de selection sur l element racine d une section. */
+function annotate(markup: string, block: ParsedBlock, hidden: boolean): string {
+  const definition = getBlockDefinition(block.type);
+  const label = definition?.label ?? 'Section';
+  const attributes = renderToAttributes(block.id, label, hidden);
+  return markup.replace(/^\s*<([a-z][a-z0-9-]*)/, (_match, tag: string) => `<${tag} ${attributes}`);
+}
+
+function renderToAttributes(id: string, label: string, hidden: boolean): string {
+  return html`data-stax-block="${id}" data-stax-label="${label}"
+  ${attrs({
+    'data-stax-hidden': hidden ? 'true' : false,
+  })}`.value;
+}
+
 /** Rend la suite de blocs d une page. */
 export function renderBlocks(blocks: readonly ParsedBlock[], context: RenderContext): RawHtml {
-  return join(blocks.map((block) => renderBlock(block, context)));
+  const editor = context.editor;
+  if (!editor) return join(blocks.map((block) => renderBlock(block, context)));
+
+  return join(
+    blocks.map((block) => {
+      const hidden = editor.hiddenBlockIds.has(block.id);
+      let markup = renderBlock(block, context).value;
+      if (!markup.trim()) {
+        const definition = getBlockDefinition(block.type);
+        markup = html`<section class="sec stax-empty">
+          <div class="wrap w-default">
+            <p class="eyebrow">${definition?.label ?? 'Section'}</p>
+            <p class="muted">${emptyHint(block)}</p>
+          </div>
+        </section>`.value;
+      }
+      return raw(annotate(markup, block, hidden));
+    }),
+  );
 }
 
 /** Expose l URL canonique d une page, utilisee par le document et le sitemap. */

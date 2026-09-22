@@ -536,3 +536,29 @@ export function modulesForPlan(
     return definition.requiredFeature === null || hasFeature(definition.requiredFeature);
   });
 }
+
+/**
+ * Charge utile de `provision_site` : le modele, sans identifiants (la base les
+ * attribue) et sans rien qui ne soit pas du contenu.
+ */
+export function templatePayload(template: SiteTemplate): Record<string, unknown> {
+  return {
+    theme: template.theme,
+    modules: template.modules,
+    navigation: template.navigation,
+    forms: template.forms,
+    pages: template.pages.map((page) => ({
+      path: page.path,
+      title: page.title,
+      kind: page.kind,
+      showInNav: page.showInNav,
+      sortOrder: page.sortOrder,
+      blocks: page.blocks.map((block) => ({
+        type: block.type,
+        version: block.version,
+        props: block.props,
+        settings: block.settings,
+      })),
+    })),
+  };
+}

@@ -252,13 +252,13 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   },
   blog: {
     id: 'blog',
-    label: 'Actualites',
+    label: 'Actualités',
     description: 'Publiez vos nouvelles et alimentez votre référencement.',
     icon: 'newspaper',
     category: 'marketing',
     requiredFeature: 'blog',
     dashboardEntries: [
-      entry('/app/actualites', 'Actualites', 'newspaper', 'content.edit', 'activite', 45),
+      entry('/app/actualites', 'Actualités', 'newspaper', 'content.edit', 'activite', 45),
     ],
     blockTypes: ['articles'],
     sortOrder: 190,

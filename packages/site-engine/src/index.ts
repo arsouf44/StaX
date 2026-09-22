@@ -5,3 +5,6 @@ export * from './seo';
 export * from './templates';
 export * from './render/index';
 export * from './editor/index';
+export * from './draft-state';
+export * from './publication-checks';
+export * from './history-diff';

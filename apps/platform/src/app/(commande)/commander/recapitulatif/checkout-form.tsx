@@ -5,14 +5,50 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Alert, Button, Checkbox } from '@stax/ui';
 import { IDLE_STATE as CHECKOUT_IDLE } from '~/lib/form-state';
-import { startCheckoutAction, type CheckoutState } from './actions';
+import { createInternalOrderAction, startCheckoutAction, type CheckoutState } from './actions';
 
-function SubmitButton() {
+function SubmitButton({ internal }: { internal: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" block size="lg" loading={pending} loadingLabel="Ouverture du paiement">
-      Régler et lancer mon projet
+    <Button
+      type="submit"
+      block
+      size="lg"
+      loading={pending}
+      loadingLabel={internal ? 'Création du site' : 'Ouverture du paiement'}
+    >
+      {internal ? 'Créer le site maintenant' : 'Régler et lancer mon projet'}
     </Button>
+  );
+}
+
+/**
+ * Compte interne StaX : aucun paiement. La confirmation reste explicite — on
+ * ne cree pas un site d un clic involontaire — mais elle ne parle ni de CGV ni
+ * de garantie, qui n ont pas d objet sans vente.
+ */
+export function InternalOrderForm() {
+  const [state, action] = useActionState<CheckoutState, FormData>(
+    createInternalOrderAction,
+    CHECKOUT_IDLE,
+  );
+
+  return (
+    <form action={action} className="space-y-4">
+      {state.status === 'error' && state.message ? (
+        <Alert tone="danger" live="alert">
+          {state.message}
+        </Alert>
+      ) : null}
+
+      <Checkbox
+        name="acceptTerms"
+        required
+        label="Je confirme la création de ce site dans le cadre d’une commande interne StaX, sans paiement."
+      />
+
+      <SubmitButton internal />
+    </form>
   );
 }
 
@@ -51,7 +87,7 @@ export function CheckoutForm({
         }
       />
 
-      <SubmitButton />
+      <SubmitButton internal={false} />
     </form>
   );
 }
