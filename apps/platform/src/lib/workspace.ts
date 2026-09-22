@@ -5,6 +5,7 @@ import { createUserClient } from '@stax/database';
 import { loadWorkspace, type Workspace } from '@stax/database';
 import type { Db } from '@stax/database';
 import type { OrgCapability } from '@stax/types';
+import { hasPlatformRole } from '@stax/auth';
 import { requireSession } from './session';
 
 /**
@@ -39,9 +40,16 @@ export const getWorkspace = cache(async (): Promise<WorkspaceContext> => {
     siteId: store.get(SITE_COOKIE)?.value ?? null,
   });
 
-  // Un compte sans organisation n a rien a faire dans l espace client : on
-  // l oriente vers la commande plutot que d afficher un tableau de bord vide.
-  if (!workspace) redirect('/bienvenue');
+  if (!workspace) {
+    // L equipe StaX n a pas d organisation cliente : l envoyer vers le tunnel
+    // de commande n aurait aucun sens, et la laissait sans issue. Sa place est
+    // au back-office, dont l acces ne depend que du role inscrit en base.
+    if (hasPlatformRole(session.profile, 'support')) redirect('/admin');
+
+    // Un client sans organisation ne verrait qu un tableau de bord vide : on
+    // lui explique la situation et on lui donne les suites possibles.
+    redirect('/bienvenue');
+  }
 
   return {
     workspace,

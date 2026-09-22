@@ -2,7 +2,7 @@ import { cache } from 'react';
 import { createUserClient, type Db } from '@stax/database';
 import type { PlatformRole } from '@stax/types';
 import { hasPlatformRole } from '@stax/auth';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { requireSession, type AuthenticatedSession } from './session';
 
 /**
@@ -35,12 +35,24 @@ export const getAdminContext = cache(async (): Promise<AdminContext> => {
   const session = await requireSession();
   const role = session.profile.platform_role;
 
+  // Pas le role : page introuvable. On ne confirme pas l existence du
+  // back-office a qui n y a pas droit.
   if (!hasPlatformRole(session.profile, 'support') || !role) {
     notFound();
   }
 
+  // Le role y est, mais la session n a pas de second facteur valide.
+  //
+  // Renvoyer 404 ici disait a un membre de l equipe que SON PROPRE
+  // back-office n existe pas, sans lui dire quoi faire — une impasse, sans
+  // indice. Le niveau d assurance exige ne bouge pas pour autant : on
+  // conduit a l enrolement au lieu de mentir.
+  //
+  // Ce controle est independant de `profiles.mfa_enforced` : le back-office
+  // ouvre les donnees de TOUS les clients, un mot de passe seul n y suffit
+  // jamais, meme si le compte n a plus l obligation de second facteur.
   if (session.user.assuranceLevel !== 'aal2') {
-    notFound();
+    redirect('/mfa/configuration?raison=obligatoire');
   }
 
   return {

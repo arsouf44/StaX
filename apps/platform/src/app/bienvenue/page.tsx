@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ButtonLink, Container, Logo, Panel } from '@stax/ui';
+import { hasPlatformRole } from '@stax/auth';
+import { ExitBar } from './exit-bar';
 import { getSession } from '~/lib/session';
 import { createUserClient, listMemberships } from '@stax/database';
 
@@ -34,7 +36,10 @@ export default async function WelcomePage() {
     <div className="flex min-h-dvh flex-col">
       <header className="py-8">
         <Container size="default">
-          <Logo />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <Logo />
+            <ExitBar canReachAdmin={hasPlatformRole(session.profile, 'support')} />
+          </div>
         </Container>
       </header>
 
