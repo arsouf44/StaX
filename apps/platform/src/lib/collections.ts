@@ -739,7 +739,7 @@ export const COLLECTIONS = {
   /* --- Réservations ------------------------------------------------------ */
   'booking-services': {
     id: 'booking-services',
-    route: '/app/reservations',
+    route: '/app/disponibilites',
     table: 'booking_services',
     module: 'booking',
     feature: 'bookings',
@@ -853,7 +853,7 @@ export const COLLECTIONS = {
 
   availability: {
     id: 'availability',
-    route: '/app/reservations',
+    route: '/app/disponibilites',
     table: 'availability_rules',
     module: 'booking',
     feature: 'bookings',

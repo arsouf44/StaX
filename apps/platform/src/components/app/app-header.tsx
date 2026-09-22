@@ -158,6 +158,12 @@ export function AppHeader({ workspace }: { workspace: Workspace }) {
               Aide &amp; support
             </DropdownItem>
             <DropdownSeparator />
+            <DropdownItem href="/commander" icon={<Icon name="plus" />}>
+              {workspace.profile.account_type === 'internal'
+                ? 'Créer un nouveau site'
+                : 'Commander un autre site'}
+            </DropdownItem>
+            <DropdownSeparator />
             <DropdownItem
               tone="danger"
               disabled={signingOut}

@@ -790,7 +790,7 @@ export const embedBlock = define({
     resourceId: z
       .string()
       .max(200)
-      .regex(/^[A-Za-z0-9_\-/.,+%:?=&]+$/, 'Identifiant invalide.'),
+      .regex(/^[A-Za-z0-9_\-/.,+%:?=&]*$/, 'Identifiant invalide.'),
     aspectRatio: z.enum(['16:9', '4:3', '1:1']).default('16:9'),
   }),
   defaults: { title: '', provider: 'youtube', resourceId: '', aspectRatio: '16:9' },

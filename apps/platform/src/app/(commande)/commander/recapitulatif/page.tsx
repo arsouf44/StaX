@@ -26,6 +26,19 @@ const DOMAIN_LABELS: Record<string, string> = {
   none: 'À définir ensemble',
 };
 
+const NEXT_STEPS = [
+  'Votre espace s’ouvre immédiatement et vous pouvez suivre l’avancement.',
+  'Nous construisons une première version à partir de vos informations.',
+  'Vous la relisez en aperçu privé et demandez vos corrections.',
+  'Nous publions après votre accord explicite. La maintenance ne commence qu’à ce moment-là.',
+];
+
+const INTERNAL_NEXT_STEPS = [
+  'Le site est créé tout de suite, avec ses pages, ses sections et son formulaire de contact.',
+  'Vous le modifiez vous-même dans l’éditeur : textes, photos, sections, couleurs.',
+  'Vous le mettez en ligne quand vous voulez, sur son adresse temporaire ou votre domaine.',
+];
+
 export default async function OrderSummaryPage() {
   const draft = await readOrderDraft();
   if (!draft.planSlug) redirect('/commander');
@@ -64,8 +77,9 @@ export default async function OrderSummaryPage() {
 
       <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Récapitulatif</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-        Vérifiez ces informations avant de régler. Vous pourrez tout modifier ensuite depuis votre
-        espace.
+        {internal
+          ? 'Vérifiez ces informations avant de créer le site. Vous pourrez tout modifier ensuite depuis votre espace.'
+          : 'Vérifiez ces informations avant de régler. Vous pourrez tout modifier ensuite depuis votre espace.'}
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
@@ -93,24 +107,15 @@ export default async function OrderSummaryPage() {
           </Panel>
 
           <Panel level={1} padding="lg">
-            <h2 className="text-sm font-medium">Ce qui se passe après le paiement</h2>
+            <h2 className="text-sm font-medium">
+              {internal ? 'Ce qui se passe ensuite' : 'Ce qui se passe après le paiement'}
+            </h2>
             <ol className="mt-4 space-y-3 text-sm text-[var(--foreground-muted)]">
-              <li>
-                <strong className="text-[var(--foreground)]">1.</strong> Votre espace s’ouvre
-                immédiatement et vous pouvez suivre l’avancement.
-              </li>
-              <li>
-                <strong className="text-[var(--foreground)]">2.</strong> Nous construisons une
-                première version à partir de vos informations.
-              </li>
-              <li>
-                <strong className="text-[var(--foreground)]">3.</strong> Vous la relisez en aperçu
-                privé et demandez vos corrections.
-              </li>
-              <li>
-                <strong className="text-[var(--foreground)]">4.</strong> Nous publions après votre
-                accord explicite. La maintenance ne commence qu’à ce moment-là.
-              </li>
+              {(internal ? INTERNAL_NEXT_STEPS : NEXT_STEPS).map((step, index) => (
+                <li key={step}>
+                  <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
+                </li>
+              ))}
             </ol>
           </Panel>
         </div>

@@ -18,10 +18,16 @@ import { cn } from '@stax/ui';
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile';
 
-const WIDTHS: Record<Viewport, string> = {
-  desktop: '100%',
-  tablet: '834px',
-  mobile: '390px',
+/**
+ * Largeur REELLE a laquelle la page est rendue. Sur un ecran plus etroit, le
+ * rendu est reduit pour tenir, mais la mise en page reste celle de l appareil
+ * choisi : en mode ordinateur, le client voit son menu d ordinateur, pas le
+ * menu repliable d un telephone parce que la colonne centrale est etroite.
+ */
+const WIDTHS: Record<Viewport, number> = {
+  desktop: 1280,
+  tablet: 834,
+  mobile: 390,
 };
 
 export interface PreviewSelection {
@@ -54,6 +60,25 @@ export function PreviewFrame({
   selectedRef.current = selectedId;
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [available, setAvailable] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const measure = () => {
+      const style = getComputedStyle(stage);
+      const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      setAvailable(Math.max(0, stage.clientWidth - padding));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
+  const target = WIDTHS[viewport];
+  const scale = available ? Math.min(1, available / target) : 1;
 
   // Nouvelle version : chargee dans le cadre cache, qui passera devant une
   // fois pret. La position de defilement et la selection sont conservees.
@@ -115,10 +140,13 @@ export function PreviewFrame({
   }, [selectedId, front]);
 
   return (
-    <div className="relative flex h-full justify-center overflow-hidden bg-[var(--surface-2)] p-2 sm:p-4">
+    <div
+      ref={stageRef}
+      className="relative flex h-full justify-center overflow-hidden bg-[var(--surface-2)] p-2 sm:p-4"
+    >
       <div
-        className="relative h-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-white shadow-sm transition-[width] duration-300"
-        style={{ width: WIDTHS[viewport], maxWidth: '100%' }}
+        className="relative h-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-white shadow-sm"
+        style={{ width: available ? `${Math.round(target * scale)}px` : '100%', maxWidth: '100%' }}
         data-testid="preview-viewport"
         data-viewport={viewport}
       >
@@ -132,9 +160,15 @@ export function PreviewFrame({
               data-testid={index === front ? 'preview-frame' : 'preview-frame-loading'}
               sandbox="allow-scripts"
               className={cn(
-                'absolute inset-0 h-full w-full border-0',
+                'absolute top-0 left-0 border-0',
                 index === front ? 'visible z-10' : 'invisible z-0',
               )}
+              style={{
+                width: `${target}px`,
+                height: `${100 / scale}%`,
+                transform: scale < 1 ? `scale(${scale})` : undefined,
+                transformOrigin: '0 0',
+              }}
               onLoad={() => {
                 if (index !== front) setFront(index);
               }}

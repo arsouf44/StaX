@@ -715,8 +715,12 @@ export function VisualEditor({
     );
 
   return (
+    // z-50 et non plus : les boites de dialogue (publication, sections,
+    // historique) sont rendues en portail a la fin de <body> avec ce meme
+    // niveau. A egalite, la derniere dans le document passe devant ; un
+    // niveau superieur ici les ferait passer DERRIERE l editeur.
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-[var(--background)]"
+      className="fixed inset-0 z-50 flex flex-col bg-[var(--background)]"
       data-testid="visual-editor"
     >
       {staffMode ? (

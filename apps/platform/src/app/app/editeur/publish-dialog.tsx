@@ -149,26 +149,6 @@ export function PublishDialog({
           </>
         ) : null}
 
-        {(step === 'confirm' || step === 'blocked') && report && report.warnings.length > 0 ? (
-          <details
-            className="rounded-[var(--radius-md)] border border-[var(--border)] p-3"
-            open={step === 'confirm'}
-          >
-            <summary className="cursor-pointer text-sm font-medium">
-              {report.warnings.length} conseil{report.warnings.length > 1 ? 's' : ''} pour améliorer
-              votre site (facultatif)
-            </summary>
-            <ul className="mt-3 space-y-2">
-              {report.warnings.map((issue, index) => (
-                <li key={`${issue.code}-${index}`} className="text-sm">
-                  <p>{issue.message}</p>
-                  <p className="text-[var(--foreground-muted)]">{issue.fix}</p>
-                </li>
-              ))}
-            </ul>
-          </details>
-        ) : null}
-
         {step === 'confirm' ? (
           <>
             <p className="flex items-start gap-2 text-sm">
@@ -192,6 +172,40 @@ export function PublishDialog({
               </Button>
             </div>
           </>
+        ) : null}
+
+        {(step === 'confirm' || step === 'blocked') && report && report.warnings.length > 0 ? (
+          <details
+            className="rounded-[var(--radius-md)] border border-[var(--border)] p-3"
+            open={step === 'confirm' && report.warnings.length <= 3}
+          >
+            <summary className="cursor-pointer text-sm font-medium">
+              {report.warnings.length} conseil{report.warnings.length > 1 ? 's' : ''} pour améliorer
+              votre site (facultatif)
+            </summary>
+            <ul className="mt-3 space-y-2">
+              {report.warnings.map((issue, index) => (
+                <li key={`${issue.code}-${index}`} className="text-sm">
+                  <p>{issue.message}</p>
+                  <p className="text-[var(--foreground-muted)]">
+                    {issue.fix}
+                    {issue.pageId ? (
+                      <>
+                        {' '}
+                        <button
+                          type="button"
+                          className="font-medium text-[var(--foreground)] underline underline-offset-2"
+                          onClick={() => onFix(issue.pageId, issue.blockId)}
+                        >
+                          Y aller
+                        </button>
+                      </>
+                    ) : null}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </details>
         ) : null}
 
         {step === 'done' && outcome ? (

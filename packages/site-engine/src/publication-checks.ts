@@ -366,6 +366,16 @@ export function checkSiteForPublication(
         });
       }
 
+      if (block.type === 'embed' && !String(block.props['resourceId'] ?? '').trim()) {
+        warnings.push({
+          severity: 'warning',
+          code: 'section_empty',
+          message: `La section « ${definition.label} » (page « ${page.title} ») n’indique pas encore quelle vidéo ou quelle carte afficher : elle ne s’affichera pas en ligne.`,
+          fix: 'Ouvrez-la et indiquez la vidéo ou la carte à afficher, ou supprimez-la.',
+          ...where(page, block),
+        });
+      }
+
       if (block.type === 'hero' && !String(block.props['title'] ?? '').trim()) {
         warnings.push({
           severity: 'warning',
