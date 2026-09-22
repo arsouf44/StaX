@@ -1777,6 +1777,68 @@ begin
 end;
 $$;
 
+-- =============================================================================
+--  Cycle de vie d'une organisation : elle doit pouvoir etre supprimee
+-- =============================================================================
+--
+--  Deux regles justes se contredisaient et rendaient toute suppression
+--  impossible — donc l'effacement au titre de l'article 17 du RGPD aussi :
+--
+--   * le garde du dernier proprietaire se declenchait aussi quand
+--     l'organisation elle-meme partait ;
+--   * `audit_logs.organization_id` etait en `on delete set null`, et
+--     « set null » est un UPDATE, refuse par le garde append-only.
+--
+--  Ces assertions verrouillent le comportement attendu, dans les deux sens.
+-- =============================================================================
+\echo ''
+\echo '--- Suppression d une organisation ---'
+
+do $$
+declare
+  v_org    uuid;
+  v_user   uuid := gen_random_uuid();
+  v_audit  bigint;
+  v_refuse boolean := false;
+begin
+  insert into auth.users (id, email) values (v_user, 'cycle-vie@exemple.test');
+
+  insert into public.organizations (name, slug, status)
+  values ('Cycle de vie', 'cycle-de-vie-test', 'active')
+  returning id into v_org;
+
+  insert into public.organization_members (organization_id, user_id, role)
+  values (v_org, v_user, 'owner')
+  on conflict (organization_id, user_id) do update set role = 'owner';
+
+  perform app.write_audit('test.lifecycle', v_org, null, 'organization', v_org::text, '{}'::jsonb);
+  select count(*) into v_audit from public.audit_logs where organization_id = v_org;
+  perform t.assert(v_audit > 0, 'Le journal contient une ligne pour cette organisation');
+
+  -- 1. Retirer le dernier proprietaire reste refuse.
+  begin
+    delete from public.organization_members where organization_id = v_org;
+  exception when check_violation then
+    v_refuse := true;
+  end;
+  perform t.assert(v_refuse,
+    'Le retrait du dernier proprietaire d''une organisation vivante est refuse');
+
+  -- 2. Mais supprimer l'organisation entiere fonctionne.
+  delete from public.organizations where id = v_org;
+  perform t.assert(
+    not exists (select 1 from public.organizations where id = v_org),
+    'Une organisation peut etre supprimee — sans quoi aucun effacement RGPD n''est possible');
+
+  -- 3. Et le journal d'audit survit, en gardant son sujet.
+  select count(*) into v_audit from public.audit_logs where organization_id = v_org;
+  perform t.assert(v_audit > 0,
+    'Le journal d''audit survit a la suppression et conserve l''organisation concernee');
+
+  delete from auth.users where id = v_user;
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'
