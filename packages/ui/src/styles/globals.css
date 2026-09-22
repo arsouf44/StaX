@@ -1,5 +1,22 @@
 @import 'tailwindcss';
 
+/*
+ * Les composants partages font partie des sources a analyser.
+ *
+ * Tailwind v4 detecte automatiquement les fichiers a partir du projet qui
+ * importe cette feuille — donc `apps/platform`, et RIEN d autre. Les classes
+ * utilisees uniquement ici, dans `packages/ui`, n etaient jamais compilees :
+ * elles existaient dans le JSX et nulle part dans le CSS servi.
+ *
+ * Consequence observee sur l editeur client : `max-h-[90dvh]`,
+ * `max-h-[60dvh]` et `bg-[rgb(0_0_0/0.6)]` absents, donc une boite de dialogue
+ * sans fond, plus haute que l ecran et impossible a faire defiler — le bas du
+ * contenu etait hors d atteinte.
+ *
+ * Ce chemin est relatif a CE fichier, et couvre tout `packages/ui/src`.
+ */
+@source '../../src';
+
 /* ==========================================================================
    StaX — systeme de design
    --------------------------------------------------------------------------

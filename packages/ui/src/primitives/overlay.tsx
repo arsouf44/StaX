@@ -8,8 +8,10 @@ import {
   useId,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../lib';
 import { Button } from './button';
 
@@ -84,6 +86,39 @@ function useScrollLock(active: boolean) {
   }, [active]);
 }
 
+/**
+ * Rend une couche superposee directement sous `<body>`.
+ *
+ * `position: fixed` et `z-index` ne suffisent pas : un ancetre qui cree un
+ * contexte d empilement — `transform`, `filter`, `backdrop-filter`, ce que
+ * font precisement nos surfaces en verre — enferme le `z-50` a l interieur de
+ * cet ancetre. La couche se retrouve alors peinte SOUS un frere qui vient
+ * apres elle dans le DOM.
+ *
+ * C est ce qui arrivait au choix des sections dans l editeur : la boite de
+ * dialogue vivait dans la colonne de gauche, et le panneau d edition, frere
+ * suivant, passait par-dessus. Le voile ne couvrait qu une partie de l ecran
+ * et la moitie du dialogue etait illisible.
+ *
+ * Le portail supprime la question : la couche n a plus d ancetre qu elle
+ * n a choisi.
+ */
+const NEVER_CHANGES = () => () => {};
+
+function OverlayPortal({ children }: { children: ReactNode }) {
+  // Au rendu serveur il n y a pas de `document` : on n emet rien, et le
+  // navigateur prend le relais. `useSyncExternalStore` donne exactement cette
+  // reponse — false sur le serveur, true sur le client — sans effet et sans
+  // desaccord d hydratation.
+  const onClient = useSyncExternalStore(
+    NEVER_CHANGES,
+    () => true,
+    () => false,
+  );
+  if (!onClient) return null;
+  return createPortal(children, document.body);
+}
+
 export interface DialogProps {
   open: boolean;
   onClose: () => void;
@@ -127,61 +162,63 @@ export function Dialog({
   const widths = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' } as const;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6">
-      <div
-        aria-hidden="true"
-        onClick={dismissible ? onClose : undefined}
-        className="absolute inset-0 bg-[rgb(0_0_0/0.6)] backdrop-blur-sm"
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
-        tabIndex={-1}
-        className={cn(
-          'glass-edge relative w-full overflow-hidden glass-3',
-          'rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-xl)]',
-          'max-h-[90dvh] animate-[reveal_0.28s_cubic-bezier(0.16,1,0.3,1)]',
-          widths[size],
-        )}
-      >
-        <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
-          <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-medium tracking-[-0.015em]">
-              {title}
-            </h2>
-            {description ? (
-              <p id={descriptionId} className="mt-1 text-sm text-[var(--foreground-muted)]">
-                {description}
-              </p>
+    <OverlayPortal>
+      <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6">
+        <div
+          aria-hidden="true"
+          onClick={dismissible ? onClose : undefined}
+          className="absolute inset-0 bg-[rgb(0_0_0/0.6)] backdrop-blur-sm"
+        />
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={description ? descriptionId : undefined}
+          tabIndex={-1}
+          className={cn(
+            'glass-edge relative w-full overflow-hidden glass-3',
+            'rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-xl)]',
+            'max-h-[90dvh] animate-[reveal_0.28s_cubic-bezier(0.16,1,0.3,1)]',
+            widths[size],
+          )}
+        >
+          <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-5">
+            <div className="min-w-0">
+              <h2 id={titleId} className="text-base font-medium tracking-[-0.015em]">
+                {title}
+              </h2>
+              {description ? (
+                <p id={descriptionId} className="mt-1 text-sm text-[var(--foreground-muted)]">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            {dismissible ? (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={onClose}
+                aria-label="Fermer"
+                className="-mt-1 -mr-2 shrink-0"
+              >
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="m4 4 8 8M12 4l-8 8" strokeLinecap="round" />
+                </svg>
+              </Button>
             ) : null}
-          </div>
-          {dismissible ? (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={onClose}
-              aria-label="Fermer"
-              className="-mt-1 -mr-2 shrink-0"
-            >
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="m4 4 8 8M12 4l-8 8" strokeLinecap="round" />
-              </svg>
-            </Button>
+          </header>
+          {children ? (
+            <div className="max-h-[60dvh] overflow-y-auto px-6 py-5 text-sm">{children}</div>
           ) : null}
-        </header>
-        {children ? (
-          <div className="max-h-[60dvh] overflow-y-auto px-6 py-5 text-sm">{children}</div>
-        ) : null}
-        {footer ? (
-          <footer className="flex flex-col-reverse gap-2 border-t border-[var(--border)] px-6 py-4 sm:flex-row sm:justify-end">
-            {footer}
-          </footer>
-        ) : null}
+          {footer ? (
+            <footer className="flex flex-col-reverse gap-2 border-t border-[var(--border)] px-6 py-4 sm:flex-row sm:justify-end">
+              {footer}
+            </footer>
+          ) : null}
+        </div>
       </div>
-    </div>
+    </OverlayPortal>
   );
 }
 
@@ -297,40 +334,42 @@ export function Sheet({ open, onClose, title, children, side = 'right', footer }
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div
-        aria-hidden="true"
-        onClick={onClose}
-        className="absolute inset-0 bg-[rgb(0_0_0/0.6)] backdrop-blur-sm"
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        className={cn(
-          'absolute inset-y-0 flex w-full max-w-sm flex-col glass-3',
-          side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
-          'border-[var(--glass-border-strong)]',
-        )}
-      >
-        <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
-          <h2 id={titleId} className="text-base font-medium">
-            {title}
-          </h2>
-          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fermer">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path d="m4 4 8 8M12 4l-8 8" strokeLinecap="round" />
-            </svg>
-          </Button>
-        </header>
-        <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
-        {footer ? (
-          <footer className="border-t border-[var(--border)] px-5 py-4">{footer}</footer>
-        ) : null}
+    <OverlayPortal>
+      <div className="fixed inset-0 z-50">
+        <div
+          aria-hidden="true"
+          onClick={onClose}
+          className="absolute inset-0 bg-[rgb(0_0_0/0.6)] backdrop-blur-sm"
+        />
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          className={cn(
+            'absolute inset-y-0 flex w-full max-w-sm flex-col glass-3',
+            side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
+            'border-[var(--glass-border-strong)]',
+          )}
+        >
+          <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
+            <h2 id={titleId} className="text-base font-medium">
+              {title}
+            </h2>
+            <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fermer">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="m4 4 8 8M12 4l-8 8" strokeLinecap="round" />
+              </svg>
+            </Button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
+          {footer ? (
+            <footer className="border-t border-[var(--border)] px-5 py-4">{footer}</footer>
+          ) : null}
+        </div>
       </div>
-    </div>
+    </OverlayPortal>
   );
 }
 
