@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { deflateSync } from 'node:zlib';
 import { resolve } from 'node:path';
+import { expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /**
@@ -100,12 +101,45 @@ async function signedWebhook(event: Record<string, unknown>): Promise<Response> 
   });
 }
 
+/** Mentions legales plausibles pour un site de test (aucune n est reelle). */
+export function legalIdentityFixture(businessName: string) {
+  return {
+    legalName: `${businessName} SAS`,
+    legalForm: 'SAS',
+    capital: '1 000 €',
+    registration: 'RCS Lyon 000 000 000',
+    address: '1 rue de la Paix, 69001 Lyon',
+    publicationDirector: 'Marie Dupont',
+  };
+}
+
+/** Le client saisit ses mentions legales dans « Mon entreprise », comme il le ferait. */
+export async function fillLegalIdentity(page: Page, businessName: string): Promise<void> {
+  const values = legalIdentityFixture(businessName);
+  await page.goto('/app/entreprise');
+  const form = page.getByTestId('legal-identity');
+  await form.getByLabel('Raison sociale ou nom').fill(values.legalName);
+  await form.getByLabel('Forme juridique').fill(values.legalForm);
+  await form.getByLabel('Capital social').fill(values.capital);
+  await form.getByLabel('Immatriculation').fill(values.registration);
+  await form.getByLabel('Adresse du siège').fill(values.address);
+  await form.getByLabel('Directeur de la publication').fill(values.publicationDirector);
+  await form.getByRole('button', { name: 'Enregistrer mes mentions légales' }).click();
+  await expect(form.getByText('Mentions légales enregistrées')).toBeVisible();
+}
+
 export async function createCustomerWithPaidOrder(options: {
   businessName: string;
   subdomain: string;
   planSlug?: string;
   sectorSlug?: string;
   businessType?: string;
+  /**
+   * Mentions legales deja saisies par le client (defaut : oui). Le parcours
+   * client principal les laisse vides pour les saisir lui-meme dans
+   * « Mon entreprise ».
+   */
+  withLegalIdentity?: boolean;
 }): Promise<CustomerSite> {
   const admin = serviceClient();
   const suffix = uniqueSuffix();
@@ -197,6 +231,15 @@ export async function createCustomerWithPaidOrder(options: {
     .eq('kind', 'platform_subdomain')
     .single();
   if (domain.error) throw new Error(`Adresse du site : ${domain.error.message}`);
+
+  if (options.withLegalIdentity !== false) {
+    // Saisi par le client lui-meme, avec son jeton : la RLS s applique.
+    const identity = await db
+      .from('site_settings')
+      .update({ legal_identity: legalIdentityFixture(options.businessName) })
+      .eq('site_id', paid.data.site_id);
+    if (identity.error) throw new Error(`Mentions legales : ${identity.error.message}`);
+  }
 
   return {
     email,

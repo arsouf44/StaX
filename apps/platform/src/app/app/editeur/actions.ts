@@ -20,6 +20,7 @@ import {
   getBlockDefinition,
   parseBlock,
   parseDraftState,
+  parseLegalIdentity,
   type CollectionKey,
   type PublicationReport,
 } from '@stax/site-engine';
@@ -219,10 +220,10 @@ export async function commitPageAction(
   if (!page) return failure('Cette page est introuvable.');
 
   const [settings, existing] = await Promise.all([
-    unwrapMaybe<{ enabled_modules: string[] }>(
+    unwrapMaybe<{ enabled_modules: string[]; legal_identity: unknown }>(
       (await db
         .from('site_settings')
-        .select('enabled_modules')
+        .select('enabled_modules, legal_identity')
         .eq('site_id', page.site_id)
         .maybeSingle()) as never,
     ),
@@ -449,10 +450,10 @@ async function buildReport(
         .eq('organization_id', site.organization_id)
         .is('deleted_at', null)) as never,
     ),
-    unwrapMaybe<{ enabled_modules: string[] }>(
+    unwrapMaybe<{ enabled_modules: string[]; legal_identity: unknown }>(
       (await db
         .from('site_settings')
-        .select('enabled_modules')
+        .select('enabled_modules, legal_identity')
         .eq('site_id', siteId)
         .maybeSingle()) as never,
     ),
@@ -484,6 +485,7 @@ async function buildReport(
     liveMediaIds: new Set(media.map((row) => row.id)),
     collections,
     enabledModules: new Set(settings?.enabled_modules ?? []),
+    legalIdentity: parseLegalIdentity(settings?.legal_identity),
   });
   return { report, organizationId: site.organization_id };
 }

@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import {
   createCustomerWithPaidOrder,
   fetchPublicPage,
+  fillLegalIdentity,
   firstHeading,
   solidPng,
   uniqueSuffix,
@@ -30,6 +31,8 @@ test.beforeAll(async () => {
   site = await createCustomerWithPaidOrder({
     businessName: `Boulangerie Martin ${suffix}`,
     subdomain: `boulangerie-${suffix}`,
+    // Le client saisit lui-meme ses mentions legales (etape 2).
+    withLegalIdentity: false,
   });
 });
 
@@ -114,6 +117,20 @@ test('un client modifie, publie et restaure son site sans aucune compétence tec
     await expect(page.getByTestId('section-item').first()).toBeVisible();
     originalTitle = (await previewFrame(page).locator('h1').first().innerText()).trim();
     expect(originalTitle.length).toBeGreaterThan(3);
+
+    // Sans mentions legales, la publication est refusee — et le client sait
+    // exactement quoi saisir, et ou.
+    await page.getByTestId('open-publish').click();
+    const dialog = page.getByTestId('publish-dialog');
+    await expect(dialog).toHaveAttribute('data-step', 'blocked', { timeout: 30_000 });
+    await expect(dialog).toContainText('mentions légales sont incomplètes');
+    await expect(dialog).toContainText('Mon entreprise');
+    await page.keyboard.press('Escape');
+
+    await fillLegalIdentity(page, `Boulangerie Martin ${suffix}`);
+    await page.goto('/app/editeur');
+    await expect(editor(page)).toBeVisible();
+    await previewReady(page);
 
     // Premiere mise en ligne : c est la « premiere version » vers laquelle le
     // client reviendra a la fin.
@@ -227,6 +244,20 @@ test('un client modifie, publie et restaure son site sans aucune compétence tec
       .poll(() => photo.evaluate((element) => (element as HTMLImageElement).naturalWidth))
       .toBeGreaterThan(0);
     await expect(page.getByText('Questions fréquentes')).toBeVisible();
+  });
+
+  await test.step('10 bis. les mentions légales en ligne reprennent « Mon entreprise »', async () => {
+    const legal = await fetchPublicPage(site.hostname, '/mentions-legales');
+    expect(legal.status).toBe(200);
+    expect(legal.body).toContain(`Boulangerie Martin ${suffix} SAS`);
+    expect(legal.body).toContain('RCS Lyon 000 000 000');
+    expect(legal.body).toContain('Directeur de la publication');
+    expect(legal.body).not.toContain('à compléter');
+    // Aucune police chargee depuis un service tiers : elles sont servies par le site.
+    expect(legal.body).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+    const privacy = await fetchPublicPage(site.hostname, '/confidentialite');
+    expect(privacy.status).toBe(200);
+    expect(privacy.body).toContain('CNIL');
   });
 
   await test.step('11. c’est bien la nouvelle version qui est servie', async () => {

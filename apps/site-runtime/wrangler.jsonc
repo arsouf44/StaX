@@ -10,23 +10,26 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
+    "head_sampling_rate": 1,
   },
   "placement": { "mode": "smart" },
+  // Polices des sites, auto-hebergees (aucun appel a Google Fonts) : servies
+  // en fichiers statiques sous /_stax/fonts/, sur le domaine de chaque site.
+  "assets": { "directory": "../../packages/site-engine/public" },
   "vars": {
-    "STAX_ENV": "development"
+    "STAX_ENV": "development",
   },
   "env": {
     "preview": {
       "name": "stax-sites-preview",
       "vars": { "STAX_ENV": "preview" },
-      "observability": { "enabled": true }
+      "observability": { "enabled": true },
     },
     "production": {
       "name": "stax-sites",
       "vars": { "STAX_ENV": "production" },
       "observability": { "enabled": true },
-      "placement": { "mode": "smart" }
-    }
-  }
+      "placement": { "mode": "smart" },
+    },
+  },
 }

@@ -1,6 +1,7 @@
 import { formatMoney } from '@stax/payments/money';
 import { getBlockDefinition, type ParsedBlock } from '../blocks/registry';
 import type { BlockSettings } from '../blocks/primitives';
+import { DEFAULT_HOST } from '../legal';
 import { absoluteUrl } from '../seo';
 import { attrs, cls, html, join, raw, type RawHtml } from './html';
 import type {
@@ -712,8 +713,14 @@ function renderForm(
       <div class="form-status" data-stax-status hidden role="status"></div>
       <div><button type="submit" class="btn btn-primary">${submitLabel}</button></div>
       <p class="form-note">
-        Vos informations servent uniquement à traiter votre demande. Elles ne sont ni revendues ni
-        utilisées à d’autres fins.
+        ${context.settings.legalIdentity.legalName || context.settings.businessName} utilise ces
+        informations uniquement pour traiter votre demande ; elles ne sont ni revendues ni utilisées
+        à d’autres fins.
+        ${
+          context.pages.some((entry) => normalizeHref(entry.path) === '/confidentialite')
+            ? html`<a href="/confidentialite">Vos données et vos droits</a>`
+            : ''
+        }
       </p>
     </form>
   `;
@@ -1401,9 +1408,21 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
             ? html`<div class="cf-turnstile" data-sitekey="${context.turnstileSiteKey}"></div>`
             : ''
         }
-
+        ${
+          context.pages.some((entry) => normalizeHref(entry.path) === SALES_TERMS_PATH)
+            ? html`<div class="consent">
+                <input type="checkbox" id="stax-order-terms" name="acceptTerms" required />
+                <label for="stax-order-terms"
+                  >J’ai lu et j’accepte les
+                  <a href="${SALES_TERMS_PATH}" target="_blank" rel="noopener"
+                    >conditions générales de vente</a
+                  >.</label
+                >
+              </div>`
+            : ''
+        }
         <div class="form-status" data-stax-status hidden role="status"></div>
-        <button type="submit" class="btn btn-primary">Valider ma commande</button>
+        <button type="submit" class="btn btn-primary">Commander avec obligation de paiement</button>
         <p class="muted" style="margin-top:.75rem;font-size:.8125rem">
           Le paiement se fait sur une page sécurisée. Aucune donnée bancaire ne transite par ce
           site.
@@ -1827,6 +1846,24 @@ const EMBED_TITLES: Record<string, string> = {
   calendly: 'Prise de rendez-vous',
 };
 
+const EMBED_PROVIDERS: Record<string, string> = {
+  youtube: 'YouTube (Google)',
+  vimeo: 'Vimeo',
+  openstreetmap: 'OpenStreetMap',
+  'google-maps': 'Google Maps',
+  calendly: 'Calendly',
+};
+
+/**
+ * Le contenu tiers n est charge qu APRES un clic du visiteur.
+ *
+ * Une iframe YouTube, Google Maps ou Calendly transmet l adresse IP du
+ * visiteur et depose des traceurs des son affichage : sans consentement
+ * prealable, c est contraire a l article 82 de la loi Informatique et
+ * Libertes. Le visiteur voit donc d abord un encart qui dit qui fournit le
+ * contenu ; le clic vaut consentement pour ce contenu-la. Sans JavaScript, un
+ * lien ouvre le contenu chez le fournisseur.
+ */
 function renderEmbed(props: Props): RawHtml {
   const provider = str(props, 'provider');
   const resourceId = str(props, 'resourceId');
@@ -1834,18 +1871,30 @@ function renderEmbed(props: Props): RawHtml {
   const url = embedUrl(provider, resourceId);
   if (!url) return raw('');
   const ratio = (str(props, 'aspectRatio') || '16:9').replace(':', '-');
+  const kind = EMBED_TITLES[provider] ?? 'Contenu intégré';
+  const providerName = EMBED_PROVIDERS[provider] ?? 'un service tiers';
 
   return html`
     ${str(props, 'title') ? html`<h2>${str(props, 'title')}</h2>` : ''}
-    <div class="embed ar-${ratio}" style="margin-top:1.5rem">
-      <iframe
-        src="${url}"
-        title="${str(props, 'title') || EMBED_TITLES[provider] || 'Contenu intégré'}"
-        loading="lazy"
-        referrerpolicy="strict-origin-when-cross-origin"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-forms"
-        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-      ></iframe>
+    <div
+      class="embed embed-gated ar-${ratio}"
+      style="margin-top:1.5rem"
+      data-stax-embed="${url}"
+      data-stax-embed-title="${str(props, 'title') || kind}"
+    >
+      <div class="embed-gate">
+        <p>
+          ${kind === 'Carte' ? 'Cette carte' : kind === 'Vidéo' ? 'Cette vidéo' : 'Ce contenu'} est
+          fourni par ${providerName}. En l’affichant, vous acceptez que ${providerName} reçoive des
+          données de navigation et dépose des cookies.
+        </p>
+        <p class="row" style="justify-content:center">
+          <button type="button" class="btn btn-primary" data-stax-embed-load>Afficher</button>
+          <a class="btn btn-link" href="${url}" target="_blank" rel="noopener noreferrer"
+            >Ouvrir chez ${providerName}</a
+          >
+        </p>
+      </div>
     </div>
   `;
 }
@@ -1896,6 +1945,371 @@ function renderMap(props: Props, context: RenderContext): RawHtml {
       }
     </div>
   `;
+}
+
+/** Chemin des conditions de vente d une boutique : partage avec le runtime. */
+export const SALES_TERMS_PATH = '/conditions-generales-de-vente';
+
+function normalizeHref(path: string): string {
+  const clean = path.split('#')[0]?.split('?')[0] ?? '';
+  return clean === '' || clean === '/' ? '/' : clean.replace(/\/+$/, '');
+}
+
+/* --- Pages legales --------------------------------------------------------- */
+
+/**
+ * Ligne « terme : valeur » d une page legale. Une valeur absente n est jamais
+ * remplacee par un texte plausible : dans l apercu, elle est signalee au
+ * client ; en ligne, la verification avant publication l aura exigee.
+ */
+function legalRow(term: string, value: string, context: RenderContext): RawHtml {
+  if (value.trim())
+    return html`<dt>${term}</dt>
+      <dd>${value}</dd>`;
+  if (!context.isPreview && !context.editor) return raw('');
+  return html`<dt>${term}</dt>
+    <dd class="muted">À compléter dans « Mon entreprise »</dd>`;
+}
+
+function postalAddress(context: RenderContext): string {
+  const s = context.settings;
+  return [s.addressLine1, s.addressLine2, [s.postalCode, s.city].filter(Boolean).join(' ')]
+    .filter((line): line is string => Boolean(line && line.trim()))
+    .join(', ');
+}
+
+/**
+ * Mentions legales (article 6 III de la LCEN, article L.111-1 du Code de la
+ * consommation pour les professions reglementees).
+ */
+function renderLegalNotice(props: Props, context: RenderContext): RawHtml {
+  const identity = context.settings.legalIdentity;
+  const settings = context.settings;
+  const host = context.host ?? DEFAULT_HOST;
+  const form = [identity.legalForm, identity.capital ? `au capital de ${identity.capital}` : '']
+    .filter(Boolean)
+    .join(' ');
+  const hostDetails = [host.address, host.phone ? `téléphone : ${host.phone}` : '', host.email]
+    .filter(Boolean)
+    .join(' — ');
+
+  return html`<div class="prose legal" style="max-width:46rem">
+    <h2>Éditeur du site</h2>
+    <p>Le site ${context.origin.replace(/^https?:\/\//, '')} est édité par :</p>
+    <dl class="legal-list">
+      ${legalRow('Raison sociale', identity.legalName || settings.businessName, context)}
+      ${
+        identity.legalName && identity.legalName !== settings.businessName
+          ? legalRow('Nom commercial', settings.businessName, context)
+          : ''
+      }
+      ${legalRow('Forme juridique', form, context)}
+      ${legalRow('Immatriculation', identity.registration, context)}
+      ${identity.vatNumber ? legalRow('TVA intracommunautaire', identity.vatNumber, context) : ''}
+      ${legalRow('Siège', identity.address || postalAddress(context), context)}
+      ${settings.phone ? legalRow('Téléphone', settings.phone, context) : ''}
+      ${settings.email ? legalRow('E-mail', settings.email, context) : ''}
+      ${legalRow('Directeur de la publication', identity.publicationDirector, context)}
+    </dl>
+    ${
+      identity.regulatedProfession
+        ? html`<h2>Profession réglementée</h2>
+            <p>${identity.regulatedProfession}</p>`
+        : ''
+    }
+
+    <h2>Hébergement</h2>
+    <p>
+      Ce site est hébergé par ${host.name}${hostDetails ? html` (${hostDetails})` : ''}. Les pages
+      sont diffusées par le réseau de Cloudflare, Inc., 101 Townsend Street, San Francisco, CA
+      94107, États-Unis.
+    </p>
+
+    <h2>Propriété intellectuelle</h2>
+    <p>
+      Les textes, photographies, logos et marques présentés sur ce site sont la propriété de leurs
+      auteurs ou titulaires. Toute reproduction ou réutilisation sans autorisation préalable est
+      interdite.
+    </p>
+
+    <h2>Signaler un contenu</h2>
+    <p>
+      Pour signaler un contenu que vous estimez illicite, écrivez à l’éditeur du
+      site${
+        settings.email ? html` (<a href="mailto:${settings.email}">${settings.email}</a>)` : ''
+      }${
+        host.reportUrl
+          ? html`, ou utilisez le
+              <a href="${host.reportUrl}" rel="noopener" target="_blank"
+                >formulaire de signalement de l’hébergeur</a
+              >`
+          : ''
+      }.
+    </p>
+
+    ${
+      identity.mediator
+        ? html`<h2>Médiation de la consommation</h2>
+            <p>
+              En cas de litige, et après une réclamation écrite restée sans réponse satisfaisante,
+              vous pouvez recourir gratuitement au médiateur de la consommation :
+              ${identity.mediator}.
+            </p>`
+        : ''
+    }
+    ${richText(arr(props, 'extra'))}
+  </div>`;
+}
+
+/**
+ * Politique de confidentialite (articles 13 et 14 du RGPD).
+ *
+ * Elle ne decrit que ce que le site fait REELLEMENT : chaque paragraphe
+ * depend d une fonctionnalite active. Un site vitrine ne parle pas de
+ * paiement ; une boutique ne l oublie pas.
+ */
+function renderPrivacyNotice(props: Props, context: RenderContext): RawHtml {
+  const identity = context.settings.legalIdentity;
+  const settings = context.settings;
+  const modules = context.enabledModules;
+  const controller = identity.legalName || settings.businessName;
+  const contact = identity.privacyContact || settings.email || '';
+  const address = identity.address || postalAddress(context);
+  const hasPayments = modules.has('payments') || modules.has('orders') || modules.has('donations');
+
+  const purposes: RawHtml[] = [
+    html`<li>
+      <strong>Répondre à vos messages et demandes de devis</strong> : nom, coordonnées et contenu de
+      votre message. Base légale : mesures précontractuelles et intérêt légitime à vous répondre.
+      Conservation : trois ans après notre dernier échange.
+    </li>`,
+  ];
+  if (modules.has('booking')) {
+    purposes.push(
+      html`<li>
+        <strong>Gérer vos réservations</strong> : nom, coordonnées, date et détails de la
+        réservation. Base légale : exécution du contrat. Conservation : trois ans après la
+        prestation.
+      </li>`,
+    );
+  }
+  if (modules.has('orders') || modules.has('products')) {
+    purposes.push(
+      html`<li>
+        <strong>Traiter vos commandes</strong> : identité, adresses, contenu de la commande. Base
+        légale : exécution du contrat ; les pièces comptables sont conservées dix ans (obligation
+        légale).
+      </li>`,
+    );
+  }
+  if (modules.has('customer-accounts')) {
+    purposes.push(
+      html`<li>
+        <strong>Votre compte client</strong> : adresse e-mail, nom, historique. Base légale :
+        exécution du contrat. Vous pouvez demander la suppression de votre compte à tout moment.
+      </li>`,
+    );
+  }
+  if (modules.has('newsletter')) {
+    purposes.push(
+      html`<li>
+        <strong>Vous envoyer nos actualités</strong> : adresse e-mail. Base légale : votre
+        consentement, que vous pouvez retirer à tout moment grâce au lien présent dans chaque envoi.
+      </li>`,
+    );
+  }
+  if (modules.has('donations')) {
+    purposes.push(
+      html`<li>
+        <strong>Gérer vos dons</strong> : identité, coordonnées, montant. Base légale : exécution du
+        contrat et obligations légales (reçus fiscaux).
+      </li>`,
+    );
+  }
+
+  return html`<div class="prose legal" style="max-width:46rem">
+    <h2>Qui est responsable de vos données</h2>
+    <p>
+      ${controller}${address ? `, ${address}` : ''}, est responsable des données collectées sur ce
+      site${contact ? html` ; vous pouvez nous écrire à <a href="mailto:${contact}">${contact}</a>` : ''}.
+    </p>
+
+    <h2>Ce que nous collectons, pourquoi et combien de temps</h2>
+    <ul>
+      ${join(purposes)}
+    </ul>
+    <p>
+      Nous ne vendons ni ne louons vos données, et nous ne les utilisons pas à d’autres fins que
+      celles indiquées ici.
+    </p>
+
+    <h2>Qui y a accès</h2>
+    <p>
+      Vos données sont destinées à ${controller}. Elles sont hébergées, pour notre compte, par
+      ${(context.host ?? DEFAULT_HOST).name}, prestataire du site, et ses sous-traitants techniques
+      (hébergement dans l’Union européenne ; diffusion des pages par Cloudflare), liés par un accord
+      de traitement des données.
+      ${
+        hasPayments
+          ? html`Les paiements sont traités par Stripe, qui agit en tant que responsable de
+            traitement indépendant pour la lutte contre la fraude et ses obligations légales : nous
+            n’avons jamais accès à vos données de carte bancaire.`
+          : ''
+      }
+    </p>
+
+    <h2>Cookies et mesure d’audience</h2>
+    <p>
+      Ce site n’utilise que des cookies strictement nécessaires à son fonctionnement (session de
+      votre compte, panier), qui ne nécessitent pas votre consentement. La fréquentation est mesurée
+      sans cookie et sans suivi d’un site à l’autre. Les vidéos et cartes provenant d’un service
+      tiers ne sont chargées que si vous le demandez.
+    </p>
+
+    <h2>Vos droits</h2>
+    <p>
+      Vous pouvez accéder à vos données, les rectifier, les effacer, en demander la portabilité,
+      vous opposer à leur traitement ou en limiter l’usage, et retirer votre consentement à tout
+      moment${contact ? html` en écrivant à <a href="mailto:${contact}">${contact}</a>` : ''}. Vous
+      pouvez aussi introduire une réclamation auprès de la CNIL (www.cnil.fr).
+    </p>
+    ${richText(arr(props, 'extra'))}
+  </div>`;
+}
+
+/**
+ * Conditions generales de vente d une boutique en ligne, vente a des
+ * particuliers (articles L.221-5 et suivants du Code de la consommation).
+ *
+ * Le texte reprend les obligations d ordre public : information precontractuelle,
+ * droit de retractation et son formulaire type, garanties legales, mediation.
+ * Il ne cree AUCUN engagement au-dela de ce que la loi impose deja au vendeur.
+ */
+function renderSalesTerms(props: Props, context: RenderContext): RawHtml {
+  const identity = context.settings.legalIdentity;
+  const settings = context.settings;
+  const seller = identity.legalName || settings.businessName;
+  const address = identity.address || postalAddress(context);
+  const contact = settings.email || '';
+  const days = num(props, 'deliveryDays', 7);
+  const perishable = bool(props, 'perishable');
+
+  return html`<div class="prose legal" style="max-width:46rem">
+    <h2>1. Vendeur</h2>
+    <p>
+      Les produits présentés sur ce site sont vendus par
+      ${seller}${
+        identity.legalForm ? `, ${identity.legalForm}` : ''
+      }${identity.registration ? `, ${identity.registration}` : ''}${
+        address ? `, ${address}` : ''
+      }${contact ? html`, joignable à <a href="mailto:${contact}">${contact}</a>` : ''}${
+        settings.phone ? ` et au ${settings.phone}` : ''
+      }.
+    </p>
+
+    <h2>2. Champ d’application</h2>
+    <p>
+      Les présentes conditions s’appliquent aux commandes passées sur ce site. Elles sont acceptées
+      par l’acheteur avant chaque commande, et peuvent être enregistrées ou imprimées.
+    </p>
+
+    <h2>3. Produits et prix</h2>
+    <p>
+      Les caractéristiques essentielles de chaque produit figurent sur sa fiche. Les prix sont
+      indiqués en euros, toutes taxes comprises. Les éventuels frais de livraison sont indiqués
+      avant la validation de la commande.
+    </p>
+
+    <h2>4. Commande</h2>
+    <p>
+      L’acheteur compose son panier, indique ses coordonnées et le mode de retrait ou de livraison,
+      accepte les présentes conditions, puis valide avec le bouton « Commander avec obligation de
+      paiement ». Une confirmation récapitulant la commande lui est adressée par e-mail.
+    </p>
+
+    <h2>5. Paiement</h2>
+    <p>
+      Le paiement en ligne s’effectue par carte bancaire sur une page sécurisée de notre prestataire
+      de paiement, Stripe. Le vendeur n’a jamais accès aux données de la carte. Le montant est
+      débité à la validation de la commande. Lorsque le règlement sur place est proposé, il
+      intervient au moment du retrait.
+    </p>
+
+    <h2>6. Retrait et livraison</h2>
+    <p>
+      Sauf délai différent indiqué lors de la commande, les produits sont disponibles ou livrés dans
+      un délai de ${days} jour${days > 1 ? 's' : ''}, et au plus tard trente jours après la
+      commande. En cas de retard, l’acheteur peut, après une mise en demeure restée sans effet dans
+      un délai supplémentaire raisonnable, résoudre la vente et être remboursé (articles L.216-1 et
+      suivants du Code de la consommation).
+    </p>
+
+    <h2>7. Droit de rétractation</h2>
+    ${
+      perishable
+        ? html`<p>
+            Conformément à l’article L.221-28 du Code de la consommation, le droit de rétractation
+            ne s’applique pas aux produits susceptibles de se détériorer ou de se périmer
+            rapidement, ni aux produits confectionnés selon les spécifications de l’acheteur ou
+            nettement personnalisés. Pour les autres produits, les règles ci-dessous s’appliquent.
+          </p>`
+        : ''
+    }
+    <p>
+      L’acheteur dispose d’un délai de quatorze jours à compter de la réception du produit pour se
+      rétracter, sans avoir à se justifier. Il informe le vendeur de sa décision par une déclaration
+      dénuée d’ambiguïté${contact ? html` (par exemple par e-mail à ${contact})` : ''} ou au moyen
+      du formulaire ci-dessous, puis renvoie le produit au plus tard quatorze jours après avoir
+      communiqué sa décision. Les frais de retour restent à sa charge. Le vendeur rembourse la
+      totalité des sommes versées, frais de livraison initiaux inclus, au plus tard quatorze jours
+      après avoir été informé de la rétractation, par le même moyen de paiement ; il peut différer
+      le remboursement jusqu’à la récupération du produit.
+    </p>
+    <p>
+      <strong>Formulaire de rétractation</strong> (à compléter et renvoyer uniquement si vous
+      souhaitez vous rétracter) :
+    </p>
+    <blockquote>
+      À l’attention de ${seller}${address ? `, ${address}` : ''}${contact ? `, ${contact}` : ''} :
+      je vous notifie par la présente ma rétractation du contrat portant sur la vente du bien
+      ci-dessous. Commandé le / reçu le : … Nom : … Adresse : … Date et signature (en cas d’envoi
+      papier) : …
+    </blockquote>
+
+    <h2>8. Garanties légales</h2>
+    <p>
+      Tous les produits bénéficient de la garantie légale de conformité (articles L.217-3 et
+      suivants du Code de la consommation) et de la garantie des vices cachés (articles 1641 et
+      suivants du Code civil). Au titre de la garantie légale de conformité, l’acheteur dispose de
+      deux ans à compter de la délivrance du bien pour agir ; il peut obtenir la réparation ou le
+      remplacement du bien, ou, à défaut, une réduction du prix ou la résolution de la vente. Durant
+      ce délai, l’acheteur n’a pas à prouver l’existence du défaut, sauf pour un bien d’occasion,
+      pour lequel ce délai est de douze mois. Au titre de la garantie des vices cachés, l’acheteur
+      dispose de deux ans à compter de la découverte du vice.
+    </p>
+
+    <h2>9. Données personnelles</h2>
+    <p>
+      Les informations recueillies servent à traiter la commande. Leur utilisation et vos droits
+      sont décrits dans la
+      <a href="/confidentialite">politique de confidentialité</a>.
+    </p>
+
+    <h2>10. Réclamations, médiation et droit applicable</h2>
+    <p>
+      Toute réclamation peut être adressée au vendeur${contact ? html` à ${contact}` : ''}.
+      ${
+        identity.mediator
+          ? html`À défaut de solution amiable, l’acheteur peut recourir gratuitement au médiateur de
+            la consommation : ${identity.mediator}.`
+          : ''
+      }
+      Les présentes conditions sont soumises au droit français. L’acheteur conserve le bénéfice des
+      dispositions impératives de la loi de son pays de résidence et peut saisir la juridiction de
+      son domicile.
+    </p>
+    ${richText(arr(props, 'extra'))}
+  </div>`;
 }
 
 /* --- Repartiteur ---------------------------------------------------------- */
@@ -1987,6 +2401,12 @@ export function renderBlock(block: ParsedBlock, context: RenderContext): RawHtml
         return renderLogos(props);
       case 'embed':
         return renderEmbed(props);
+      case 'legal-notice':
+        return renderLegalNotice(props, context);
+      case 'privacy-notice':
+        return renderPrivacyNotice(props, context);
+      case 'sales-terms':
+        return renderSalesTerms(props, context);
       default:
         // Type inconnu : le snapshot l a deja ecarte, mais on ne rend rien
         // plutot que de laisser filtrer un contenu non valide.

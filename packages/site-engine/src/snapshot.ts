@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { blockSettingsSchema } from './blocks/primitives';
 import { getBlockDefinition, type ParsedBlock } from './blocks/registry';
+import { parseLegalIdentity, type LegalIdentity } from './legal';
 
 /**
  * Snapshot publie.
@@ -187,6 +188,8 @@ export interface SiteSettingsView {
   cookieBannerEnabled: boolean;
   analyticsEnabled: boolean;
   googleSiteVerification: string | null;
+  /** Identite legale de l editeur du site (mentions obligatoires). */
+  legalIdentity: LegalIdentity;
 }
 
 export interface NavLink {
@@ -230,6 +233,7 @@ const settingsViewSchema = z.object({
   cookie_banner_enabled: z.boolean().default(true),
   analytics_enabled: z.boolean().default(true),
   google_site_verification: z.string().nullable().default(null),
+  legal_identity: z.unknown().optional(),
 });
 
 export function parseSiteSettings(raw: unknown, fallbackName: string): SiteSettingsView {
@@ -257,5 +261,6 @@ export function parseSiteSettings(raw: unknown, fallbackName: string): SiteSetti
     cookieBannerEnabled: data.cookie_banner_enabled,
     analyticsEnabled: data.analytics_enabled,
     googleSiteVerification: data.google_site_verification,
+    legalIdentity: parseLegalIdentity(data.legal_identity),
   };
 }

@@ -25,7 +25,9 @@ export function TableWrapper({
       aria-label={label}
       tabIndex={0}
       className={cn(
-        'overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)]',
+        // `relative` : un element positionne (texte reserve aux lecteurs d'ecran)
+        // reste contenu dans la zone defilante au lieu d'elargir la page.
+        'relative overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)]',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]',
         className,
       )}

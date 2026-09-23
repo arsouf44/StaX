@@ -278,7 +278,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanView[] }) {
       role="region"
       aria-label="Comparaison détaillée des offres"
       tabIndex={0}
-      className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+      className="relative overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
     >
       <table className="w-full min-w-[42rem] border-collapse text-sm">
         <caption className="sr-only">

@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import {
   createCustomerWithPaidOrder,
   fetchPublicPage,
+  fillLegalIdentity,
   firstHeading,
   provisionInternalAccount,
   serviceClient,
@@ -140,6 +141,8 @@ test('compte interne : site Ultra Premium créé sans paiement, modifié et publ
   });
 
   await test.step('édition du site puis publication réelle', async () => {
+    await fillLegalIdentity(page, 'Atelier interne StaX');
+    await page.goto('/app');
     await page.getByTestId('my-site').getByRole('link', { name: 'Modifier mon site' }).click();
     await expect(page.getByTestId('visual-editor')).toBeVisible();
     await expect(page.getByTestId('preview-viewport')).toHaveAttribute('data-loading', 'false');

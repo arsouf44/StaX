@@ -384,3 +384,33 @@ export function maintenancePolicyConfig(): MaintenancePolicyConfig {
     financialRetentionYears: 10,
   };
 }
+
+/**
+ * Identite de StaX en tant qu HEBERGEUR des sites de ses clients.
+ *
+ * Chaque site client doit nommer son hebergeur dans ses mentions legales
+ * (article 6 III de la LCEN) : c est StaX, qui fournit l hebergement. Seules
+ * les valeurs reellement configurees sont renvoyees — jamais un marqueur
+ * « [A CONFIGURER] », qui n a rien a faire sur le site d un client.
+ */
+export interface SiteHostIdentity {
+  name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  reportUrl: string | null;
+}
+
+export function siteHostIdentity(platformBaseUrl: string | null): SiteHostIdentity {
+  const configured = (key: LegalKey): string | null =>
+    isLegalValueConfigured(key) ? legalValue(key) : null;
+  return {
+    name: configured('LEGAL_COMPANY_NAME') ?? 'StaX',
+    address: configured('LEGAL_ADDRESS'),
+    phone: configured('SUPPORT_PHONE'),
+    email: configured('SUPPORT_EMAIL'),
+    reportUrl: platformBaseUrl
+      ? `${platformBaseUrl.replace(/\/+$/, '')}/signaler-un-contenu`
+      : null,
+  };
+}

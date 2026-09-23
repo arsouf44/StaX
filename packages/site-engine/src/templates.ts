@@ -287,103 +287,43 @@ const NEWSLETTER_FORM: TemplateForm = {
 /**
  * Pages legales.
  *
- * Le texte structure ce que la loi demande (article 6 de la LCEN, RGPD) et
- * reprend ce que nous savons deja. Ce que nous ne savons pas — numero SIREN,
- * forme juridique — est marque « à compléter » : la verification avant
- * publication le signale au client, plutot que d inventer une valeur.
+ * Leur contenu n est PAS du texte fige : les sections « Mentions légales »,
+ * « Politique de confidentialité » et « Conditions générales de vente » sont
+ * rendues a partir de l identite legale saisie dans « Mon entreprise » et des
+ * fonctionnalites actives du site. Rien n est invente : tant qu une mention
+ * obligatoire manque, la verification avant publication bloque et dit ou la
+ * saisir.
  */
-function legalPages(businessName: string, sortOrder: number): TemplatePage[] {
-  const legal = buildBlock('rich-text', {
-    blocks: [
-      { kind: 'heading', level: 2, text: 'Éditeur du site' },
-      {
-        kind: 'list',
-        text: '',
-        items: [
-          `Nom commercial : ${businessName}`,
-          'Forme juridique et capital : à compléter',
-          'Numéro SIREN : à compléter',
-          'Adresse du siège : à compléter',
-          'Responsable de la publication : à compléter',
-        ],
-      },
-      { kind: 'heading', level: 2, text: 'Hébergement' },
-      {
-        kind: 'paragraph',
-        text:
-          'Ce site est réalisé et hébergé par StaX. Les pages sont servies par le réseau ' +
-          'Cloudflare, Inc. (101 Townsend St, San Francisco, CA 94107, États-Unis).',
-      },
-      { kind: 'heading', level: 2, text: 'Propriété intellectuelle' },
-      {
-        kind: 'paragraph',
-        text:
-          'Les textes, photos et logos présentés sur ce site sont la propriété de leur auteur. ' +
-          'Toute reproduction sans autorisation est interdite.',
-      },
-    ],
-  });
-
-  const privacy = buildBlock('rich-text', {
-    blocks: [
-      { kind: 'heading', level: 2, text: 'Les informations que vous nous confiez' },
-      {
-        kind: 'paragraph',
-        text:
-          'Lorsque vous nous écrivez depuis ce site, nous recevons les informations que vous ' +
-          'saisissez (nom, adresse e-mail, téléphone, message). Elles servent uniquement à ' +
-          `vous répondre. ${businessName} ne les revend ni ne les partage.`,
-      },
-      { kind: 'heading', level: 2, text: 'Combien de temps nous les gardons' },
-      {
-        kind: 'paragraph',
-        text:
-          'Vos messages sont conservés trois ans au plus après notre dernier échange, puis ' +
-          'supprimés.',
-      },
-      { kind: 'heading', level: 2, text: 'Vos droits' },
-      {
-        kind: 'paragraph',
-        text:
-          'Vous pouvez demander à consulter, corriger ou supprimer vos informations à tout ' +
-          'moment en nous écrivant depuis la page contact. Vous pouvez aussi adresser une ' +
-          'réclamation à la CNIL (cnil.fr).',
-      },
-      { kind: 'heading', level: 2, text: 'Mesure d’audience' },
-      {
-        kind: 'paragraph',
-        text:
-          'Ce site mesure sa fréquentation sans cookie et sans suivre les visiteurs d’un site ' +
-          'à l’autre. Aucune donnée n’est transmise à des régies publicitaires.',
-      },
-    ],
-  });
-
+function legalPages(
+  sortOrder: number,
+  options: { sellsOnline: boolean; perishable: boolean },
+): TemplatePage[] {
   const pages: TemplatePage[] = [];
   const heading = (title: string) => buildBlock('section-heading', { title });
-  const legalHeading = heading('Mentions légales');
-  const privacyHeading = heading('Confidentialité');
+  const entries: Array<[string, string, ParsedBlock | null]> = [
+    ['/mentions-legales', 'Mentions légales', buildBlock('legal-notice')],
+    ['/confidentialite', 'Confidentialité', buildBlock('privacy-notice')],
+  ];
+  if (options.sellsOnline) {
+    entries.push([
+      '/conditions-generales-de-vente',
+      'Conditions générales de vente',
+      buildBlock('sales-terms', { perishable: options.perishable }),
+    ]);
+  }
 
-  if (legalHeading && legal) {
+  entries.forEach(([path, title, body], index) => {
+    const head = heading(title);
+    if (!head || !body) return;
     pages.push({
-      path: '/mentions-legales',
-      title: 'Mentions légales',
+      path,
+      title,
       kind: 'legal',
       showInNav: false,
-      sortOrder,
-      blocks: [legalHeading, legal],
+      sortOrder: sortOrder + index * 10,
+      blocks: [head, body],
     });
-  }
-  if (privacyHeading && privacy) {
-    pages.push({
-      path: '/confidentialite',
-      title: 'Confidentialité',
-      kind: 'legal',
-      showInNav: false,
-      sortOrder: sortOrder + 10,
-      blocks: [privacyHeading, privacy],
-    });
-  }
+  });
   return pages;
 }
 
@@ -558,7 +498,13 @@ export function buildTemplateForBusiness(
     };
   });
 
-  pages.push(...legalPages(businessName, (pages.length + 1) * 10));
+  const sellsOnline = modules.has('orders');
+  pages.push(
+    ...legalPages((pages.length + 1) * 10, {
+      sellsOnline,
+      perishable: business.sector === 'restauration',
+    }),
+  );
 
   const navPages = pages.filter((page) => page.showInNav && page.path !== '/');
   const preset = getPreset(business.theme.preset);
@@ -587,6 +533,9 @@ export function buildTemplateForBusiness(
       footer: [
         { label: 'Mentions légales', path: '/mentions-legales' },
         { label: 'Confidentialité', path: '/confidentialite' },
+        ...(sellsOnline
+          ? [{ label: 'Conditions de vente', path: '/conditions-generales-de-vente' }]
+          : []),
       ],
     },
     forms,

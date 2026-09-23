@@ -337,20 +337,8 @@ export function renderDocument(input: DocumentInput): string {
         : ''
     }
     ${input.logoUrl ? html`<link rel="icon" href="${input.logoUrl}" />` : ''}
-    ${
-      context.theme.googleFontsHref
-        ? html`<link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-            <link
-              rel="stylesheet"
-              href="${context.theme.googleFontsHref}"
-              media="print"
-              onload="this.media='all'"
-            />
-            <noscript><link rel="stylesheet" href="${context.theme.googleFontsHref}" /></noscript>`
-        : ''
-    }
     <style nonce="${context.nonce}">
+      ${raw(context.theme.fontFaces)}
       :root{${raw(context.theme.cssVariables)}}
       ${raw(SITE_STYLESHEET)}
       ${context.editor ? raw(EDITOR_STYLES) : ''}

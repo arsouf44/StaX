@@ -69,6 +69,25 @@ export const SITE_SCRIPT = String.raw`
     for (var j = 0; j < revealables.length; j += 1) observer.observe(revealables[j]);
   }
 
+  /* --- Contenus integres : charges seulement a la demande ---------------- */
+  var embedButtons = d.querySelectorAll('[data-stax-embed-load]');
+  for (var e = 0; e < embedButtons.length; e += 1) {
+    embedButtons[e].addEventListener('click', function (event) {
+      var box = event.currentTarget.closest('[data-stax-embed]');
+      if (!box) return;
+      var frame = d.createElement('iframe');
+      frame.src = box.getAttribute('data-stax-embed');
+      frame.title = box.getAttribute('data-stax-embed-title') || 'Contenu intégré';
+      frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation allow-forms');
+      frame.setAttribute('allow', 'accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+      box.innerHTML = '';
+      box.classList.remove('embed-gated');
+      box.appendChild(frame);
+      frame.focus();
+    });
+  }
+
   /* --- Onglets (carte de restaurant) ------------------------------------- */
   d.querySelectorAll('[data-stax-tabs]').forEach(function (root) {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[role="tab"]'));

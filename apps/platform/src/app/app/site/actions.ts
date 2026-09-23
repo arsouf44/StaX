@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { unwrapList } from '@stax/database';
+import { legalIdentitySchema } from '@stax/site-engine';
 import {
   fieldErrors,
   navigationSchema,
@@ -170,6 +171,61 @@ export async function saveBusinessIdentityAction(
 
   revalidatePath('/app/entreprise');
   return SAVED;
+}
+
+/* --- Mentions legales ------------------------------------------------------ */
+
+const LEGAL_KEYS = [
+  'legalName',
+  'legalForm',
+  'capital',
+  'registration',
+  'vatNumber',
+  'address',
+  'publicationDirector',
+  'regulatedProfession',
+  'mediator',
+  'privacyContact',
+] as const;
+
+/**
+ * Identite legale du client, editeur de son site. Enregistree telle que
+ * saisie : les champs obligatoires sont exiges a la PUBLICATION (qui dit
+ * lesquels manquent), pas ici — on peut remplir en plusieurs fois.
+ */
+export async function saveLegalIdentityAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const gate = await requireSiteEditor();
+  if (!gate.ok) return gate.state;
+
+  const parsed = legalIdentitySchema.safeParse(
+    Object.fromEntries(LEGAL_KEYS.map((key) => [key, text(formData, key)])),
+  );
+  if (!parsed.success) {
+    return {
+      status: 'error',
+      message: 'Certaines informations sont trop longues.',
+      errors: fieldErrors(parsed.error),
+    };
+  }
+
+  const { error } = await gate.value.db.from('site_settings').upsert(
+    {
+      site_id: gate.value.siteId,
+      legal_identity: parsed.data,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'site_id' },
+  );
+  if (error) return failure();
+
+  revalidatePath('/app/entreprise');
+  return {
+    status: 'success',
+    message: 'Mentions légales enregistrées. Elles seront en ligne à la prochaine publication.',
+  };
 }
 
 /* --- Referencement -------------------------------------------------------- */

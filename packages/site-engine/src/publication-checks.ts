@@ -1,5 +1,6 @@
 import { getBlockDefinition, parseBlock } from './blocks/registry';
 import type { DraftBlock, DraftPage, DraftState } from './draft-state';
+import { missingLegalFields, type LegalIdentity } from './legal';
 
 /**
  * Verification avant publication.
@@ -41,6 +42,11 @@ export interface PublicationContext {
   collections: Partial<Record<CollectionKey, number>>;
   /** Modules actifs du site. */
   enabledModules: ReadonlySet<string>;
+  /**
+   * Identite legale de l editeur (« Mon entreprise »). Absente : la
+   * verification des mentions obligatoires n est pas faite.
+   */
+  legalIdentity?: LegalIdentity;
 }
 
 export type CollectionKey =
@@ -398,6 +404,41 @@ export function checkSiteForPublication(
           ...where(page, block),
         });
       }
+    }
+  }
+
+  // --- Mentions obligatoires -----------------------------------------------
+  // Un site professionnel doit identifier son editeur (article 6 III de la
+  // LCEN). Publier sans ces mentions exposerait le client a une amende : on
+  // refuse, en disant exactement quoi saisir et ou.
+  if (context.legalIdentity) {
+    const missing = missingLegalFields(context.legalIdentity);
+    if (missing.length > 0) {
+      blocking.push({
+        severity: 'blocking',
+        code: 'legal_identity',
+        message: `Vos mentions légales sont incomplètes : il manque ${missing.join(', ')}.`,
+        fix: 'Renseignez-les dans « Mon entreprise », rubrique « Mentions légales » : elles sont reprises automatiquement sur votre site.',
+      });
+    }
+    const hasLegalNotice = published.some((page) =>
+      (page.blocks ?? []).some((block) => block.visible && block.type === 'legal-notice'),
+    );
+    if (!hasLegalNotice && !paths.has('/mentions-legales')) {
+      warnings.push({
+        severity: 'warning',
+        code: 'legal_page',
+        message: 'Votre site n’a pas de page « Mentions légales ».',
+        fix: 'Restaurez-la depuis la corbeille des pages : elle est obligatoire pour un site professionnel.',
+      });
+    }
+    if (context.enabledModules.has('orders') && !context.legalIdentity.mediator.trim()) {
+      warnings.push({
+        severity: 'warning',
+        code: 'mediator',
+        message: 'Vous vendez en ligne, mais aucun médiateur de la consommation n’est indiqué.',
+        fix: 'Si vous vendez à des particuliers, l’adhésion à un médiateur est obligatoire : indiquez-le dans « Mon entreprise ».',
+      });
     }
   }
 

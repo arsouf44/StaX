@@ -796,6 +796,59 @@ export const embedBlock = define({
   defaults: { title: '', provider: 'youtube', resourceId: '', aspectRatio: '16:9' },
 });
 
+export const legalNoticeBlock = define({
+  type: 'legal-notice',
+  version: 1,
+  label: 'Mentions légales',
+  description:
+    'Vos mentions légales, rédigées automatiquement à partir des informations de « Mon entreprise ».',
+  icon: 'scale',
+  category: 'structure',
+  requiresModule: null,
+  singleton: true,
+  schema: z.object({
+    /** Complement libre : credits photo, conditions particulieres… */
+    extra: z.array(richParagraphSchema).max(30).default([]),
+  }),
+  defaults: { extra: [] },
+});
+
+export const privacyNoticeBlock = define({
+  type: 'privacy-notice',
+  version: 1,
+  label: 'Politique de confidentialité',
+  description:
+    'Votre politique de confidentialité, adaptée automatiquement aux fonctionnalités de votre site.',
+  icon: 'shield-check',
+  category: 'structure',
+  requiresModule: null,
+  singleton: true,
+  schema: z.object({
+    extra: z.array(richParagraphSchema).max(30).default([]),
+  }),
+  defaults: { extra: [] },
+});
+
+export const salesTermsBlock = define({
+  type: 'sales-terms',
+  version: 1,
+  label: 'Conditions générales de vente',
+  description:
+    'Les conditions de vente de votre boutique, avec les mentions obligatoires pour vendre à des particuliers.',
+  icon: 'file-text',
+  category: 'structure',
+  requiresModule: 'orders',
+  singleton: true,
+  schema: z.object({
+    /** Delai de livraison ou de retrait annonce, en jours. */
+    deliveryDays: z.number().int().min(1).max(30).default(7),
+    /** Produits perissables ou personnalises : pas de droit de retractation. */
+    perishable: z.boolean().default(false),
+    extra: z.array(richParagraphSchema).max(40).default([]),
+  }),
+  defaults: { deliveryDays: 7, perishable: false, extra: [] },
+});
+
 /* -------------------------------------------------------------------------- */
 
 export const BLOCK_DEFINITIONS = [
@@ -835,6 +888,9 @@ export const BLOCK_DEFINITIONS = [
   statsBlock,
   logosBlock,
   embedBlock,
+  legalNoticeBlock,
+  privacyNoticeBlock,
+  salesTermsBlock,
 ] as const satisfies readonly BlockDefinition[];
 
 export type BlockType = (typeof BLOCK_DEFINITIONS)[number]['type'];

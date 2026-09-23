@@ -1,4 +1,4 @@
-import { readEnv } from '@stax/config';
+import { readEnv, siteHostIdentity } from '@stax/config';
 import { resolveBusiness } from '@stax/business';
 import { mediaPublicUrl } from '@stax/database';
 import { generateNonce, issueCsrfToken } from '@stax/security';
@@ -257,6 +257,7 @@ export async function GET(request: Request): Promise<Response> {
     hasCustomerAccounts: false,
     theme,
     settings,
+    host: siteHostIdentity(readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? null),
     pages: snapshot.pages,
     currentPath: normalizePath(page.path),
     enabledModules: new Set(site.enabledModules),
@@ -297,8 +298,8 @@ export async function GET(request: Request): Promise<Response> {
         'sandbox allow-scripts',
         "default-src 'none'",
         `script-src 'nonce-${nonce}'`,
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com data:",
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' data:",
         ["img-src 'self' https: data:", ...storageImageOrigin()].join(' '),
         "connect-src 'none'",
         "form-action 'none'",

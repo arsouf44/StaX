@@ -42,6 +42,9 @@ export interface EditorField {
 /** Libelles en francais courant. Aucun nom technique ne sort d ici. */
 const LABELS: Record<string, string> = {
   eyebrow: 'Surtitre',
+  extra: 'Texte complémentaire',
+  deliveryDays: 'Délai de retrait ou de livraison (jours)',
+  perishable: 'Produits périssables ou personnalisés (pas de rétractation)',
   title: 'Titre',
   subtitle: 'Sous-titre',
   description: 'Description',
