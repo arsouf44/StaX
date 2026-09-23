@@ -361,8 +361,6 @@ export async function createInternalOrderAction(
     p_domain_handling: draft.domainHandling ?? 'subdomain_only',
     p_customer_notes: draft.customerNotes ?? null,
     p_terms_version: TERMS_VERSION,
-    p_template: null,
-    p_hostname: null,
     p_details: {
       email: draft.contactEmail ?? null,
       phone: draft.contactPhone ?? null,

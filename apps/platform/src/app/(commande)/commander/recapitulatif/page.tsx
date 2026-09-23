@@ -2,13 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { resolveBusiness } from '@stax/business';
-import {
-  formatMaintenance,
-  formatMoney,
-  grossFromNet,
-  maintenanceTrialDays,
-  vatFromNet,
-} from '@stax/payments';
+import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
 import { refundPolicyConfig, sitesDomain } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
@@ -33,19 +27,17 @@ const DOMAIN_LABELS: Record<string, string> = {
 };
 
 /**
- * Ce qui se passe apres la commande. StaX concoit et construit le site, de
- * zero, sur plusieurs semaines ; le client le decouvre quand il lui est
- * confie. Rien ici ne promet un site disponible le jour meme.
+ * Ce qui se passe apres la commande. StaX concoit et developpe le site
+ * individuellement, dans son propre depot, puis le met en ligne sur son
+ * propre projet Cloudflare ; le client en prend la main a la livraison. Rien
+ * ici ne promet un site disponible le jour meme.
  */
-function nextSteps(trialDays: number): string[] {
-  return [
-    'Votre espace client s’ouvre dès le paiement : vous y suivez l’avancement de votre projet et échangez avec l’équipe.',
-    'L’équipe StaX conçoit et construit votre site de A à Z, à partir de vos informations. Comptez quelques semaines.',
-    'Quand il est prêt, nous vous le confions : il apparaît dans votre espace, vous le relisez et demandez vos corrections.',
-    'Nous le mettons en ligne avec votre accord. Votre première année de maintenance commence ' +
-      `à la mise en ligne, et au plus tard ${trialDays} jours après la commande.`,
-  ];
-}
+const NEXT_STEPS = [
+  'Votre espace client s’ouvre dès le paiement : vous y suivez chaque étape de votre projet, envoyez vos informations et vos fichiers, et échangez avec l’équipe.',
+  'Nous concevons puis développons votre site pour votre entreprise — pas de modèle à personnaliser. Comptez quelques semaines selon l’offre.',
+  'Nous le mettons en ligne sur votre domaine, en HTTPS, et vérifions tout avant de vous le livrer.',
+  'À la livraison, vous gardez la main : vous modifiez vos textes, photos et informations depuis StaX. La maintenance mensuelle commence ce jour-là, pas avant.',
+];
 
 const INTERNAL_NEXT_STEPS = [
   'La commande est enregistrée sans paiement et l’espace client s’ouvre : il affiche le suivi du projet, comme pour un client.',
@@ -126,13 +118,11 @@ export default async function OrderSummaryPage() {
               {internal ? 'Ce qui se passe ensuite' : 'Ce qui se passe après le paiement'}
             </h2>
             <ol className="mt-4 space-y-3 text-sm text-[var(--foreground-muted)]">
-              {(internal ? INTERNAL_NEXT_STEPS : nextSteps(maintenanceTrialDays())).map(
-                (step, index) => (
-                  <li key={step}>
-                    <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
-                  </li>
-                ),
-              )}
+              {(internal ? INTERNAL_NEXT_STEPS : NEXT_STEPS).map((step, index) => (
+                <li key={step}>
+                  <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
+                </li>
+              ))}
             </ol>
           </Panel>
         </div>
@@ -191,8 +181,9 @@ export default async function OrderSummaryPage() {
                 <strong className="text-[var(--foreground)]">
                   {formatMaintenance(maintenanceGross, plan.currency, plan.billingInterval)}
                 </strong>{' '}
-                de maintenance, prélevée à partir de la mise en ligne de votre site. Résiliable à
-                tout moment depuis votre espace.
+                de maintenance, prélevée chaque mois à partir de la <strong>livraison</strong> de
+                votre site — rien avant. Votre carte est enregistrée par Stripe pour ce prélèvement.
+                Résiliable depuis votre espace, dans les conditions des CGV.
               </p>
 
               <div className="mt-6">

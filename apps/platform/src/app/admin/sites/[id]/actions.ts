@@ -14,6 +14,7 @@ import { activationCodeHint, generateActivationCode, hashActivationCode } from '
 import { emailSchema, optionalText, uuidSchema } from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
+import { startMaintenanceAtDelivery } from '~/lib/maintenance';
 import type { ActionState } from '~/lib/form-state';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 
@@ -372,12 +373,23 @@ export async function deliverSiteAction(payload: unknown): Promise<ActionState> 
     };
   }
 
+  // La maintenance mensuelle commence a la livraison, jamais avant.
+  const service = tryCreateServiceClient();
+  const maintenance = service
+    ? await startMaintenanceAtDelivery(service, parsed.data.siteId)
+    : ({ status: 'failed', message: 'clé de service absente' } as const);
+
   revalidatePath(`/admin/sites/${parsed.data.siteId}`);
   revalidatePath('/admin/sites');
   return {
-    status: 'success',
+    status: maintenance.status === 'failed' ? 'error' : 'success',
     message:
-      'Site confié. Le client y a désormais accès depuis son espace, et il a été prévenu. Vous gardez la main.',
+      'Site confié. Le client y a désormais accès depuis son espace, et il a été prévenu.' +
+      (maintenance.status === 'started'
+        ? ' La maintenance mensuelle démarre aujourd’hui.'
+        : maintenance.status === 'failed'
+          ? ` Attention : la maintenance n’a pas pu démarrer (${maintenance.message}).`
+          : ''),
   };
 }
 

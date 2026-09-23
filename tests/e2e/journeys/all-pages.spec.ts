@@ -79,7 +79,6 @@ const ADMIN_PAGES = [
   '/admin/sites?filtre=a-confier',
   '/admin/support',
   '/admin/taches',
-  '/admin/templates',
   '/admin/utilisateurs',
   '/admin/webhooks',
 ];

@@ -819,28 +819,6 @@ export const ADMIN_VIEWS = {
     note: 'À ne pas confondre avec les droits d’offre : un drapeau sert à déployer progressivement, pas à vendre. Les droits d’offre se règlent par client depuis sa fiche.',
   },
 
-  templates: {
-    id: 'templates',
-    route: '/admin/templates',
-    table: 'site_templates',
-    title: 'Modèles de site',
-    description: 'Structures de départ proposées à la création d’un site.',
-    minimum: 'designer',
-    select: 'slug, name, description, is_active, sort_order, updated_at',
-    orderColumn: 'sort_order',
-    ascending: true,
-    columns: [
-      { key: 'name', label: 'Modèle', kind: 'text' },
-      { key: 'slug', label: 'Identifiant', kind: 'mono', secondary: true },
-      { key: 'description', label: 'Description', kind: 'text', secondary: true },
-      { key: 'is_active', label: 'Proposé', kind: 'boolean' },
-    ],
-    emptyTitle: 'Aucun modèle',
-    emptyDescription: 'Les modèles de site sont livrés par migration de données de référence.',
-    icon: 'layout-grid',
-    note: 'Lecture seule. Un modèle est du code versionné : le modifier depuis une interface le désynchroniserait du dépôt.',
-  },
-
   metiers: {
     id: 'metiers',
     route: '/admin/metiers',

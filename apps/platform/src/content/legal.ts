@@ -6,7 +6,7 @@ import {
   maintenancePolicyConfig,
   refundPolicyConfig,
 } from '@stax/config';
-import { formatMoney, maintenanceTrialDays } from '@stax/payments';
+import { formatMoney } from '@stax/payments';
 
 /**
  * LEGAL_REVIEW_REQUIRED
@@ -237,7 +237,6 @@ export function buildTerms(): LegalDocument {
   const refund = refundPolicyConfig();
   const maintenance = maintenancePolicyConfig();
   const delivery = deliveryPolicyConfig();
-  const trialDays = maintenanceTrialDays();
   const company = legalValue('LEGAL_COMPANY_NAME');
 
   return {
@@ -405,10 +404,11 @@ export function buildTerms(): LegalDocument {
               'virement, selon les modalités indiquées sur la facture.',
           ),
           p(
-            'La Création est payée à la commande. La Maintenance est payée d’avance, pour chaque ' +
-              `période annuelle. La première période commence à la mise en ligne du Site, et au ` +
-              `plus tard ${trialDays} jours après la commande ; les périodes suivantes sont ` +
-              'prélevées à leur date anniversaire sur le moyen de paiement enregistré.',
+            'La Création est payée à la commande. La Maintenance est mensuelle et payée d’avance ' +
+              'pour chaque mois. Elle commence le jour de la livraison du Site (sa remise au Client ' +
+              'une fois en ligne et vérifié) : aucune somme n’est prélevée au titre de la ' +
+              'Maintenance avant cette date. Les mois suivants sont prélevés à la même date sur le ' +
+              'moyen de paiement enregistré auprès de Stripe lors de la commande.',
           ),
           p(
             'Une facture conforme à la réglementation est émise pour chaque paiement et reste ' +

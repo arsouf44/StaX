@@ -1,18 +1,19 @@
 import type { Cents, Currency, UUID } from '@stax/types';
-import { platformUrl, readEnv } from '@stax/config';
+import { platformUrl } from '@stax/config';
+import { formatMoney } from './money';
 import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
 
 /**
  * Parcours de paiement de la plateforme.
  *
- * Une seule session de paiement couvre les deux engagements, pour qu'aucun
- * cout ne soit cache : le paiement initial de creation ET l'abonnement
- * annuel de maintenance apparaissent dans le meme recapitulatif Stripe.
+ * A la commande, le client paie la CREATION de son site, et rien d'autre.
+ * Sa carte est enregistree chez Stripe (jamais chez StaX) pour la suite.
  *
- * La maintenance ne demarre PAS le jour de la commande : une periode sans
- * facturation (MAINTENANCE_TRIAL_DAYS, 30 jours par defaut) laisse le temps
- * de construire et de mettre le site en ligne. L'administration peut ensuite
- * aligner precisement le debut de la maintenance sur la mise en ligne reelle.
+ * La maintenance est MENSUELLE et ne commence qu'a la LIVRAISON du site :
+ * c'est la livraison, confirmee par l'equipe apres la checklist, qui cree
+ * l'abonnement (`startMaintenanceSubscription`). Aucun prelevement de
+ * maintenance n'a lieu tant que le site n'est pas livre, et la base refuse
+ * d'enregistrer un abonnement pour un site non livre.
  */
 
 export interface CheckoutPlanPrices {
@@ -42,11 +43,6 @@ export interface CreateCheckoutInput {
   discountCents?: Cents;
   couponCode?: string | null;
   locale?: 'fr' | 'en';
-}
-
-export function maintenanceTrialDays(): number {
-  const raw = Number.parseInt(readEnv('MAINTENANCE_TRIAL_DAYS') ?? '30', 10);
-  return Number.isFinite(raw) && raw >= 0 && raw <= 730 ? raw : 30;
 }
 
 /**
@@ -120,31 +116,6 @@ function lineItemForSetup(
   };
 }
 
-function lineItemForMaintenance(
-  plan: CheckoutPlanPrices,
-  taxRates: string[],
-): Stripe.Checkout.SessionCreateParams.LineItem | null {
-  if (plan.maintenancePriceCents <= 0) return null;
-  if (plan.stripeMaintenancePriceId) {
-    return { price: plan.stripeMaintenancePriceId, quantity: 1, tax_rates: taxRates };
-  }
-  return {
-    quantity: 1,
-    tax_rates: taxRates,
-    price_data: {
-      currency: plan.currency.toLowerCase(),
-      unit_amount: plan.maintenancePriceCents,
-      tax_behavior: 'exclusive',
-      recurring: { interval: 'year' },
-      product_data: {
-        name: `Maintenance annuelle — offre ${plan.planName}`,
-        description:
-          'Hébergement, certificat HTTPS, sauvegardes, mises a jour de sécurité et support.',
-      },
-    },
-  };
-}
-
 export async function createCheckoutSession(
   input: CreateCheckoutInput,
 ): Promise<{ sessionId: string; url: string }> {
@@ -154,13 +125,7 @@ export async function createCheckoutSession(
 
   const vatRate = await ensureVatTaxRate(input.plan.vatRateBps);
   const taxRates = vatRate ? [vatRate] : [];
-
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-    lineItemForSetup(input.plan, discountCents, taxRates),
-  ];
-  const maintenance = lineItemForMaintenance(input.plan, taxRates);
-  const hasSubscription = maintenance !== null;
-  if (maintenance) lineItems.push(maintenance);
+  const hasMaintenance = input.plan.maintenancePriceCents > 0;
 
   const metadata: Stripe.MetadataParam = {
     stax_order_id: input.orderId,
@@ -170,9 +135,17 @@ export async function createCheckoutSession(
     ...(input.couponCode ? { stax_coupon: input.couponCode } : {}),
   };
 
+  const maintenanceNotice = hasMaintenance
+    ? `Seule la création est payée aujourd’hui. La maintenance (${formatMoney(
+        input.plan.maintenancePriceCents,
+        input.plan.currency,
+        { hideDecimalsWhenRound: true },
+      )} HT par mois) ne démarre qu’à la livraison de votre site : votre carte est enregistrée par Stripe pour ce prélèvement mensuel, résiliable.`
+    : null;
+
   const params: Stripe.Checkout.SessionCreateParams = {
-    mode: hasSubscription ? 'subscription' : 'payment',
-    line_items: lineItems,
+    mode: 'payment',
+    line_items: [lineItemForSetup(input.plan, discountCents, taxRates)],
     locale: input.locale ?? 'fr',
     currency: input.plan.currency.toLowerCase(),
     client_reference_id: input.orderId,
@@ -181,13 +154,28 @@ export async function createCheckoutSession(
     cancel_url: `${base}/commander/paiement?order=${input.orderId}&annule=1`,
     automatic_tax: { enabled: false },
     billing_address_collection: 'required',
+    invoice_creation: {
+      enabled: true,
+      invoice_data: {
+        description: `Création de votre site — commande ${input.orderReference}`,
+        metadata,
+      },
+    },
     // Le consentement CGV est deja recueilli et horodate cote StaX ; Stripe
     // le redemande pour que la preuve existe aussi chez le prestataire.
     consent_collection: { terms_of_service: 'required' },
     custom_text: {
       terms_of_service_acceptance: {
-        message: `J’accepte les conditions generales de vente de StaX disponibles sur ${base}/cgv.`,
+        message: `J’accepte les conditions générales de vente de StaX disponibles sur ${base}/cgv.`,
       },
+      ...(maintenanceNotice ? { submit: { message: maintenanceNotice } } : {}),
+    },
+    payment_intent_data: {
+      metadata,
+      description: `Création de votre site — commande ${input.orderReference}`,
+      // La carte est conservee par Stripe pour la maintenance mensuelle, qui
+      // ne sera prelevee qu'a partir de la livraison.
+      ...(hasMaintenance ? { setup_future_usage: 'off_session' as const } : {}),
     },
   };
 
@@ -196,28 +184,167 @@ export async function createCheckoutSession(
     params.customer_update = { address: 'auto', name: 'auto' };
   } else {
     params.customer_email = input.customerEmail;
-    params.customer_creation = hasSubscription ? undefined : 'always';
-  }
-
-  if (hasSubscription) {
-    const trialDays = maintenanceTrialDays();
-    params.subscription_data = {
-      metadata,
-      description: `Maintenance du site — commande ${input.orderReference}`,
-      ...(trialDays > 0 ? { trial_period_days: trialDays } : {}),
-    };
-  } else {
-    params.payment_intent_data = { metadata };
+    params.customer_creation = 'always';
   }
 
   const session = await stripe.checkout.sessions.create(params, {
-    idempotencyKey: idempotencyKey('checkout', input.orderId),
+    idempotencyKey: idempotencyKey('checkout-payment', input.orderId),
   });
 
   if (!session.url) {
-    throw new Error('Stripe n’a pas renvoye d’URL de paiement.');
+    throw new Error('Stripe n’a pas renvoyé d’URL de paiement.');
   }
   return { sessionId: session.id, url: session.url };
+}
+
+/**
+ * Apres le paiement : la carte utilisee devient le moyen de paiement par
+ * defaut du client Stripe, pour la maintenance qui demarrera a la livraison.
+ */
+export async function rememberDefaultPaymentMethod(params: {
+  stripeCustomerId: string;
+  paymentIntentId: string;
+}): Promise<string | null> {
+  const stripe = getStripe();
+  const intent = await stripe.paymentIntents.retrieve(params.paymentIntentId);
+  const paymentMethod =
+    typeof intent.payment_method === 'string' ? intent.payment_method : intent.payment_method?.id;
+  if (!paymentMethod) return null;
+  await stripe.customers.update(params.stripeCustomerId, {
+    invoice_settings: { default_payment_method: paymentMethod },
+  });
+  return paymentMethod;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Maintenance mensuelle : demarrage a la livraison                           */
+/* -------------------------------------------------------------------------- */
+
+export interface StartMaintenanceInput {
+  orderId: UUID;
+  orderReference: string;
+  organizationId: UUID;
+  siteId: UUID;
+  stripeCustomerId: string;
+  /** Paiement de la creation : sa carte sert si aucune carte par defaut n'est connue. */
+  paymentIntentId?: string | null;
+  plan: {
+    planSlug: string;
+    planName: string;
+    maintenancePriceCents: Cents;
+    currency: Currency;
+    vatRateBps: number;
+    stripeMaintenancePriceId: string | null;
+  };
+}
+
+const productCache = new Map<string, string>();
+
+/** Produit Stripe « Maintenance mensuelle — offre X », cree une fois puis reutilise. */
+async function ensureMaintenanceProduct(planSlug: string, planName: string): Promise<string> {
+  const cached = productCache.get(planSlug);
+  if (cached) return cached;
+  const stripe = getStripe();
+  const found = await stripe.products.search({
+    query: `metadata['stax_maintenance_plan']:'${planSlug.replace(/[^a-z0-9-]/g, '')}' AND active:'true'`,
+    limit: 1,
+  });
+  const existing = found.data[0];
+  if (existing) {
+    productCache.set(planSlug, existing.id);
+    return existing.id;
+  }
+  const created = await stripe.products.create(
+    {
+      name: `Maintenance mensuelle — offre ${planName}`,
+      description:
+        'Hébergement et diffusion Cloudflare, HTTPS, surveillance, sauvegardes, infrastructure de publication, mises à jour StaX, support et accès à l’éditeur.',
+      metadata: { stax_maintenance_plan: planSlug },
+    },
+    { idempotencyKey: idempotencyKey('maintenance-product', planSlug) },
+  );
+  productCache.set(planSlug, created.id);
+  return created.id;
+}
+
+/**
+ * Cree l'abonnement de maintenance MENSUELLE, le jour de la livraison.
+ * Premiere echeance : a la livraison, puis chaque mois. Idempotent par
+ * commande : un second appel ne cree jamais un second abonnement.
+ */
+export async function startMaintenanceSubscription(input: StartMaintenanceInput): Promise<{
+  subscriptionId: string;
+  status: string;
+  priceId: string | null;
+  periodStart: string | null;
+  periodEnd: string | null;
+}> {
+  const stripe = getStripe();
+  const vatRate = await ensureVatTaxRate(input.plan.vatRateBps);
+  const customer = await stripe.customers.retrieve(input.stripeCustomerId);
+  if ('deleted' in customer && customer.deleted) {
+    throw new Error('Le client Stripe de cette commande a été supprimé.');
+  }
+  let defaultMethod: string | Stripe.PaymentMethod | null | undefined =
+    customer.invoice_settings?.default_payment_method;
+  // A defaut, la carte utilisee pour payer la creation.
+  if (!defaultMethod && input.paymentIntentId) {
+    const intent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
+    defaultMethod = intent.payment_method;
+  }
+  const metadata: Stripe.MetadataParam = {
+    stax_order_id: input.orderId,
+    stax_order_reference: input.orderReference,
+    stax_organization_id: input.organizationId,
+    stax_site_id: input.siteId,
+    stax_plan_slug: input.plan.planSlug,
+  };
+
+  const item: Stripe.SubscriptionCreateParams.Item = input.plan.stripeMaintenancePriceId
+    ? { price: input.plan.stripeMaintenancePriceId }
+    : {
+        price_data: {
+          currency: input.plan.currency.toLowerCase(),
+          product: await ensureMaintenanceProduct(input.plan.planSlug, input.plan.planName),
+          unit_amount: input.plan.maintenancePriceCents,
+          tax_behavior: 'exclusive',
+          recurring: { interval: 'month' },
+        },
+      };
+
+  const subscription = await stripe.subscriptions.create(
+    {
+      customer: input.stripeCustomerId,
+      items: [item],
+      ...(vatRate ? { default_tax_rates: [vatRate] } : {}),
+      ...(defaultMethod
+        ? {
+            default_payment_method:
+              typeof defaultMethod === 'string' ? defaultMethod : defaultMethod.id,
+          }
+        : {}),
+      collection_method: 'charge_automatically',
+      // Si la banque exige une authentification, l'abonnement reste
+      // « incomplet » et Stripe envoie au client le lien pour la valider :
+      // rien n'est suppose paye.
+      payment_behavior: 'allow_incomplete',
+      off_session: true,
+      payment_settings: { save_default_payment_method: 'on_subscription' },
+      description: `Maintenance mensuelle du site — commande ${input.orderReference}`,
+      metadata,
+    },
+    { idempotencyKey: idempotencyKey('maintenance-start', input.orderId) },
+  );
+  const item0 = subscription.items.data[0];
+  const iso = (seconds: number | null | undefined) =>
+    typeof seconds === 'number' ? new Date(seconds * 1000).toISOString() : null;
+  return {
+    subscriptionId: subscription.id,
+    status: subscription.status,
+    priceId: item0?.price.id ?? null,
+    periodStart: iso(item0?.current_period_start),
+    periodEnd: iso(item0?.current_period_end),
+  };
 }
 
 /**
@@ -258,26 +385,6 @@ export async function ensureStripeCustomer(params: {
     { idempotencyKey: idempotencyKey('customer', params.organizationId) },
   );
   return customer.id;
-}
-
-/**
- * Aligne le debut de la facturation de maintenance sur la mise en ligne reelle.
- * Appele par l'administration au moment de la publication.
- */
-export async function alignMaintenanceStart(
-  stripeSubscriptionId: string,
-  goLiveAt: Date,
-): Promise<void> {
-  const stripe = getStripe();
-  const trialEnd = Math.floor(goLiveAt.getTime() / 1000);
-  if (trialEnd <= Math.floor(Date.now() / 1000)) {
-    await stripe.subscriptions.update(stripeSubscriptionId, { trial_end: 'now' });
-    return;
-  }
-  await stripe.subscriptions.update(stripeSubscriptionId, {
-    trial_end: trialEnd,
-    proration_behavior: 'none',
-  });
 }
 
 export async function cancelSubscriptionAtPeriodEnd(

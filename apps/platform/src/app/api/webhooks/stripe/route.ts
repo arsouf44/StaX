@@ -4,6 +4,7 @@ import { renewalReminderEmail, sendEmail } from '@stax/emails';
 import {
   formatMoney,
   redactEventPayload,
+  rememberDefaultPaymentMethod,
   verifyWebhook,
   WebhookVerificationError,
   type Stripe,
@@ -189,17 +190,34 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
   }
 
   // Aucun site modele n est prepare au paiement : l equipe StaX concoit et
-  // construit le site de zero, puis le confie au client depuis
+  // developpe le site individuellement, puis le livre au client depuis
   // l administration (`app.deliver_site`). Le client suit son projet d ici la.
 
-  // L abonnement de maintenance arrive aussi par `customer.subscription.created`,
-  // mais l ordre des evenements n est pas garanti : on le rattache ici s il est
-  // deja connu, et la fonction SQL reste idempotente dans les deux cas.
+  // La carte utilisee devient le moyen de paiement par defaut : c est elle qui
+  // reglera la maintenance mensuelle, creee a la LIVRAISON du site (jamais ici).
+  const customerId = asString(session.customer);
+  const paymentIntentId = asString(session.payment_intent);
+  if (session.mode === 'payment' && customerId && paymentIntentId) {
+    try {
+      await rememberDefaultPaymentMethod({ stripeCustomerId: customerId, paymentIntentId });
+    } catch (rememberError) {
+      // Sans consequence sur la commande, deja payee : a la livraison, la carte
+      // du paiement initial est reprise directement.
+      console.error(
+        '[stax:webhook] carte par defaut non enregistree',
+        rememberError instanceof Error ? rememberError.message : rememberError,
+      );
+    }
+  }
+
+  // Parcours anterieur (session en mode abonnement, creee avant le passage a
+  // la maintenance mensuelle a la livraison) : l abonnement est rattache s il
+  // est accepte ; un refus (site non livre) est journalise par la base.
   const subscriptionId = asString(session.subscription);
   if (subscriptionId) {
-    await db.rpc('upsert_subscription_from_stripe', {
+    const { error: subscriptionError } = await db.rpc('upsert_subscription_from_stripe', {
       p_stripe_subscription_id: subscriptionId,
-      p_stripe_customer_id: asString(session.customer),
+      p_stripe_customer_id: customerId,
       p_status: 'incomplete',
       p_period_start: null,
       p_period_end: null,
@@ -207,6 +225,9 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
       p_order_id: orderId,
       p_price_id: null,
     });
+    if (subscriptionError) {
+      console.error('[stax:webhook] abonnement anterieur non rattache', subscriptionError.message);
+    }
   }
 }
 
@@ -261,7 +282,11 @@ async function onInvoiceEvent(db: Db, invoice: Stripe.Invoice): Promise<void> {
 const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
 
 /**
- * Rappel de reconduction de la maintenance annuelle.
+ * Rappel de reconduction — contrats ANNUELS anterieurs uniquement.
+ *
+ * La maintenance est desormais mensuelle, sans duree minimale et resiliable a
+ * tout moment : elle n'est pas concernee. Les contrats annuels vendus avant
+ * le passage au mensuel restent soumis au rappel.
  *
  * Obligatoire envers un client non professionnel (article L215-1 du Code de la
  * consommation) : sans lui, il pourrait resilier a tout moment apres la
