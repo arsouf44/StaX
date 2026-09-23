@@ -93,17 +93,22 @@ begin
 
   -- Sites deja confies a leurs clients (0041) : c'est le cas nominal des tests
   -- d'isolation et de RBAC ci-dessous.
+  -- Ces deux sites exercent le moteur multi-tenant historique (pages, sections,
+  -- instantanes publies) : ils sont explicitement `legacy_engine`. Les sites
+  -- developpes independamment ont leur propre bloc de tests plus bas.
   insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug,
-                            delivered_at)
+                            delivered_at, architecture)
        values (v_org_a, 'Site A', 'site-a',
-               (select id from public.plans where slug='ultra-premium'), 'ultra-premium', 'restaurant',
-               now())
+               (select id from public.plans where slug='ultra-premium' and is_active
+                   and valid_until is null), 'ultra-premium', 'restaurant',
+               now(), 'legacy_engine')
     returning id into v_site_a;
   insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug,
-                            delivered_at)
+                            delivered_at, architecture)
        values (v_org_b, 'Site B', 'site-b',
-               (select id from public.plans where slug='essentiel'), 'essentiel', 'plombier',
-               now())
+               (select id from public.plans where slug='essentiel' and is_active
+                   and valid_until is null), 'essentiel', 'plombier',
+               now(), 'legacy_engine')
     returning id into v_site_b;
 
   insert into public.site_settings (site_id, business_name) values
@@ -549,10 +554,10 @@ begin
     'Essentiel ne donne PAS acces aux comptes clients');
   -- NULL = illimite, -1 = fonctionnalite absente de l'offre. Les deux ne
   -- veulent pas dire la meme chose et ne doivent jamais etre confondus.
-  perform t.assert(app.feature_limit(org_a, 'max_pages') is null,
-    'Ultra Premium n''impose aucune limite de pages');
-  perform t.assert(app.feature_limit(org_b, 'max_pages') = 8,
-    'La limite de pages Essentiel est de 8');
+  perform t.assert(app.feature_limit(org_a, 'max_pages') = 20,
+    'La limite de pages Ultra Premium est de 20');
+  perform t.assert(app.feature_limit(org_b, 'max_pages') = 5,
+    'La limite de pages Essentiel est de 5');
   perform t.assert(app.feature_limit(org_b, 'max_products') = -1,
     'Une fonctionnalite absente de l''offre renvoie -1');
 
@@ -578,13 +583,15 @@ $$;
 do $$
 declare
   v_price app.price_breakdown;
-  v_plan uuid := (select id from plans where slug='essentiel');
+  v_plan uuid := (select id from plans where slug='essentiel' and is_active and valid_until is null);
 begin
   v_price := app.compute_order_pricing(v_plan, null);
   perform t.assert(v_price.setup_cents = 30000, 'Prix Essentiel = 300,00 EUR HT');
   perform t.assert(v_price.vat_cents = 6000, 'TVA 20 % sur 300,00 EUR = 60,00 EUR');
   perform t.assert(v_price.total_cents = 36000, 'Total TTC = 360,00 EUR');
-  perform t.assert(v_price.maintenance_cents = 2200, 'Maintenance Essentiel = 22,00 EUR HT par an');
+  perform t.assert(v_price.maintenance_cents = 1200, 'Maintenance Essentiel = 12,00 EUR HT par mois');
+  perform t.assert((select billing_interval from plans where id = v_plan) = 'month',
+    'La maintenance Essentiel est mensuelle');
 
   insert into coupons (code, kind, value, applies_to) values ('BIENVENUE10', 'percent', 1000, 'setup');
   v_price := app.compute_order_pricing(v_plan, 'BIENVENUE10');
@@ -593,7 +600,7 @@ begin
 
   -- Une offre sur devis ne peut pas etre commandee directement.
   begin
-    v_price := app.compute_order_pricing((select id from plans where slug='sur-mesure'), null);
+    v_price := app.compute_order_pricing((select id from plans where slug='sur-mesure' and is_active and valid_until is null), null);
     perform t.assert(false, 'Une offre sur devis refuse le calcul direct');
   exception when others then
     perform t.assert(true, 'Une offre sur devis refuse le calcul direct');
@@ -2276,6 +2283,13 @@ begin
   v_org  := (v_result ->> 'organizationId')::uuid;
   v_site := (v_result ->> 'siteId')::uuid;
   perform t.assert(v_site is not null, 'L''administration cree un site de zero');
+  perform t.assert((select architecture from public.sites where id = v_site) = 'external_repository',
+    'Un nouveau site est un projet independant (depot et projet Cloudflare propres)');
+  -- La suite de ce bloc exerce le parcours HISTORIQUE (site rendu par le
+  -- moteur multi-tenant) : le site est bascule explicitement, par la cle de
+  -- service. Le parcours cible a son propre bloc ci-dessous.
+  perform set_config('request.jwt.claims', null, true);
+  update public.sites set architecture = 'legacy_engine' where id = v_site;
   perform t.assert(exists (select 1 from public.organization_members
                             where organization_id = v_org and user_id = staff and role = 'owner'),
     'La personne de l''equipe qui cree le site en garde la main (proprietaire)');
@@ -2391,6 +2405,542 @@ begin
     v_failed := true;
   end;
   perform t.assert(v_failed, 'Apres la purge, le journal redevient immuable');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Offres : cinq niveaux, maintenance mensuelle, promesses adossees aux droits
+-- -----------------------------------------------------------------------------
+\echo '--- Offres : cinq niveaux, maintenance mensuelle ---'
+do $$
+declare
+  v_refused boolean := false;
+  v_premium uuid := (select id from public.plans where slug = 'premium' and is_active and valid_until is null);
+begin
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(
+    (select count(*) from public.plans where is_active and is_public and valid_until is null) = 5,
+    'Cinq offres publiques : Essentiel, Premium, Ultra Premium, Exceptionnel, Sur mesure');
+  perform t.assert(
+    (select string_agg(slug || ':' || setup_price_cents || ':' || maintenance_price_cents || ':'
+                       || billing_interval, ',' order by sort_order)
+       from public.plans where is_active and is_public and not is_quote_only and valid_until is null)
+    = 'essentiel:30000:1200:month,premium:55000:1400:month,ultra-premium:109900:1600:month,'
+      || 'exceptionnel:179000:1800:month',
+    'Tarifs : 300/12, 550/14, 1099/16, 1790/18 EUR HT, maintenance mensuelle');
+  perform t.assert(
+    (select is_quote_only and billing_interval = 'month' from public.plans
+      where slug = 'sur-mesure' and is_active and valid_until is null),
+    'Sur mesure : sur devis, maintenance definie selon le projet');
+  perform t.assert(
+    not exists (select 1 from public.plans
+                 where is_active and is_public and valid_until is null and billing_interval = 'year'),
+    'Plus aucune offre en vente avec une maintenance annuelle');
+  perform t.assert(
+    exists (select 1 from public.plans where slug = 'premium' and version = 2 and not is_active),
+    'Les versions annuelles sont archivees, jamais supprimees (contrats en cours)');
+  perform t.assert(
+    (select highlight from public.plans where slug = 'exceptionnel' and is_active) = 'signature',
+    'Exceptionnel est presentee comme une categorie superieure');
+
+  -- Droits : ce qui distingue reellement les offres.
+  perform t.assert(
+    (select count(*) from public.features where key in ('advanced_animations', 'custom_design',
+                                                         'max_sites', 'max_monthly_submissions')) = 0,
+    'Aucun droit fictif : animations, design, sites et messages ne sont plus des « fonctionnalites »');
+  perform t.assert(
+    (select limit_value from public.plan_features pf join public.plans p on p.id = pf.plan_id
+      where p.slug = 'exceptionnel' and p.is_active and pf.feature_key = 'max_pages') = 35,
+    'Exceptionnel : jusqu''a 35 pages');
+  perform t.assert(
+    (select enabled from public.plan_features pf join public.plans p on p.id = pf.plan_id
+      where p.slug = 'premium' and p.is_active and pf.feature_key = 'bookings')
+    and not (select enabled from public.plan_features pf join public.plans p on p.id = pf.plan_id
+      where p.slug = 'premium' and p.is_active and pf.feature_key = 'ecommerce'),
+    'Premium : reservations oui, boutique non');
+
+  -- Une inclusion adossee a un droit que l'offre n'accorde pas est refusee.
+  begin
+    insert into public.plan_inclusions (plan_id, category, label, feature_key)
+    values (v_premium, 'site', 'Boutique en ligne offerte', 'ecommerce');
+  exception when others then v_refused := true; end;
+  perform t.assert(v_refused, 'Une promesse sans droit correspondant est refusee par la base');
+
+  -- Une commande fige les inclusions et annonce la maintenance a la livraison.
+  perform t.assert(jsonb_array_length(app.plan_inclusions_snapshot(v_premium)) > 5,
+    'Les inclusions de l''offre sont figees dans chaque commande');
+
+  -- Aucun code promotionnel ne pretend remiser la maintenance.
+  v_refused := false;
+  begin
+    insert into public.coupons (code, kind, value, applies_to) values ('MAINT50', 'percent', 5000, 'maintenance');
+  exception when others then v_refused := true; end;
+  perform t.assert(v_refused, 'Un code promotionnel sur la maintenance est refuse (jamais applique)');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Sites developpes independamment : rattachement, livraison, publication
+-- -----------------------------------------------------------------------------
+-- Appelle une fonction sous l'identite d'une personne connectee et renvoie
+-- son resultat JSON (le role est retabli avant tout retour).
+create or replace function t.json_as(p_user uuid, p_sql text)
+returns jsonb language plpgsql as $$
+declare v_result jsonb;
+begin
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', p_user, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  execute 'select to_jsonb(' || p_sql || ')' into v_result;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  return v_result;
+exception when others then
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  raise;
+end;
+$$;
+
+\echo '--- Sites independants : depot, Cloudflare, livraison, publication ---'
+do $$
+declare
+  staff     uuid := (select v from t.fixtures where k='staff');
+  bob       uuid := (select v from t.fixtures where k='bob');
+  claire    uuid;
+  v_result  jsonb;
+  v_org_x   uuid; v_site_x uuid;
+  v_org_y   uuid; v_site_y uuid;
+  v_manifest uuid;
+  v_v1 uuid; v_v2 uuid; v_v3 uuid; v_v4 uuid; v_v5 uuid;
+  v_dep     uuid;
+  v_hosting uuid;
+  v_refused boolean;
+  v_rev     int;
+  sha1 text := repeat('1', 40);
+  sha2 text := repeat('2', 40);
+  sha4 text := repeat('4', 40);
+  sha5 text := repeat('5', 40);
+  v_account text := repeat('ab', 16);
+  v_essentiel uuid := (select id from public.plans where slug = 'essentiel' and is_active and valid_until is null);
+  v_repo_x text;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  insert into auth.users (email) values ('claire@client-x.test') returning id into claire;
+  insert into t.fixtures (k, v) values ('claire', claire) on conflict (k) do update set v = excluded.v;
+
+  -- Installation de l'application GitHub StaX, connue du serveur.
+  perform public.upsert_github_installation(1001, 'stax-sites', 5001, 'Organization', 'selected', false);
+
+  -- Deux sites, deux organisations clientes.
+  v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
+    'Atelier X', 'restaurant', v_essentiel, 'Paris'));
+  v_org_x := (v_result ->> 'organizationId')::uuid; v_site_x := (v_result ->> 'siteId')::uuid;
+  v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
+    'Studio Y', 'coiffeur', v_essentiel, 'Lyon'));
+  v_org_y := (v_result ->> 'organizationId')::uuid; v_site_y := (v_result ->> 'siteId')::uuid;
+  insert into public.organization_members (organization_id, user_id, role) values (v_org_x, claire, 'owner');
+  insert into t.fixtures (k, v) values ('site_x', v_site_x), ('org_x', v_org_x)
+    on conflict (k) do update set v = excluded.v;
+
+  perform t.assert((select architecture from public.sites where id = v_site_x) = 'external_repository',
+    'Un nouveau site est un projet independant, jamais genere par StaX');
+
+  -- 1. Rattachement du depot : reserve a l'administration, jamais au client.
+  v_repo_x := format('public.connect_site_repository(%L::uuid, 1001, 9001, %L, 5001, %L, %L, %L, %L, %L)',
+    v_site_x, 'stax-sites', 'atelier-x', 'stax-sites/atelier-x',
+    'https://github.com/stax-sites/atelier-x', 'main', 'main');
+  perform t.assert(t.denied_as(claire, 'select ' || v_repo_x),
+    'Un client ne peut pas rattacher un depot GitHub');
+
+  v_result := t.json_as(staff, v_repo_x);
+  perform t.assert((v_result ->> 'ok')::boolean, 'L''administration rattache le depot du site');
+
+  v_result := t.json_as(staff, format(
+    'public.connect_site_repository(%L::uuid, 1001, 9001, %L, 5001, %L, %L, %L, %L, %L)',
+    v_site_y, 'stax-sites', 'atelier-x', 'stax-sites/atelier-x',
+    'https://github.com/stax-sites/atelier-x', 'main', 'main'));
+  perform t.assert(v_result ->> 'code' = 'repository_already_attached',
+    'Le depot d''une autre organisation ne peut pas etre rattache');
+
+  v_result := t.json_as(staff, format(
+    'public.connect_site_repository(%L::uuid, 4242, 9002, %L, 666, %L, %L, %L, %L, %L)',
+    v_site_y, 'pirate', 'studio-y', 'pirate/studio-y', 'https://github.com/pirate/studio-y',
+    'main', 'main'));
+  perform t.assert(v_result ->> 'code' = 'installation_unknown',
+    'Un depot hors de l''application GitHub StaX est refuse');
+
+  v_result := t.json_as(staff, format(
+    'public.connect_site_repository(%L::uuid, 1001, 9003, %L, 777, %L, %L, %L, %L, %L)',
+    v_site_y, 'autre-compte', 'studio-y', 'autre-compte/studio-y',
+    'https://github.com/autre-compte/studio-y', 'main', 'main'));
+  perform t.assert(v_result ->> 'code' = 'owner_mismatch',
+    'Un depot d''un autre compte GitHub que celui de l''installation est refuse');
+
+  -- 2. Projet Cloudflare : un projet, un site.
+  v_result := t.json_as(staff, format(
+    'public.connect_site_hosting(%L::uuid, %L, %L, %L, %L, %L, %L)',
+    v_site_x, 'cloudflare_pages', v_account, 'atelier-x', 'proj-atelier-x', 'main',
+    'https://atelier-x.pages.dev'));
+  perform t.assert((v_result ->> 'ok')::boolean, 'L''administration rattache le projet Cloudflare');
+  v_result := t.json_as(staff, format(
+    'public.connect_site_hosting(%L::uuid, %L, %L, %L, %L, %L, %L)',
+    v_site_y, 'cloudflare_pages', v_account, 'atelier-x', 'proj-atelier-x', 'main',
+    'https://atelier-x.pages.dev'));
+  perform t.assert(v_result ->> 'code' = 'project_already_attached',
+    'Le projet Cloudflare d''un autre site ne peut pas etre rattache');
+
+  -- 3. Contrat d'edition et contenu initial (version 1, deploiement verifie).
+  v_result := t.json_as(staff, format(
+    'public.record_site_manifest(%L::uuid, %L, %L, 1, %L::jsonb, %L, %L, %L::jsonb, %L::jsonb, %L::jsonb, true)',
+    v_site_x, sha1, 'stax.manifest.json', '{"contract":1,"site":{"name":"Atelier X"}}',
+    'hash-manifest', 'valid', '[]', '[]', '{"pages":3,"locales":1,"forms":1,"collections":0}'));
+  v_manifest := (v_result ->> 'manifestId')::uuid;
+  perform t.assert((v_result ->> 'active')::boolean, 'Un manifeste valide devient le contrat actif');
+
+  v_result := t.json_as(staff, format(
+    'public.initialize_site_content(%L::uuid, %L::uuid, %L::jsonb, %L, %L, %L::jsonb)',
+    v_site_x, v_manifest, '{"pages":{"home":{"hero":{"title":"Bienvenue"}}}}', 'hash-v1', sha1,
+    '{"status":"building","providerDeploymentId":"dep-0"}'));
+  perform t.assert(v_result ->> 'code' = 'deployment_not_verified',
+    'Pas de contenu initial sans deploiement de production reussi');
+
+  v_result := t.json_as(staff, format(
+    'public.initialize_site_content(%L::uuid, %L::uuid, %L::jsonb, %L, %L, %L::jsonb)',
+    v_site_x, v_manifest, '{"pages":{"home":{"hero":{"title":"Bienvenue"}}}}', 'hash-v1', sha1,
+    '{"status":"success","providerDeploymentId":"dep-1","url":"https://d1.atelier-x.pages.dev"}'));
+  v_v1 := (v_result ->> 'releaseId')::uuid;
+  perform t.assert(v_v1 is not null, 'Le contenu initial devient la version 1, adossee a son commit');
+
+  -- L'equipe StaX travaille sur le projet AVANT la livraison.
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_result := t.json_as(staff, format('public.save_site_draft(%L::uuid, %L::jsonb, %s)',
+    v_site_x, '{"pages":{"home":{"hero":{"title":"Bienvenue a l''atelier"}}}}', v_rev));
+  perform t.assert((v_result ->> 'ok')::boolean,
+    'L''equipe StaX modifie le brouillon avant la livraison');
+
+  perform t.assert(
+    (select production_release_id from public.sites where id = v_site_x) = v_v1
+    and (select status from public.site_releases where id = v_v1) = 'published',
+    'La version 1 est la version de production');
+
+  -- 4. Avant la livraison, le client ne peut rien modifier ni publier.
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  perform t.assert(t.denied_as(claire, format(
+    'select public.save_site_draft(%L, %L::jsonb, %s)', v_site_x, '{"x":1}', v_rev)),
+    'Avant la livraison, le client ne peut pas modifier son site');
+  perform t.assert(t.denied_as(claire, format(
+    'select public.request_site_release(%L, ''publish'', null, %s)', v_site_x, v_rev)),
+    'Avant la livraison, le client ne peut pas publier');
+  perform t.assert(t.denied_as(claire, format('select public.begin_site_preview(%L)', v_site_x)),
+    'Avant la livraison, le client ne peut pas demander d''apercu');
+  perform t.assert(t.denied_as(claire, format('select public.deliver_site(%L)', v_site_x)),
+    'Le client ne peut pas se livrer le site lui-meme');
+
+  -- 5. Livraison : refusee tant que la checklist n'est pas complete.
+  v_result := t.json_as(staff, format('public.deliver_site(%L::uuid)', v_site_x));
+  perform t.assert(v_result ->> 'code' = 'checklist_incomplete'
+                   and v_result -> 'missing' ? 'deployed' and v_result -> 'missing' ? 'forms',
+    'Pas de livraison sans checklist complete (deploiement, domaine, HTTPS, formulaires...)');
+
+  perform t.assert(t.denied_as(staff, format(
+    'select public.attest_delivery_check(%L, ''https'', true, ''Verifie a la main, promis'')', v_site_x)),
+    'Un controle automatique (HTTPS) ne s''atteste pas a la main');
+  perform t.assert(t.denied_as(staff, format(
+    'select public.attest_delivery_check(%L, ''forms'', true, ''ok'')', v_site_x)),
+    'Une attestation manuelle exige une description de ce qui a ete verifie');
+
+  perform t.json_as(staff, format('public.attest_delivery_check(%L::uuid, %L, true, %L)',
+    v_site_x, 'forms', 'Formulaire de contact envoye et recu dans la messagerie StaX'));
+  perform t.json_as(staff, format('public.attest_delivery_check(%L::uuid, %L, true, %L)',
+    v_site_x, 'responsive', 'Verifie sur iPhone 15, Pixel 8, iPad et ordinateur 1440 px'));
+
+  perform t.assert(t.denied_as(staff, format(
+    'select public.record_delivery_check(%L, ''deployed'', true, ''{}''::jsonb)', v_site_x)),
+    'Seul le serveur enregistre un controle automatique (preuve a l''appui)');
+  perform set_config('request.jwt.claims', null, true);
+  perform public.record_delivery_check(v_site_x, 'deployed', true, '{"deployment":"dep-1"}'::jsonb);
+  perform public.record_delivery_check(v_site_x, 'domain', true, '{"hostname":"atelier-x.fr"}'::jsonb);
+  perform public.record_delivery_check(v_site_x, 'https', true, '{"status":200}'::jsonb);
+  perform public.record_delivery_check(v_site_x, 'seo', true, '{"title":true,"sitemap":true}'::jsonb);
+
+  v_result := t.json_as(staff, format('public.delivery_readiness(%L::uuid)', v_site_x));
+  perform t.assert((v_result ->> 'ready')::boolean, 'Checklist complete : le site est pret a livrer');
+  v_result := t.json_as(staff, format('public.deliver_site(%L::uuid)', v_site_x));
+  perform t.assert((v_result ->> 'ok')::boolean, 'La livraison aboutit une fois la checklist complete');
+  perform t.assert((select status from public.sites where id = v_site_x) = 'live'
+                   and (select delivered_at is not null from public.sites where id = v_site_x),
+    'Le site livre est en ligne et confie au client');
+  perform t.assert((select status::text from public.projects where site_id = v_site_x) = 'delivered',
+    'Le projet passe a l''etape Livraison');
+
+  -- 6. Apres la livraison, le client modifie et publie.
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_result := t.json_as(claire, format('public.save_site_draft(%L::uuid, %L::jsonb, %s)',
+    v_site_x, '{"pages":{"home":{"hero":{"title":"Nouveau titre"}}}}', v_rev));
+  perform t.assert((v_result ->> 'ok')::boolean, 'La livraison ouvre l''edition au client');
+  v_result := t.json_as(claire, format('public.save_site_draft(%L::uuid, %L::jsonb, %s)',
+    v_site_x, '{"pages":{}}', v_rev));
+  perform t.assert(v_result ->> 'code' = 'conflict',
+    'Un brouillon modifie entre-temps n''est pas ecrase (controle de revision)');
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_result := t.json_as(claire, format(
+    'public.request_site_release(%L::uuid, %L, null, %s, null, %L)', v_site_x, 'publish', v_rev,
+    'Nouveau titre'));
+  v_v2 := (v_result ->> 'releaseId')::uuid;
+  perform t.assert((v_result ->> 'ok')::boolean and (v_result ->> 'version')::int = 2,
+    'Publier cree une nouvelle version (v2)');
+  v_result := t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev));
+  perform t.assert(v_result ->> 'code' = 'release_in_progress',
+    'Une seule publication a la fois par site');
+  v_result := t.json_as(claire, format(
+    'public.request_site_release(%L::uuid, %L, null, null, now() + interval %L)',
+    v_site_x, 'publish', '2 days'));
+  perform t.assert(v_result ->> 'code' = 'feature_unavailable',
+    'La publication programmee est refusee hors des offres qui la comprennent');
+
+  perform t.assert((select status from public.site_releases where id = v_v2) = 'queued'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v1,
+    'Une version demandee n''est PAS publiee : la production reste en v1');
+
+  -- 7. Un client ne peut pas se declarer publie.
+  perform t.assert(t.denied_as(claire, format(
+    'select public.record_release_commit(%L, %L, %L, ''https://x'', ''main'')', v_v2, sha1, sha2)),
+    'Un client ne peut pas inscrire un commit a la place de GitHub');
+  perform t.assert(t.denied_as(claire, format(
+    'select public.record_site_deployment((select id from site_hosting where site_id = %L), ''dep-x'', ''production'', ''success'', %L)',
+    v_site_x, sha2)),
+    'Un client ne peut pas declarer un deploiement Cloudflare reussi');
+  perform t.assert(t.denied_as(claire, format(
+    'update public.site_releases set status = ''published'' where id = %L', v_v2)),
+    'Un client ne peut pas modifier l''etat d''une version');
+
+  -- 8. Cycle serveur : commit GitHub puis deploiement Cloudflare confirme.
+  perform set_config('request.jwt.claims', null, true);
+  v_result := public.claim_site_release(v_v2);
+  perform t.assert((v_result ->> 'ok')::boolean, 'Le serveur prend la version en charge');
+  v_result := public.record_release_commit(v_v2, sha1, sha2,
+    'https://github.com/stax-sites/atelier-x/commit/' || sha2, 'main');
+  v_dep := (v_result ->> 'deploymentId')::uuid;
+  v_hosting := (select hosting_id from public.site_deployments where id = v_dep);
+  perform t.assert((select status from public.site_releases where id = v_v2) = 'deploying'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v1,
+    'Commit ecrit, deploiement en cours : la production reste en v1 (« publie » jamais affiche)');
+
+  v_result := public.record_site_deployment(v_hosting, 'dep-2', 'production', 'building', sha2, 'main');
+  perform t.assert((select status from public.site_releases where id = v_v2) = 'deploying',
+    'Un build en cours ne publie rien');
+  v_result := public.record_site_deployment(v_hosting, 'dep-2', 'production', 'success', sha2, 'main',
+    'https://d2.atelier-x.pages.dev');
+  perform t.assert((select status from public.site_releases where id = v_v2) = 'published'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v2,
+    'Le deploiement confirme publie la v2 : la version publiee correspond a un commit');
+  perform t.assert((select status from public.site_releases where id = v_v1) = 'superseded',
+    'La version precedente est remplacee, pas effacee');
+  perform t.assert((select commit_sha from public.site_releases where id = v_v2) = sha2,
+    'La version publiee porte le SHA du commit deploye');
+
+  v_result := public.record_site_deployment(v_hosting, 'dep-2', 'production', 'failure', sha2);
+  perform t.assert(v_result ->> 'code' = 'already_final'
+                   and (select status from public.site_releases where id = v_v2) = 'published',
+    'Un evenement tardif ne peut pas « depublier » une version');
+
+  -- 9. Echec GitHub : la production ne bouge pas.
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_v3 := (t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev)) ->> 'releaseId')::uuid;
+  perform public.claim_site_release(v_v3);
+  perform public.fail_site_release(v_v3, 'github', 'github_unavailable',
+    'GitHub n''a pas accepte le commit.');
+  perform t.assert((select status from public.site_releases where id = v_v3) = 'failed'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v2,
+    'Echec GitHub : la version n''est pas publiee, la v2 reste en production');
+  perform t.assert(exists (select 1 from public.notifications
+                            where recipient_id = claire and type = 'site.release_failed'),
+    'Le client recoit une erreur claire');
+
+  -- 10. Echec Cloudflare : idem.
+  v_v4 := (t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev)) ->> 'releaseId')::uuid;
+  perform public.claim_site_release(v_v4);
+  perform public.record_release_commit(v_v4, sha2, sha4, 'https://github.com/x/y/commit/' || sha4, 'main');
+  perform public.record_site_deployment(v_hosting, 'dep-4', 'production', 'failure', sha4, 'main',
+    null, 'build', 'npm run build exited with 1');
+  perform t.assert((select status from public.site_releases where id = v_v4) = 'failed'
+                   and (select error_stage from public.site_releases where id = v_v4) = 'cloudflare'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v2,
+    'Echec Cloudflare : la version echoue, la v2 reste la version de production');
+
+  -- 11. Retour arriere : la v1 est republiee, comme une nouvelle version.
+  v_result := t.json_as(claire, format('public.request_site_release(%L::uuid, %L, %L::uuid)',
+    v_site_x, 'rollback', v_v1));
+  v_v5 := (v_result ->> 'releaseId')::uuid;
+  perform t.assert((select content from public.site_releases where id = v_v5)
+                   = (select content from public.site_releases where id = v_v1)
+                   and (select kind from public.site_releases where id = v_v5) = 'rollback',
+    'Restaurer la v1 cree une version v5 au contenu de la v1');
+  perform public.claim_site_release(v_v5);
+  perform public.record_release_commit(v_v5, sha4, sha5, 'https://github.com/x/y/commit/' || sha5, 'main');
+  perform public.record_site_deployment(v_hosting, 'dep-5', 'production', 'success', sha5, 'main');
+  perform t.assert((select production_release_id from public.sites where id = v_site_x) = v_v5,
+    'Le retour arriere est redeploye puis mis en production');
+
+  -- 12. Le contenu d'une version est immuable, pour tout le monde.
+  perform set_config('request.jwt.claims', null, true);
+  v_refused := false;
+  begin
+    update public.site_releases set content = '{"pirate":true}'::jsonb where id = v_v2;
+  exception when others then v_refused := true; end;
+  perform t.assert(v_refused, 'Le contenu d''une version publiee ne se modifie jamais');
+  v_refused := false;
+  begin
+    insert into public.site_releases (site_id, organization_id, version_number, kind, status,
+                                      manifest_id, content, content_hash)
+    values (v_site_x, v_org_x, 99, 'publish', 'published', v_manifest, '{}'::jsonb, 'x');
+  exception when others then v_refused := true; end;
+  perform t.assert(v_refused, 'Une version ne peut pas naitre « publiee » sans commit ni deploiement');
+
+  -- 13. Isolation : une autre societe ne voit ni ne touche rien.
+  perform t.assert(t.count_as(bob, format('select 1 from site_content_drafts where site_id = %L', v_site_x)) = 0,
+    'Un autre client ne lit pas le brouillon');
+  perform t.assert(t.count_as(bob, format('select 1 from site_releases where site_id = %L', v_site_x)) = 0,
+    'Un autre client ne lit pas l''historique des versions');
+  perform t.assert(t.count_as(claire, 'select 1 from site_repositories') = 0
+                   and t.count_as(claire, 'select 1 from site_hosting') = 0,
+    'Le client ne voit pas les details d''infrastructure (depot, compte Cloudflare)');
+  perform t.assert(t.count_as(claire, format('select 1 from site_releases where site_id = %L', v_site_x)) = 5,
+    'Le client voit l''historique complet de SES versions');
+  perform t.assert(t.denied_as(bob, format(
+    'select public.save_site_draft(%L, ''{}''::jsonb, null)', v_site_x)),
+    'Un autre client ne peut pas modifier le site');
+  perform t.assert(t.denied_as(bob, format(
+    'select public.request_site_release(%L, ''rollback'', %L)', v_site_x, v_v1)),
+    'Un autre client ne peut pas publier ni restaurer le site');
+
+  -- 14. Apercu : un seul build a la fois.
+  v_result := t.json_as(claire, format('public.begin_site_preview(%L::uuid)', v_site_x));
+  perform t.assert((v_result ->> 'ok')::boolean, 'Le client livre demande un apercu');
+  v_result := t.json_as(claire, format('public.begin_site_preview(%L::uuid)', v_site_x));
+  perform t.assert(v_result ->> 'code' = 'preview_in_progress', 'Un seul apercu en preparation a la fois');
+
+  -- 15. Le moteur multi-tenant ne publie jamais un site independant.
+  perform set_config('request.jwt.claims', null, true);
+  v_refused := false;
+  begin
+    insert into public.site_versions (site_id, version_number, snapshot, content_hash)
+    values (v_site_x, 1, '{}'::jsonb, 'x');
+  exception when others then v_refused := true; end;
+  perform t.assert(v_refused, 'Aucun instantane du moteur de rendu pour un site independant');
+
+  -- 16. Le domaine d'un site independant est gere par l'equipe.
+  perform t.assert(t.denied_as(claire, format(
+    'insert into public.site_domains (site_id, organization_id, hostname) values (%L, %L, ''pirate.example'')',
+    v_site_x, v_org_x)),
+    'Le client ne rattache pas lui-meme un domaine a un site independant');
+
+  -- 17. Plus aucun modele de site.
+  perform t.assert(not exists (select 1 from pg_proc where proname = 'provision_site')
+                   and to_regclass('public.site_templates') is null,
+    'Aucun modele de site : ni fonction de provisionnement, ni catalogue de structures');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Maintenance : elle commence a la livraison, jamais a la commande
+-- -----------------------------------------------------------------------------
+\echo '--- Maintenance : demarrage a la livraison ---'
+do $$
+declare
+  v_site_x uuid := (select v from t.fixtures where k='site_x');
+  v_org_x  uuid := (select v from t.fixtures where k='org_x');
+  v_site_y uuid;
+  v_org_y  uuid;
+  v_plan   uuid := (select id from public.plans where slug = 'premium' and is_active and valid_until is null);
+  v_order_x uuid; v_order_y uuid;
+  v_result jsonb;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  select id, organization_id into v_site_y, v_org_y from public.sites where name = 'Studio Y';
+
+  insert into public.orders (reference, organization_id, site_id, status, plan_id, plan_slug,
+    setup_price_cents, maintenance_price_cents, billing_interval, total_cents,
+    terms_version, terms_accepted_at)
+  values ('STX-TEST-Y', v_org_y, v_site_y, 'checkout_pending', v_plan, 'premium', 55000, 1400,
+          'month', 66000, '2026-09', now())
+  returning id into v_order_y;
+  update public.orders set status = 'paid' where id = v_order_y;
+  perform t.assert((select maintenance_status from public.orders where id = v_order_y) = 'pending_delivery',
+    'Au paiement, la maintenance est en attente de livraison : rien n''est preleve');
+
+  v_result := app.upsert_subscription_from_stripe('sub_test_y', 'cus_test_y', 'active', now(),
+    now() + interval '1 month', false, v_order_y, null);
+  perform t.assert(v_result ->> 'code' = 'site_not_delivered'
+                   and not exists (select 1 from public.subscriptions where order_id = v_order_y),
+    'Un abonnement de maintenance est refuse tant que le site n''est pas livre');
+
+  insert into public.orders (reference, organization_id, site_id, status, plan_id, plan_slug,
+    setup_price_cents, maintenance_price_cents, billing_interval, total_cents,
+    terms_version, terms_accepted_at)
+  values ('STX-TEST-X', v_org_x, v_site_x, 'checkout_pending', v_plan, 'premium', 55000, 1400,
+          'month', 66000, '2026-09', now())
+  returning id into v_order_x;
+  update public.orders set status = 'paid' where id = v_order_x;
+  v_result := app.upsert_subscription_from_stripe('sub_test_x', 'cus_test_x', 'active', now(),
+    now() + interval '1 month', false, v_order_x, null);
+  perform t.assert((v_result ->> 'ok')::boolean
+                   and (select billing_interval from public.subscriptions where order_id = v_order_x) = 'month',
+    'Une fois le site livre, la maintenance mensuelle demarre');
+  perform t.assert((select maintenance_status from public.orders where id = v_order_x) = 'started'
+                   and (select maintenance_started_at is not null from public.orders where id = v_order_x),
+    'La commande enregistre la date de demarrage de la maintenance');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Quotas appliques par la base
+-- -----------------------------------------------------------------------------
+\echo '--- Quotas appliques ---'
+do $$
+declare
+  claire uuid := (select v from t.fixtures where k='claire');
+  staff  uuid := (select v from t.fixtures where k='staff');
+  v_site_x uuid := (select v from t.fixtures where k='site_x');
+  v_org_x  uuid := (select v from t.fixtures where k='org_x');
+  v_org_a  uuid := (select v from t.fixtures where k='org_a');
+  v_ticket uuid;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  -- Essentiel : 2 comptes collaborateurs. Claire occupe le premier ; l'equipe
+  -- StaX, membre de l'organisation, ne compte pas.
+  perform t.assert(app.usage_count(v_org_x, 'max_team_members') = 1,
+    'L''equipe StaX ne consomme pas le quota de collaborateurs du client');
+  perform t.assert(not t.denied_as(claire, format(
+    'insert into public.organization_invitations (organization_id, email, role, token_hash, expires_at) '
+    'values (%L, ''dora@client-x.test'', ''editor'', ''h1'', now() + interval ''7 days'')', v_org_x)),
+    'Un second collaborateur est invite (2 sur 2)');
+  perform t.assert(t.denied_as(claire, format(
+    'insert into public.organization_invitations (organization_id, email, role, token_hash, expires_at) '
+    'values (%L, ''eric@client-x.test'', ''editor'', ''h2'', now() + interval ''7 days'')', v_org_x)),
+    'Un troisieme collaborateur est refuse sur l''offre Essentiel');
+
+  -- Boutique : droit d'offre, verifie par la base.
+  perform t.assert(t.denied_as(claire, format(
+    'insert into public.products (site_id, organization_id, name, slug, price_cents) '
+    'values (%L, %L, ''Pain'', ''pain'', 250)', v_site_x, v_org_x)),
+    'Sans boutique dans l''offre, aucun produit ne peut etre cree');
+
+  -- Pages : celles du contrat d'edition comptent.
+  perform t.assert(app.usage_count(v_org_x, 'max_pages') = 3,
+    'Les pages d''un site independant sont celles de son contrat d''edition');
+
+  -- Support prioritaire : un droit applique.
+  insert into public.support_tickets (reference, organization_id, subject, priority)
+  values ('SUP-TEST-A', v_org_a, 'Question sur ma boutique', 'normal')
+  returning id into v_ticket;
+  perform t.assert((select priority from public.support_tickets where id = v_ticket) = 'high',
+    'Support prioritaire : la demande d''un client Ultra Premium est ouverte en priorite haute');
 end;
 $$;
 
