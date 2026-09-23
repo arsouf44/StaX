@@ -121,10 +121,10 @@ export default async function BusinessPage({
       />
 
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <Breadcrumb
             className="mb-8"
@@ -144,10 +144,10 @@ export default async function BusinessPage({
                 description={`Les pages, les fonctionnalités et le vocabulaire de votre espace sont adaptés à ce métier. Vous gérez vos ${business.vocabulary.offeringPlural}, vos ${business.vocabulary.customerPlural} et vos contenus sans intermédiaire.`}
               />
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <ButtonLink href={`/commander?metier=${business.id}`} size="lg">
+                <ButtonLink href={`/commander?metier=${business.id}`} size="pill-lg">
                   Commander mon site
                 </ButtonLink>
-                <ButtonLink href="/tarifs" variant="glass" size="lg">
+                <ButtonLink href="/tarifs" variant="glass" size="pill-lg">
                   Voir les tarifs
                 </ButtonLink>
               </div>
@@ -205,7 +205,7 @@ export default async function BusinessPage({
                     <div className="flex items-start justify-between gap-3">
                       <span className="text-sm font-medium">{mod.label}</span>
                       {mod.requiredFeature ? (
-                        <span className="shrink-0 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-2 py-0.5 text-2xs text-[var(--accent)]">
+                        <span className="shrink-0 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-2 py-0.5 text-2xs text-[var(--accent-text)]">
                           Premium
                         </span>
                       ) : null}
@@ -278,7 +278,7 @@ export default async function BusinessPage({
               Vous répondez au questionnaire, nous construisons, vous validez. La maintenance et
               l’hébergement sont inclus.
             </p>
-            <ButtonLink href={`/commander?metier=${business.id}`} size="lg" className="mt-8">
+            <ButtonLink href={`/commander?metier=${business.id}`} size="pill-lg" className="mt-8">
               Commander mon site
             </ButtonLink>
           </Panel>

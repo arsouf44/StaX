@@ -58,10 +58,10 @@ export default function InfrastructurePage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -69,7 +69,7 @@ export default function InfrastructurePage() {
             title="Où tournent vos sites"
             description="Nous ne gérons pas de serveurs physiques et nous ne bricolons pas d’hébergement mutualisé. Chaque couche est confiée à un acteur dont c’est le métier, et nous documentons lequel."
           />
-          <OperationalIndicators className="mt-12" />
+          <OperationalIndicators className="mt-12 lg:grid-cols-4" />
         </Container>
       </Section>
 
@@ -162,7 +162,7 @@ export default function InfrastructurePage() {
             Qui traite quelles données, où, et avec quelles garanties de transfert. Publiée et tenue
             à jour.
           </p>
-          <ButtonLink href="/sous-traitants" size="lg" className="mt-8">
+          <ButtonLink href="/sous-traitants" size="pill-lg" className="mt-8">
             Voir les sous-traitants
           </ButtonLink>
         </Container>

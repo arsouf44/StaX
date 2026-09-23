@@ -157,9 +157,9 @@ export function Section({
   ...props
 }: HTMLAttributes<HTMLElement> & { spacing?: 'compact' | 'default' | 'roomy' }) {
   const spacings = {
-    compact: 'py-14 sm:py-16',
-    default: 'py-20 sm:py-28',
-    roomy: 'py-24 sm:py-36',
+    compact: 'py-16 sm:py-20',
+    default: 'py-24 sm:py-36',
+    roomy: 'py-28 sm:py-44',
   } as const;
   return (
     <section className={cn('relative', spacings[spacing], className)} {...props}>
@@ -188,15 +188,14 @@ export function SectionHeading({
   return (
     <div className={cn(align === 'center' && 'mx-auto text-center', 'max-w-3xl', className)}>
       {eyebrow ? (
-        <p className="mb-4 inline-flex items-center gap-2 text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-          <span aria-hidden="true" className="h-px w-6 bg-[var(--border-strong)]" />
-          {eyebrow}
-        </p>
+        <p className="mb-5 text-sm font-medium tracking-[-0.005em] text-accent">{eyebrow}</p>
       ) : null}
       <Tag
         className={cn(
-          'font-medium tracking-[-0.03em] text-balance',
-          Tag === 'h1' ? 'text-4xl sm:text-5xl lg:text-6xl' : 'text-3xl sm:text-4xl',
+          'font-semibold tracking-[-0.04em] text-balance',
+          Tag === 'h1'
+            ? 'text-[2.75rem] leading-[1] sm:text-6xl lg:text-7xl'
+            : 'text-[2.25rem] leading-[1.04] sm:text-5xl lg:text-[3.5rem]',
         )}
       >
         {title}
@@ -204,7 +203,7 @@ export function SectionHeading({
       {description ? (
         <p
           className={cn(
-            'mt-5 text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]',
+            'mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)] sm:text-xl sm:leading-relaxed',
             align === 'center' && 'mx-auto',
           )}
         >

@@ -1,24 +1,15 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import { platformUrl, publicEnv } from '@stax/config';
 import { BRAND, faviconDataUri } from '@stax/ui/brand';
 import { ToastProvider } from '@stax/ui';
 import { ThemeScript } from '~/components/theme-script';
 import './globals.css';
 
-const geistSans = Geist({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-  display: 'swap',
-  // Ajuste la police de secours pour eviter tout decalage a l affichage.
-  adjustFontFallback: true,
-});
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-  display: 'swap',
-});
+/*
+ * Typographie systeme (SF Pro sur Apple, Helvetica ou Arial ailleurs) : aucune
+ * police a telecharger, donc aucun decalage a l affichage et aucune requete de
+ * plus. Voir `--font-sans` dans packages/ui/src/styles/globals.css.
+ */
 
 export const metadata: Metadata = {
   metadataBase: new URL(platformUrl()),
@@ -58,7 +49,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#060608' },
+    { media: '(prefers-color-scheme: dark)', color: '#05070b' },
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
   ],
 };
@@ -67,12 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const locale = publicEnv().NEXT_PUBLIC_DEFAULT_LOCALE;
 
   return (
-    <html
-      lang={locale}
-      data-theme="dark"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable}`}
-    >
+    <html lang={locale} data-theme="dark" suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
         <ThemeScript />
         {/* Lien d evitement : premiere cible au clavier, sur chaque page. */}

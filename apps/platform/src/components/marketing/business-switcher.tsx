@@ -59,7 +59,7 @@ export function BusinessSwitcher() {
       <div
         role="tablist"
         aria-label="Aperçu par métier"
-        className="mx-auto flex w-fit gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1"
+        className="glass-edge mx-auto flex w-fit max-w-full gap-1 rounded-full p-1 glass-2 sm:p-1.5"
         onKeyDown={(event) => {
           if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
           event.preventDefault();
@@ -80,9 +80,9 @@ export function BusinessSwitcher() {
             tabIndex={active === variant.id ? 0 : -1}
             onClick={() => setActive(variant.id)}
             className={cn(
-              'rounded-full px-4 py-2 text-sm transition-colors',
+              'rounded-full px-3 py-2 text-sm transition-[background-color,color,box-shadow] duration-300 sm:px-5 sm:py-2.5 sm:text-[0.9375rem]',
               active === variant.id
-                ? 'bg-[var(--primary)] font-medium text-[var(--primary-foreground)]'
+                ? 'bg-[var(--foreground)] font-medium text-[var(--background)] shadow-[0_8px_24px_-12px_rgb(0_0_0/0.8)]'
                 : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]',
             )}
           >
@@ -91,43 +91,23 @@ export function BusinessSwitcher() {
         ))}
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
-        <BrowserFrame
-          url={current.host}
-          tone={current.id === 'coiffeur' ? 'light' : 'dark'}
-          className="order-2 lg:order-1"
-        >
-          <SitePreview variant={current.id} />
-        </BrowserFrame>
-
-        <div className="order-1 space-y-4 lg:order-2">
-          <div className="glass-edge rounded-[var(--radius-lg)] p-5 glass-2">
-            <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              Secteur
-            </p>
-            <p className="mt-1.5 text-sm font-medium">{current.sector}</p>
-
-            <p className="mt-5 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              Modules activés automatiquement
-            </p>
-            <ul className="mt-2.5 space-y-1.5">
-              {current.modules.map((module) => (
-                <li key={module} className="flex items-center gap-2 text-xs">
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                    className="size-3 shrink-0 text-[var(--success)]"
-                  >
-                    <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
-                  </svg>
-                  <span className="text-[var(--foreground-muted)]">{module}</span>
-                </li>
-              ))}
-            </ul>
+      <div className="mt-12 grid gap-8 lg:mt-16 lg:grid-cols-[1fr_19rem] lg:items-center">
+        {/* La scene : le site du metier choisi, qui change au clic. */}
+        <div className="stage relative order-2 lg:order-1">
+          <div
+            key={current.id}
+            className="animate-[reveal_0.55s_cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none"
+          >
+            <BrowserFrame url={current.host} tone={current.id === 'coiffeur' ? 'light' : 'dark'}>
+              <SitePreview variant={current.id} />
+            </BrowserFrame>
           </div>
 
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5">
+          {/* Le tableau de bord du meme metier, pose en surimpression. */}
+          <div
+            key={`${current.id}-dashboard`}
+            className="glass-edge mt-4 rounded-[var(--radius-lg)] p-4 glass-3 motion-reduce:animate-none lg:absolute lg:right-6 lg:-bottom-10 lg:mt-0 lg:w-72 lg:animate-[reveal_0.7s_cubic-bezier(0.16,1,0.3,1)]"
+          >
             <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
               Votre tableau de bord
             </p>
@@ -135,17 +115,39 @@ export function BusinessSwitcher() {
               {current.dashboard.map((entry) => (
                 <span
                   key={entry}
-                  className="rounded-md border border-[var(--border)] bg-[var(--background-inset)] px-2 py-1 text-xs text-[var(--foreground-muted)]"
+                  className="rounded-full border border-[var(--border)] bg-[var(--background-inset)] px-2.5 py-1 text-xs text-[var(--foreground-muted)]"
                 >
                   {entry}
                 </span>
               ))}
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-[var(--muted)]">
-              Un plombier ne voit jamais « Carte du restaurant ». L’interface s’adapte à votre
-              métier, pas l’inverse.
-            </p>
           </div>
+        </div>
+
+        <div className="order-1 lg:order-2">
+          <p className="text-sm font-medium text-accent">{current.sector}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+            Modules activés automatiquement
+          </p>
+          <ul className="mt-5 divide-y divide-[var(--border)] border-y border-[var(--border)]">
+            {current.modules.map((module) => (
+              <li key={module} className="flex items-center gap-3 py-3 text-[0.9375rem]">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="size-4 shrink-0 text-[var(--accent-text)]"
+                >
+                  <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
+                </svg>
+                <span>{module}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+            Un plombier ne voit jamais « Carte du restaurant ». L’interface s’adapte à votre métier,
+            pas l’inverse.
+          </p>
         </div>
       </div>
     </Container>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Container, Panel, Reveal, Section, SectionHeading, ButtonLink, Badge } from '@stax/ui';
+import { Container, Reveal, Section, SectionHeading, ButtonLink, Badge } from '@stax/ui';
 import { FEATURE_PAGES } from '~/content/features';
 
 export const metadata: Metadata = {
@@ -21,10 +21,10 @@ export default function FeaturesIndexPage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -37,40 +37,46 @@ export default function FeaturesIndexPage() {
 
       <Section spacing="compact">
         <Container size="wide">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="border-t border-[var(--border)]">
             {FEATURE_PAGES.map((feature, index) => (
-              <Reveal key={feature.slug} delay={index * 40}>
-                <Link href={`/fonctionnalites/${feature.slug}`} className="block h-full">
-                  <Panel level={1} padding="lg" interactive className="h-full">
-                    <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-base font-medium">{feature.name}</h2>
-                      {feature.requiredPlan ? (
-                        <Badge tone="accent" size="sm">
-                          {PLAN_LABELS[feature.requiredPlan] ?? feature.requiredPlan}
-                        </Badge>
-                      ) : (
-                        <Badge tone="neutral" size="sm">
-                          Toutes offres
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                      {feature.subtitle}
-                    </p>
-                    <p className="mt-5 text-xs font-medium text-[var(--accent)]">
-                      En savoir plus →
-                    </p>
-                  </Panel>
+              <Reveal key={feature.slug} as="li" delay={Math.min(index * 30, 210)}>
+                <Link
+                  href={`/fonctionnalites/${feature.slug}`}
+                  className="group grid gap-3 border-b border-[var(--border)] py-7 transition-colors duration-300 hover:bg-[var(--glass-1)] md:grid-cols-[1fr_1.5fr_auto] md:items-center md:gap-10 md:px-4"
+                >
+                  <h2 className="text-2xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-[var(--accent-text)]">
+                    {feature.name}
+                  </h2>
+                  <p className="text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                    {feature.subtitle}
+                  </p>
+                  <span className="flex items-center gap-4 md:justify-self-end">
+                    {feature.requiredPlan ? (
+                      <Badge tone="accent" size="sm">
+                        {PLAN_LABELS[feature.requiredPlan] ?? feature.requiredPlan}
+                      </Badge>
+                    ) : (
+                      <Badge tone="neutral" size="sm">
+                        Toutes offres
+                      </Badge>
+                    )}
+                    <span
+                      aria-hidden="true"
+                      className="text-[var(--muted)] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[var(--accent-text)]"
+                    >
+                      →
+                    </span>
+                  </span>
                 </Link>
               </Reveal>
             ))}
-          </div>
+          </ul>
         </Container>
       </Section>
 
       <Section spacing="compact">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">
+          <h2 className="text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
             Une fonctionnalité qui manque ?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[var(--foreground-muted)]">
@@ -78,10 +84,10 @@ export default function FeaturesIndexPage() {
             étudions sa faisabilité et vous adressons un devis détaillé.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <ButtonLink href="/devis" size="lg">
+            <ButtonLink href="/devis" size="pill-lg">
               Demander un devis
             </ButtonLink>
-            <ButtonLink href="/tarifs" variant="secondary" size="lg">
+            <ButtonLink href="/tarifs" variant="secondary" size="pill-lg">
               Voir les offres
             </ButtonLink>
           </div>

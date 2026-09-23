@@ -134,12 +134,12 @@ export function Logo({
  * dans un onglet de navigateur.
  */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-<rect width="32" height="32" rx="7" fill="#08080A"/>
+<rect width="32" height="32" rx="7" fill="#05070B"/>
 <g stroke-width="5" stroke-linecap="round">
-<path d="M8 9 L14 15" stroke="#FAFAFA"/>
-<path d="M18 17 L24 23" stroke="#FAFAFA" stroke-opacity="0.55"/>
-<path d="M24 9 L18 15" stroke="#FAFAFA" stroke-opacity="0.8"/>
-<path d="M14 17 L8 23" stroke="#6E6BFF"/>
+<path d="M8 9 L14 15" stroke="#F8FAFC"/>
+<path d="M18 17 L24 23" stroke="#F8FAFC" stroke-opacity="0.55"/>
+<path d="M24 9 L18 15" stroke="#F8FAFC" stroke-opacity="0.8"/>
+<path d="M14 17 L8 23" stroke="#147CFF"/>
 </g>
 </svg>`;
 
@@ -156,10 +156,12 @@ export const BRAND = {
   /** Positionnement, utilise dans les metadonnees et les partages. */
   tagline: 'Votre site professionnel. Construit pour votre métier.',
   colors: {
-    ink: '#08080A',
-    paper: '#FAFAFA',
-    accent: '#6E6BFF',
-    accentLight: '#5B57F5',
+    ink: '#05070B',
+    paper: '#F8FAFC',
+    accent: '#147CFF',
+    accentLight: '#0B66DA',
+    glacier: '#52B5FF',
+    ice: '#9DDBFF',
   },
   radius: 7,
 } as const;

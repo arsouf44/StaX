@@ -29,6 +29,9 @@ const buttonVariants = cva(
       variant: {
         primary:
           'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_1px_0_0_rgb(255_255_255/0.2)_inset] hover:opacity-90',
+        /** Appel a l action de marque : bleu electrique, reserve a UNE action par ecran. */
+        accent:
+          'bg-[var(--accent)] text-[var(--accent-foreground)] shadow-[0_1px_0_0_rgb(255_255_255/0.22)_inset,0_10px_30px_-12px_var(--accent-glow)] hover:bg-[var(--accent-hover)]',
         secondary:
           'border border-[var(--border-strong)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]',
         glass:
@@ -46,6 +49,10 @@ const buttonVariants = cva(
         md: 'h-10 rounded-[var(--radius-md)] px-4 text-sm',
         lg: 'h-12 rounded-[var(--radius-md)] px-6 text-base',
         xl: 'h-14 rounded-[var(--radius-lg)] px-8 text-lg',
+        /** Pastille : boutons des pages publiques. */
+        pill: 'h-11 rounded-full px-6 text-[0.9375rem]',
+        'pill-lg': 'h-[3.25rem] rounded-full px-7 text-base',
+        'pill-sm': 'h-9 rounded-full px-4 text-sm',
         icon: 'size-10 rounded-[var(--radius-md)]',
         'icon-sm': 'size-8 rounded-[var(--radius-sm)]',
       },

@@ -151,7 +151,7 @@ function FooterColumn({
           <li>
             <Link
               href={extra.href}
-              className="text-sm font-medium text-[var(--foreground)] transition-colors hover:text-[var(--accent)]"
+              className="text-sm font-medium text-[var(--foreground)] transition-colors hover:text-[var(--accent-text)]"
             >
               {extra.label} →
             </Link>

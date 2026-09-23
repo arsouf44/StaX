@@ -78,10 +78,10 @@ export default function HelpPage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -125,10 +125,10 @@ export default function HelpPage() {
               avons le contexte de votre site sous les yeux, la réponse est plus rapide.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <ButtonLink href="/app/support" size="lg">
+              <ButtonLink href="/app/support" size="pill-lg">
                 Contacter le support
               </ButtonLink>
-              <ButtonLink href="/faq" variant="secondary" size="lg">
+              <ButtonLink href="/faq" variant="secondary" size="pill-lg">
                 Questions fréquentes
               </ButtonLink>
             </div>

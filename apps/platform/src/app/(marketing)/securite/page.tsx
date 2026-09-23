@@ -77,10 +77,10 @@ export default function SecurityPage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -156,13 +156,13 @@ export default function SecurityPage() {
             traitement des données personnelles.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <ButtonLink href="/infrastructure" variant="secondary">
+            <ButtonLink size="pill" href="/infrastructure" variant="secondary">
               Infrastructure
             </ButtonLink>
-            <ButtonLink href="/sous-traitants" variant="secondary">
+            <ButtonLink size="pill" href="/sous-traitants" variant="secondary">
               Sous-traitants
             </ButtonLink>
-            <ButtonLink href="/donnees-personnelles" variant="secondary">
+            <ButtonLink size="pill" href="/donnees-personnelles" variant="secondary">
               Données personnelles
             </ButtonLink>
           </div>
