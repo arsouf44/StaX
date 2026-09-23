@@ -22,6 +22,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  */
 
 export const IMPERSONATION_MAX_MINUTES = 60;
+/**
+ * Session de CONSTRUCTION : l equipe construit un site que le client n a pas
+ * encore (non confie, `sites.delivered_at` nul). Personne n est « observe » :
+ * une journee de travail est permise d un tenant.
+ */
+export const CONSTRUCTION_SESSION_MAX_MINUTES = 480;
 export const IMPERSONATION_COOKIE = 'stax_support_view';
 
 /** Operations interdites pendant une session d assistance, sans exception. */
@@ -56,6 +62,8 @@ export interface StartImpersonationInput {
   reason: string;
   ticketId?: UUID | null;
   durationMinutes?: number;
+  /** Construction d un site non encore confie : duree maximale plus longue. */
+  construction?: boolean;
 }
 
 export interface ImpersonationSession {
@@ -80,7 +88,8 @@ export async function startImpersonation(
     );
   }
 
-  const minutes = Math.min(Math.max(input.durationMinutes ?? 30, 5), IMPERSONATION_MAX_MINUTES);
+  const ceiling = input.construction ? CONSTRUCTION_SESSION_MAX_MINUTES : IMPERSONATION_MAX_MINUTES;
+  const minutes = Math.min(Math.max(input.durationMinutes ?? 30, 5), ceiling);
   const token = randomToken(32);
   const tokenHash = await hmacHex(token, 'impersonation');
   const expiresAt = new Date(Date.now() + minutes * 60_000).toISOString();

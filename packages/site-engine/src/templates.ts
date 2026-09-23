@@ -567,6 +567,37 @@ export function modulesForPlan(
  * Charge utile de `provision_site` : le modele, sans identifiants (la base les
  * attribue) et sans rien qui ne soit pas du contenu.
  */
+/**
+ * Point de depart VIERGE : une page d'accueil sans aucune section, et les
+ * seules pages que la loi impose (mentions legales, confidentialite, CGV pour
+ * une vente en ligne), qui se remplissent d'apres « Mon entreprise ». Le
+ * theme, les modules et le formulaire de contact du metier sont conserves :
+ * ce sont des reglages, pas du contenu.
+ */
+export function blankTemplate(template: SiteTemplate): SiteTemplate {
+  const home = template.pages.find((page) => page.path === '/');
+  const legal = template.pages.filter((page) => page.kind === 'legal');
+  const legalPaths = new Set(legal.map((page) => page.path));
+  return {
+    ...template,
+    pages: [
+      {
+        path: '/',
+        title: home?.title ?? 'Accueil',
+        kind: home?.kind ?? 'home',
+        showInNav: true,
+        sortOrder: 0,
+        blocks: [],
+      },
+      ...legal,
+    ],
+    navigation: {
+      primary: [{ label: home?.title ?? 'Accueil', path: '/' }],
+      footer: template.navigation.footer.filter((link) => legalPaths.has(link.path)),
+    },
+  };
+}
+
 export function templatePayload(template: SiteTemplate): Record<string, unknown> {
   return {
     theme: template.theme,

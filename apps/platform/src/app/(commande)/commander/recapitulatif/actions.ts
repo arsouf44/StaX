@@ -7,7 +7,6 @@ import { createUserClient, listMemberships, unwrapMaybe } from '@stax/database';
 import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@stax/payments';
 import { getBusiness } from '@stax/business';
 import { clearOrderDraft, readOrderDraft } from '~/lib/order-draft';
-import { availableSiteHostname, buildSitePlan } from '~/lib/site-provisioning';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 import { getSession } from '~/lib/session';
 import { guardAction } from '~/lib/action-guard';
@@ -281,7 +280,10 @@ export async function startCheckoutAction(
 }
 
 /**
- * Commande d un compte interne StaX : aucun paiement, site cree tout de suite.
+ * Commande d un compte interne StaX : aucun paiement, meme parcours qu un
+ * client. La commande, l organisation, le projet et un site VIDE sont crees ;
+ * l equipe StaX construit ensuite le site depuis l administration, puis le
+ * confie a ce compte.
  *
  * L interface ne propose ce chemin qu aux comptes internes, mais CE N EST PAS
  * ELLE QUI DECIDE : `create_internal_order` relit en base le privilege du
@@ -339,21 +341,10 @@ export async function createInternalOrderAction(
   if (!plan) return { status: 'error', message: 'Cette offre n’est plus disponible.' };
 
   const pitch = typeof draft.answers['pitch'] === 'string' ? draft.answers['pitch'] : null;
-  // Organisation interne = toutes les fonctionnalites : le modele complet du
-  // metier est prepare, quelle que soit l offre choisie.
-  const sitePlan = buildSitePlan({
-    businessTypeSlug: business.id,
-    businessName: draft.organizationName,
-    pitch,
-    city: draft.city ?? null,
-    hasFeature: null,
-  });
-  const hostname = await availableSiteHostname(
-    draft.domainHandling === 'subdomain_only' && draft.subdomain
-      ? draft.subdomain
-      : draft.organizationName,
-  );
 
+  // Aucun modele n est applique : le site est construit de zero par l equipe.
+  // Aucune cle de service non plus : tout passe par le jeton de la personne,
+  // et c est la base qui verifie le privilege du compte.
   const { data, error } = await db.rpc('create_internal_order', {
     p_plan_id: plan.id,
     p_sector_slug: draft.sectorSlug,
@@ -366,12 +357,12 @@ export async function createInternalOrderAction(
       contactPhone: draft.contactPhone ?? null,
       ...draft.answers,
     },
-    p_requested_domain: draft.domainHostname ?? null,
+    p_requested_domain: draft.domainHostname ?? draft.subdomain ?? null,
     p_domain_handling: draft.domainHandling ?? 'subdomain_only',
     p_customer_notes: draft.customerNotes ?? null,
     p_terms_version: TERMS_VERSION,
-    p_template: sitePlan.payload,
-    p_hostname: hostname,
+    p_template: null,
+    p_hostname: null,
     p_details: {
       email: draft.contactEmail ?? null,
       phone: draft.contactPhone ?? null,
@@ -395,7 +386,7 @@ export async function createInternalOrderAction(
     console.error('[stax:internal-order]', error?.message);
     return {
       status: 'error',
-      message: 'Le site n’a pas pu être créé. Rien n’a été enregistré : réessayez.',
+      message: 'La commande n’a pas pu être enregistrée. Rien n’a été créé : réessayez.',
     };
   }
 

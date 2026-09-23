@@ -15,17 +15,17 @@ function SubmitButton({ internal }: { internal: boolean }) {
       block
       size="lg"
       loading={pending}
-      loadingLabel={internal ? 'Création du site' : 'Ouverture du paiement'}
+      loadingLabel={internal ? 'Enregistrement de la commande' : 'Ouverture du paiement'}
     >
-      {internal ? 'Créer le site maintenant' : 'Régler et lancer mon projet'}
+      {internal ? 'Enregistrer la commande' : 'Régler et lancer mon projet'}
     </Button>
   );
 }
 
 /**
  * Compte interne StaX : aucun paiement. La confirmation reste explicite — on
- * ne cree pas un site d un clic involontaire — mais elle ne parle ni de CGV ni
- * de garantie, qui n ont pas d objet sans vente.
+ * n enregistre pas une commande d un clic involontaire — mais elle ne parle ni
+ * de CGV ni de garantie, qui n ont pas d objet sans vente.
  */
 export function InternalOrderForm() {
   const [state, action] = useActionState<CheckoutState, FormData>(
@@ -44,7 +44,7 @@ export function InternalOrderForm() {
       <Checkbox
         name="acceptTerms"
         required
-        label="Je confirme la création de ce site dans le cadre d’une commande interne StaX, sans paiement."
+        label="Je confirme cette commande interne StaX, sans paiement."
       />
 
       <SubmitButton internal />

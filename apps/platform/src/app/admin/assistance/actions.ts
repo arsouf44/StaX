@@ -9,7 +9,7 @@ import {
   startImpersonation,
   verifyImpersonation,
 } from '@stax/auth';
-import { createServiceClient } from '@stax/database';
+import { tryCreateServiceClient } from '@stax/database';
 import { boundedText, uuidSchema } from '@stax/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
@@ -69,7 +69,16 @@ export async function startImpersonationAction(
 
   // Cle de service : `impersonation_sessions` est en ecriture reservee a la
   // plateforme, et le role vient d'etre verifie ci-dessus.
-  const result = await startImpersonation(createServiceClient(), {
+  const service = tryCreateServiceClient();
+  if (!service) {
+    return {
+      status: 'error',
+      message:
+        'L’assistance est indisponible : la clé de service Supabase n’est pas configurée sur ' +
+        'ce déploiement (voir « État des services »).',
+    };
+  }
+  const result = await startImpersonation(service, {
     staffId: session.user.id,
     organizationId: parsed.data.organizationId,
     reason: parsed.data.reason,
@@ -112,9 +121,9 @@ export async function endImpersonationAction(
   const token = store.get(IMPERSONATION_COOKIE)?.value ?? null;
 
   if (token) {
-    const service = createServiceClient();
-    const active = await verifyImpersonation(service, token, session.user.id);
-    if (active) await endImpersonation(service, active.id, 'manual');
+    const service = tryCreateServiceClient();
+    const active = service ? await verifyImpersonation(service, token, session.user.id) : null;
+    if (service && active) await endImpersonation(service, active.id, 'manual');
   }
 
   // Le cookie part dans tous les cas : une session close en base ne doit pas
@@ -140,7 +149,9 @@ export async function activeSupportSession(): Promise<{
   // meme avec un cookie valide : le controle ne tient pas au cookie.
   if (!session.profile.platform_role) return null;
 
-  const active = await verifyImpersonation(createServiceClient(), token, session.user.id);
+  const service = tryCreateServiceClient();
+  if (!service) return null;
+  const active = await verifyImpersonation(service, token, session.user.id);
   if (!active) return null;
 
   return {

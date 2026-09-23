@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { platformUrl, readEnv } from '@stax/config';
-import { createServiceClient, unwrapMaybe } from '@stax/database';
+import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
 import {
   connectOAuthUrl,
   createConnectedAccount,
@@ -54,7 +54,14 @@ export async function startConnectOnboardingAction(
   if (!guard.ok) return { status: 'error', message: guard.message };
 
   const organizationId = context.workspace.organization.id;
-  const service = createServiceClient();
+  const service = tryCreateServiceClient();
+  if (!service)
+    return {
+      status: 'error',
+      message:
+        'Service momentanément indisponible : la configuration du serveur est incomplète. ' +
+        'Réessayez plus tard ou écrivez-nous.',
+    };
 
   const existing = unwrapMaybe<{ stripe_account_id: string }>(
     (await service
@@ -116,7 +123,14 @@ export async function openStripeDashboardAction(
     return { status: 'error', message: 'Votre rôle ne donne pas accès à ce tableau de bord.' };
   }
 
-  const service = createServiceClient();
+  const service = tryCreateServiceClient();
+  if (!service)
+    return {
+      status: 'error',
+      message:
+        'Service momentanément indisponible : la configuration du serveur est incomplète. ' +
+        'Réessayez plus tard ou écrivez-nous.',
+    };
   const account = unwrapMaybe<{ stripe_account_id: string }>(
     (await service
       .from('connected_accounts')

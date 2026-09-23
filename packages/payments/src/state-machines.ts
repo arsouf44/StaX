@@ -148,34 +148,34 @@ export const PROJECT_TIMELINE: ReadonlyArray<{
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   ordered: 'Commande reçue',
-  questionnaire_pending: 'Questionnaire a compléter',
+  questionnaire_pending: 'Questionnaire à compléter',
   assets_pending: 'En attente de vos éléments',
   in_progress: 'Création en cours',
   internal_review: 'Relecture interne',
   client_review: 'En attente de votre validation',
   changes_requested: 'Corrections demandées',
-  approved: 'Valide',
-  ready_to_publish: 'Prêt a publier',
+  approved: 'Validé',
+  ready_to_publish: 'Prêt à publier',
   published: 'En ligne',
   maintenance: 'En maintenance',
-  cancelled: 'Annule',
-  archived: 'Archive',
+  cancelled: 'Annulé',
+  archived: 'Archivé',
 };
 
 export const SITE_STATUS_LABELS: Record<SiteStatus, string> = {
   draft: 'Brouillon',
   building: 'En construction',
   review: 'En relecture',
-  ready: 'Prêt a publier',
+  ready: 'Prêt à publier',
   live: 'En ligne',
   suspended: 'Suspendu',
-  archived: 'Archive',
+  archived: 'Archivé',
 };
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   draft: 'Brouillon',
   checkout_pending: 'Paiement en attente',
-  paid: 'Payee',
+  paid: 'Payée',
   cancelled: 'Annulée',
   refunded: 'Remboursée',
   partially_refunded: 'Partiellement remboursée',

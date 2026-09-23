@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { assignableRoles, ROLE_LABELS } from '@stax/business';
-import { createServiceClient, unwrapList, unwrapMaybe } from '@stax/database';
+import { tryCreateServiceClient, unwrapList, unwrapMaybe } from '@stax/database';
 import { sendEmail, teamInvitationEmail } from '@stax/emails';
 import { hmacHex, randomToken } from '@stax/security';
 import { inviteMemberSchema, updateMemberRoleSchema, uuidSchema } from '@stax/validation';
@@ -225,17 +225,20 @@ export async function updateMemberRoleAction(
 
   if (error) return { status: 'error', message: 'Ce changement n’a pas pu être enregistré.' };
 
-  const service = createServiceClient();
-  await service.from('audit_logs').insert({
-    actor_id: userId,
-    actor_email: workspace.profile.email,
-    actor_type: 'user',
-    organization_id: workspace.organization.id,
-    action: 'member.role_changed',
-    target_type: 'organization_member',
-    target_id: member.id,
-    metadata_safe: { from: member.role, to: parsed.data.role },
-  });
+  // Sans cle de service, l'action reste faite ; seule la trace manque, et
+  // `tryCreateServiceClient` l'a journalise.
+  await tryCreateServiceClient()
+    ?.from('audit_logs')
+    .insert({
+      actor_id: userId,
+      actor_email: workspace.profile.email,
+      actor_type: 'user',
+      organization_id: workspace.organization.id,
+      action: 'member.role_changed',
+      target_type: 'organization_member',
+      target_id: member.id,
+      metadata_safe: { from: member.role, to: parsed.data.role },
+    });
 
   revalidatePath('/app/equipe-stax');
   return { status: 'success', message: 'Accès mis à jour.' };
@@ -299,17 +302,20 @@ export async function removeMemberAction(
 
   if (error) return { status: 'error', message: 'Cet accès n’a pas pu être retiré.' };
 
-  const service = createServiceClient();
-  await service.from('audit_logs').insert({
-    actor_id: userId,
-    actor_email: workspace.profile.email,
-    actor_type: 'user',
-    organization_id: workspace.organization.id,
-    action: 'member.removed',
-    target_type: 'organization_member',
-    target_id: member.id,
-    metadata_safe: { role: member.role },
-  });
+  // Sans cle de service, l'action reste faite ; seule la trace manque, et
+  // `tryCreateServiceClient` l'a journalise.
+  await tryCreateServiceClient()
+    ?.from('audit_logs')
+    .insert({
+      actor_id: userId,
+      actor_email: workspace.profile.email,
+      actor_type: 'user',
+      organization_id: workspace.organization.id,
+      action: 'member.removed',
+      target_type: 'organization_member',
+      target_id: member.id,
+      metadata_safe: { role: member.role },
+    });
 
   revalidatePath('/app/equipe-stax');
   return { status: 'success', message: 'Accès retiré.' };

@@ -6,6 +6,12 @@ import { deflateSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+// Le modele du metier, tel que l'equipe StaX l'applique depuis l'editeur.
+import {
+  buildTemplateForBusiness,
+  modulesForPlan,
+  templatePayload,
+} from '../../../../packages/site-engine/src/index';
 
 /**
  * Acces a la pile locale (tests/e2e/stack) pour les parcours de bout en bout.
@@ -51,6 +57,18 @@ function webhookSecret(): string {
 
 export function serviceClient(): SupabaseClient {
   return createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+}
+
+/**
+ * Remet a zero la limitation de debit de la pile locale.
+ *
+ * Tous les parcours se connectent depuis la meme adresse (127.0.0.1) : sans
+ * cela, la limite de dix connexions par cinq minutes — la vraie, celle de la
+ * production — serait atteinte au milieu de la suite.
+ */
+export async function resetRateLimits(): Promise<void> {
+  const { error } = await serviceClient().from('rate_limit_counters').delete().gte('count', 0);
+  if (error) throw new Error(`Limitation de debit : ${error.message}`);
 }
 
 export async function userClient(email: string, password: string): Promise<SupabaseClient> {
@@ -140,6 +158,11 @@ export async function createCustomerWithPaidOrder(options: {
    * « Mon entreprise ».
    */
   withLegalIdentity?: boolean;
+  /**
+   * Site construit par StaX et confie au client (defaut : oui). `false` :
+   * commande payee, site encore en construction, que le client ne voit pas.
+   */
+  delivered?: boolean;
 }): Promise<CustomerSite> {
   const admin = serviceClient();
   const suffix = uniqueSuffix();
@@ -196,8 +219,8 @@ export async function createCustomerWithPaidOrder(options: {
   }
   const orderId = order.data;
 
-  // « Stripe » confirme le paiement : le webhook de la plateforme cree le site
-  // et le prepare, comme en production.
+  // « Stripe » confirme le paiement : le webhook de la plateforme enregistre la
+  // commande et cree le site, VIDE et non confie, comme en production.
   const response = await signedWebhook({
     id: `evt_e2e_${suffix}`,
     object: 'event',
@@ -224,6 +247,28 @@ export async function createCustomerWithPaidOrder(options: {
   if (paid.error || paid.data.status !== 'paid' || !paid.data.site_id) {
     throw new Error(`Commande non payee apres le webhook : ${JSON.stringify(paid.data)}`);
   }
+
+  // L'equipe StaX construit le site, puis le confie au client. Le parcours
+  // complet (administration, editeur, « Confier le site ») est couvert par
+  // internal-account.spec.ts ; ici, le modele du metier tient lieu de
+  // construction, pour les parcours qui commencent une fois le site confie.
+  if (options.delivered === false) {
+    return {
+      email,
+      password,
+      businessName: options.businessName,
+      organizationId: org.data.id,
+      orderId,
+      siteId: paid.data.site_id as string,
+      hostname: '',
+    };
+  }
+  await buildAndDeliverSite(paid.data.site_id as string, {
+    businessName: options.businessName,
+    businessType: options.businessType ?? 'boulangerie',
+    hostname: `${options.subdomain}.${SITES_DOMAIN}`,
+    email,
+  });
   const domain = await admin
     .from('site_domains')
     .select('hostname')
@@ -250,6 +295,67 @@ export async function createCustomerWithPaidOrder(options: {
     siteId: paid.data.site_id as string,
     hostname: domain.data.hostname as string,
   };
+}
+
+/** Compte de l'equipe StaX (role plateforme), cree avec la cle de service. */
+export async function createStaffAccount(
+  role: 'platform_owner' | 'platform_admin' | 'designer' | 'support',
+): Promise<{ email: string; password: string; id: string }> {
+  const admin = serviceClient();
+  const email = `equipe-${uniqueSuffix()}@stax.test`;
+  const password = randomPassword();
+  const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  if (created.error) throw new Error(`Compte equipe : ${created.error.message}`);
+  const id = created.data.user.id;
+  const updated = await admin
+    .from('profiles')
+    .update({ platform_role: role, mfa_enforced: false })
+    .eq('id', id);
+  if (updated.error) throw new Error(`Role equipe : ${updated.error.message}`);
+  return { email, password, id };
+}
+
+/**
+ * Construction du site par StaX puis attribution au client, en raccourci
+ * (cle de service) : modele du metier limite aux fonctionnalites de l'offre,
+ * adresse temporaire, puis `delivered_at`.
+ */
+export async function buildAndDeliverSite(
+  siteId: string,
+  options: { businessName: string; businessType: string; hostname: string; email: string },
+): Promise<void> {
+  const admin = serviceClient();
+  const features = new Map<string, boolean>();
+  for (const feature of [
+    'bookings',
+    'ecommerce',
+    'online_payments',
+    'customer_accounts',
+    'blog',
+    'multi_language',
+  ]) {
+    const { data } = await admin.rpc('site_has_feature', { p_site: siteId, p_feature: feature });
+    features.set(feature, data === true);
+  }
+  const modules = modulesForPlan(options.businessType, (feature) => features.get(feature) === true);
+  const template = buildTemplateForBusiness(options.businessType, {
+    enabledModules: modules,
+    businessName: options.businessName,
+    city: 'Lyon',
+  });
+  const built = await admin.rpc('provision_site', {
+    p_site: siteId,
+    p_template: templatePayload(template),
+    p_hostname: options.hostname,
+    p_details: { businessName: options.businessName, email: options.email, city: 'Lyon' },
+  });
+  if (built.error) throw new Error(`Construction du site : ${built.error.message}`);
+
+  const delivered = await admin
+    .from('sites')
+    .update({ delivered_at: new Date().toISOString() })
+    .eq('id', siteId);
+  if (delivered.error) throw new Error(`Attribution du site : ${delivered.error.message}`);
 }
 
 /* -------------------------------------------------------------------------- */

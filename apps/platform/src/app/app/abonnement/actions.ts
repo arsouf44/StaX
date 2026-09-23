@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { maintenancePolicyConfig } from '@stax/config';
-import { createServiceClient, unwrapMaybe } from '@stax/database';
+import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
 import { sendEmail, subscriptionCancelledEmail } from '@stax/emails';
 import {
   cancelSubscriptionAtPeriodEnd,
@@ -128,17 +128,20 @@ export async function requestCancellationAction(
 
   // Trace cote plateforme. L'etat de l'abonnement, lui, sera mis a jour par le
   // webhook Stripe : on n'ecrit pas « resilie » a la place de Stripe.
-  const service = createServiceClient();
-  await service.from('audit_logs').insert({
-    actor_id: gate.value.userId,
-    actor_email: gate.value.workspace.profile.email,
-    actor_type: 'user',
-    organization_id: gate.value.workspace.organization.id,
-    action: 'subscription.cancel_requested',
-    target_type: 'subscription',
-    target_id: gate.value.subscriptionId,
-    metadata_safe: { reason: parsed.data.reason ?? null },
-  });
+  // Sans cle de service, l'action reste faite ; seule la trace manque, et
+  // `tryCreateServiceClient` l'a journalise.
+  await tryCreateServiceClient()
+    ?.from('audit_logs')
+    .insert({
+      actor_id: gate.value.userId,
+      actor_email: gate.value.workspace.profile.email,
+      actor_type: 'user',
+      organization_id: gate.value.workspace.organization.id,
+      action: 'subscription.cancel_requested',
+      target_type: 'subscription',
+      target_id: gate.value.subscriptionId,
+      metadata_safe: { reason: parsed.data.reason ?? null },
+    });
 
   // Confirmation sur support durable (article L215-1-1 du Code de la
   // consommation) : la date de fin et ses effets, par e-mail.
@@ -158,7 +161,8 @@ const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone
 async function sendCancellationConfirmation(
   context: WorkspaceContext & { subscriptionId: string },
 ): Promise<boolean> {
-  const service = createServiceClient();
+  const service = tryCreateServiceClient();
+  if (!service) return false;
   const subscription = unwrapMaybe<{ current_period_end: string | null }>(
     (await service
       .from('subscriptions')
@@ -205,8 +209,9 @@ export async function resumeSubscriptionAction(
     };
   }
 
-  const service = createServiceClient();
-  await service.from('audit_logs').insert({
+  // Sans cle de service, l'action reste faite ; seule la trace manque, et
+  // `tryCreateServiceClient` l'a journalise.
+  await tryCreateServiceClient()?.from('audit_logs').insert({
     actor_id: gate.value.userId,
     actor_email: gate.value.workspace.profile.email,
     actor_type: 'user',

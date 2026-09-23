@@ -738,10 +738,13 @@ export async function republishVersionAction(
 }
 
 /**
- * Prepare un site encore vide a partir de son metier. Sans effet sur un site
- * qui a deja des pages : la base le verifie elle-meme.
+ * Prepare un site encore vide. Deux points de depart : une page d accueil
+ * vierge (plus les pages legales obligatoires), ou le modele complet du
+ * metier. Sans effet sur un site qui a deja des pages : la base le verifie
+ * elle-meme.
  */
-export async function prepareSiteAction(): Promise<EditorResult> {
+export async function prepareSiteAction(mode: unknown = 'template'): Promise<EditorResult> {
+  const blank = mode === 'blank';
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
   if (!site) return failure('Aucun site à préparer.');
@@ -751,6 +754,22 @@ export async function prepareSiteAction(): Promise<EditorResult> {
 
   const snapshot = await loadFeatureSnapshot(db, workspace.organization.id);
   const access = featureAccess(snapshot);
+
+  // L'adresse temporaire choisie a la commande est respectee.
+  const order = unwrapMaybe<{ requested_domain: string | null; domain_handling: string | null }>(
+    (await db
+      .from('orders')
+      .select('requested_domain, domain_handling')
+      .eq('site_id', site.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()) as never,
+  );
+  const subdomain =
+    order?.domain_handling === 'subdomain_only' && order.requested_domain
+      ? (order.requested_domain.split('.')[0] ?? null)
+      : null;
+
   const result = await provisionExistingSite(
     db,
     {
@@ -766,9 +785,16 @@ export async function prepareSiteAction(): Promise<EditorResult> {
         phone: workspace.organization.phone,
         city: workspace.organization.city,
       },
+      blank,
+      subdomain,
     },
   );
   if (!result.ok) return failure('Le site n’a pas pu être préparé. Réessayez dans un instant.');
   revalidatePath('/app', 'layout');
-  return { status: 'success', message: 'Votre site est prêt à être personnalisé.' };
+  return {
+    status: 'success',
+    message: blank
+      ? 'Page d’accueil vierge créée : ajoutez vos premières sections.'
+      : 'Le modèle du métier est en place : personnalisez-le.',
+  };
 }

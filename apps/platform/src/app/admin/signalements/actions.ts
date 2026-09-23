@@ -101,7 +101,7 @@ export async function decideContentReportAction(payload: unknown): Promise<Actio
     const owner = unwrapMaybe<{ profiles: { email: string; first_name: string | null } | null }>(
       (await service
         .from('organization_members')
-        .select('profiles ( email, first_name )')
+        .select('profiles!organization_members_user_id_fkey ( email, first_name )')
         .eq('organization_id', report.organization_id)
         .eq('role', 'owner')
         .limit(1)

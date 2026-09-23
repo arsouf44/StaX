@@ -117,11 +117,110 @@ function developmentFallbacks(): Record<string, string> {
   };
 }
 
+/**
+ * Noms equivalents acceptes pour les variables Supabase.
+ *
+ * L'URL du projet et la cle publique sont les MEMES valeurs cote serveur et
+ * cote navigateur : un deploiement qui ne declare que `NEXT_PUBLIC_SUPABASE_URL`
+ * ne doit pas voir tout le code serveur s'arreter pour autant. Les integrations
+ * Supabase (Vercel notamment) nomment aussi la cle de service
+ * `SUPABASE_SECRET_KEY`. Aucun alias ne rend public un secret : on ne va
+ * jamais chercher la cle de service dans une variable `NEXT_PUBLIC_*`.
+ */
+const SERVER_ALIASES: Record<string, readonly string[]> = {
+  SUPABASE_URL: ['NEXT_PUBLIC_SUPABASE_URL'],
+  SUPABASE_ANON_KEY: [
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'SUPABASE_PUBLISHABLE_KEY',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+  ],
+  SUPABASE_SERVICE_ROLE_KEY: ['SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_KEY'],
+};
+
+/** Valeur d'une variable serveur, sous son nom ou l'un de ses equivalents. */
+export function readServerEnv(key: string): string | undefined {
+  const direct = readEnv(key);
+  if (direct) return direct;
+  for (const alias of SERVER_ALIASES[key] ?? []) {
+    const value = readEnv(alias);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function withAliases(
+  source: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const resolved = { ...source };
+  for (const key of Object.keys(SERVER_ALIASES)) {
+    const value = readServerEnv(key);
+    if (value) resolved[key] = value;
+  }
+  return resolved;
+}
+
+/**
+ * Ce qu'il faut pour le client de service, et RIEN d'autre.
+ *
+ * Le client de service ne depend que de l'URL du projet et de la cle de
+ * service. Il ne doit pas tomber parce qu'une variable sans rapport (un
+ * fournisseur d'e-mail, un domaine) est absente ou mal formee : c'est ce qui
+ * rendait, en production, chaque page et chaque action qui en ont besoin
+ * inutilisables d'un coup.
+ */
+export function supabaseServiceCredentials():
+  { ok: true; url: string; key: string } | { ok: false; missing: string[] } {
+  const url = readServerEnv('SUPABASE_URL');
+  const key = readServerEnv('SUPABASE_SERVICE_ROLE_KEY');
+  const missing: string[] = [];
+  if (!url) missing.push('SUPABASE_URL (ou NEXT_PUBLIC_SUPABASE_URL)');
+  if (!key) missing.push('SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY)');
+  if (missing.length > 0 || !url || !key) return { ok: false, missing };
+  return { ok: true, url, key };
+}
+
+/**
+ * Problemes de configuration qui cassent la plateforme, en francais, pour
+ * l'ecran « Etat des services ». Seuls les NOMS des variables sont cites :
+ * jamais une valeur, meme partielle.
+ */
+export function coreConfigurationProblems(): string[] {
+  const problems: string[] = [];
+  const service = supabaseServiceCredentials();
+  if (!service.ok) {
+    problems.push(
+      `Variable absente : ${service.missing.join(', ')}. Sans elle, la création des sites, ` +
+        'les paiements (webhooks Stripe), la limitation de débit et l’assistance aux clients ' +
+        'ne fonctionnent pas.',
+    );
+  }
+  const secret = readEnv('STAX_SECRET_KEY');
+  if (!secret || secret.length < 32) {
+    problems.push(
+      'STAX_SECRET_KEY est absente ou trop courte (32 caractères minimum) : les formulaires ' +
+        'et les liens signés sont refusés.',
+    );
+  }
+  if (isProduction() && !readEnv('SITES_DOMAIN') && !readEnv('NEXT_PUBLIC_SITES_DOMAIN')) {
+    problems.push(
+      'SITES_DOMAIN (ou NEXT_PUBLIC_SITES_DOMAIN) n’est pas renseigné : les adresses ' +
+        'temporaires des sites seraient en « sites.localhost ».',
+    );
+  }
+  if (isProduction() && !readEnv('PLATFORM_URL') && !readEnv('NEXT_PUBLIC_PLATFORM_URL')) {
+    problems.push(
+      'PLATFORM_URL (ou NEXT_PUBLIC_PLATFORM_URL) n’est pas renseigné : les liens envoyés ' +
+        'par e-mail pointeraient vers localhost.',
+    );
+  }
+  return problems;
+}
+
 export function serverEnv(): ServerEnv {
   assertServerOnly('@stax/config/env#serverEnv');
   if (serverCache) return serverCache;
 
-  const source = readAllEnv();
+  const source = withAliases(readAllEnv());
   const withDefaults =
     deployEnvironment() === 'production' ? source : { ...developmentFallbacks(), ...source };
 

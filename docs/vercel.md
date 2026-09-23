@@ -51,7 +51,20 @@ ajoutez après, **redéployez** (Deployments → ⋯ → Redeploy, sans le cache
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | « Le catalogue tarifaire est momentanément indisponible » — la page s'affiche, vide |
 | `STAX_SECRET_KEY` | **Tous** les formulaires refusent de s'exécuter : inscription, contact, devis, activation |
-| `SUPABASE_SERVICE_ROLE_KEY` | Contact, devis et activation annoncent une indisponibilité ; la limitation de débit cesse d'être appliquée |
+| `SUPABASE_SERVICE_ROLE_KEY` | Contact, devis et activation annoncent une indisponibilité ; la limitation de débit cesse d'être appliquée ; les webhooks Stripe échouent ; l'ouverture de l'éditeur depuis l'administration (sessions de construction et d'assistance) est refusée avec un message |
+
+**Aucune page ne plante pour autant** : chaque écran qui dépend d'une variable
+absente l'annonce en clair. L'écran **Administration → État des services**
+liste, en tête, les variables manquantes (leur nom, jamais leur valeur).
+
+**Noms équivalents acceptés** — pour les variables Supabase, le serveur accepte
+aussi les noms posés par l'intégration Supabase de Vercel :
+
+| Variable attendue | Équivalents acceptés |
+| --- | --- |
+| `SUPABASE_URL` | `NEXT_PUBLIC_SUPABASE_URL` (même valeur) |
+| `SUPABASE_ANON_KEY` | `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_KEY` (jamais une variable `NEXT_PUBLIC_*`) |
 
 ### Obligatoires
 

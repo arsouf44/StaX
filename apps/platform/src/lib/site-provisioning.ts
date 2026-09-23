@@ -1,9 +1,14 @@
 import 'server-only';
 import { resolveBusiness } from '@stax/business';
 import { sitesDomain } from '@stax/config';
-import { createServiceClient, unwrapMaybe, type Db } from '@stax/database';
+import { tryCreateServiceClient, unwrapMaybe, type Db } from '@stax/database';
 import { isSubdomainAvailable, suggestSubdomain } from '@stax/security';
-import { buildTemplateForBusiness, modulesForPlan, templatePayload } from '@stax/site-engine';
+import {
+  blankTemplate,
+  buildTemplateForBusiness,
+  modulesForPlan,
+  templatePayload,
+} from '@stax/site-engine';
 
 /**
  * Preparation d un site : modele metier + adresse en sous-domaine.
@@ -25,6 +30,8 @@ export interface SitePlanInput {
   city?: string | null;
   /** Fonctionnalites de l offre ; `null` = toutes (compte interne). */
   hasFeature: ((feature: string) => boolean) | null;
+  /** Page d accueil vierge + pages legales, au lieu du modele complet du metier. */
+  blank?: boolean;
 }
 
 export function buildSitePlan(input: SitePlanInput): {
@@ -35,12 +42,13 @@ export function buildSitePlan(input: SitePlanInput): {
   const modules = input.hasFeature
     ? modulesForPlan(business.id, input.hasFeature)
     : [...business.modules];
-  const template = buildTemplateForBusiness(business.id, {
+  const full = buildTemplateForBusiness(business.id, {
     enabledModules: modules,
     businessName: input.businessName,
     pitch: input.pitch ?? null,
     city: input.city ?? null,
   });
+  const template = input.blank ? blankTemplate(full) : full;
   return { payload: templatePayload(template), modules: [...template.modules] };
 }
 
@@ -53,8 +61,11 @@ export function buildSitePlan(input: SitePlanInput): {
  */
 export async function availableSiteHostname(preferred: string): Promise<string> {
   const base = suggestSubdomain(preferred).slice(0, 40).replace(/-+$/, '') || 'site';
-  const service = createServiceClient();
   const domain = sitesDomain();
+  const service = tryCreateServiceClient();
+  // Sans cle de service, l'existence ne peut pas etre verifiee : un suffixe
+  // aleatoire evite la collision plutot que de faire echouer la preparation.
+  if (!service) return `${base.slice(0, 30)}-${crypto.randomUUID().slice(0, 8)}.${domain}`;
 
   for (let attempt = 0; attempt < 50; attempt += 1) {
     const label = attempt === 0 ? base : `${base.slice(0, 36)}-${attempt + 1}`;
@@ -90,6 +101,7 @@ export async function provisionExistingSite(
     hasFeature: ((feature: string) => boolean) | null;
     subdomain?: string | null;
     details?: Record<string, unknown>;
+    blank?: boolean;
   },
 ): Promise<{ ok: boolean; hostname: string | null }> {
   const plan = buildSitePlan({
@@ -98,6 +110,7 @@ export async function provisionExistingSite(
     pitch: typeof options.details?.['pitch'] === 'string' ? options.details['pitch'] : null,
     city: typeof options.details?.['city'] === 'string' ? options.details['city'] : null,
     hasFeature: options.hasFeature,
+    blank: options.blank ?? false,
   });
   const hostname = await availableSiteHostname(options.subdomain || site.name);
   const { error } = await db.rpc('provision_site', {

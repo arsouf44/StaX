@@ -32,20 +32,26 @@ const DOMAIN_LABELS: Record<string, string> = {
   none: 'À définir ensemble',
 };
 
+/**
+ * Ce qui se passe apres la commande. StaX concoit et construit le site, de
+ * zero, sur plusieurs semaines ; le client le decouvre quand il lui est
+ * confie. Rien ici ne promet un site disponible le jour meme.
+ */
 function nextSteps(trialDays: number): string[] {
   return [
-    'Votre espace s’ouvre immédiatement et vous pouvez suivre l’avancement.',
-    'Nous construisons une première version à partir de vos informations.',
-    'Vous la relisez en aperçu privé et demandez vos corrections.',
-    'Nous publions après votre accord explicite. Votre première année de maintenance commence ' +
+    'Votre espace client s’ouvre dès le paiement : vous y suivez l’avancement de votre projet et échangez avec l’équipe.',
+    'L’équipe StaX conçoit et construit votre site de A à Z, à partir de vos informations. Comptez quelques semaines.',
+    'Quand il est prêt, nous vous le confions : il apparaît dans votre espace, vous le relisez et demandez vos corrections.',
+    'Nous le mettons en ligne avec votre accord. Votre première année de maintenance commence ' +
       `à la mise en ligne, et au plus tard ${trialDays} jours après la commande.`,
   ];
 }
 
 const INTERNAL_NEXT_STEPS = [
-  'Le site est créé tout de suite, avec ses pages, ses sections et son formulaire de contact.',
-  'Vous le modifiez vous-même dans l’éditeur : textes, photos, sections, couleurs.',
-  'Vous le mettez en ligne quand vous voulez, sur son adresse temporaire ou votre domaine.',
+  'La commande est enregistrée sans paiement et l’espace client s’ouvre : il affiche le suivi du projet, comme pour un client.',
+  'L’équipe StaX conçoit et construit le site de A à Z depuis l’administration.',
+  'Le site n’apparaît dans l’espace client que lorsque l’administration le lui confie.',
+  'L’équipe StaX garde la main sur le site en permanence, avant comme après.',
 ];
 
 export default async function OrderSummaryPage() {
@@ -87,8 +93,8 @@ export default async function OrderSummaryPage() {
       <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Récapitulatif</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         {internal
-          ? 'Vérifiez ces informations avant de créer le site. Vous pourrez tout modifier ensuite depuis votre espace.'
-          : 'Vérifiez ces informations avant de régler. Vous pourrez tout modifier ensuite depuis votre espace.'}
+          ? 'Vérifiez ces informations avant d’enregistrer la commande.'
+          : 'Vérifiez ces informations avant de régler.'}
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
@@ -151,9 +157,9 @@ export default async function OrderSummaryPage() {
                 </div>
               </dl>
               <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-                Le site est créé immédiatement, avec toutes les fonctionnalités, et s’ouvre dans
-                votre espace. La commande est enregistrée comme interne : aucune facture, aucun
-                prélèvement.
+                La commande est enregistrée comme interne : aucune facture, aucun prélèvement. Le
+                site sera construit par l’équipe StaX, puis confié à ce compte depuis
+                l’administration.
               </p>
               <div className="mt-6">
                 <InternalOrderForm />

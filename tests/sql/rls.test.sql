@@ -91,13 +91,19 @@ begin
     (v_org_b, v_bob,    'owner')
   on conflict (organization_id, user_id) do update set role = excluded.role;
 
-  insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug)
+  -- Sites deja confies a leurs clients (0041) : c'est le cas nominal des tests
+  -- d'isolation et de RBAC ci-dessous.
+  insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug,
+                            delivered_at)
        values (v_org_a, 'Site A', 'site-a',
-               (select id from public.plans where slug='ultra-premium'), 'ultra-premium', 'restaurant')
+               (select id from public.plans where slug='ultra-premium'), 'ultra-premium', 'restaurant',
+               now())
     returning id into v_site_a;
-  insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug)
+  insert into public.sites (organization_id, name, slug, plan_id, plan_slug, business_type_slug,
+                            delivered_at)
        values (v_org_b, 'Site B', 'site-b',
-               (select id from public.plans where slug='essentiel'), 'essentiel', 'plombier')
+               (select id from public.plans where slug='essentiel'), 'essentiel', 'plombier',
+               now())
     returning id into v_site_b;
 
   insert into public.site_settings (site_id, business_name) values
@@ -2244,6 +2250,102 @@ begin
   perform t.assert(exists (select 1 from public.content_reports
                             where id = v_report and status = 'actioned' and decided_by = staff),
     'La decision motivee est enregistree avec son auteur');
+end;
+$$;
+
+\echo '--- Site construit par StaX, puis confie au client ---'
+do $$
+declare
+  alice uuid := (select v from t.fixtures where k='alice');
+  bob   uuid := (select v from t.fixtures where k='bob');
+  staff uuid := (select v from t.fixtures where k='staff');
+  v_result jsonb;
+  v_org  uuid;
+  v_site uuid;
+  v_page uuid;
+begin
+  perform t.assert(t.denied_as(alice,
+    'select public.admin_create_site(''Chez Alice'', ''restaurant'', null, ''Lyon'')'),
+    'Un client ne peut pas creer de site depuis l''administration');
+
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', staff, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_result := public.admin_create_site('Chez Alice', 'restaurant', null, 'Lyon');
+  reset role;
+  v_org  := (v_result ->> 'organizationId')::uuid;
+  v_site := (v_result ->> 'siteId')::uuid;
+  perform t.assert(v_site is not null, 'L''administration cree un site de zero');
+  perform t.assert(exists (select 1 from public.organization_members
+                            where organization_id = v_org and user_id = staff and role = 'owner'),
+    'La personne de l''equipe qui cree le site en garde la main (proprietaire)');
+  perform t.assert(not exists (select 1 from public.site_pages where site_id = v_site),
+    'Le site part de zero : aucune page imposee');
+
+  -- Le client est rattache a l'organisation, mais le site n'est pas encore confie.
+  perform set_config('request.jwt.claims', null, true);
+  insert into public.organization_members (organization_id, user_id, role)
+  values (v_org, alice, 'owner');
+  insert into public.site_pages (site_id, path, title, kind)
+  values (v_site, '/', 'Accueil', 'home') returning id into v_page;
+
+  perform t.assert(t.denied_as(alice,
+    format('insert into public.site_pages (site_id, path, title, kind) values (%L, ''/carte'', ''Carte'', ''standard'')', v_site)),
+    'Avant attribution, le client ne peut pas ajouter de page');
+  perform t.assert(t.denied_as(alice,
+    format('update public.site_pages set title = ''Pirate'' where id = %L', v_page)),
+    'Avant attribution, le client ne peut pas modifier le site');
+  perform t.assert(t.denied_as(alice,
+    format('update public.sites set delivered_at = now() where id = %L', v_site)),
+    'Le client ne peut pas s''attribuer le site lui-meme');
+  perform t.assert(t.denied_as(alice,
+    format('select public.deliver_site(%L)', v_site)),
+    'Le client ne peut pas declencher l''attribution');
+
+  -- L'equipe StaX, elle, travaille sur le site en construction.
+  perform t.assert(not t.denied_as(staff,
+    format('update public.site_pages set title = ''Accueil — Chez Alice'' where id = %L', v_page)),
+    'L''equipe StaX modifie le site en construction');
+
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', staff, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_result := public.deliver_site(v_site, 'personne-inconnue@exemple.test');
+  reset role;
+  perform t.assert(v_result ->> 'code' = 'no_account',
+    'Une adresse sans compte ne recoit pas le site');
+
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', staff, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_result := public.deliver_site(v_site, 'bob@tenant-b.test', 'editor');
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((v_result ->> 'ok')::boolean,
+    'L''administration confie le site au client, par son adresse e-mail');
+  perform t.assert(exists (select 1 from public.organization_members
+                            where organization_id = v_org and user_id = bob and role = 'editor'),
+    'Le compte designe devient membre de l''organisation du site');
+  perform t.assert(exists (select 1 from public.notifications
+                            where recipient_id = bob and site_id = v_site and type = 'site.delivered'),
+    'Le client est prevenu que son site est pret');
+
+  perform t.assert(not t.denied_as(alice,
+    format('update public.site_pages set title = ''Bienvenue'' where id = %L', v_page)),
+    'Une fois le site confie, le client le modifie');
+  perform t.assert(not t.denied_as(staff,
+    format('update public.site_pages set title = ''Bienvenue chez Alice'' where id = %L', v_page)),
+    'L''equipe StaX garde la main apres l''attribution');
+
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', staff, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.withdraw_site(v_site);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(t.denied_as(alice,
+    format('update public.site_pages set title = ''Encore'' where id = %L', v_page)),
+    'Un site repris redevient inaccessible au client en modification');
 end;
 $$;
 

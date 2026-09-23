@@ -83,11 +83,14 @@ export async function AdminTable({
   view: viewId,
   searchParams,
   children,
+  actions,
 }: {
   view: AdminViewId;
   searchParams: Record<string, string | string[] | undefined>;
   /** Actions propres a l'ecran, rendues sous le tableau. */
   children?: React.ReactNode;
+  /** Boutons d'en-tete (creer, exporter...). */
+  actions?: React.ReactNode;
 }) {
   const view = getAdminView(viewId);
   const { db } = await getAdminContext();
@@ -134,7 +137,7 @@ export async function AdminTable({
 
   return (
     <>
-      <PageHeader title={view.title} description={view.description} />
+      <PageHeader title={view.title} description={view.description} actions={actions} />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
         {view.filters && view.filters.length > 0 ? (

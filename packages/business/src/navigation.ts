@@ -18,7 +18,15 @@ export interface NavContext {
   enabledModules: readonly string[];
   hasFeature: (key: FeatureKey) => boolean;
   can: (capability: OrgCapability) => boolean;
+  /**
+   * `false` tant que StaX construit le site et ne l a pas confie au client :
+   * seuls le suivi du projet et les ecrans du compte sont proposes.
+   */
+  siteDelivered?: boolean;
 }
+
+/** Entrees qui ne portent pas sur le site : proposees meme pendant sa construction. */
+const ACCOUNT_GROUPS: ReadonlySet<DashboardGroup> = new Set(['pilotage', 'entreprise']);
 
 export interface NavGroup {
   id: DashboardGroup;
@@ -188,8 +196,16 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
 export function buildDashboardNavigation(context: NavContext): NavGroup[] {
   const entries = new Map<string, DashboardEntry>();
 
+  const underConstruction = context.siteDelivered === false;
+
   const accept = (entry: DashboardEntry) => {
     if (!context.can(entry.capability as OrgCapability)) return;
+    if (
+      underConstruction &&
+      (!ACCOUNT_GROUPS.has(entry.group) || entry.href === '/app/statistiques')
+    ) {
+      return;
+    }
     // Une entree deja presente garde le rang le plus faible (la plus haute).
     const existing = entries.get(entry.href);
     if (existing && existing.sortOrder <= entry.sortOrder) return;

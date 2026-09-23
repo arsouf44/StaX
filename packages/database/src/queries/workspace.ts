@@ -30,6 +30,8 @@ export interface WorkspaceSite {
   lastPublishedAt: string | null;
   isDemo: boolean;
   suspendedAt: string | null;
+  /** `null` tant que StaX construit le site et ne l'a pas confie au client. */
+  deliveredAt: string | null;
   primaryHostname: string | null;
   domains: Array<
     Pick<SiteDomain, 'id' | 'hostname' | 'status' | 'kind' | 'is_primary' | 'ssl_status'>
@@ -131,6 +133,7 @@ export async function listSites(db: Db, organizationId: UUID): Promise<Workspace
       lastPublishedAt: row.last_published_at,
       isDemo: row.is_demo,
       suspendedAt: row.suspended_at,
+      deliveredAt: row.delivered_at ?? null,
       primaryHostname: primary?.hostname ?? null,
       domains,
       enabledModules: row.site_settings?.enabled_modules ?? [],
