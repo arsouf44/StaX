@@ -64,10 +64,10 @@ export default async function EditorPage({
     return (
       <>
         <PageHeader title="Modifier mon site" />
-        <Alert tone="info" live="status" title="Votre site n’a pas encore de pages">
-          Nous pouvons le préparer tout de suite à partir de votre métier : des pages, des textes
-          d’exemple adaptés à votre activité et un formulaire de contact. Vous pourrez tout modifier
-          ensuite.
+        <Alert tone="info" live="status" title="Ce site n’a pas encore de pages">
+          Partez d’une page d’accueil vierge pour construire le site de zéro — les pages légales
+          obligatoires sont ajoutées d’office et se remplissent d’après « Mon entreprise ». Ou
+          partez du modèle du métier : des pages et des textes d’exemple, à remplacer.
         </Alert>
         <div className="mt-6">
           <PrepareSiteButton />

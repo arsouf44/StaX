@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServiceClient, unwrapList, unwrapMaybe } from '@stax/database';
+import { tryCreateServiceClient, unwrapList, unwrapMaybe, type Db } from '@stax/database';
 import { salesInvoiceIssuedEmail, sendEmail } from '@stax/emails';
 import { platformUrl } from '@stax/config';
 import { computeOrderPricing, formatMoney } from '@stax/payments';
@@ -37,7 +37,7 @@ const issueSchema = z.object({
 });
 
 /** Numero suivant, alloue sous verrou pour rester sans trou ni doublon. */
-async function nextInvoiceNumber(service: ReturnType<typeof createServiceClient>): Promise<string> {
+async function nextInvoiceNumber(service: Db): Promise<string> {
   const year = new Date().getUTCFullYear();
   const prefix = `F-${year}-`;
 
@@ -86,7 +86,14 @@ export async function issueSalesInvoiceAction(
 
   // La cle de service est necessaire : `sales_invoices` est en ecriture
   // reservee a la plateforme, et le role a deja ete verifie ci-dessus.
-  const service = createServiceClient();
+  const service = tryCreateServiceClient();
+  if (!service)
+    return {
+      status: 'error',
+      message:
+        'Action impossible : la clé de service Supabase n’est pas configurée sur ce déploiement ' +
+        '(voir « État des services »).',
+    };
 
   const plan = unwrapMaybe<{
     id: string;
@@ -244,7 +251,14 @@ export async function cancelSalesInvoiceAction(
     return { status: 'error', message: 'Indiquez le motif de l’annulation.' };
   }
 
-  const service = createServiceClient();
+  const service = tryCreateServiceClient();
+  if (!service)
+    return {
+      status: 'error',
+      message:
+        'Action impossible : la clé de service Supabase n’est pas configurée sur ce déploiement ' +
+        '(voir « État des services »).',
+    };
 
   // Une facture deja rattachee a produit une commande : l'annuler ici
   // laisserait cette commande orpheline. On refuse, et on renvoie vers le

@@ -27,6 +27,7 @@
 create or replace function app.forbid_mutation()
 returns trigger
 language plpgsql
+set search_path = pg_catalog
 as $$
 begin
   if tg_op = 'DELETE' and coalesce(current_setting('stax.retention_purge', true), '') = 'on' then

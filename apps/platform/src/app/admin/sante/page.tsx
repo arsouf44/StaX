@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
-import { missingCapabilities, legalStatus, type CapabilityKey } from '@stax/config';
+import {
+  coreConfigurationProblems,
+  legalStatus,
+  missingCapabilities,
+  type CapabilityKey,
+} from '@stax/config';
 import { unwrapList } from '@stax/database';
 import {
   Alert,
@@ -64,6 +69,7 @@ export default async function AdminHealthPage() {
 
   const missing = missingCapabilities();
   const legal = legalStatus();
+  const configuration = coreConfigurationProblems();
 
   const recentWebhooks = unwrapList<{ status: string }>(
     (await db
@@ -82,6 +88,20 @@ export default async function AdminHealthPage() {
       />
 
       <div className="space-y-8">
+        {configuration.length > 0 ? (
+          <Alert tone="danger" live="alert" title="Configuration du déploiement incomplète">
+            <p>
+              Ces variables se renseignent dans les réglages du déploiement (variables
+              d’environnement), puis un redéploiement les prend en compte.
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {configuration.map((problem) => (
+                <li key={problem}>{problem}</li>
+              ))}
+            </ul>
+          </Alert>
+        ) : null}
+
         {!legal.configured ? (
           <Alert tone="danger" live="alert" title="Informations légales incomplètes">
             {legal.missingRequired.length > 0 ? (

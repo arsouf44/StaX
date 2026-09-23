@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { buildDashboardNavigation } from '@stax/business';
 import { featureAccess, loadFeatureSnapshot } from '@stax/database';
 import { AppHeader } from '~/components/app/app-header';
 import { AppShell } from '~/components/app/app-shell';
+import { SiteUnderConstruction } from '~/components/app/site-under-construction';
 import { SupportBanner } from '~/components/app/support-banner';
 import { activeSupportSession } from '~/app/admin/assistance/actions';
-import { getWorkspace } from '~/lib/workspace';
+import { getWorkspace, isAccountPath, isSiteUnderConstruction } from '~/lib/workspace';
 
 /**
  * L espace client n est JAMAIS mis en cache et n est jamais indexe : il
@@ -32,10 +34,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const support = await activeSupportSession();
   const supportActive = support?.organizationId === workspace.organization.id;
 
+  // Site en construction chez StaX : le client suit son projet, il n a pas
+  // encore la main sur le site. La base le refuserait de toute facon
+  // (`app.site_can`) ; l interface ne propose donc pas ces ecrans.
+  const underConstruction = isSiteUnderConstruction(workspace);
+  const pathname = (await headers()).get('x-stax-pathname') ?? '/app';
+  const hideContent = underConstruction && !isAccountPath(pathname);
+
   const groups = buildDashboardNavigation({
     enabledModules: workspace.currentSite?.enabledModules ?? [],
     hasFeature: (key) => access.has(key),
     can: (capability) => workspace.capabilities.includes(capability),
+    siteDelivered: !underConstruction,
   });
 
   return (
@@ -50,7 +60,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         />
       ) : null}
       <AppShell groups={groups} header={<AppHeader workspace={workspace} />}>
-        {children}
+        {hideContent && workspace.currentSite ? (
+          <SiteUnderConstruction siteName={workspace.currentSite.name} />
+        ) : (
+          children
+        )}
       </AppShell>
     </>
   );

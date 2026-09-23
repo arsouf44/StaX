@@ -44,6 +44,9 @@ export default function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set('x-nonce', nonce);
   headers.set('content-security-policy', csp);
+  // Chemin demande, pour les mises en page (qui ne le recoivent pas) et pour
+  // revenir a la bonne page apres connexion.
+  headers.set('x-stax-pathname', request.nextUrl.pathname);
 
   const response = NextResponse.next({ request: { headers } });
   response.headers.set('content-security-policy', csp);
@@ -56,6 +59,7 @@ export const config = {
      * Chemins porteurs de session ou d'action sensible.
      * `/app/editeur/apercu` en est retire : il pose sa propre CSP `sandbox`.
      */
+    '/app',
     '/app/((?!editeur/apercu).*)',
     '/admin/:path*',
     '/api/:path*',

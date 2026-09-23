@@ -206,15 +206,21 @@ export const ADMIN_VIEWS = {
     table: 'sites',
     title: 'Sites',
     description:
-      'Tous les sites de la plateforme. Un site en relecture attend une action de notre côté.',
+      'Tous les sites de la plateforme. Un site « en construction » n’est pas encore confié à son client, qui ne le voit pas.',
     minimum: 'support',
     select:
-      'id, name, slug, status, is_demo, last_published_at, created_at, organizations ( name )',
+      'id, name, slug, status, is_demo, delivered_at, last_published_at, created_at, organizations ( name )',
     orderColumn: 'created_at',
     ascending: false,
     searchColumn: 'name',
     searchLabel: 'Rechercher un site',
     filters: [
+      {
+        value: 'a-confier',
+        label: 'En construction (non confiés)',
+        column: 'delivered_at',
+        operator: 'isNull',
+      },
       {
         value: 'relecture',
         label: 'En relecture',
@@ -235,6 +241,7 @@ export const ADMIN_VIEWS = {
       { key: 'name', label: 'Site', kind: 'text' },
       { key: 'organizations', label: 'Client', kind: 'relation', path: 'name' },
       { key: 'status', label: 'État', kind: 'status', statuses: SITE_STATUSES },
+      { key: 'delivered_at', label: 'Confié au client', kind: 'date', secondary: true },
       {
         key: 'last_published_at',
         label: 'Dernière publication',
@@ -841,14 +848,14 @@ export const ADMIN_VIEWS = {
     title: 'Métiers',
     description: 'Les métiers proposés à la commande, et les modules que chacun active.',
     minimum: 'support',
-    select: 'slug, name, sector_slug, is_active, sort_order, business_sectors ( name )',
+    select: 'slug, label, sector_slug, is_active, sort_order, business_sectors ( label )',
     orderColumn: 'sort_order',
     ascending: true,
-    searchColumn: 'name',
+    searchColumn: 'label',
     searchLabel: 'Rechercher un métier',
     columns: [
-      { key: 'name', label: 'Métier', kind: 'text' },
-      { key: 'business_sectors', label: 'Secteur', kind: 'relation', path: 'name' },
+      { key: 'label', label: 'Métier', kind: 'text' },
+      { key: 'business_sectors', label: 'Secteur', kind: 'relation', path: 'label' },
       { key: 'slug', label: 'Identifiant', kind: 'mono', secondary: true },
       { key: 'is_active', label: 'Proposé', kind: 'boolean' },
     ],

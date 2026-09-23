@@ -1,5 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { assertServerOnly, publicEnv, readEnv, serverEnv } from '@stax/config';
+import {
+  assertServerOnly,
+  publicEnv,
+  readServerEnv,
+  supabaseServiceCredentials,
+} from '@stax/config';
 
 /**
  * Clients Supabase.
@@ -41,8 +46,8 @@ export function createAnonClient(): Db {
  */
 export function createUserClient(accessToken: string): Db {
   assertServerOnly('@stax/database/client#createUserClient');
-  const url = readEnv('SUPABASE_URL') ?? publicEnv().NEXT_PUBLIC_SUPABASE_URL;
-  const key = readEnv('SUPABASE_ANON_KEY') ?? publicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = readServerEnv('SUPABASE_URL') ?? publicEnv().NEXT_PUBLIC_SUPABASE_URL;
+  const key = readServerEnv('SUPABASE_ANON_KEY') ?? publicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return createClient(url, key, {
     ...NO_PERSIST,
     global: {
@@ -64,8 +69,16 @@ let serviceClient: Db | null = null;
 export function createServiceClient(): Db {
   assertServerOnly('@stax/database/client#createServiceClient');
   if (serviceClient) return serviceClient;
-  const env = serverEnv();
-  serviceClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+  // Seules l'URL et la cle de service sont exigees : une variable sans rapport
+  // mal renseignee ne doit pas priver la plateforme de son client de service.
+  const credentials = supabaseServiceCredentials();
+  if (!credentials.ok) {
+    throw new Error(
+      `[StaX] Client de service indisponible : ${credentials.missing.join(', ')}. ` +
+        'Voir docs/deployment.md.',
+    );
+  }
+  serviceClient = createClient(credentials.url, credentials.key, {
     ...NO_PERSIST,
     global: { headers: { 'x-stax-client': 'service' } },
   });

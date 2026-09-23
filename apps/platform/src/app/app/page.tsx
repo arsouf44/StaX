@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { resolveBusiness } from '@stax/business';
-import { unwrapList } from '@stax/database';
-import { formatMaintenance } from '@stax/payments';
+import { featureAccess, loadFeatureSnapshot, unwrapList, unwrapMaybe } from '@stax/database';
+import { formatMaintenance, PROJECT_STATUS_LABELS } from '@stax/payments';
 import {
   Alert,
   ButtonLink,
@@ -15,8 +15,8 @@ import {
   StatusPill,
 } from '@stax/ui';
 import { publicSiteUrl } from '@stax/config';
-import { getWorkspace } from '~/lib/workspace';
-import { featureAccess, loadFeatureSnapshot } from '@stax/database';
+import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
+import { SiteUnderConstruction } from '~/components/app/site-under-construction';
 
 export const metadata: Metadata = { title: 'Tableau de bord' };
 
@@ -39,6 +39,18 @@ export default async function DashboardPage({
   const params = await searchParams;
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
+
+  if (site && isSiteUnderConstruction(workspace)) {
+    return (
+      <ConstructionDashboard
+        firstName={workspace.profile.first_name ?? ''}
+        siteName={site.name}
+        siteId={site.id}
+        db={db}
+        orderNotice={typeof params.commande === 'string' ? params.commande : null}
+      />
+    );
+  }
   const business = resolveBusiness(site?.businessTypeSlug);
   const vocabulary = business.vocabulary;
 
@@ -177,9 +189,9 @@ export default async function DashboardPage({
       </div>
 
       {params.commande === 'interne' ? (
-        <Alert tone="success" live="status" title="Site créé, sans paiement">
-          Commande interne enregistrée : le site est prêt dans votre espace, avec des pages et des
-          textes d’exemple adaptés au métier. Personnalisez-le puis mettez-le en ligne.
+        <Alert tone="success" live="status" title="Commande interne enregistrée">
+          Aucun paiement. Le site est conçu et construit par l’équipe StaX, puis confié depuis
+          l’administration.
         </Alert>
       ) : null}
 
@@ -526,5 +538,87 @@ function ShortcutCard({
         <p className="mt-1 text-xs leading-relaxed text-[var(--foreground-muted)]">{description}</p>
       </Card>
     </Link>
+  );
+}
+
+/**
+ * Tableau de bord pendant la construction du site : l essentiel est de savoir
+ * ou en est le projet, et comment nous joindre.
+ */
+async function ConstructionDashboard({
+  firstName,
+  siteName,
+  siteId,
+  db,
+  orderNotice,
+}: {
+  firstName: string;
+  siteName: string;
+  siteId: string;
+  db: Awaited<ReturnType<typeof getWorkspace>>['db'];
+  orderNotice: string | null;
+}) {
+  const project = unwrapMaybe<{ reference: string; status: string; due_at: string | null }>(
+    (await db
+      .from('projects')
+      .select('reference, status, due_at')
+      .eq('site_id', siteId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()) as never,
+  );
+  const statusLabel = project
+    ? (PROJECT_STATUS_LABELS[project.status as keyof typeof PROJECT_STATUS_LABELS] ??
+      'Création en cours')
+    : 'Création en cours';
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-medium tracking-[-0.02em]">
+          Bonjour{firstName ? ` ${firstName}` : ''}
+        </h1>
+        <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">
+          Votre commande est enregistrée. Voici où en est la création de {siteName}.
+        </p>
+      </div>
+
+      {orderNotice === 'interne' ? (
+        <Alert tone="success" live="status" title="Commande interne enregistrée">
+          Aucun paiement, aucune facture. Le site est conçu et construit par l’équipe StaX, puis
+          confié à ce compte depuis l’administration, comme pour un client.
+        </Alert>
+      ) : orderNotice ? (
+        <Alert tone="success" live="status" title="Merci pour votre commande">
+          Votre paiement est confirmé. L’équipe StaX commence la création de votre site.
+        </Alert>
+      ) : null}
+
+      <SiteUnderConstruction siteName={siteName} compact />
+
+      {project ? (
+        <Panel level={1} padding="lg">
+          <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
+            Mon projet · {project.reference}
+          </p>
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <StatusPill tone="accent">{statusLabel}</StatusPill>
+            {project.due_at ? (
+              <span className="text-[var(--foreground-muted)]">
+                Livraison prévue le{' '}
+                {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+                  new Date(project.due_at),
+                )}
+              </span>
+            ) : null}
+          </p>
+          <p className="mt-3 text-sm">
+            <Link href="/app/projet" className="underline underline-offset-4">
+              Voir le détail et échanger avec l’équipe
+            </Link>
+          </p>
+        </Panel>
+      ) : null}
+    </div>
   );
 }

@@ -59,15 +59,15 @@ export default async function WelcomePage() {
             <div className="mt-8 space-y-4">
               <Panel level={2} padding="lg">
                 <h2 className="text-base font-medium">
-                  {internal ? 'Créer un site' : 'Je veux commander un site'}
+                  {internal ? 'Passer une commande interne' : 'Je veux commander un site'}
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   {internal
-                    ? 'Compte interne StaX : choisissez n’importe quelle offre et n’importe quel métier. Aucun paiement ne vous sera demandé, le site est créé immédiatement.'
+                    ? 'Compte interne StaX : choisissez n’importe quelle offre et n’importe quel métier. Aucun paiement ne vous sera demandé. Le site est ensuite construit par l’équipe StaX, puis confié à ce compte depuis l’administration.'
                     : 'Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez tout modifier ensuite.'}
                 </p>
                 <ButtonLink href="/commander" className="mt-4">
-                  {internal ? 'Créer un site' : 'Commander mon site'}
+                  {internal ? 'Commander sans paiement' : 'Commander mon site'}
                 </ButtonLink>
               </Panel>
 

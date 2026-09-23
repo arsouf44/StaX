@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import { createServiceClient, createUserClient } from '@stax/database';
+import { createUserClient, tryCreateServiceClient } from '@stax/database';
 import { loadStaffWorkspace, loadWorkspace, type Workspace } from '@stax/database';
 import { IMPERSONATION_COOKIE, verifyImpersonation } from '@stax/auth';
 import type { Db } from '@stax/database';
@@ -41,7 +41,12 @@ export const getWorkspace = cache(async (): Promise<WorkspaceContext> => {
   // droits de contenu que la base lui accorde pendant la session.
   const supportToken = store.get(IMPERSONATION_COOKIE)?.value ?? null;
   if (supportToken && session.profile.platform_role) {
-    const active = await verifyImpersonation(createServiceClient(), supportToken, session.user.id);
+    // Sans cle de service, la session ne peut pas etre verifiee : on la traite
+    // comme absente (espace personnel) plutot que de faire tomber la page.
+    const service = tryCreateServiceClient();
+    const active = service
+      ? await verifyImpersonation(service, supportToken, session.user.id)
+      : null;
     if (active) {
       const staffWorkspace = await loadStaffWorkspace(
         db,
@@ -97,6 +102,57 @@ export async function requireCapability(capability: OrgCapability): Promise<Work
     notFound();
   }
   return context;
+}
+
+/**
+ * Roles de l equipe StaX qui construisent les sites : meme liste que
+ * `app.is_platform_site_editor()` en base.
+ */
+const SITE_BUILDER_ROLES: ReadonlySet<string> = new Set([
+  'platform_owner',
+  'platform_admin',
+  'designer',
+  'support',
+]);
+
+/**
+ * Le site courant est-il encore en construction chez StaX, pour la personne
+ * connectee ?
+ *
+ * StaX concoit et construit le site ; le client n y a acces qu une fois le
+ * site confie (`sites.delivered_at`). La regle qui fait foi est en base
+ * (`app.site_can`) : ceci ne fait qu accorder l interface a ce que la base
+ * permet, pour que le client ne tombe pas sur des ecrans qu il ne peut pas
+ * utiliser.
+ */
+export function isSiteUnderConstruction(workspace: Workspace): boolean {
+  const site = workspace.currentSite;
+  if (!site || site.deliveredAt) return false;
+  const role = workspace.profile.platform_role;
+  return !(role && SITE_BUILDER_ROLES.has(role));
+}
+
+/** Ecrans de l espace client qui ne portent pas sur le site lui-meme. */
+const ACCOUNT_PATHS = [
+  '/app/projet',
+  '/app/entreprise',
+  '/app/equipe-stax',
+  '/app/facturation',
+  '/app/abonnement',
+  '/app/securite',
+  '/app/donnees',
+  '/app/activite',
+  '/app/support',
+  '/app/compte',
+  // Detail d une commande StaX (`/app/commande/[id]`), a ne pas confondre avec
+  // `/app/commandes`, les commandes de la boutique du site.
+  '/app/commande',
+] as const;
+
+/** Chemin accessible pendant que StaX construit le site. */
+export function isAccountPath(pathname: string): boolean {
+  if (pathname === '/app' || pathname === '/app/') return true;
+  return ACCOUNT_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 /** Site courant, ou page introuvable si l organisation n en a aucun. */

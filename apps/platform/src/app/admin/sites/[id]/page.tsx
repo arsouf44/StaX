@@ -9,6 +9,7 @@ import { Alert, Badge, DescriptionList, Panel, Stat, StatusPill, type StatusTone
 import { requireAdminRole } from '~/lib/admin';
 import { SiteAdminActions, type ActivationCodeView, type AdminVersionView } from './site-actions';
 import { InterveneForm } from './intervene-form';
+import { SiteDelivery, type SiteClientView } from './site-delivery';
 
 export const metadata: Metadata = { title: 'Site' };
 
@@ -85,6 +86,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     archived_at: string | null;
     published_version_id: string | null;
     organization_id: string;
+    delivered_at: string | null;
     organizations: { name: string; slug: string } | null;
   }>(
     (await db
@@ -92,7 +94,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       .select(
         'id, name, slug, status, plan_slug, business_type_slug, is_demo, timezone, created_at, ' +
           'first_published_at, last_published_at, suspended_at, archived_at, ' +
-          'published_version_id, organization_id, organizations ( name, slug )',
+          'published_version_id, organization_id, delivered_at, organizations ( name, slug )',
       )
       .eq('id', id)
       .maybeSingle()) as never,
@@ -148,10 +150,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         .order('created_at', { ascending: false })
         .limit(10)) as never,
     ),
-    unwrapMaybe<{ status: string; go_live_at: string | null; delivery_due_at: string | null }>(
+    unwrapMaybe<{ status: string; go_live_at: string | null; due_at: string | null }>(
       (await db
         .from('projects')
-        .select('status, go_live_at, delivery_due_at')
+        .select('status, go_live_at, due_at')
         .eq('site_id', site.id)
         .maybeSingle()) as never,
     ),
@@ -183,6 +185,35 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   ]);
 
   const [pageCount, unreadCount, paidOrders] = counters;
+
+  // Qui a acces a ce site : les clients (comptes sans role plateforme) et,
+  // eventuellement, la personne connectee si elle a cree le site.
+  const members = unwrapList<{
+    user_id: string;
+    role: string;
+    profiles: {
+      email: string;
+      first_name: string | null;
+      last_name: string | null;
+      platform_role: string | null;
+    } | null;
+  }>(
+    (await db
+      .from('organization_members')
+      .select(
+        'user_id, role, profiles!organization_members_user_id_fkey ( email, first_name, last_name, platform_role )',
+      )
+      .eq('organization_id', site.organization_id)) as never,
+  );
+  const clients: SiteClientView[] = members
+    .filter((member) => member.profiles && !member.profiles.platform_role)
+    .map((member) => ({
+      email: member.profiles?.email ?? '',
+      name:
+        [member.profiles?.first_name, member.profiles?.last_name].filter(Boolean).join(' ') || null,
+      role: member.role,
+    }));
+  const isMember = members.some((member) => member.user_id === session.user.id);
   const state = STATUS_TONES[site.status] ?? {
     tone: 'neutral' as StatusTone,
     label: site.status,
@@ -281,7 +312,18 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         />
       </div>
 
-      <InterveneForm organizationId={site.organization_id} siteId={site.id} />
+      <SiteDelivery
+        siteId={site.id}
+        siteName={site.name}
+        deliveredLabel={site.delivered_at ? DATE.format(new Date(site.delivered_at)) : null}
+        clients={clients}
+        isMember={isMember}
+        canDeliver={canAct}
+      />
+
+      {site.delivered_at ? (
+        <InterveneForm organizationId={site.organization_id} siteId={site.id} />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <Panel level={1} padding="lg">
@@ -299,7 +341,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               {
                 term: 'Projet',
                 description: project
-                  ? `${project.status}${project.delivery_due_at ? ` · livraison prévue ${DATE.format(new Date(project.delivery_due_at))}` : ''}`
+                  ? `${project.status}${project.due_at ? ` · livraison prévue ${DATE.format(new Date(project.due_at))}` : ''}`
                   : 'Aucun projet de suivi',
               },
               {

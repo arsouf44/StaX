@@ -64,6 +64,10 @@ alter table public.content_reports enable row level security;
 create policy content_reports_select on public.content_reports
   for select to authenticated using (app.is_platform_staff());
 
+-- Supabase accorde par defaut tous les droits sur une nouvelle table a `anon`
+-- et `authenticated`. Le RLS ferme deja l'ecriture ; on retire en plus le
+-- privilege lui-meme, pour ne laisser que la lecture filtree ci-dessus.
+revoke all on table public.content_reports from anon, authenticated;
 grant select on table public.content_reports to authenticated;
 
 -- -----------------------------------------------------------------------------

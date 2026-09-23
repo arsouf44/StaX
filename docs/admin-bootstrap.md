@@ -65,9 +65,12 @@ Attribution depuis le back-office, par un `platform_owner` uniquement.
 
 ## Compte interne StaX (sites sans paiement)
 
-Un compte interne peut créer **autant de sites qu’il veut, sur n’importe quelle
-offre et n’importe quel métier, sans jamais payer**. Il sert à l’équipe (sites
-de démonstration, sites offerts, comptes de test commerciaux).
+Un compte interne peut commander **autant de sites qu’il veut, sur n’importe
+quelle offre et n’importe quel métier, sans jamais payer**. Il sert à l’équipe
+(sites offerts, comptes de test commerciaux). Après la commande, il suit
+**exactement le parcours d’un client** : le site est construit par l’équipe
+StaX, puis confié au compte depuis l’administration (voir « Construire puis
+confier un site » ci-dessous).
 
 ### Ce qui fait le privilège — et ce qui ne le fait pas
 
@@ -80,9 +83,8 @@ protégé par le déclencheur `app.guard_account_privileges`. Aucun test du type
 La commande sans paiement passe par `app.create_internal_order`, qui **vérifie
 en base** que la personne connectée est un compte interne exonéré, puis crée
 dans la même transaction : l’organisation, une commande `internal` à 0 € (prix
-catalogue intégralement remis, ligne `internal_waiver`), le site sur l’offre
-choisie, le projet, les pages, sections et formulaires du métier, l’adresse
-`<sous-domaine>.sites.stax.fr`, et une trace d’audit
+catalogue intégralement remis, ligne `internal_waiver`), un site **vide** sur
+l’offre choisie, non confié, le projet de suivi, et une trace d’audit
 (`order.internal_created`). Aucun passage par Stripe, aucun paiement ni créance
 fictifs. Une commande interne ne peut jamais basculer en « payée ».
 
@@ -133,3 +135,36 @@ service, c’est-à-dire un accès à l’infrastructure.
 C’est la raison pour laquelle il faut **au moins deux comptes `platform_owner`**,
 détenus par deux personnes différentes, avec leurs codes de secours conservés
 séparément.
+
+---
+
+## Construire puis confier un site
+
+StaX conçoit et construit le site de chaque client, de zéro, puis le lui
+confie. Tant qu’un site n’est pas confié (`sites.delivered_at` vide), le
+client suit son projet et ne peut **ni voir ni modifier** le site : la base le
+refuse (`app.site_can`), l’espace client affiche « Votre site est en cours de
+création ». L’équipe StaX garde la main sur le site en permanence.
+
+1. **Le site existe** : soit il vient d’une commande (payée ou interne) — un
+   site vide est créé avec la commande — soit on le crée depuis
+   **Administration → Sites → Créer un site** (nom, métier, offre, ville).
+   Dans ce second cas, la personne qui le crée devient propriétaire de
+   l’organisation du site.
+2. **Construire** : sur la fiche du site, **Construire le site** ouvre
+   l’éditeur. Pour un site non confié, c’est une session de construction
+   (motif pré-rempli, jusqu’à 8 heures), tracée comme une intervention. Un site
+   vide propose de partir d’une **page vierge** (seules les pages légales
+   obligatoires sont ajoutées) ou du modèle du métier.
+3. **Confier** : sur la fiche du site, **Confier le site** avec l’adresse
+   e-mail du compte client (facultative si le client est déjà rattaché, par
+   exemple parce qu’il a commandé). Le compte devient membre de l’organisation
+   avec le rôle choisi, le projet passe « En attente de votre validation » et le
+   client est prévenu dans son espace. Une adresse sans compte StaX est
+   refusée : utilisez alors un code d’activation (même fiche).
+4. **Reprendre** : **Reprendre le site** le remet « en construction » ; rien
+   n’est effacé, le site en ligne ne change pas.
+
+Un site déjà confié se modifie depuis l’administration par **Intervenir sur ce
+site** (motif obligatoire, 60 minutes, visible par le client), ou directement
+si l’on est membre de son organisation.

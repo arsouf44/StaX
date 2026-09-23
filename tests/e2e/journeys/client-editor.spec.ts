@@ -1,12 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   createCustomerWithPaidOrder,
+  type CustomerSite,
   fetchPublicPage,
   fillLegalIdentity,
   firstHeading,
+  resetRateLimits,
   solidPng,
   uniqueSuffix,
-  type CustomerSite,
 } from './support/stack';
 
 /**
@@ -37,6 +38,7 @@ test.beforeAll(async () => {
 });
 
 async function login(page: Page, email: string, password: string): Promise<void> {
+  await resetRateLimits();
   await page.goto('/connexion');
   await page
     .getByLabel(/e-mail/i)

@@ -29,7 +29,9 @@ export default async function TeamPage() {
   }>(
     (await db
       .from('organization_members')
-      .select('id, user_id, role, created_at, profiles ( first_name, last_name, email )')
+      .select(
+        'id, user_id, role, created_at, profiles!organization_members_user_id_fkey ( first_name, last_name, email )',
+      )
       .eq('organization_id', workspace.organization.id)
       .order('created_at', { ascending: true })
       .limit(100)) as never,

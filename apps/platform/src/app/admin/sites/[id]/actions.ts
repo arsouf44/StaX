@@ -1,13 +1,21 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { createUserClient, unwrapMaybe } from '@stax/database';
+import {
+  CONSTRUCTION_SESSION_MAX_MINUTES,
+  IMPERSONATION_COOKIE,
+  startImpersonation,
+} from '@stax/auth';
+import { createUserClient, tryCreateServiceClient, unwrapMaybe } from '@stax/database';
 import { activationCodeHint, generateActivationCode, hashActivationCode } from '@stax/security';
 import { emailSchema, optionalText, uuidSchema } from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
+import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 
 /**
  * Operations du back-office sur un site client.
@@ -228,4 +236,171 @@ export async function revokeActivationCodeAction(payload: unknown): Promise<Acti
 
   revalidatePath(`/admin/sites/${parsed.data.siteId}`);
   return { status: 'success', message: 'Code révoqué. Il ne peut plus être utilisé.' };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Construction, puis attribution au client                                   */
+/* -------------------------------------------------------------------------- */
+
+const openEditorSchema = z.object({ siteId: uuidSchema }).strict();
+
+/**
+ * Ouvre l'editeur de ce site pour la personne de l'equipe.
+ *
+ * Deux cas :
+ *  - elle est membre de l'organisation du site (elle l'a cree depuis
+ *    l'administration) : son propre espace s'ouvre sur ce site ;
+ *  - sinon, une session d'assistance est ouverte. Pour un site encore en
+ *    construction (non confie), c'est une session de construction : motif
+ *    pre-rempli, duree d'une journee de travail. Un site deja confie passe par
+ *    le formulaire « Intervenir », motif saisi et duree courte.
+ */
+export async function openSiteEditorAction(payload: unknown): Promise<ActionState> {
+  const { session } = await requireAdminRole('designer');
+  const parsed = openEditorSchema.safeParse(payload);
+  if (!parsed.success) return { status: 'error', message: 'Demande refusée.' };
+
+  const db = createUserClient(session.user.accessToken);
+  const site = unwrapMaybe<{
+    id: string;
+    name: string;
+    organization_id: string;
+    delivered_at: string | null;
+  }>(
+    (await db
+      .from('sites')
+      .select('id, name, organization_id, delivered_at')
+      .eq('id', parsed.data.siteId)
+      .maybeSingle()) as never,
+  );
+  if (!site) return { status: 'error', message: 'Ce site est introuvable.' };
+
+  const membership = unwrapMaybe<{ role: string }>(
+    (await db
+      .from('organization_members')
+      .select('role')
+      .eq('organization_id', site.organization_id)
+      .eq('user_id', session.user.id)
+      .maybeSingle()) as never,
+  );
+
+  const store = await cookies();
+  const cookieOptions = { httpOnly: true, secure: true, sameSite: 'lax' as const, path: '/' };
+
+  if (membership) {
+    store.delete(IMPERSONATION_COOKIE);
+    store.set(ORG_COOKIE, site.organization_id, { ...cookieOptions, maxAge: 60 * 60 * 24 * 180 });
+    store.set(SITE_COOKIE, site.id, { ...cookieOptions, maxAge: 60 * 60 * 24 * 180 });
+    redirect('/app/editeur');
+  }
+
+  if (site.delivered_at) {
+    return {
+      status: 'error',
+      message:
+        'Ce site est déjà confié à son client : ouvrez l’éditeur avec « Intervenir sur ce site », motif à l’appui.',
+    };
+  }
+
+  const service = tryCreateServiceClient();
+  if (!service) {
+    return {
+      status: 'error',
+      message:
+        'L’éditeur ne peut pas être ouvert : la clé de service Supabase n’est pas configurée sur ce déploiement (voir « État des services »).',
+    };
+  }
+
+  const result = await startImpersonation(service, {
+    staffId: session.user.id,
+    organizationId: site.organization_id,
+    reason: `Construction du site « ${site.name} »`,
+    durationMinutes: CONSTRUCTION_SESSION_MAX_MINUTES,
+    construction: true,
+  });
+  if (!result.ok) return { status: 'error', message: result.error.message };
+
+  const expires = new Date(result.data.expiresAt);
+  store.set(IMPERSONATION_COOKIE, result.data.token, { ...cookieOptions, expires });
+  store.set(SITE_COOKIE, site.id, { ...cookieOptions, expires });
+  redirect('/app/editeur');
+}
+
+const deliverSchema = z
+  .object({
+    siteId: uuidSchema,
+    email: z.union([emailSchema, z.literal('')]).optional(),
+    role: z.enum(['owner', 'admin', 'editor']).default('owner'),
+  })
+  .strict();
+
+const DELIVERY_ERRORS: Record<string, string> = {
+  no_account:
+    'Aucun compte StaX n’utilise cette adresse. Demandez au client de créer son compte, ou créez-lui un code d’activation ci-dessous : il en deviendra membre en l’utilisant.',
+  no_client:
+    'Ce site n’a encore aucun client rattaché. Indiquez l’adresse e-mail du compte client à qui le confier.',
+  not_found: 'Ce site est introuvable.',
+};
+
+/** Confie le site a son client : c'est a ce moment qu'il y a acces. */
+export async function deliverSiteAction(payload: unknown): Promise<ActionState> {
+  const { session } = await requireAdminRole('platform_admin');
+  const parsed = deliverSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { status: 'error', message: 'Vérifiez l’adresse e-mail du client.' };
+  }
+
+  const guard = await guardAction({ limit: 'adminSensitive', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
+
+  const db = createUserClient(session.user.accessToken);
+  const { data, error } = await db.rpc('deliver_site', {
+    p_site: parsed.data.siteId,
+    p_email: parsed.data.email ? parsed.data.email.trim().toLowerCase() : null,
+    p_role: parsed.data.role,
+  });
+  if (error) {
+    console.error('[stax:delivery] refus', error.code, error.message);
+    return { status: 'error', message: explain(error.code, error.message) };
+  }
+
+  const result = (data ?? {}) as { ok?: boolean; code?: string };
+  if (!result.ok) {
+    return {
+      status: 'error',
+      message: DELIVERY_ERRORS[result.code ?? ''] ?? 'Le site n’a pas pu être confié.',
+    };
+  }
+
+  revalidatePath(`/admin/sites/${parsed.data.siteId}`);
+  revalidatePath('/admin/sites');
+  return {
+    status: 'success',
+    message:
+      'Site confié. Le client y a désormais accès depuis son espace, et il a été prévenu. Vous gardez la main.',
+  };
+}
+
+const withdrawSchema = z.object({ siteId: uuidSchema }).strict();
+
+/** Reprend un site confie : le client n'y a plus acces en modification. */
+export async function withdrawSiteAction(payload: unknown): Promise<ActionState> {
+  const { session } = await requireAdminRole('platform_admin');
+  const parsed = withdrawSchema.safeParse(payload);
+  if (!parsed.success) return { status: 'error', message: 'Demande refusée.' };
+
+  const guard = await guardAction({ limit: 'adminSensitive', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
+
+  const db = createUserClient(session.user.accessToken);
+  const { error } = await db.rpc('withdraw_site', { p_site: parsed.data.siteId });
+  if (error) return { status: 'error', message: explain(error.code, error.message) };
+
+  revalidatePath(`/admin/sites/${parsed.data.siteId}`);
+  revalidatePath('/admin/sites');
+  return {
+    status: 'success',
+    message:
+      'Site repris : il est de nouveau en construction, le client ne peut plus le modifier. Rien n’a été effacé.',
+  };
 }

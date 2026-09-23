@@ -1,17 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   createCustomerWithPaidOrder,
+  createStaffAccount,
   fetchPublicPage,
   fillLegalIdentity,
   firstHeading,
   provisionInternalAccount,
+  resetRateLimits,
   serviceClient,
   uniqueSuffix,
   userClient,
 } from './support/stack';
 
 /**
- * Compte interne StaX : un site Ultra Premium, sans aucun paiement.
+ * Compte interne StaX : une commande Ultra Premium sans aucun paiement, qui
+ * suit ensuite EXACTEMENT le parcours d'un client : StaX construit le site de
+ * zero depuis l'administration, puis le confie a ce compte, qui n'y a acces
+ * qu'a partir de ce moment. L'equipe garde la main.
  *
  * Le compte est cree par le VRAI script de provisionnement
  * (`pnpm internal:bootstrap`), avec un mot de passe jetable lu dans
@@ -34,6 +39,7 @@ test.beforeAll(() => {
 });
 
 async function login(page: Page): Promise<void> {
+  await resetRateLimits();
   await page.goto('/connexion');
   await page
     .getByLabel(/e-mail/i)
@@ -50,8 +56,9 @@ async function login(page: Page): Promise<void> {
   await page.waitForURL(/\/(app|bienvenue)/);
 }
 
-test('compte interne : site Ultra Premium créé sans paiement, modifié et publié', async ({
+test('compte interne : commande sans paiement, site construit par StaX puis confié', async ({
   page,
+  browser,
 }) => {
   await test.step('connexion du compte interne', async () => {
     await login(page);
@@ -92,41 +99,42 @@ test('compte interne : site Ultra Premium créé sans paiement, modifié et publ
     await page.waitForURL(/\/commander\/recapitulatif/);
   });
 
-  await test.step('récapitulatif : aucun paiement demandé', async () => {
+  await test.step('récapitulatif : aucun paiement, et StaX construit le site', async () => {
     const main = page.locator('main');
     await expect(main).toContainText('Compte interne StaX');
     await expect(main).toContainText('Aucun paiement');
     await expect(main).toContainText('0,00 €');
-    await expect(main).not.toContainText(/avant de régler|après le paiement/);
+    await expect(main).toContainText('construit le site de A à Z');
+    await expect(main).toContainText('que lorsque l’administration le lui confie');
+    await expect(main).not.toContainText(/créé tout de suite|avant de régler|après le paiement/);
     await expect(page.getByRole('button', { name: /payer|paiement sécurisé/i })).toHaveCount(0);
   });
 
-  await test.step('création immédiate du site, sans passer par Stripe', async () => {
+  await test.step('commande enregistrée sans passer par Stripe', async () => {
     const stripeRequests: string[] = [];
     page.on('request', (request) => {
       if (/stripe\.com/.test(request.url())) stripeRequests.push(request.url());
     });
-    await page.getByLabel(/Je confirme la création/).check();
-    await page.getByRole('button', { name: 'Créer le site maintenant' }).click();
+    await page.getByLabel(/Je confirme cette commande interne/).check();
+    await page.getByRole('button', { name: 'Enregistrer la commande' }).click();
     await page.waitForURL(/\/app\?commande=interne/, { timeout: 30_000 });
-    await expect(page.locator('main')).toContainText('Site créé, sans paiement');
-    await expect(page.getByTestId('my-site')).toContainText(HOSTNAME);
+    await expect(page.locator('main')).toContainText('Commande interne enregistrée');
+    await expect(page.getByTestId('site-under-construction')).toBeVisible();
     expect(stripeRequests).toEqual([]);
   });
 
-  await test.step('en base : commande interne à 0 €, aucun encaissement, offre complète', async () => {
+  let siteId = '';
+  await test.step('en base : commande interne à 0 €, site vide, non confié', async () => {
     const admin = serviceClient();
-    const site = await admin
-      .from('site_domains')
-      .select('site_id, sites ( organization_id, plans ( slug ) )')
-      .eq('hostname', HOSTNAME)
+    const org = await admin
+      .from('organizations')
+      .select('id')
+      .eq('name', `Chez Dupont ${suffix}`)
       .single();
-    expect(site.error).toBeNull();
-    const siteId = site.data?.site_id as string;
     const order = await admin
       .from('orders')
-      .select('id, status, billing_mode, total_cents, discount_cents, setup_price_cents')
-      .eq('site_id', siteId)
+      .select('id, status, billing_mode, total_cents, discount_cents, setup_price_cents, site_id')
+      .eq('organization_id', org.data?.id ?? '')
       .single();
     expect(order.data).toMatchObject({
       status: 'internal',
@@ -134,39 +142,97 @@ test('compte interne : site Ultra Premium créé sans paiement, modifié et publ
       total_cents: 0,
     });
     expect(order.data?.discount_cents).toBe(order.data?.setup_price_cents);
+    siteId = order.data?.site_id as string;
     const payments = await admin.from('payments').select('id').eq('order_id', order.data?.id);
     expect(payments.data).toEqual([]);
-    const project = await admin.from('projects').select('id').eq('site_id', siteId);
-    expect(project.data?.length).toBe(1);
+    const pages = await admin.from('site_pages').select('id').eq('site_id', siteId);
+    expect(pages.data).toEqual([]);
+    const site = await admin.from('sites').select('delivered_at').eq('id', siteId).single();
+    expect(site.data?.delivered_at).toBeNull();
   });
 
-  await test.step('édition du site puis publication réelle', async () => {
-    await fillLegalIdentity(page, 'Atelier interne StaX');
-    await page.goto('/app');
-    await page.getByTestId('my-site').getByRole('link', { name: 'Modifier mon site' }).click();
-    await expect(page.getByTestId('visual-editor')).toBeVisible();
-    await expect(page.getByTestId('preview-viewport')).toHaveAttribute('data-loading', 'false');
-    await page.getByTestId('section-item').first().locator('button').first().click();
-    const field = page.locator('[data-field="title"] input, [data-field="title"] textarea');
-    await field.first().fill(TITLE);
-    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
+  await test.step('avant attribution, le client n’a pas accès au site', async () => {
+    await expect(page.getByRole('link', { name: 'Modifier mon site' })).toHaveCount(0);
+    await page.goto('/app/editeur');
+    await expect(page.getByTestId('site-under-construction')).toBeVisible();
+    await expect(page.getByTestId('visual-editor')).toHaveCount(0);
+  });
 
-    await page.getByTestId('open-publish').click();
-    await expect(page.getByTestId('publish-dialog')).toHaveAttribute('data-step', 'confirm', {
+  // L'administration : une personne de l'equipe StaX, dans son propre navigateur.
+  const staff = await createStaffAccount('platform_owner');
+  const staffContext = await browser.newContext();
+  const admin = await staffContext.newPage();
+
+  await test.step('StaX construit le site de zéro, depuis l’administration', async () => {
+    await resetRateLimits();
+    await admin.goto('/connexion');
+    await admin
+      .getByLabel(/e-mail/i)
+      .first()
+      .fill(staff.email);
+    await admin
+      .getByLabel(/mot de passe/i)
+      .first()
+      .fill(staff.password);
+    await admin
+      .getByRole('button', { name: /se connecter/i })
+      .first()
+      .click();
+    await admin.waitForURL(/\/(admin|app)/);
+
+    await admin.goto(`/admin/sites/${siteId}`);
+    await expect(admin.getByTestId('site-delivery')).toContainText('En construction chez StaX');
+    await admin.getByRole('button', { name: 'Construire le site' }).click();
+    await admin.waitForURL(/\/app\/editeur/, { timeout: 30_000 });
+
+    await admin.getByRole('button', { name: 'Partir d’une page vierge' }).click();
+    await expect(admin.getByTestId('visual-editor')).toBeVisible({ timeout: 30_000 });
+    await expect(admin.getByTestId('section-item')).toHaveCount(0);
+
+    await admin.getByTestId('open-section-library').click();
+    await admin.getByTestId('add-section-hero').first().click();
+    await expect(admin.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
+    const field = admin.locator('[data-field="title"] input, [data-field="title"] textarea');
+    await field.first().fill(TITLE);
+    await expect(admin.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
+
+    await fillLegalIdentity(admin, 'Chez Dupont');
+    await admin.goto('/app/editeur');
+    await admin.getByTestId('open-publish').click();
+    await expect(admin.getByTestId('publish-dialog')).toHaveAttribute('data-step', 'confirm', {
       timeout: 30_000,
     });
-    await page.getByTestId('confirm-publish').click();
-    await expect(page.getByTestId('publish-success')).toContainText('version 1', {
+    await admin.getByTestId('confirm-publish').click();
+    await expect(admin.getByTestId('publish-success')).toContainText('version 1', {
       timeout: 60_000,
     });
   });
 
-  await test.step('requête HTTP réelle : le site est en ligne', async () => {
+  await test.step('requête HTTP réelle : le site construit par StaX est en ligne', async () => {
     const live = await fetchPublicPage(HOSTNAME);
     expect(live.status).toBe(200);
     expect(live.headers['x-stax-version']).toBe('1');
     expect(firstHeading(live.body)).toBe(TITLE);
   });
+
+  await test.step('StaX confie le site au compte interne', async () => {
+    await admin.goto(`/admin/sites/${siteId}`);
+    const delivery = admin.getByTestId('site-delivery');
+    await expect(delivery).toContainText(INTERNAL_EMAIL);
+    await delivery.getByRole('button', { name: 'Confier le site' }).click();
+    await expect(delivery).toContainText('Confié au client', { timeout: 30_000 });
+  });
+
+  await test.step('le client découvre son site et le modifie', async () => {
+    await page.goto('/app');
+    await expect(page.getByTestId('site-under-construction')).toHaveCount(0);
+    await expect(page.getByTestId('my-site')).toContainText(HOSTNAME);
+    await page.getByTestId('my-site').getByRole('link', { name: 'Modifier mon site' }).click();
+    await expect(page.getByTestId('visual-editor')).toBeVisible();
+    await expect(page.getByTestId('section-item')).toHaveCount(1);
+  });
+
+  await staffContext.close();
 
   await test.step('sites illimités : une seconde commande interne, autre offre', async () => {
     const db = await userClient(account.email, account.password);
@@ -182,8 +248,6 @@ test('compte interne : site Ultra Premium créé sans paiement, modifié et publ
       p_sector_slug: 'artisanat',
       p_business_type: 'plombier',
       p_organization_name: `Plomberie ${suffix}`,
-      p_template: { pages: [] },
-      p_hostname: `plomberie-${suffix}.sites.stax.test`,
       p_details: {},
     });
     expect(second.error).toBeNull();

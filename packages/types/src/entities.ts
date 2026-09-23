@@ -224,6 +224,12 @@ export interface Site {
   suspended_at: Timestamp | null;
   suspension_reason: string | null;
   archived_at: Timestamp | null;
+  /**
+   * Date a laquelle StaX a confie le site a son client. `null` : site en
+   * construction, que seule l'equipe StaX peut modifier (verifie en base).
+   */
+  delivered_at: Timestamp | null;
+  delivered_by: UUID | null;
   created_by: UUID | null;
   created_at: Timestamp;
   updated_at: Timestamp;
