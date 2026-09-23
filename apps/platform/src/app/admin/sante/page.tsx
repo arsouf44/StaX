@@ -47,6 +47,9 @@ const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
   cloudflare_domains: 'Rattachement automatique des domaines (API Cloudflare)',
   turnstile: 'Vérification anti-robot Turnstile',
   email: 'Envoi d’e-mails transactionnels',
+  github_app: 'Application GitHub (publication dans le dépôt de chaque site)',
+  cloudflare_sites: 'API Cloudflare des sites (suivi réel des déploiements)',
+  cron: 'Tâches de fond planifiées (CRON_SECRET)',
 };
 
 const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });

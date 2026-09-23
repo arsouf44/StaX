@@ -1,0 +1,121 @@
+{
+  "$schema": "https://stax.fr/schemas/stax.manifest.v1.json",
+  "contract": 1,
+  "site": {
+    "name": "Boulangerie Martin",
+    "locales": ["fr", "en"],
+    "defaultLocale": "fr"
+  },
+  "content": {
+    "file": "src/content/stax.content.json",
+    "mediaDir": "public/media/stax",
+    "mediaUrl": "/media/stax"
+  },
+  "preview": { "bridge": true },
+  "globals": [
+    {
+      "id": "coordonnees",
+      "label": "Coordonnées",
+      "fields": [
+        { "id": "telephone", "label": "Téléphone", "type": "phone", "required": true },
+        { "id": "email", "label": "E-mail", "type": "email" },
+        { "id": "adresse", "label": "Adresse", "type": "address" },
+        { "id": "horaires", "label": "Horaires", "type": "opening_hours" }
+      ]
+    },
+    {
+      "id": "entete",
+      "label": "En-tête",
+      "fields": [{ "id": "menu", "label": "Menu", "type": "navigation", "maxItems": 6 }]
+    }
+  ],
+  "pages": [
+    {
+      "id": "accueil",
+      "label": "Accueil",
+      "path": "/",
+      "seo": true,
+      "sections": [
+        {
+          "id": "hero",
+          "label": "Bandeau d’accueil",
+          "fields": [
+            { "id": "titre", "label": "Titre", "type": "text", "required": true, "maxLength": 80 },
+            { "id": "texte", "label": "Texte", "type": "richtext", "blocks": ["paragraph"] },
+            { "id": "image", "label": "Photo", "type": "image", "aspectRatio": "16:9" },
+            { "id": "bouton", "label": "Bouton", "type": "link" }
+          ]
+        },
+        {
+          "id": "specialites",
+          "label": "Nos spécialités",
+          "fields": [
+            {
+              "id": "produits",
+              "label": "Spécialités",
+              "type": "repeater",
+              "itemLabel": "Spécialité",
+              "max": 8,
+              "localized": true,
+              "fields": [
+                { "id": "nom", "label": "Nom", "type": "text", "required": true, "maxLength": 60 },
+                { "id": "prix", "label": "Prix", "type": "number", "min": 0, "unit": "€" },
+                { "id": "photo", "label": "Photo", "type": "image" }
+              ]
+            },
+            { "id": "galerie", "label": "Galerie", "type": "gallery", "max": 12 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "path": "/contact",
+      "seo": true,
+      "sections": [
+        {
+          "id": "intro",
+          "label": "Introduction",
+          "fields": [{ "id": "texte", "label": "Texte", "type": "richtext" }]
+        }
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "actualites",
+      "label": "Actualités",
+      "itemLabel": "Article",
+      "kind": "articles",
+      "route": "/actualites/{slug}",
+      "slugFrom": "titre",
+      "fields": [
+        { "id": "titre", "label": "Titre", "type": "text", "required": true },
+        { "id": "date", "label": "Date", "type": "date", "required": true },
+        { "id": "corps", "label": "Article", "type": "richtext" },
+        { "id": "image", "label": "Image", "type": "image" }
+      ]
+    }
+  ],
+  "forms": [
+    {
+      "slug": "contact",
+      "label": "Contact",
+      "kind": "contact",
+      "fields": [
+        { "name": "nom", "label": "Nom", "type": "text", "required": true },
+        { "name": "email", "label": "E-mail", "type": "email", "required": true },
+        { "name": "message", "label": "Message", "type": "textarea", "required": true },
+        {
+          "name": "rgpd",
+          "label": "J’accepte d’être recontacté",
+          "type": "consent",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "modules": ["contact"],
+  "integrations": { "analytics": true }
+}

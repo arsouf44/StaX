@@ -2847,6 +2847,93 @@ begin
 end;
 $$;
 
+\echo '--- Confirmation tardive d''un deploiement, droits des modules ---'
+do $$
+declare
+  staff     uuid := (select v from t.fixtures where k='staff');
+  claire    uuid := (select v from t.fixtures where k='claire');
+  v_site_x  uuid := (select v from t.fixtures where k='site_x');
+  v_hosting uuid;
+  v_result  jsonb;
+  v_rev     int;
+  v_v6 uuid; v_v7 uuid; v_v8 uuid;
+  v_before  uuid;
+  sha6 text := repeat('6', 40);
+  sha7 text := repeat('7', 40);
+  sha8 text := repeat('8', 40);
+  v_site_y  uuid;
+  v_essentiel uuid := (select id from public.plans where slug = 'essentiel' and is_active and valid_until is null);
+begin
+  perform set_config('request.jwt.claims', null, true);
+  v_hosting := (select id from public.site_hosting where site_id = v_site_x and status = 'connected');
+  v_before := (select production_release_id from public.sites where id = v_site_x);
+
+  -- 1. Delai depasse : la version est declaree en echec, la production ne bouge pas.
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_v6 := (t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev)) ->> 'releaseId')::uuid;
+  perform set_config('request.jwt.claims', null, true);
+  perform public.claim_site_release(v_v6);
+  perform public.record_release_commit(v_v6, null, sha6, 'https://github.com/x/y/commit/' || sha6, 'main');
+  perform public.fail_site_release(v_v6, 'timeout', 'deployment_timeout',
+    'Cloudflare n''a pas confirme le deploiement dans le delai.');
+  perform t.assert((select status from public.site_releases where id = v_v6) = 'failed'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_before,
+    'Sans confirmation dans le delai : echec affiche, la production ne change pas');
+
+  -- 2. Cloudflare confirme ensuite CE commit : la version est bien en ligne.
+  perform public.record_site_deployment(v_hosting, 'dep-6', 'production', 'success', sha6, 'main');
+  perform t.assert((select status from public.site_releases where id = v_v6) = 'published'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v6
+                   and (select error_stage from public.site_releases where id = v_v6) is null,
+    'Confirmation tardive de Cloudflare : la version devient publiee (etat reel du site)');
+
+  -- 3. Une confirmation tardive ne passe jamais devant une version plus recente.
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_v7 := (t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev)) ->> 'releaseId')::uuid;
+  perform set_config('request.jwt.claims', null, true);
+  perform public.claim_site_release(v_v7);
+  perform public.record_release_commit(v_v7, sha6, sha7, 'https://github.com/x/y/commit/' || sha7, 'main');
+  perform public.fail_site_release(v_v7, 'timeout', 'deployment_timeout', 'Delai depasse.');
+  v_v8 := (t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev)) ->> 'releaseId')::uuid;
+  perform set_config('request.jwt.claims', null, true);
+  perform public.claim_site_release(v_v8);
+  perform public.record_release_commit(v_v8, sha7, sha8, 'https://github.com/x/y/commit/' || sha8, 'main');
+  perform public.record_site_deployment(v_hosting, 'dep-8', 'production', 'success', sha8, 'main');
+  perform public.record_site_deployment(v_hosting, 'dep-7', 'production', 'success', sha7, 'main');
+  perform t.assert((select status from public.site_releases where id = v_v7) = 'failed'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_v8,
+    'Une confirmation tardive ne remplace jamais une version plus recente');
+
+  -- 4. Une version en echec pour une autre raison ne se « rattrape » pas.
+  perform t.assert(not exists (
+      select 1 from public.site_releases
+       where site_id = v_site_x and status = 'failed' and error_stage = 'cloudflare'
+         and published_at is not null),
+    'Un echec Cloudflare reste un echec');
+
+  -- 5. Offre Essentiel : un contrat qui utilise les reservations et deux
+  --    langues ne peut pas etre livre.
+  v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
+    'Cabinet Z', 'coiffeur', v_essentiel, 'Nantes'));
+  v_site_y := (v_result ->> 'siteId')::uuid;
+  v_result := t.json_as(staff, format(
+    'public.record_site_manifest(%L::uuid, %L, %L, 1, %L::jsonb, %L, %L, %L::jsonb, %L::jsonb, %L::jsonb, true)',
+    v_site_y, sha6, 'stax.manifest.json', '{"contract":1,"site":{"name":"Cabinet Z"}}',
+    'hash-z', 'valid', '[]', '[]',
+    '{"pages":3,"locales":2,"forms":1,"collections":0,"advancedForms":false,"modules":["contact","booking"]}'));
+  v_result := t.json_as(staff, format('public.delivery_readiness(%L::uuid)', v_site_y));
+  perform t.assert(
+    exists (select 1 from jsonb_array_elements(v_result -> 'checks') c
+             where c ->> 'key' = 'plan' and c ->> 'status' = 'failed'
+               and (c -> 'evidence' -> 'problems')::text like '%booking%'
+               and (c -> 'evidence' -> 'problems')::text like '%multilingue%'),
+    'Checklist : un module ou une langue hors offre bloque la livraison');
+end;
+$$;
+
 -- -----------------------------------------------------------------------------
 --  Maintenance : elle commence a la livraison, jamais a la commande
 -- -----------------------------------------------------------------------------

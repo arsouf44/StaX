@@ -95,6 +95,9 @@ importers:
       '@stax/security':
         specifier: workspace:*
         version: link:../../packages/security
+      '@stax/site-contract':
+        specifier: workspace:*
+        version: link:../../packages/site-contract
       '@stax/site-data':
         specifier: workspace:*
         version: link:../../packages/site-data
@@ -391,6 +394,22 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/site-contract:
+    dependencies:
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@stax/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: 22.19.1
+        version: 22.19.1
       typescript:
         specifier: 5.9.3
         version: 5.9.3
