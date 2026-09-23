@@ -93,7 +93,7 @@ export function Hero({
               </ButtonLink>
             </div>
             <p className="mt-4 text-xs text-[var(--muted)]">
-              {entryPrice ? `${entryPrice} · ` : ''}Sans engagement de durée
+              {entryPrice ? `${entryPrice} · ` : ''}Maintenance annuelle résiliable en ligne
             </p>
           </Reveal>
         </div>

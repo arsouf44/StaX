@@ -2177,6 +2177,121 @@ begin
 end;
 $$;
 
+\echo '--- Signalements de contenus (DSA) ---'
+do $$
+declare
+  alice  uuid := (select v from t.fixtures where k='alice');
+  staff  uuid := (select v from t.fixtures where k='staff');
+  org_a  uuid := (select v from t.fixtures where k='org_a');
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  v_result jsonb;
+  v_report uuid;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  insert into public.site_domains (site_id, organization_id, hostname, status)
+  values (site_a, org_a, 'signalement-a.test', 'active')
+  on conflict do nothing;
+
+  perform t.assert(t.denied_as(alice,
+      'select public.record_content_report(''https://x.test/'', ''other'', ''un texte assez long pour passer'', ''A'', ''a@b.test'', true)'),
+    'Un utilisateur connecte ne peut pas ecrire directement un signalement');
+
+  v_result := public.record_content_report(
+    'https://signalement-a.test/page', 'defamation',
+    'Cette page contient des propos diffamatoires a mon egard.', 'Jean Test', 'jean@exemple.test', true);
+  perform t.assert((v_result->>'ok')::boolean and (v_result->>'hosted')::boolean,
+    'Un signalement est enregistre et rattache au site heberge');
+
+  v_result := public.record_content_report(
+    'https://signalement-a.test/page', 'defamation',
+    'Cette page contient des propos diffamatoires a mon egard.', null, null, true);
+  perform t.assert(not (v_result->>'ok')::boolean,
+    'Hors abus sur mineurs, un signalement anonyme est refuse');
+
+  v_result := public.record_content_report(
+    'https://signalement-a.test/page', 'child_abuse',
+    'Contenu pedopornographique visible sur cette page du site.', null, null, true);
+  perform t.assert((v_result->>'ok')::boolean,
+    'Un signalement d''abus sur mineurs peut etre anonyme');
+
+  v_result := public.record_content_report(
+    'https://signalement-a.test/page', 'fraud',
+    'Cette page contient une arnaque evidente aux visiteurs.', 'Jean Test', 'jean@exemple.test', false);
+  perform t.assert(not (v_result->>'ok')::boolean,
+    'La declaration de bonne foi est obligatoire');
+
+  perform t.assert(t.count_as(alice, 'select 1 from public.content_reports') = 0,
+    'Le commercant ne lit pas les signalements (ni l''identite de leurs auteurs)');
+  perform t.assert(t.count_as(staff, 'select 1 from public.content_reports') >= 2,
+    'L''equipe StaX lit les signalements');
+
+  select id into v_report from public.content_reports where category = 'defamation' limit 1;
+  perform t.assert(t.denied_as(alice, format(
+      'select public.decide_content_report(%L::uuid, ''rejected'', ''Aucun contenu illicite constate'')', v_report)),
+    'Le commercant ne decide pas d''un signalement');
+  perform t.assert(t.denied_as(staff, format(
+      'select public.decide_content_report(%L::uuid, ''actioned'', ''court'')', v_report)),
+    'Une decision non motivee est refusee');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', staff, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.decide_content_report(v_report, 'actioned',
+    'Contenu retire : propos diffamatoires caracterises.');
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(exists (select 1 from public.content_reports
+                            where id = v_report and status = 'actioned' and decided_by = staff),
+    'La decision motivee est enregistree avec son auteur');
+end;
+$$;
+
+\echo '--- Durees de conservation ---'
+do $$
+declare
+  alice uuid := (select v from t.fixtures where k='alice');
+  v_failed boolean := false;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  insert into public.audit_logs (action, created_at) values
+    ('test.retention_old', now() - interval '4 years'),
+    ('test.retention_recent', now() - interval '2 years');
+  insert into public.security_events (kind, created_at) values
+    ('test.retention_old', now() - interval '13 months'),
+    ('test.retention_recent', now() - interval '1 month');
+
+  perform t.assert(t.denied_as(alice, 'select public.apply_retention()'),
+    'Un utilisateur ne peut pas declencher la purge');
+
+  begin
+    delete from public.audit_logs where action = 'test.retention_recent';
+  exception when others then
+    v_failed := true;
+  end;
+  perform t.assert(v_failed, 'Hors purge, le journal d''audit reste impossible a effacer');
+
+  perform public.apply_retention();
+
+  perform t.assert(not exists (select 1 from public.audit_logs where action = 'test.retention_old'),
+    'Le journal d''audit de plus de 3 ans est purge');
+  perform t.assert(exists (select 1 from public.audit_logs where action = 'test.retention_recent'),
+    'Le journal d''audit de moins de 3 ans est conserve');
+  perform t.assert(not exists (select 1 from public.security_events where kind = 'test.retention_old'),
+    'Les journaux de securite de plus de 12 mois sont purges');
+  perform t.assert(exists (select 1 from public.security_events where kind = 'test.retention_recent'),
+    'Les journaux de securite recents sont conserves');
+
+  v_failed := false;
+  begin
+    delete from public.audit_logs where action = 'test.retention_recent';
+  exception when others then
+    v_failed := true;
+  end;
+  perform t.assert(v_failed, 'Apres la purge, le journal redevient immuable');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

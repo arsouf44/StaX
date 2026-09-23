@@ -92,10 +92,11 @@ export default async function PricingPage() {
               </p>
             </Panel>
             <Panel level={1} padding="lg">
-              <h2 className="text-base font-medium">Sans engagement de durée</h2>
+              <h2 className="text-base font-medium">Résiliable en ligne, en quelques clics</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Vous résiliez depuis votre espace, la maintenance prend fin à l’échéance en cours.
-                Vos données restent exportables après la résiliation.
+                La maintenance est annuelle et se reconduit chaque année. Vous résiliez depuis votre
+                espace quand vous voulez : elle prend fin à l’échéance en cours, et nous vous
+                rappelons la date de reconduction à l’avance. Vos données restent exportables.
               </p>
             </Panel>
           </div>

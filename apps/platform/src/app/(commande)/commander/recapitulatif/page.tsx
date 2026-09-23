@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { resolveBusiness } from '@stax/business';
-import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
+import {
+  formatMaintenance,
+  formatMoney,
+  grossFromNet,
+  maintenanceTrialDays,
+  vatFromNet,
+} from '@stax/payments';
 import { refundPolicyConfig, sitesDomain } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
@@ -26,12 +32,15 @@ const DOMAIN_LABELS: Record<string, string> = {
   none: 'À définir ensemble',
 };
 
-const NEXT_STEPS = [
-  'Votre espace s’ouvre immédiatement et vous pouvez suivre l’avancement.',
-  'Nous construisons une première version à partir de vos informations.',
-  'Vous la relisez en aperçu privé et demandez vos corrections.',
-  'Nous publions après votre accord explicite. La maintenance ne commence qu’à ce moment-là.',
-];
+function nextSteps(trialDays: number): string[] {
+  return [
+    'Votre espace s’ouvre immédiatement et vous pouvez suivre l’avancement.',
+    'Nous construisons une première version à partir de vos informations.',
+    'Vous la relisez en aperçu privé et demandez vos corrections.',
+    'Nous publions après votre accord explicite. Votre première année de maintenance commence ' +
+      `à la mise en ligne, et au plus tard ${trialDays} jours après la commande.`,
+  ];
+}
 
 const INTERNAL_NEXT_STEPS = [
   'Le site est créé tout de suite, avec ses pages, ses sections et son formulaire de contact.',
@@ -111,11 +120,13 @@ export default async function OrderSummaryPage() {
               {internal ? 'Ce qui se passe ensuite' : 'Ce qui se passe après le paiement'}
             </h2>
             <ol className="mt-4 space-y-3 text-sm text-[var(--foreground-muted)]">
-              {(internal ? INTERNAL_NEXT_STEPS : NEXT_STEPS).map((step, index) => (
-                <li key={step}>
-                  <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
-                </li>
-              ))}
+              {(internal ? INTERNAL_NEXT_STEPS : nextSteps(maintenanceTrialDays())).map(
+                (step, index) => (
+                  <li key={step}>
+                    <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
+                  </li>
+                ),
+              )}
             </ol>
           </Panel>
         </div>

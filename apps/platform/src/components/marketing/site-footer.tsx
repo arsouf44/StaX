@@ -83,6 +83,16 @@ export function SiteFooter({ sectors }: { sectors?: Array<{ slug: string; label:
                 </Link>
               </li>
             ))}
+            <li>
+              {/* Fonction de resiliation accessible depuis toutes les pages
+                  (article L215-1-1 du Code de la consommation). */}
+              <Link
+                href="/app/abonnement"
+                className="text-xs text-[var(--muted)] transition-colors hover:text-[var(--foreground-muted)]"
+              >
+                Résilier votre contrat
+              </Link>
+            </li>
           </ul>
 
           <div className="mt-6 flex flex-col gap-3 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">

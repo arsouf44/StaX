@@ -11,7 +11,7 @@ import { availableSiteHostname, buildSitePlan } from '~/lib/site-provisioning';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 import { getSession } from '~/lib/session';
 import { guardAction } from '~/lib/action-guard';
-import { TERMS_VERSION } from '~/content/legal';
+import { DPA_VERSION, TERMS_VERSION } from '~/content/legal';
 
 /**
  * Creation de la commande et ouverture du paiement.
@@ -44,11 +44,23 @@ export async function startCheckoutAction(
   _previous: CheckoutState,
   formData: FormData,
 ): Promise<CheckoutState> {
+  const professional = formData.get('professionalUse');
+  if (professional !== 'on' && professional !== 'true') {
+    return {
+      status: 'error',
+      message:
+        'Nos offres sont réservées aux professionnels et aux associations : confirmez que vous ' +
+        'commandez pour votre activité.',
+    };
+  }
+
   const accepted = formData.get('acceptTerms');
   if (accepted !== 'on' && accepted !== 'true') {
     return {
       status: 'error',
-      message: 'Vous devez accepter les conditions générales de vente pour commander.',
+      message:
+        'Vous devez accepter les conditions générales de vente et l’accord de traitement des ' +
+        'données pour commander.',
     };
   }
 
@@ -159,6 +171,9 @@ export async function startCheckoutAction(
       contactEmail: draft.contactEmail ?? null,
       contactPhone: draft.contactPhone ?? null,
       ...draft.answers,
+      // Preuve de l'acceptation (article 1127-2 du Code civil) : versions des
+      // documents acceptes et declaration d'achat professionnel.
+      acceptedDocuments: { cgv: TERMS_VERSION, dpa: DPA_VERSION, professionalUse: true },
     },
     p_requested_domain: draft.domainHostname ?? draft.subdomain ?? null,
     p_domain_handling: draft.domainHandling ?? 'none',

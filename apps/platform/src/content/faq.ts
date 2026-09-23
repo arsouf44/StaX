@@ -59,7 +59,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'tarifs',
     question: 'Puis-je arrêter la maintenance ?',
     answer:
-      'Oui, sans engagement de durée. Vous résiliez depuis votre espace, la maintenance prend fin à l’échéance en cours. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vos données ne sont pas supprimées à l’échéance : vous pouvez les exporter ou réactiver la maintenance.',
+      'Oui, à tout moment, en ligne depuis votre espace, sans justification. La maintenance est annuelle et se reconduit chaque année : la résiliation prend effet à l’échéance annuelle en cours, et nous vous rappelons la date de reconduction un à trois mois avant. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vos données ne sont pas supprimées à l’échéance : vous pouvez les exporter ou réactiver la maintenance.',
   },
   {
     category: 'tarifs',

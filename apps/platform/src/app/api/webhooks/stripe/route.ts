@@ -1,5 +1,8 @@
+import { platformUrl } from '@stax/config';
 import { createServiceClient } from '@stax/database';
+import { renewalReminderEmail, sendEmail } from '@stax/emails';
 import {
+  formatMoney,
   redactEventPayload,
   verifyWebhook,
   WebhookVerificationError,
@@ -133,6 +136,10 @@ async function handleEvent(db: Db, event: Stripe.Event): Promise<void> {
       await onInvoiceEvent(db, event.data.object as Stripe.Invoice);
       return;
 
+    case 'invoice.upcoming':
+      await onUpcomingInvoice(db, event.data.object as Stripe.Invoice);
+      return;
+
     case 'charge.refunded':
       await onChargeRefunded(db, event.data.object as Stripe.Charge);
       return;
@@ -256,6 +263,67 @@ async function onInvoiceEvent(db: Db, invoice: Stripe.Invoice): Promise<void> {
     p_period_end: toIso(invoice.period_end),
   });
   if (error) throw new Error(error.message);
+}
+
+const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
+
+/**
+ * Rappel de reconduction de la maintenance annuelle.
+ *
+ * Obligatoire envers un client non professionnel (article L215-1 du Code de la
+ * consommation) : sans lui, il pourrait resilier a tout moment apres la
+ * reconduction. Nous l'envoyons a tous les clients. Une maintenance deja
+ * resiliee ne recoit rien : elle ne sera pas reconduite.
+ */
+async function onUpcomingInvoice(db: Db, invoice: Stripe.Invoice): Promise<void> {
+  const subscriptionId =
+    asString((invoice as unknown as { subscription?: unknown }).subscription) ??
+    asString(invoice.lines?.data?.[0]?.subscription);
+  if (!subscriptionId) return;
+
+  const { data: subscription } = await db
+    .from('subscriptions')
+    .select('organization_id, billing_interval, current_period_end, cancel_at_period_end, status')
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle();
+  const row = subscription as {
+    organization_id: string;
+    billing_interval: string;
+    current_period_end: string | null;
+    cancel_at_period_end: boolean;
+    status: string;
+  } | null;
+  if (!row || row.cancel_at_period_end || row.billing_interval !== 'year') return;
+  if (row.status === 'canceled' || row.status === 'incomplete_expired') return;
+
+  const renewal =
+    row.current_period_end ?? toIso(invoice.next_payment_attempt) ?? toIso(invoice.period_end);
+  if (!renewal) return;
+
+  const { data: member } = await db
+    .from('organization_members')
+    .select('profiles ( email, first_name )')
+    .eq('organization_id', row.organization_id)
+    .eq('role', 'owner')
+    .limit(1)
+    .maybeSingle();
+  const profile = (
+    member as { profiles: { email: string; first_name: string | null } | null } | null
+  )?.profiles;
+  if (!profile?.email) return;
+
+  const result = await sendEmail(
+    renewalReminderEmail({
+      to: profile.email,
+      firstName: profile.first_name,
+      renewalDate: LONG_DATE.format(new Date(renewal)),
+      amount: formatMoney(invoice.amount_due ?? 0, 'EUR') + ' TTC',
+      cancelUrl: `${platformUrl()}/app/abonnement`,
+    }),
+    { db, organizationId: row.organization_id },
+  );
+  // Un echec d'envoi est rejoue : le rappel est une obligation, pas un confort.
+  if (!result.ok) throw new Error(`Rappel de reconduction non envoye : ${result.error ?? ''}`);
 }
 
 async function onChargeRefunded(db: Db, charge: Stripe.Charge): Promise<void> {

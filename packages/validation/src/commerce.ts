@@ -116,14 +116,19 @@ export const refundRequestSchema = z
 export const cancelSubscriptionSchema = z
   .object({
     subscriptionId: uuidSchema,
-    reason: z.enum([
-      'too_expensive',
-      'no_longer_needed',
-      'missing_features',
-      'switching_provider',
-      'business_closing',
-      'other',
-    ]),
+    // Facultatif : exiger un motif pour resilier serait une entrave a la
+    // resiliation (article L215-1-1 du Code de la consommation).
+    reason: z
+      .enum([
+        'too_expensive',
+        'no_longer_needed',
+        'missing_features',
+        'switching_provider',
+        'business_closing',
+        'other',
+      ])
+      .optional()
+      .or(z.literal('').transform(() => undefined)),
     comment: optionalText(2000),
     confirm: z.literal(true, { message: 'Confirmez la résiliation.' }),
   })

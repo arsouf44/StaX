@@ -73,6 +73,12 @@ export function CheckoutForm({
       ) : null}
 
       <Checkbox
+        name="professionalUse"
+        required
+        label="Je commande pour les besoins de mon activité professionnelle (entreprise, indépendant, profession libérale) ou de mon association."
+      />
+
+      <Checkbox
         name="acceptTerms"
         required
         label={
@@ -81,8 +87,16 @@ export function CheckoutForm({
             <Link href="/cgv" target="_blank" className="underline underline-offset-4">
               conditions générales de vente
             </Link>{' '}
-            (version {termsVersion}) et je comprends que la garantie commerciale de{' '}
-            {refundWindowDays} jours court à partir de la mise en ligne de mon site.
+            (version {termsVersion}) et l’
+            <Link
+              href="/accord-de-traitement"
+              target="_blank"
+              className="underline underline-offset-4"
+            >
+              accord de traitement des données
+            </Link>
+            , et je comprends que la garantie commerciale de {refundWindowDays} jours court à partir
+            de la mise en ligne de mon site.
           </>
         }
       />

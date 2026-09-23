@@ -51,6 +51,7 @@ export type LegalKey =
   | 'LEGAL_DIRECTOR'
   | 'LEGAL_HOST'
   | 'LEGAL_HOST_ADDRESS'
+  | 'LEGAL_HOST_PHONE'
   | 'LEGAL_DPO_CONTACT'
   | 'LEGAL_MEDIATOR'
   | 'SUPPORT_EMAIL'
@@ -151,6 +152,13 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     defaultValue:
       'Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis — Supabase, Inc., 970 Toa Payoh North, Singapour',
     hint: 'Adresse postale et moyen de contact de l’hébergeur.',
+  },
+  {
+    key: 'LEGAL_HOST_PHONE',
+    label: 'Téléphone de l’hébergeur',
+    required: false,
+    placeholder: '[A CONFIGURER — telephone de l’hebergeur]',
+    hint: 'Exigé par l’article 6 III de la LCEN (modifié par la loi du 21 mai 2024) : numéro de téléphone du prestataire d’hébergement, tel qu’il le publie.',
   },
   {
     key: 'LEGAL_DPO_CONTACT',
