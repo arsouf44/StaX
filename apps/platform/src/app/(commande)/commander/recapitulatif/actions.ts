@@ -187,11 +187,12 @@ export async function startCheckoutAction(
     discount_cents: number;
     currency: string;
     coupon_code: string | null;
+    vat_rate_bps: number;
   }>(
     (await db
       .from('orders')
       .select(
-        'id, reference, setup_price_cents, maintenance_price_cents, discount_cents, currency, coupon_code',
+        'id, reference, setup_price_cents, maintenance_price_cents, discount_cents, currency, coupon_code, vat_rate_bps',
       )
       .eq('id', orderId)
       .single()) as never,
@@ -239,6 +240,7 @@ export async function startCheckoutAction(
         currency: order.currency as 'EUR',
         stripeSetupPriceId: plan.stripe_setup_price_id,
         stripeMaintenancePriceId: plan.stripe_maintenance_price_id,
+        vatRateBps: order.vat_rate_bps,
       },
       discountCents: order.discount_cents,
       couponCode: order.coupon_code,

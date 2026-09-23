@@ -282,9 +282,51 @@ export function workspaceCan(workspace: Workspace, capability: OrgCapability): b
  */
 export async function toCsvExport(
   db: Db,
-  collection: 'messages' | 'contacts' | 'reservations' | 'commandes',
+  collection: 'messages' | 'contacts' | 'reservations' | 'commandes' | 'comptes',
 ): Promise<{ ok: true; filename: string; csv: string }> {
   const stamp = new Date().toISOString().slice(0, 10);
+
+  if (collection === 'comptes') {
+    const rows = unwrapList<{
+      email: string;
+      full_name: string | null;
+      phone: string | null;
+      email_verified_at: string | null;
+      last_login_at: string | null;
+      is_blocked: boolean;
+      created_at: string;
+    }>(
+      (await db
+        .from('site_customers')
+        .select('email, full_name, phone, email_verified_at, last_login_at, is_blocked, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10_000)) as never,
+    );
+    return {
+      ok: true,
+      filename: `stax-comptes-clients-${stamp}.csv`,
+      csv: toCsv([
+        [
+          'E-mail',
+          'Nom',
+          'Téléphone',
+          'Adresse confirmée',
+          'Dernière connexion',
+          'Bloqué',
+          'Créé le',
+        ],
+        ...rows.map((row) => [
+          row.email,
+          row.full_name,
+          row.phone,
+          row.email_verified_at ? 'oui' : 'non',
+          row.last_login_at,
+          row.is_blocked ? 'oui' : 'non',
+          row.created_at,
+        ]),
+      ]),
+    };
+  }
 
   if (collection === 'contacts') {
     const rows = unwrapList<{

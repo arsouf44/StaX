@@ -281,7 +281,17 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
     icon: 'user-round-check',
     category: 'operations',
     requiredFeature: 'customer_accounts',
-    dashboardEntries: [entry('/app/contacts', 'Clients', 'contact', 'inbox.view', 'activite', 15)],
+    dashboardEntries: [
+      entry('/app/contacts', 'Clients', 'contact', 'inbox.view', 'activite', 15),
+      entry(
+        '/app/comptes-clients',
+        'Comptes clients',
+        'user-round-check',
+        'commerce.view',
+        'activite',
+        15,
+      ),
+    ],
     blockTypes: [],
     sortOrder: 210,
   },

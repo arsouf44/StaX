@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { Alert, Button, Icon, Panel } from '@stax/ui';
 import { exportCollectionAction } from './actions';
 
-type Collection = 'messages' | 'contacts' | 'reservations' | 'commandes';
+type Collection = 'messages' | 'contacts' | 'reservations' | 'commandes' | 'comptes';
 
 /** U+FEFF, ecrit par son point de code pour rester visible a la relecture. */
 const BYTE_ORDER_MARK = String.fromCharCode(0xfeff);
@@ -29,6 +29,11 @@ const LABELS: Record<Collection, { title: string; description: string; icon: str
     title: 'Commandes',
     description: 'Vos commandes en ligne et leur état.',
     icon: 'shopping-bag',
+  },
+  comptes: {
+    title: 'Comptes clients',
+    description: 'Les comptes ouverts par vos clients sur votre site.',
+    icon: 'user-round-check',
   },
 };
 

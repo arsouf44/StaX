@@ -26,17 +26,35 @@ export interface CreateConnectedAccountInput {
   country?: string;
 }
 
+/**
+ * Compte Stripe COMPLET, au nom du professionnel (equivalent « Standard »).
+ *
+ * - tableau de bord Stripe complet : le client s y connecte avec ses propres
+ *   identifiants, voit tout, rembourse, exporte, sans passer par StaX ;
+ * - les frais de Stripe sont factures au client par Stripe, pas a StaX ;
+ * - les pertes (litiges, soldes negatifs) relevent de Stripe et du client :
+ *   StaX n est ni dans le flux financier, ni garant de ses encaissements ;
+ * - Stripe collecte lui-meme les justificatifs d identite (aucune donnee KYC
+ *   ne transite par StaX).
+ *
+ * Un compte « Express » ferait au contraire de StaX le payeur des frais et
+ * le responsable des pertes de chaque client, avec un tableau de bord reduit.
+ */
 export async function createConnectedAccount(input: CreateConnectedAccountInput): Promise<string> {
   const stripe = getStripe();
   const account = await stripe.accounts.create(
     {
-      type: 'express',
       country: input.country ?? 'FR',
       email: input.email,
       business_profile: { name: input.businessName },
+      controller: {
+        stripe_dashboard: { type: 'full' },
+        fees: { payer: 'account' },
+        losses: { payments: 'stripe' },
+        requirement_collection: 'stripe',
+      },
       capabilities: {
         card_payments: { requested: true },
-        transfers: { requested: true },
       },
       metadata: { stax_organization_id: input.organizationId },
     },
@@ -62,11 +80,62 @@ export async function createOnboardingLink(
   return link.url;
 }
 
-/** Lien vers le tableau de bord Express du professionnel. */
+/** Adresse du tableau de bord Stripe complet : le client s y connecte lui-meme. */
+export const STRIPE_DASHBOARD_URL = 'https://dashboard.stripe.com/';
+
+/**
+ * Lien vers le tableau de bord du professionnel.
+ *
+ * Un compte complet se consulte sur dashboard.stripe.com avec les identifiants
+ * du client : il n existe pas (et il ne doit pas exister) de lien de connexion
+ * delivre par StaX. Seul un ancien compte « Express » passe par un lien
+ * a usage unique.
+ */
 export async function createLoginLink(stripeAccountId: string): Promise<string> {
   const stripe = getStripe();
+  const account = await stripe.accounts.retrieve(stripeAccountId);
+  const dashboard = account.controller?.stripe_dashboard?.type ?? account.type;
+  if (dashboard !== 'express') return STRIPE_DASHBOARD_URL;
   const link = await stripe.accounts.createLoginLink(stripeAccountId);
   return link.url;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Compte Stripe existant (OAuth)                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Un client qui a DEJA un compte Stripe le relie en un clic : il se connecte
+ * chez Stripe et autorise StaX a creer des paiements sur son compte. Aucun
+ * justificatif a refournir, aucun nouveau compte a ouvrir.
+ */
+export function connectOAuthUrl(params: {
+  clientId: string;
+  state: string;
+  redirectUri: string;
+  email?: string;
+  businessName?: string;
+}): string {
+  const url = new URL('https://connect.stripe.com/oauth/authorize');
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('client_id', params.clientId);
+  url.searchParams.set('scope', 'read_write');
+  url.searchParams.set('state', params.state);
+  url.searchParams.set('redirect_uri', params.redirectUri);
+  if (params.email) url.searchParams.set('stripe_user[email]', params.email);
+  if (params.businessName) url.searchParams.set('stripe_user[business_name]', params.businessName);
+  url.searchParams.set('stripe_user[country]', 'FR');
+  return url.toString();
+}
+
+/** Echange le code d autorisation contre l identifiant du compte relie. */
+export async function completeConnectOAuth(code: string): Promise<string> {
+  const stripe = getStripe();
+  const response = await stripe.oauth.token({ grant_type: 'authorization_code', code });
+  if (!response.stripe_user_id) {
+    throw new Error('Stripe n’a pas renvoye de compte relie.');
+  }
+  return response.stripe_user_id;
 }
 
 export interface ConnectAccountSnapshot {

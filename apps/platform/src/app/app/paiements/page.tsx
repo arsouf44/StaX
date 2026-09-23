@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { readEnv } from '@stax/config';
 import { unwrapList, unwrapMaybe } from '@stax/database';
 import { CONNECT_STATUS_HELP, CONNECT_STATUS_LABELS, formatMoney } from '@stax/payments';
 import {
@@ -58,8 +59,13 @@ const REQUIREMENT_LABELS: Record<string, string> = {
 
 const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
 
-export default async function PaymentsPage() {
+export default async function PaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ stripe?: string }>;
+}) {
   const { workspace, db } = await getWorkspace();
+  const { stripe: outcome } = await searchParams;
 
   if (!workspace.capabilities.includes('billing.view')) {
     return (
@@ -103,6 +109,9 @@ export default async function PaymentsPage() {
       ? DATE_TIME.format(new Date(account.last_synced_at))
       : null,
     canManage: workspace.capabilities.includes('payments.connect'),
+    active: status === 'active',
+    oauthAvailable: Boolean(readEnv('STRIPE_CONNECT_CLIENT_ID')),
+    outcome: typeof outcome === 'string' ? outcome.slice(0, 40) : null,
   };
 
   const payments = unwrapList<{

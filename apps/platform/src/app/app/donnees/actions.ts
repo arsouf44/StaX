@@ -16,7 +16,7 @@ import { requireSession } from '~/lib/session';
  *    l ouverture du fichier.
  */
 export async function exportCollectionAction(
-  collection: 'messages' | 'contacts' | 'reservations' | 'commandes',
+  collection: 'messages' | 'contacts' | 'reservations' | 'commandes' | 'comptes',
 ): Promise<{ ok: true; filename: string; csv: string } | { ok: false; message: string }> {
   const session = await requireSession();
   const db = createUserClient(session.user.accessToken);

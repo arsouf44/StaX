@@ -23,6 +23,12 @@ export interface CheckoutPlanPrices {
   currency: Currency;
   stripeSetupPriceId: string | null;
   stripeMaintenancePriceId: string | null;
+  /**
+   * Taux de TVA fige dans la commande, en points de base (2000 = 20 %).
+   * Les prix du catalogue sont hors taxes : sans ce taux, Stripe encaisserait
+   * le montant HT alors que le client a vu, et accepte, un total TTC.
+   */
+  vatRateBps: number;
 }
 
 export interface CreateCheckoutInput {
@@ -43,21 +49,69 @@ export function maintenanceTrialDays(): number {
   return Number.isFinite(raw) && raw >= 0 && raw <= 730 ? raw : 30;
 }
 
+/**
+ * Taux de TVA Stripe correspondant au taux de la commande.
+ *
+ * Stripe ajoute la TVA au montant HT et la fait apparaitre sur la facture
+ * (HT, taux, montant de TVA, TTC) : le montant encaisse est exactement le
+ * total TTC affiche au client. Le taux est cree une fois puis reutilise ; il
+ * est reconnu a sa marque `stax_vat`, jamais a son seul libelle.
+ */
+const vatRateCache = new Map<number, string>();
+
+export async function ensureVatTaxRate(rateBps: number): Promise<string | null> {
+  if (!Number.isInteger(rateBps) || rateBps <= 0) return null;
+  const cached = vatRateCache.get(rateBps);
+  if (cached) return cached;
+
+  const stripe = getStripe();
+  const percentage = rateBps / 100;
+  for await (const rate of stripe.taxRates.list({ active: true, limit: 100 })) {
+    if (
+      !rate.inclusive &&
+      rate.percentage === percentage &&
+      rate.metadata?.['stax_vat'] === String(rateBps)
+    ) {
+      vatRateCache.set(rateBps, rate.id);
+      return rate.id;
+    }
+  }
+
+  const created = await stripe.taxRates.create(
+    {
+      display_name: 'TVA',
+      description: `TVA ${percentage.toLocaleString('fr-FR')} %`,
+      percentage,
+      inclusive: false,
+      country: 'FR',
+      jurisdiction: 'FR',
+      tax_type: 'vat',
+      metadata: { stax_vat: String(rateBps) },
+    },
+    { idempotencyKey: idempotencyKey('vat-rate', String(rateBps)) },
+  );
+  vatRateCache.set(rateBps, created.id);
+  return created.id;
+}
+
 function lineItemForSetup(
   plan: CheckoutPlanPrices,
   discountCents: Cents,
+  taxRates: string[],
 ): Stripe.Checkout.SessionCreateParams.LineItem {
   const amount = Math.max(plan.setupPriceCents - discountCents, 0);
   if (plan.stripeSetupPriceId && discountCents === 0) {
-    return { price: plan.stripeSetupPriceId, quantity: 1 };
+    return { price: plan.stripeSetupPriceId, quantity: 1, tax_rates: taxRates };
   }
   // Une remise serveur se materialise par un prix ad hoc : le montant envoye a
   // Stripe reste celui calcule par la base, jamais celui fourni par le client.
   return {
     quantity: 1,
+    tax_rates: taxRates,
     price_data: {
       currency: plan.currency.toLowerCase(),
       unit_amount: amount,
+      tax_behavior: 'exclusive',
       product_data: {
         name: `Création de votre site — offre ${plan.planName}`,
         description: 'Conception, developpement, mise en ligne et accompagnement.',
@@ -68,16 +122,19 @@ function lineItemForSetup(
 
 function lineItemForMaintenance(
   plan: CheckoutPlanPrices,
+  taxRates: string[],
 ): Stripe.Checkout.SessionCreateParams.LineItem | null {
   if (plan.maintenancePriceCents <= 0) return null;
   if (plan.stripeMaintenancePriceId) {
-    return { price: plan.stripeMaintenancePriceId, quantity: 1 };
+    return { price: plan.stripeMaintenancePriceId, quantity: 1, tax_rates: taxRates };
   }
   return {
     quantity: 1,
+    tax_rates: taxRates,
     price_data: {
       currency: plan.currency.toLowerCase(),
       unit_amount: plan.maintenancePriceCents,
+      tax_behavior: 'exclusive',
       recurring: { interval: 'year' },
       product_data: {
         name: `Maintenance annuelle — offre ${plan.planName}`,
@@ -95,10 +152,13 @@ export async function createCheckoutSession(
   const base = platformUrl();
   const discountCents = input.discountCents ?? 0;
 
+  const vatRate = await ensureVatTaxRate(input.plan.vatRateBps);
+  const taxRates = vatRate ? [vatRate] : [];
+
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-    lineItemForSetup(input.plan, discountCents),
+    lineItemForSetup(input.plan, discountCents, taxRates),
   ];
-  const maintenance = lineItemForMaintenance(input.plan);
+  const maintenance = lineItemForMaintenance(input.plan, taxRates);
   const hasSubscription = maintenance !== null;
   if (maintenance) lineItems.push(maintenance);
 

@@ -2133,6 +2133,50 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Comptes clients d'un site : le commercant les gere, personne d'autre
+-- -----------------------------------------------------------------------------
+\echo '--- Comptes clients (effacement RGPD) ---'
+do $$
+declare
+  alice  uuid := (select v from t.fixtures where k='alice');
+  bob    uuid := (select v from t.fixtures where k='bob');
+  viewer uuid := (select v from t.fixtures where k='viewer');
+  org_a  uuid := (select v from t.fixtures where k='org_a');
+  site_a uuid := (select v from t.fixtures where k='site_a');
+  v_customer uuid;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  insert into public.site_customers (site_id, organization_id, email, full_name)
+  values (site_a, org_a, 'cliente@exemple.test', 'Cliente Test')
+  returning id into v_customer;
+
+  perform t.assert(t.count_as(alice, 'select 1 from public.site_customers where email = ''cliente@exemple.test''') = 1,
+    'Le commercant voit les comptes clients de son site');
+  perform t.assert(t.count_as(bob, 'select 1 from public.site_customers where email = ''cliente@exemple.test''') = 0,
+    'Un autre commercant ne voit pas ces comptes');
+  perform t.assert(t.denied_as(bob, format('select public.delete_site_customer(%L::uuid)', v_customer)),
+    'Un autre commercant ne peut pas effacer un compte client');
+  perform t.assert(t.denied_as(viewer, format('select public.delete_site_customer(%L::uuid)', v_customer)),
+    'Un membre en lecture seule ne peut pas effacer un compte client');
+  perform t.assert(exists (select 1 from public.site_customers where id = v_customer),
+    'Le compte est intact apres les tentatives refusees');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.delete_site_customer(v_customer);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(not exists (select 1 from public.site_customers where id = v_customer),
+    'Le commercant efface un compte client sur demande');
+  perform t.assert(exists (select 1 from public.audit_logs
+                            where action = 'site_customer.erased' and target_id = v_customer::text),
+    'L''effacement est journalise, sans l''adresse e-mail');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'
