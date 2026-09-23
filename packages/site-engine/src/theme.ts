@@ -9,7 +9,24 @@ import { z } from 'zod';
  * n atteint la feuille de style sans passer par ce filtre.
  */
 
-export const FONT_STACKS: Record<string, { family: string; stack: string; googleFont?: string }> = {
+/**
+ * Polices des sites clients, AUTO-HEBERGEES.
+ *
+ * Elles sont servies par le site lui-meme (`/_stax/fonts/…`), jamais par un
+ * service tiers : charger Google Fonts transmettrait l adresse IP de chaque
+ * visiteur a Google, aux Etats-Unis, sans son consentement — ce que la
+ * jurisprudence europeenne sanctionne. Sous-ensemble latin uniquement : il
+ * couvre le francais (accents, œ, €) pour une fraction du poids.
+ */
+export const FONT_BASE_PATH = '/_stax/fonts';
+
+interface FontFace {
+  file: string;
+  weight: string;
+  style?: 'normal' | 'italic';
+}
+
+export const FONT_STACKS: Record<string, { family: string; stack: string; faces?: FontFace[] }> = {
   geist: {
     family: 'Geist',
     stack: "'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif",
@@ -17,29 +34,59 @@ export const FONT_STACKS: Record<string, { family: string; stack: string; google
   inter: {
     family: 'Inter',
     stack: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
-    googleFont: 'Inter:wght@400;500;600;700',
+    faces: [{ file: 'inter.woff2', weight: '100 900' }],
   },
   sora: {
     family: 'Sora',
     stack: "'Sora', system-ui, sans-serif",
-    googleFont: 'Sora:wght@400;500;600;700',
+    faces: [{ file: 'sora.woff2', weight: '100 800' }],
   },
   fraunces: {
     family: 'Fraunces',
     stack: "'Fraunces', Georgia, 'Times New Roman', serif",
-    googleFont: 'Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700',
+    faces: [{ file: 'fraunces.woff2', weight: '100 900' }],
   },
   'instrument-serif': {
     family: 'Instrument Serif',
     stack: "'Instrument Serif', Georgia, serif",
-    googleFont: 'Instrument+Serif:ital@0;1',
+    faces: [
+      { file: 'instrument-serif.woff2', weight: '400' },
+      { file: 'instrument-serif-italic.woff2', weight: '400', style: 'italic' },
+    ],
   },
   'ibm-plex-sans': {
     family: 'IBM Plex Sans',
     stack: "'IBM Plex Sans', system-ui, sans-serif",
-    googleFont: 'IBM+Plex+Sans:wght@400;500;600;700',
+    faces: ['400', '500', '600', '700'].map((weight) => ({
+      file: `ibm-plex-sans-${weight}.woff2`,
+      weight,
+    })),
   },
 };
+
+/** Plage latine : celle des fichiers fournis. */
+const LATIN_RANGE =
+  'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,' +
+  'U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
+
+/** Declarations @font-face des polices utilisees par un theme. */
+export function fontFaceCss(keys: readonly string[]): string {
+  const seen = new Set<string>();
+  const rules: string[] = [];
+  for (const key of keys) {
+    const font = FONT_STACKS[key];
+    if (!font?.faces || seen.has(key)) continue;
+    seen.add(key);
+    for (const face of font.faces) {
+      rules.push(
+        `@font-face{font-family:'${font.family}';font-style:${face.style ?? 'normal'};` +
+          `font-weight:${face.weight};font-display:swap;` +
+          `src:url(${FONT_BASE_PATH}/${face.file}) format('woff2');unicode-range:${LATIN_RANGE}}`,
+      );
+    }
+  }
+  return rules.join('');
+}
 
 export interface ThemePreset {
   id: string;
@@ -216,8 +263,8 @@ export interface ResolvedTheme {
     ThemeTokens;
   /** Feuille de variables CSS, prete a etre injectee dans une balise style. */
   cssVariables: string;
-  /** URL Google Fonts a precharger, ou null si les polices sont auto-hebergees. */
-  googleFontsHref: string | null;
+  /** Declarations @font-face des polices auto-hebergees du theme. */
+  fontFaces: string;
   scheme: 'light' | 'dark';
 }
 
@@ -295,22 +342,13 @@ export function resolveTheme(input: {
     `--site-button-radius:${buttonStyle === 'pill' ? '9999px' : radii.md}`,
   ].join(';');
 
-  const googleFonts = [headingFont.googleFont, bodyFont.googleFont].filter(
-    (value, index, array): value is string => Boolean(value) && array.indexOf(value) === index,
-  );
-
   return {
     preset,
     fontHeading: fontHeadingKey,
     fontBody: fontBodyKey,
     tokens: { ...tokens, radius, density, buttonStyle, headingScale },
     cssVariables,
-    googleFontsHref:
-      googleFonts.length > 0
-        ? `https://fonts.googleapis.com/css2?${googleFonts
-            .map((f) => `family=${f}`)
-            .join('&')}&display=swap`
-        : null,
+    fontFaces: fontFaceCss([fontHeadingKey, fontBodyKey]),
     scheme: preset.scheme,
   };
 }

@@ -74,6 +74,26 @@ d’elle-même.
 
 ---
 
+## Rappel de reconduction (obligation légale)
+
+La maintenance est annuelle et se reconduit tacitement. L’article L215-1 du Code
+de la consommation impose d’informer le client **entre trois mois et un mois**
+avant l’échéance ; sans ce rappel, un client non professionnel peut résilier à
+tout moment après la reconduction. StaX l’envoie à tous ses clients.
+
+Le rappel part à la réception de l’événement `invoice.upcoming`. Deux réglages
+Stripe sont donc **obligatoires** en production :
+
+1. l’endpoint de webhook de la plateforme doit être abonné à `invoice.upcoming` ;
+2. dans les paramètres de facturation Stripe, le délai des « upcoming renewal
+   events » (événements de renouvellement à venir) doit être fixé à **45 jours** :
+   c’est la seule valeur qui tombe dans la fenêtre légale d’un à trois mois.
+
+Un abonnement déjà résilié (`cancel_at_period_end`) ne reçoit pas de rappel. Un
+envoi en échec est rejoué par la tâche de fond, comme tout événement en échec.
+
+---
+
 ## Remboursements
 
 Déclenchés depuis le back-office après examen, jamais automatiquement.

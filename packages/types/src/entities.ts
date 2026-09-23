@@ -46,6 +46,15 @@ export interface Profile {
   timezone: string;
   platform_role: PlatformRole | null;
   mfa_enforced: boolean;
+  /**
+   * Compte interne StaX. Ces quatre colonnes ne s ecrivent que par le script
+   * d approvisionnement (cle de service) : l interface les LIT pour adapter
+   * ses libelles, mais c est la base qui decide (app.create_internal_order).
+   */
+  account_type: 'customer' | 'internal';
+  billing_exempt: boolean;
+  unlimited_sites: boolean;
+  all_features: boolean;
   marketing_opt_in: boolean;
   onboarding_step: string | null;
   last_seen_at: Timestamp | null;
@@ -74,6 +83,10 @@ export interface Organization {
   stripe_customer_id: string | null;
   status: 'active' | 'suspended' | 'archived';
   is_demo: boolean;
+  /** Organisation interne StaX : aucune facturation, toutes les fonctionnalites. */
+  account_type: 'customer' | 'internal';
+  billing_exempt: boolean;
+  all_features: boolean;
   suspended_at: Timestamp | null;
   suspension_reason: string | null;
   created_by: UUID | null;

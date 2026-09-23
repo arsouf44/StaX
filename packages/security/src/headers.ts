@@ -32,6 +32,12 @@ export interface SecurityHeaderOptions {
    */
   scriptHashes?: readonly string[];
   frameSrc?: readonly string[];
+  /**
+   * Origines d images supplementaires. En production, le stockage des photos
+   * est en https et deja couvert ; le nommer reste plus precis, et c est ce
+   * qui permet a une pile locale (http) d afficher les photos des clients.
+   */
+  imgSrc?: readonly string[];
   /** Desactive `upgrade-insecure-requests` en developpement local. */
   allowInsecure?: boolean;
   /** Le site autorise-t-il l'intégration d'une carte tierce ? */
@@ -69,7 +75,17 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
     STRIPE_FRAME,
     TURNSTILE,
     ...(options.frameSrc ?? []),
-    ...(options.allowMaps ? ['https://www.openstreetmap.org', 'https://www.google.com'] : []),
+    // Contenus integres de la liste blanche (section « Contenu intégré »). Ils
+    // ne sont charges qu apres un clic du visiteur : voir renderEmbed.
+    ...(options.allowMaps
+      ? [
+          'https://www.openstreetmap.org',
+          'https://www.google.com',
+          'https://www.youtube-nocookie.com',
+          'https://player.vimeo.com',
+          'https://calendly.com',
+        ]
+      : []),
   ].join(' ');
 
   const directives: string[] = [
@@ -79,9 +95,9 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
     // sont injectes en variables CSS, et un nonce sur chaque style serait
     // incompatible avec le streaming SSR. Aucun style ne provient de
     // l'utilisateur : ils sont generes a partir de valeurs validees.
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https:",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
+    ["img-src 'self' data: blob: https:", ...(options.imgSrc ?? [])].join(' '),
     "media-src 'self' https:",
     `connect-src ${connect}`,
     `frame-src ${frame}`,

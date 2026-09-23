@@ -1,3 +1,4 @@
+import type { HostIdentity } from '../legal';
 import type { ResolvedTheme } from '../theme';
 import type { RenderablePage, SiteSettingsView } from '../snapshot';
 
@@ -229,6 +230,8 @@ export interface RenderContext {
   hasCustomerAccounts: boolean;
   theme: ResolvedTheme;
   settings: SiteSettingsView;
+  /** Hebergeur du site (StaX), repris dans les mentions legales. */
+  host?: HostIdentity;
   pages: RenderablePage[];
   currentPath: string;
   enabledModules: Set<string>;
@@ -241,4 +244,21 @@ export interface RenderContext {
   turnstileSiteKey: string | null;
   /** Date de reference, injectee pour rester testable. */
   now: Date;
+  /**
+   * Mode editeur de l apercu : chaque section devient selectionnable, les
+   * sections vides ou masquees restent visibles et expliquent quoi faire.
+   * JAMAIS present sur le site public.
+   */
+  editor?: EditorRenderOptions;
+}
+
+export interface EditorRenderOptions {
+  /** Sections masquees : visibles dans l apercu, marquees comme telles. */
+  hiddenBlockIds: ReadonlySet<string>;
+  /** Origine de la plateforme, seule destinataire des messages de l apercu. */
+  parentOrigin: string;
+  /** Section a mettre en evidence au chargement. */
+  selectedBlockId: string | null;
+  /** Position de defilement a retrouver apres un rechargement. */
+  scrollY: number;
 }

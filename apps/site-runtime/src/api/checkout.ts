@@ -1,5 +1,6 @@
 import { createServiceClient, unwrapMaybe } from '@stax/database';
 import { createConnectCheckoutSession } from '@stax/payments';
+import { SALES_TERMS_PATH } from '@stax/site-engine';
 import { hmacHex, randomToken } from '@stax/security';
 import { jsonResponse } from '../responses';
 import { siteOrigin } from '../context';
@@ -65,6 +66,18 @@ export async function handleCheckout(request: Request, site: ResolvedSite): Prom
   const lines = await readCart(request, site.siteId);
   if (lines.length === 0) {
     return refuse('Votre panier est vide.', 409, 'cart_empty');
+  }
+
+  // Quand la boutique publie des conditions de vente, leur acceptation est
+  // exigee ICI aussi : la case cochee dans la page ne prouve rien a elle seule.
+  const hasSalesTerms = site.snapshot.pages.some((page) => page.path === SALES_TERMS_PATH);
+  const accepted = field(guard.payload, 'acceptTerms', 10);
+  if (hasSalesTerms && accepted !== 'on' && accepted !== 'true' && accepted !== '1') {
+    return refuse(
+      'Acceptez les conditions générales de vente pour passer commande.',
+      422,
+      'terms_required',
+    );
   }
 
   const name = field(guard.payload, 'name', 120);

@@ -13,6 +13,7 @@ import { attrs, html, join, raw, renderToString, type RawHtml } from './html';
 import type { RenderContext } from './context';
 import { SITE_STYLESHEET } from './styles';
 import { SITE_SCRIPT } from './script';
+import { EDITOR_STYLES, editorScript } from './editor-script';
 
 /**
  * Document complet d une page publique.
@@ -297,7 +298,7 @@ export function renderDocument(input: DocumentInput): string {
   }
 
   const body = renderToString(html`
-    ${context.isPreview ? previewBanner() : ''}${context.isDemo ? demoBanner() : ''}
+    ${context.isPreview && !context.editor ? previewBanner() : ''}${context.isDemo ? demoBanner() : ''}
     <a class="skip" href="#contenu">Aller au contenu</a>
     ${header(context, input.logoUrl)}
     <main id="contenu">${input.mainOverride ?? renderBlocks(page.blocks, context)}</main>
@@ -336,22 +337,11 @@ export function renderDocument(input: DocumentInput): string {
         : ''
     }
     ${input.logoUrl ? html`<link rel="icon" href="${input.logoUrl}" />` : ''}
-    ${
-      context.theme.googleFontsHref
-        ? html`<link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-            <link
-              rel="stylesheet"
-              href="${context.theme.googleFontsHref}"
-              media="print"
-              onload="this.media='all'"
-            />
-            <noscript><link rel="stylesheet" href="${context.theme.googleFontsHref}" /></noscript>`
-        : ''
-    }
     <style nonce="${context.nonce}">
+      ${raw(context.theme.fontFaces)}
       :root{${raw(context.theme.cssVariables)}}
       ${raw(SITE_STYLESHEET)}
+      ${context.editor ? raw(EDITOR_STYLES) : ''}
     </style>
     <link rel="alternate" type="application/xml" href="/sitemap.xml" title="Plan du site" />
     ${join(
@@ -370,11 +360,20 @@ export function renderDocument(input: DocumentInput): string {
   const tokenAttribute = renderToString(html`${context.formToken}`);
 
   return `<!doctype html>
-<html lang="${page.locale}" data-scheme="${context.theme.scheme}">
+<html lang="${page.locale}" data-scheme="${context.theme.scheme}"${context.isPreview ? ' data-stax-preview="true"' : ''}>
 <head>${renderToString(head)}</head>
 <body data-stax-token="${tokenAttribute}">
 ${body}
 <script nonce="${context.nonce}" defer>${SITE_SCRIPT}</script>
+${
+  context.editor
+    ? `<script nonce="${context.nonce}">${editorScript({
+        parentOrigin: context.editor.parentOrigin,
+        selectedBlockId: context.editor.selectedBlockId,
+        scrollY: context.editor.scrollY,
+      })}</script>`
+    : ''
+}
 ${needsTurnstile ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}
 </body>
 </html>`;

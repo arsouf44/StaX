@@ -5,7 +5,11 @@ import { useFormStatus } from 'react-dom';
 import { Alert, Button, Panel, StatusPill } from '@stax/ui';
 import type { StatusTone } from '@stax/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
-import { openStripeDashboardAction, startConnectOnboardingAction } from './actions';
+import {
+  connectExistingStripeAction,
+  openStripeDashboardAction,
+  startConnectOnboardingAction,
+} from './actions';
 
 export interface ConnectView {
   configured: boolean;
@@ -18,7 +22,36 @@ export interface ConnectView {
   disabledReason: string | null;
   lastSyncedLabel: string | null;
   canManage: boolean;
+  active: boolean;
+  /** « J'ai deja un compte Stripe » : disponible si la liaison OAuth est configuree. */
+  oauthAvailable: boolean;
+  /** Retour de Stripe : relie, annule, deja-relie, lien-invalide, echec. */
+  outcome: string | null;
 }
+
+const OUTCOMES: Record<string, { tone: 'success' | 'warning' | 'danger'; text: string }> = {
+  relie: {
+    tone: 'success',
+    text: 'Votre compte Stripe est relié. Les paiements de votre site arriveront directement sur ce compte.',
+  },
+  retour: {
+    tone: 'success',
+    text: 'Merci. Stripe vérifie vos informations : le statut se met à jour automatiquement.',
+  },
+  annule: { tone: 'warning', text: 'Liaison annulée : rien n’a été modifié.' },
+  'deja-relie': {
+    tone: 'warning',
+    text: 'Un autre compte Stripe actif est déjà relié à votre site. Déconnectez-le depuis Stripe avant d’en relier un nouveau.',
+  },
+  'lien-invalide': {
+    tone: 'danger',
+    text: 'Ce lien de retour n’est plus valable. Relancez la liaison depuis cette page.',
+  },
+  echec: {
+    tone: 'danger',
+    text: 'Stripe n’a pas pu finaliser la liaison. Réessayez dans quelques minutes.',
+  },
+};
 
 function SubmitButton({
   label,
@@ -46,10 +79,16 @@ export function ConnectPanel({ view }: { view: ConnectView }) {
     openStripeDashboardAction,
     IDLE_STATE,
   );
+  const [linkState, linkAction] = useActionState<ActionState, FormData>(
+    connectExistingStripeAction,
+    IDLE_STATE,
+  );
 
   const error =
     (startState.status === 'error' ? startState.message : null) ??
-    (dashboardState.status === 'error' ? dashboardState.message : null);
+    (dashboardState.status === 'error' ? dashboardState.message : null) ??
+    (linkState.status === 'error' ? linkState.message : null);
+  const outcome = view.outcome ? OUTCOMES[view.outcome] : null;
 
   return (
     <Panel level={2} padding="lg">
@@ -63,11 +102,29 @@ export function ConnectPanel({ view }: { view: ConnectView }) {
         <StatusPill tone={view.statusTone}>{view.statusLabel}</StatusPill>
       </div>
 
+      {outcome ? (
+        <Alert tone={outcome.tone} className="mt-4" live="status">
+          {outcome.text}
+        </Alert>
+      ) : null}
+
       {error ? (
         <Alert tone="danger" className="mt-4" live="alert">
           {error}
         </Alert>
       ) : null}
+
+      <ul className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
+        {OWNERSHIP_POINTS.map((point) => (
+          <li
+            key={point.title}
+            className="rounded-[var(--radius-md)] border border-[var(--border)] p-3"
+          >
+            <p className="font-medium">{point.title}</p>
+            <p className="mt-1 text-[var(--foreground-muted)]">{point.text}</p>
+          </li>
+        ))}
+      </ul>
 
       {view.disabledReason ? (
         <Alert tone="warning" className="mt-4" live="status" title="Compte limité par Stripe">
@@ -102,12 +159,23 @@ export function ConnectPanel({ view }: { view: ConnectView }) {
 
       {view.canManage ? (
         <div className="mt-6 flex flex-wrap gap-3 border-t border-[var(--border)] pt-5">
-          <form action={startAction}>
-            <SubmitButton
-              label={view.configured ? 'Compléter mes informations' : 'Activer les paiements'}
-              pendingLabel="Ouverture de Stripe"
-            />
-          </form>
+          {!view.active ? (
+            <form action={startAction}>
+              <SubmitButton
+                label={view.configured ? 'Compléter mes informations' : 'Créer mon compte Stripe'}
+                pendingLabel="Ouverture de Stripe"
+              />
+            </form>
+          ) : null}
+          {!view.active && view.oauthAvailable ? (
+            <form action={linkAction}>
+              <SubmitButton
+                label="J’ai déjà un compte Stripe"
+                pendingLabel="Ouverture de Stripe"
+                variant="secondary"
+              />
+            </form>
+          ) : null}
           {view.configured ? (
             <form action={dashboardAction}>
               <SubmitButton
@@ -132,3 +200,19 @@ export function ConnectPanel({ view }: { view: ConnectView }) {
     </Panel>
   );
 }
+
+/** Ce que le client doit comprendre en une lecture, sans jargon. */
+const OWNERSHIP_POINTS = [
+  {
+    title: 'Votre argent',
+    text: 'Les paiements de vos clients arrivent sur votre compte bancaire. StaX ne touche jamais cet argent et ne prend aucune commission.',
+  },
+  {
+    title: 'Votre compte',
+    text: 'Le compte Stripe est à votre nom. Vous vous y connectez avec vos propres identifiants, sur stripe.com.',
+  },
+  {
+    title: 'Votre liberté',
+    text: 'Remboursements, factures, relevés : tout se gère chez Stripe. Vous pouvez déconnecter StaX à tout moment.',
+  },
+];

@@ -126,6 +126,25 @@ reconnaître une personne d'une visite à l'autre. C'est ce qui place cette mesu
 dans l'exemption de consentement prévue par la CNIL pour la mesure d'audience,
 et cette propriété doit être préservée à chaque évolution.
 
+### A7 — Signalements de contenus illicites
+
+| | |
+| --- | --- |
+| **Finalité** | Recevoir et traiter les signalements de contenus illicites sur les sites hébergés |
+| **Base légale** | Obligation légale (art. 6.1.c) — règlement (UE) 2022/2065, art. 16 ; LCEN, art. 6 |
+| **Personnes** | Auteurs de signalements ; éditeurs des sites concernés |
+| **Données** | Nom, e-mail (facultatifs pour un abus sur mineur), URL, motif, décision motivée, empreinte d'IP |
+| **Tables** | `content_reports`, `audit_logs` |
+| **Conservation** | 1 an après la décision (purge `app.apply_retention()`) |
+
+L'identité de l'auteur n'est pas communiquée à l'éditeur du site, sauf
+obligation légale. Seule l'équipe StaX lit les signalements (RLS), et seule
+l'administration de la plateforme peut décider.
+
+Toutes les durées de conservation de ce registre sont **appliquées** par
+`app.apply_retention()` (migration 0039), planifiée chaque jour : voir
+`docs/supabase.md`.
+
 ---
 
 ## B. StaX comme **sous-traitant** (art. 28)

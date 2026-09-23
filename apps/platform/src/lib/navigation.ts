@@ -136,11 +136,13 @@ export const LEGAL_LINKS: NavLink[] = [
   { label: 'Mentions légales', href: '/mentions-legales' },
   { label: 'Conditions générales de vente', href: '/cgv' },
   { label: 'Conditions générales d’utilisation', href: '/cgu' },
+  { label: 'Accord de traitement des données', href: '/accord-de-traitement' },
   { label: 'Politique de confidentialité', href: '/confidentialite' },
   { label: 'Cookies', href: '/cookies' },
   { label: 'Remboursements', href: '/remboursements' },
   { label: 'Données personnelles', href: '/donnees-personnelles' },
   { label: 'Sous-traitants', href: '/sous-traitants' },
+  { label: 'Signaler un contenu', href: '/signaler-un-contenu' },
   { label: 'Accessibilité', href: '/accessibilite' },
 ];
 

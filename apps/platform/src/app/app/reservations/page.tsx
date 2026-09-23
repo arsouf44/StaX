@@ -3,7 +3,7 @@ import { BOOKING_STATUS_LABELS, BOOKING_TRANSITIONS, statusLabel } from '@stax/b
 import { unwrapList, unwrapMaybe } from '@stax/database';
 import { PermissionDenied } from '@stax/ui';
 import type { StatusTone } from '@stax/ui';
-import { CollectionSection } from '~/components/app/collection-section';
+import Link from 'next/link';
 import { ModulePage } from '~/components/app/module-page';
 import { getWorkspace } from '~/lib/workspace';
 import { BookingList, type BookingView } from './booking-list';
@@ -100,7 +100,7 @@ export default async function BookingsPage() {
       module="booking"
       feature="bookings"
       title="Mes réservations"
-      description="Les demandes reçues depuis votre site, et les règles qui décident des créneaux proposés."
+      description="Les demandes reçues depuis votre site : confirmez-les, annulez-les, notez les arrivées."
     >
       <div className="space-y-12">
         <section aria-labelledby="demandes" className="space-y-4">
@@ -121,8 +121,13 @@ export default async function BookingsPage() {
           )}
         </section>
 
-        <CollectionSection collection="booking-services" />
-        <CollectionSection collection="availability" />
+        <p className="text-sm text-[var(--foreground-muted)]">
+          Pour choisir ce qui se réserve et à quels moments, ouvrez{' '}
+          <Link href="/app/disponibilites" className="underline underline-offset-2">
+            Mes disponibilités
+          </Link>
+          .
+        </p>
       </div>
     </ModulePage>
   );

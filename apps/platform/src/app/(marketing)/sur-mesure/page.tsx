@@ -66,10 +66,10 @@ export default function CustomPage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -80,10 +80,10 @@ export default function CustomPage() {
             className="mx-auto"
           />
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-            <ButtonLink href="/devis" size="lg">
+            <ButtonLink href="/devis" size="pill-lg">
               Demander un devis
             </ButtonLink>
-            <ButtonLink href="/tarifs" variant="glass" size="lg">
+            <ButtonLink href="/tarifs" variant="glass" size="pill-lg">
               Comparer avec les offres standard
             </ButtonLink>
           </div>
@@ -133,7 +133,7 @@ export default function CustomPage() {
               Le formulaire prend une dizaine de minutes. Plus vos réponses sont précises, plus le
               devis sera juste — et plus vite nous pourrons vous répondre.
             </p>
-            <ButtonLink href="/devis" size="lg" className="mt-8">
+            <ButtonLink href="/devis" size="pill-lg" className="mt-8">
               Remplir le formulaire de devis
             </ButtonLink>
           </Panel>

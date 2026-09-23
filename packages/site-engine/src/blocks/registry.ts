@@ -38,7 +38,7 @@ const text = (max: number) => z.string().max(max).default('');
 export const heroBlock = define({
   type: 'hero',
   version: 1,
-  label: 'Banniere principale',
+  label: 'Bannière principale',
   description: 'La première chose que voit un visiteur : votre promesse en une phrase.',
   icon: 'layout-panel-top',
   category: 'structure',
@@ -56,7 +56,7 @@ export const heroBlock = define({
   defaults: {
     eyebrow: '',
     title: 'Votre titre principal',
-    subtitle: 'Decrivez en une phrase ce que vous faites et pour qui.',
+    subtitle: 'Décrivez en une phrase ce que vous faites et pour qui.',
     media: null,
     actions: [],
     layout: 'centered',
@@ -68,7 +68,7 @@ export const introBlock = define({
   type: 'intro',
   version: 1,
   label: 'Présentation',
-  description: 'Un paragraphe d introduction accompagne d une image.',
+  description: 'Un paragraphe d’introduction accompagné d’une image.',
   icon: 'align-left',
   category: 'contenu',
   requiresModule: null,
@@ -122,7 +122,7 @@ export const galleryBlock = define({
   type: 'gallery',
   version: 1,
   label: 'Galerie photos',
-  description: 'Vos plus belles photos, en grille ou en mosaique.',
+  description: 'Vos plus belles photos, en grille ou en mosaïque.',
   icon: 'images',
   category: 'preuve',
   requiresModule: 'gallery',
@@ -139,7 +139,7 @@ export const featuresBlock = define({
   type: 'features',
   version: 1,
   label: 'Points forts',
-  description: 'Trois a six arguments qui rassurent vos visiteurs.',
+  description: 'Trois à six arguments qui rassurent vos visiteurs.',
   icon: 'sparkles',
   category: 'preuve',
   requiresModule: null,
@@ -165,7 +165,7 @@ export const trustBlock = define({
   type: 'trust',
   version: 1,
   label: 'Gages de confiance',
-  description: 'Certifications, assurances, années d expérience, zone couverte.',
+  description: 'Certifications, assurances, années d’expérience, zone couverte.',
   icon: 'badge-check',
   category: 'preuve',
   requiresModule: null,
@@ -187,8 +187,8 @@ export const trustBlock = define({
 export const processBlock = define({
   type: 'process',
   version: 1,
-  label: 'Comment ca se passe',
-  description: 'Les étapes de votre intervention, du premier contact a la fin.',
+  label: 'Comment ça se passe',
+  description: 'Les étapes de votre intervention, du premier contact à la fin.',
   icon: 'list-ordered',
   category: 'contenu',
   requiresModule: null,
@@ -204,7 +204,7 @@ export const processBlock = define({
       .max(8)
       .default([]),
   }),
-  defaults: { title: 'Comment ca se passe', steps: [] },
+  defaults: { title: 'Comment ça se passe', steps: [] },
 });
 
 export const servicesBlock = define({
@@ -240,7 +240,7 @@ export const pricingBlock = define({
   type: 'pricing',
   version: 1,
   label: 'Tarifs',
-  description: 'Des formules comparees cote a cote.',
+  description: 'Des formules comparées côte à côte.',
   icon: 'euro',
   category: 'conversion',
   requiresModule: null,
@@ -297,7 +297,7 @@ export const faqBlock = define({
   type: 'faq',
   version: 1,
   label: 'Questions fréquentes',
-  description: 'Les réponses aux questions que l on vous pose le plus souvent.',
+  description: 'Les réponses aux questions que l’on vous pose le plus souvent.',
   icon: 'help-circle',
   category: 'contenu',
   requiresModule: 'faq',
@@ -314,8 +314,8 @@ export const faqBlock = define({
 export const ctaBlock = define({
   type: 'cta',
   version: 1,
-  label: 'Appel a l action',
-  description: 'Une invitation claire a vous contacter ou a réserver.',
+  label: 'Invitation à agir',
+  description: 'Une invitation claire à vous contacter ou à réserver.',
   icon: 'megaphone',
   category: 'conversion',
   requiresModule: null,
@@ -332,7 +332,7 @@ export const contactBlock = define({
   type: 'contact',
   version: 1,
   label: 'Formulaire de contact',
-  description: 'Vos visiteurs vous ecrivent, vous recevez tout dans votre espace.',
+  description: 'Vos visiteurs vous écrivent, vous recevez tout dans votre espace.',
   icon: 'mail',
   category: 'conversion',
   requiresModule: 'contact',
@@ -356,7 +356,7 @@ export const quoteFormBlock = define({
   type: 'quote-form',
   version: 1,
   label: 'Demande de devis',
-  description: 'Un formulaire structuré qui qualifié les demandes entrantes.',
+  description: 'Un formulaire structuré pour recevoir des demandes précises.',
   icon: 'file-text',
   category: 'conversion',
   requiresModule: 'quotes',
@@ -371,8 +371,8 @@ export const quoteFormBlock = define({
 export const mapBlock = define({
   type: 'map',
   version: 1,
-  label: 'Plan d accès',
-  description: 'Votre adresse sur une carte, avec l itineraire.',
+  label: 'Plan d’accès',
+  description: 'Votre adresse sur une carte, avec l’itinéraire.',
   icon: 'map-pin',
   category: 'contenu',
   requiresModule: null,
@@ -388,7 +388,7 @@ export const openingHoursBlock = define({
   type: 'opening-hours',
   version: 1,
   label: 'Horaires',
-  description: 'Vos horaires d ouverture et vos fermetures exceptionnelles.',
+  description: 'Vos horaires d’ouverture et vos fermetures exceptionnelles.',
   icon: 'clock',
   category: 'metier',
   requiresModule: 'opening-hours',
@@ -397,7 +397,7 @@ export const openingHoursBlock = define({
     showCurrentStatus: z.boolean().default(true),
     showClosures: z.boolean().default(true),
   }),
-  defaults: { title: 'Horaires d ouverture', showCurrentStatus: true, showClosures: true },
+  defaults: { title: 'Horaires d’ouverture', showCurrentStatus: true, showClosures: true },
 });
 
 export const teamBlock = define({
@@ -421,7 +421,7 @@ export const menuBlock = define({
   type: 'menu',
   version: 1,
   label: 'Carte',
-  description: 'Votre carte, organisee par catégories, avec les allergènes.',
+  description: 'Votre carte, organisée par catégories, avec les allergènes.',
   icon: 'utensils',
   category: 'metier',
   requiresModule: 'restaurant-menu',
@@ -484,7 +484,7 @@ export const bookingBlock = define({
   type: 'booking',
   version: 1,
   label: 'Réservation',
-  description: 'Vos clients reservent en ligne, vous validez depuis votre espace.',
+  description: 'Vos clients réservent en ligne, vous validez depuis votre espace.',
   icon: 'calendar-check',
   category: 'metier',
   requiresModule: 'booking',
@@ -536,7 +536,7 @@ export const cartBlock = define({
   type: 'cart',
   version: 1,
   label: 'Panier',
-  description: 'Le recapitulatif de commande et le paiement.',
+  description: 'Le récapitulatif de commande et le paiement.',
   icon: 'shopping-cart',
   category: 'metier',
   requiresModule: 'orders',
@@ -616,8 +616,8 @@ export const portfolioBlock = define({
 export const beforeAfterBlock = define({
   type: 'before-after',
   version: 1,
-  label: 'Avant / apres',
-  description: 'Deux photos comparees : la preuve la plus convaincante.',
+  label: 'Avant / après',
+  description: 'Deux photos comparées : la preuve la plus convaincante.',
   icon: 'columns-2',
   category: 'preuve',
   requiresModule: 'portfolio',
@@ -634,14 +634,14 @@ export const beforeAfterBlock = define({
       .max(12)
       .default([]),
   }),
-  defaults: { title: 'Avant / apres', items: [] },
+  defaults: { title: 'Avant / après', items: [] },
 });
 
 export const serviceAreaBlock = define({
   type: 'service-area',
   version: 1,
-  label: 'Zones d intervention',
-  description: 'Les communes que vous couvrez — essentiel pour être trouve.',
+  label: 'Zones d’intervention',
+  description: 'Les communes que vous couvrez — essentiel pour être trouvé.',
   icon: 'map-pin',
   category: 'metier',
   requiresModule: 'service-area',
@@ -650,7 +650,7 @@ export const serviceAreaBlock = define({
     subtitle: text(300),
     layout: z.enum(['tags', 'columns', 'map']).default('tags'),
   }),
-  defaults: { title: 'Zones d intervention', subtitle: '', layout: 'tags' },
+  defaults: { title: 'Zones d’intervention', subtitle: '', layout: 'tags' },
 });
 
 export const eventsBlock = define({
@@ -672,7 +672,7 @@ export const eventsBlock = define({
 export const articlesBlock = define({
   type: 'articles',
   version: 1,
-  label: 'Actualites',
+  label: 'Actualités',
   description: 'Vos derniers articles, bons pour votre référencement.',
   icon: 'newspaper',
   category: 'metier',
@@ -682,7 +682,7 @@ export const articlesBlock = define({
     limit: z.number().int().min(1).max(24).default(3),
     columns: z.union([z.literal(2), z.literal(3)]).default(3),
   }),
-  defaults: { title: 'Actualites', limit: 3, columns: 3 },
+  defaults: { title: 'Actualités', limit: 3, columns: 3 },
 });
 
 export const newsletterBlock = define({
@@ -700,10 +700,10 @@ export const newsletterBlock = define({
       .string()
       .max(400)
       .default(
-        'J accepte de recevoir des actualites par e-mail. Je peux me desinscrire a tout moment.',
+        'J’accepte de recevoir des actualités par e-mail. Je peux me désinscrire à tout moment.',
       ),
   }),
-  defaults: { title: 'Restez informe', subtitle: '', consentText: '' },
+  defaults: { title: 'Restez informé', subtitle: '', consentText: '' },
 });
 
 export const donationBlock = define({
@@ -735,7 +735,7 @@ export const statsBlock = define({
   type: 'stats',
   version: 1,
   label: 'Chiffres clés',
-  description: 'Vos chiffres vérifiables : années d activité, projets, équipe.',
+  description: 'Vos chiffres vérifiables : années d’activité, projets, équipe.',
   icon: 'bar-chart-3',
   category: 'preuve',
   requiresModule: null,
@@ -774,7 +774,7 @@ export const embedBlock = define({
   type: 'embed',
   version: 1,
   label: 'Contenu intégré',
-  description: 'Une video ou une carte provenant d un service approuvé.',
+  description: 'Une vidéo ou une carte provenant d’un service approuvé.',
   icon: 'code',
   category: 'contenu',
   requiresModule: null,
@@ -790,10 +790,63 @@ export const embedBlock = define({
     resourceId: z
       .string()
       .max(200)
-      .regex(/^[A-Za-z0-9_\-/.,+%:?=&]+$/, 'Identifiant invalide.'),
+      .regex(/^[A-Za-z0-9_\-/.,+%:?=&]*$/, 'Identifiant invalide.'),
     aspectRatio: z.enum(['16:9', '4:3', '1:1']).default('16:9'),
   }),
   defaults: { title: '', provider: 'youtube', resourceId: '', aspectRatio: '16:9' },
+});
+
+export const legalNoticeBlock = define({
+  type: 'legal-notice',
+  version: 1,
+  label: 'Mentions légales',
+  description:
+    'Vos mentions légales, rédigées automatiquement à partir des informations de « Mon entreprise ».',
+  icon: 'scale',
+  category: 'structure',
+  requiresModule: null,
+  singleton: true,
+  schema: z.object({
+    /** Complement libre : credits photo, conditions particulieres… */
+    extra: z.array(richParagraphSchema).max(30).default([]),
+  }),
+  defaults: { extra: [] },
+});
+
+export const privacyNoticeBlock = define({
+  type: 'privacy-notice',
+  version: 1,
+  label: 'Politique de confidentialité',
+  description:
+    'Votre politique de confidentialité, adaptée automatiquement aux fonctionnalités de votre site.',
+  icon: 'shield-check',
+  category: 'structure',
+  requiresModule: null,
+  singleton: true,
+  schema: z.object({
+    extra: z.array(richParagraphSchema).max(30).default([]),
+  }),
+  defaults: { extra: [] },
+});
+
+export const salesTermsBlock = define({
+  type: 'sales-terms',
+  version: 1,
+  label: 'Conditions générales de vente',
+  description:
+    'Les conditions de vente de votre boutique, avec les mentions obligatoires pour vendre à des particuliers.',
+  icon: 'file-text',
+  category: 'structure',
+  requiresModule: 'orders',
+  singleton: true,
+  schema: z.object({
+    /** Delai de livraison ou de retrait annonce, en jours. */
+    deliveryDays: z.number().int().min(1).max(30).default(7),
+    /** Produits perissables ou personnalises : pas de droit de retractation. */
+    perishable: z.boolean().default(false),
+    extra: z.array(richParagraphSchema).max(40).default([]),
+  }),
+  defaults: { deliveryDays: 7, perishable: false, extra: [] },
 });
 
 /* -------------------------------------------------------------------------- */
@@ -835,6 +888,9 @@ export const BLOCK_DEFINITIONS = [
   statsBlock,
   logosBlock,
   embedBlock,
+  legalNoticeBlock,
+  privacyNoticeBlock,
+  salesTermsBlock,
 ] as const satisfies readonly BlockDefinition[];
 
 export type BlockType = (typeof BLOCK_DEFINITIONS)[number]['type'];
@@ -914,6 +970,107 @@ export function parseBlock(input: {
 }
 
 /** Bloc pret a inserer, rempli avec ses valeurs par defaut. */
+/**
+ * Contenu de depart d une section ajoutee depuis l editeur.
+ *
+ * La bibliotheque promet « un contenu d exemple que vous remplacerez » : une
+ * section Questions fréquentes sans aucune question ne s afficherait meme pas
+ * en ligne, et le client croirait que l ajout a echoue.
+ *
+ * Deux regles : les textes sont vrais pour presque tout le monde, ou
+ * signales comme textes d exemple avant publication (voir
+ * publication-checks.ts) ; et JAMAIS de faux avis, de faux chiffres ni de
+ * faux logos de clients — ceux-la restent vides tant que le client ne les a
+ * pas saisis.
+ */
+export const STARTER_PLACEHOLDER = 'Remplacez ce texte';
+
+const STARTERS: Record<string, Record<string, unknown>> = {
+  intro: {
+    body: [
+      {
+        kind: 'paragraph',
+        text:
+          'Présentez votre histoire, votre équipe et ce qui fait votre différence. ' +
+          'Un texte sincère vaut mieux qu’un discours générique.',
+      },
+    ],
+  },
+  'rich-text': {
+    blocks: [
+      {
+        kind: 'paragraph',
+        text: `${STARTER_PLACEHOLDER} par le vôtre : cliquez dessus pour l’écrire.`,
+      },
+    ],
+  },
+  features: {
+    title: 'Pourquoi nous choisir',
+    items: [
+      {
+        icon: 'clock',
+        title: 'Réactivité',
+        description: 'Nous répondons rapidement à chaque demande.',
+      },
+      {
+        icon: 'shield-check',
+        title: 'Travail soigné',
+        description: 'Un résultat à la hauteur de vos attentes.',
+      },
+      {
+        icon: 'handshake',
+        title: 'Conseil personnalisé',
+        description: 'Nous prenons le temps de comprendre votre besoin.',
+      },
+    ],
+  },
+  process: {
+    steps: [
+      { title: 'Vous nous contactez', description: 'Par téléphone ou avec le formulaire.' },
+      { title: 'Nous en parlons', description: 'Nous faisons le point sur votre besoin.' },
+      {
+        title: 'Nous nous occupons de tout',
+        description: 'Et vous tenons informé à chaque étape.',
+      },
+    ],
+  },
+  faq: {
+    items: [
+      {
+        question: 'Comment vous contacter ?',
+        answer:
+          'Par téléphone, par e-mail ou avec le formulaire de contact de ce site. ' +
+          'Nous vous répondons rapidement.',
+      },
+      {
+        question: 'Où vous trouver ?',
+        answer: 'Notre adresse et nos horaires sont indiqués sur la page Contact.',
+      },
+    ],
+  },
+  cta: { subtitle: 'Écrivez-nous ou appelez-nous : nous vous répondons rapidement.' },
+};
+
+/** Section prete a etre ajoutee par le client, avec son contenu de depart. */
+export function createStarterBlock(type: string): ParsedBlock | null {
+  const definition = getBlockDefinition(type);
+  if (!definition) return null;
+  const starter = STARTERS[type];
+  if (!starter) return createBlock(type);
+  const parsed = definition.schema.safeParse({
+    ...(definition.defaults as Record<string, unknown>),
+    ...starter,
+  });
+  if (!parsed.success) return createBlock(type);
+  return {
+    id: '',
+    type: definition.type,
+    version: definition.version,
+    props: parsed.data as Record<string, unknown>,
+    settings: blockSettingsSchema.parse({}),
+  };
+}
+
 export function createBlock(type: string): ParsedBlock | null {
   const definition = getBlockDefinition(type);
   if (!definition) return null;

@@ -402,7 +402,7 @@ export function QuotaMeter({
       <div className={cn('flex items-center justify-between text-sm', className)}>
         <span className="text-[var(--foreground-muted)]">{label}</span>
         <span className="font-medium text-[var(--foreground)] tabular-nums">
-          {used.toLocaleString('fr-FR')} {unit} · illimite
+          {used.toLocaleString('fr-FR')} {unit} · illimité
         </span>
       </div>
     );

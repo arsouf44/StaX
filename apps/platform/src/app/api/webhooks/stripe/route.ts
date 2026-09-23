@@ -1,10 +1,14 @@
+import { platformUrl } from '@stax/config';
 import { createServiceClient } from '@stax/database';
+import { renewalReminderEmail, sendEmail } from '@stax/emails';
 import {
+  formatMoney,
   redactEventPayload,
   verifyWebhook,
   WebhookVerificationError,
   type Stripe,
 } from '@stax/payments';
+import { provisionExistingSite } from '~/lib/site-provisioning';
 
 /**
  * Webhook Stripe de la plateforme.
@@ -132,6 +136,10 @@ async function handleEvent(db: Db, event: Stripe.Event): Promise<void> {
       await onInvoiceEvent(db, event.data.object as Stripe.Invoice);
       return;
 
+    case 'invoice.upcoming':
+      await onUpcomingInvoice(db, event.data.object as Stripe.Invoice);
+      return;
+
     case 'charge.refunded':
       await onChargeRefunded(db, event.data.object as Stripe.Charge);
       return;
@@ -176,9 +184,19 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
   });
 
   if (error) throw new Error(error.message);
-  const result = data as { ok: boolean; code?: string } | null;
+  const result = data as { ok: boolean; code?: string; siteId?: string } | null;
   if (!result?.ok) {
     throw new Error(`Commande non appliquee : ${result?.code ?? 'inconnu'}`);
+  }
+
+  // Le site est prepare DES le paiement : le client le trouve dans son espace,
+  // avec des pages et des textes adaptes a son metier, pret a etre relu. Un
+  // echec ici n annule pas la commande (elle est payee) : l espace client
+  // propose « Préparer mon site » et la fonction SQL est idempotente.
+  if (result.code === 'applied' && result.siteId) {
+    await prepareOrderedSite(db, orderId, result.siteId).catch((error: unknown) => {
+      console.error('[stax:webhook] preparation du site differee', error);
+    });
   }
 
   // L abonnement de maintenance arrive aussi par `customer.subscription.created`,
@@ -247,6 +265,67 @@ async function onInvoiceEvent(db: Db, invoice: Stripe.Invoice): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
+
+/**
+ * Rappel de reconduction de la maintenance annuelle.
+ *
+ * Obligatoire envers un client non professionnel (article L215-1 du Code de la
+ * consommation) : sans lui, il pourrait resilier a tout moment apres la
+ * reconduction. Nous l'envoyons a tous les clients. Une maintenance deja
+ * resiliee ne recoit rien : elle ne sera pas reconduite.
+ */
+async function onUpcomingInvoice(db: Db, invoice: Stripe.Invoice): Promise<void> {
+  const subscriptionId =
+    asString((invoice as unknown as { subscription?: unknown }).subscription) ??
+    asString(invoice.lines?.data?.[0]?.subscription);
+  if (!subscriptionId) return;
+
+  const { data: subscription } = await db
+    .from('subscriptions')
+    .select('organization_id, billing_interval, current_period_end, cancel_at_period_end, status')
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle();
+  const row = subscription as {
+    organization_id: string;
+    billing_interval: string;
+    current_period_end: string | null;
+    cancel_at_period_end: boolean;
+    status: string;
+  } | null;
+  if (!row || row.cancel_at_period_end || row.billing_interval !== 'year') return;
+  if (row.status === 'canceled' || row.status === 'incomplete_expired') return;
+
+  const renewal =
+    row.current_period_end ?? toIso(invoice.next_payment_attempt) ?? toIso(invoice.period_end);
+  if (!renewal) return;
+
+  const { data: member } = await db
+    .from('organization_members')
+    .select('profiles ( email, first_name )')
+    .eq('organization_id', row.organization_id)
+    .eq('role', 'owner')
+    .limit(1)
+    .maybeSingle();
+  const profile = (
+    member as { profiles: { email: string; first_name: string | null } | null } | null
+  )?.profiles;
+  if (!profile?.email) return;
+
+  const result = await sendEmail(
+    renewalReminderEmail({
+      to: profile.email,
+      firstName: profile.first_name,
+      renewalDate: LONG_DATE.format(new Date(renewal)),
+      amount: formatMoney(invoice.amount_due ?? 0, 'EUR') + ' TTC',
+      cancelUrl: `${platformUrl()}/app/abonnement`,
+    }),
+    { db, organizationId: row.organization_id },
+  );
+  // Un echec d'envoi est rejoue : le rappel est une obligation, pas un confort.
+  if (!result.ok) throw new Error(`Rappel de reconduction non envoye : ${result.error ?? ''}`);
+}
+
 async function onChargeRefunded(db: Db, charge: Stripe.Charge): Promise<void> {
   const paymentIntentId = asString(charge.payment_intent);
   if (!paymentIntentId) return;
@@ -261,4 +340,59 @@ async function onChargeRefunded(db: Db, charge: Stripe.Charge): Promise<void> {
     });
     if (error) throw new Error(error.message);
   }
+}
+
+/** Prepare le site d une commande payee, a partir de son metier et de son offre. */
+async function prepareOrderedSite(db: Db, orderId: string, siteId: string): Promise<void> {
+  const { data: order } = await db
+    .from('orders')
+    .select('organization_id, business_type_slug, requested_domain, domain_handling, questionnaire')
+    .eq('id', orderId)
+    .maybeSingle();
+  const { data: site } = await db.from('sites').select('id, name').eq('id', siteId).maybeSingle();
+  if (!order || !site) return;
+
+  const answers = (order.questionnaire ?? {}) as Record<string, unknown>;
+  const features = new Map<string, boolean>();
+  const hasFeature = (feature: string) => features.get(feature) === true;
+  for (const feature of [
+    'bookings',
+    'ecommerce',
+    'online_payments',
+    'customer_accounts',
+    'blog',
+    'multi_language',
+  ]) {
+    // `site_has_feature` est la variante reservee a la cle de service : la
+    // version publique ne repond qu aux membres de l organisation.
+    const { data: enabled } = await db.rpc('site_has_feature', {
+      p_site: siteId,
+      p_feature: feature,
+    });
+    features.set(feature, enabled === true);
+  }
+
+  await provisionExistingSite(
+    db,
+    {
+      id: site.id as string,
+      name: site.name as string,
+      businessTypeSlug: (order.business_type_slug as string | null) ?? null,
+      organizationId: order.organization_id as string,
+    },
+    {
+      hasFeature,
+      subdomain:
+        order.domain_handling === 'subdomain_only' && typeof order.requested_domain === 'string'
+          ? order.requested_domain.split('.')[0]
+          : null,
+      details: {
+        email: typeof answers['contactEmail'] === 'string' ? answers['contactEmail'] : null,
+        phone: typeof answers['contactPhone'] === 'string' ? answers['contactPhone'] : null,
+        city: typeof answers['city'] === 'string' ? answers['city'] : null,
+        pitch: typeof answers['pitch'] === 'string' ? answers['pitch'] : null,
+        description: typeof answers['pitch'] === 'string' ? answers['pitch'] : null,
+      },
+    },
+  );
 }

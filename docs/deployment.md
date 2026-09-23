@@ -78,6 +78,22 @@ pnpm legal:check
 
 Sans elles, **la production refuse de démarrer**. C’est voulu.
 
+Le Worker des sites clients a aussi besoin de l’identité de StaX : StaX est
+l’**hébergeur** de chaque site client, et ses mentions légales doivent le
+nommer avec son adresse et son téléphone (article 6 III de la LCEN).
+
+```bash
+cd apps/site-runtime
+wrangler secret put LEGAL_COMPANY_NAME --env production
+wrangler secret put LEGAL_ADDRESS      --env production
+wrangler secret put SUPPORT_PHONE      --env production
+wrangler secret put SUPPORT_EMAIL      --env production
+```
+
+Les polices des sites clients sont servies par le Worker lui-même
+(`/_stax/fonts/`, configuration `assets` de `wrangler.jsonc`) : aucun visiteur
+n’est jamais envoyé vers Google Fonts.
+
 ### 4. Déploiement
 
 ```bash

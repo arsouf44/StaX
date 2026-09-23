@@ -45,3 +45,22 @@ du fichier à l’envoi : une extension ne prouve rien.
 ## Sauvegardes
 
 Voir [backup-recovery.md](./backup-recovery.md).
+
+## Durées de conservation (purge quotidienne)
+
+La fonction `app.apply_retention()` (migration 0039) supprime chaque jour les
+données qui ont dépassé la durée annoncée dans la politique de confidentialité
+et le registre des traitements : journaux techniques (12 mois), journal d’audit
+(3 ans), statistiques unitaires (30 jours), signalements clos (1 an), etc.
+
+Elle est planifiée automatiquement à 3 h 17 **si l’extension `pg_cron` est
+active** au moment de la migration. Sur Supabase, activez `pg_cron`
+(Database → Extensions) **avant** d’appliquer les migrations, ou planifiez-la
+ensuite :
+
+```sql
+select cron.schedule('stax-retention', '17 3 * * *', 'select app.apply_retention()');
+```
+
+Sans cette planification, les durées de conservation publiées ne sont pas
+respectées : c’est une non-conformité au RGPD (article 5.1.e).

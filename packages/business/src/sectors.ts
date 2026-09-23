@@ -543,7 +543,7 @@ export const SECTORS: readonly SectorDefinition[] = [
     defaultModules: [...COMMON_MODULES, 'blog', 'events', 'newsletter'],
     defaultPages: [
       HOME(['hero', 'intro', 'articles', 'events', 'cta']),
-      page('/actualites', 'Actualites', 'blog', ['section-heading', 'articles']),
+      page('/actualites', 'Actualités', 'blog', ['section-heading', 'articles']),
       page('/adherer', 'Adhérer', 'standard', ['section-heading', 'rich-text', 'contact']),
       CONTACT_PAGE,
     ],

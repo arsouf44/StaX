@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { unwrapMaybe } from '@stax/database';
 import { Panel } from '@stax/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { SettingsForm, type SettingsGroup } from '~/components/app/settings-form';
 import { getWorkspace } from '~/lib/workspace';
-import { saveBusinessIdentityAction } from '../site/actions';
+import { parseLegalIdentity } from '@stax/site-engine';
+import { saveBusinessIdentityAction, saveLegalIdentityAction } from '../site/actions';
 
 export const metadata: Metadata = { title: 'Mon entreprise' };
 
@@ -119,6 +119,95 @@ const GROUPS: SettingsGroup[] = [
   },
 ];
 
+const LEGAL_GROUPS: SettingsGroup[] = [
+  {
+    id: 'mentions',
+    title: 'Mentions légales',
+    description:
+      'En tant qu’éditeur de votre site, la loi vous impose de vous identifier. Saisissez ces informations une fois : les pages « Mentions légales », « Confidentialité » et, si vous vendez en ligne, « Conditions générales de vente » les reprennent automatiquement. Les champs marqués d’un astérisque sont exigés avant la mise en ligne.',
+    fields: [
+      {
+        name: 'legalName',
+        label: 'Raison sociale ou nom',
+        kind: 'text',
+        required: true,
+        maxLength: 160,
+        hint: 'Tel qu’il figure au registre. Entrepreneur individuel : vos nom et prénom.',
+      },
+      {
+        name: 'legalForm',
+        label: 'Forme juridique',
+        kind: 'text',
+        required: true,
+        maxLength: 80,
+        placeholder: 'SAS, SARL, EI, micro-entreprise, association…',
+      },
+      {
+        name: 'capital',
+        label: 'Capital social',
+        kind: 'text',
+        maxLength: 40,
+        hint: 'Pour une société uniquement. Exemple : 1 000 €.',
+      },
+      {
+        name: 'registration',
+        label: 'Immatriculation',
+        kind: 'text',
+        required: true,
+        maxLength: 160,
+        placeholder: 'RCS Paris 123 456 789',
+        hint: 'SIREN avec la ville du RCS, ou RNE pour un artisan, ou RNA pour une association.',
+      },
+      {
+        name: 'vatNumber',
+        label: 'Numéro de TVA intracommunautaire',
+        kind: 'text',
+        maxLength: 40,
+      },
+      {
+        name: 'address',
+        label: 'Adresse du siège',
+        kind: 'text',
+        required: true,
+        maxLength: 240,
+        wide: true,
+      },
+      {
+        name: 'publicationDirector',
+        label: 'Directeur de la publication',
+        kind: 'text',
+        required: true,
+        maxLength: 120,
+        hint: 'La personne responsable des contenus du site : en général, le dirigeant.',
+      },
+      {
+        name: 'privacyContact',
+        label: 'Contact pour les données personnelles',
+        kind: 'email',
+        maxLength: 180,
+        hint: 'Facultatif : à défaut, votre e-mail public est indiqué.',
+      },
+      {
+        name: 'mediator',
+        label: 'Médiateur de la consommation',
+        kind: 'text',
+        maxLength: 300,
+        wide: true,
+        hint: 'Obligatoire si vous vendez à des particuliers : nom et site internet du médiateur auquel vous adhérez.',
+      },
+      {
+        name: 'regulatedProfession',
+        label: 'Profession réglementée',
+        kind: 'textarea',
+        rows: 3,
+        maxLength: 400,
+        wide: true,
+        hint: 'Seulement si votre activité est réglementée : ordre ou organisme d’inscription, titre professionnel et pays où il a été obtenu, règles professionnelles applicables.',
+      },
+    ],
+  },
+];
+
 export default async function BusinessSettingsPage() {
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
@@ -139,11 +228,12 @@ export default async function BusinessSettingsPage() {
         notification_emails: string[] | null;
         cookie_banner_enabled: boolean;
         analytics_enabled: boolean;
+        legal_identity: unknown;
       }>(
         (await db
           .from('site_settings')
           .select(
-            'business_name, tagline, description, email, phone, address_line1, address_line2, postal_code, city, social_links, notification_emails, cookie_banner_enabled, analytics_enabled',
+            'business_name, tagline, description, email, phone, address_line1, address_line2, postal_code, city, social_links, notification_emails, cookie_banner_enabled, analytics_enabled, legal_identity',
           )
           .eq('site_id', site.id)
           .maybeSingle()) as never,
@@ -175,6 +265,9 @@ export default async function BusinessSettingsPage() {
     analyticsEnabled: settings?.analytics_enabled ?? true,
   };
 
+  const identity = parseLegalIdentity(settings?.legal_identity);
+  const legalValues = { ...identity };
+
   return (
     <>
       <PageHeader
@@ -198,19 +291,18 @@ export default async function BusinessSettingsPage() {
         </Panel>
       )}
 
-      <Panel level={1} padding="lg" className="mt-8">
-        <h2 className="text-sm font-medium">Informations légales de votre entreprise</h2>
-        <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-          Les mentions légales de votre site (numéro SIREN, forme juridique, adresse du siège,
-          directeur de la publication) sont des obligations qui vous incombent. Nous ne les
-          inventons pas : transmettez-les-nous et nous les mettons en place.
-        </p>
-        <p className="mt-3 text-sm">
-          <Link href="/app/support" className="text-[var(--accent)] underline underline-offset-4">
-            Transmettre mes informations légales
-          </Link>
-        </p>
-      </Panel>
+      {site ? (
+        <div className="mt-12" data-testid="legal-identity">
+          <SettingsForm
+            action={saveLegalIdentityAction}
+            groups={LEGAL_GROUPS}
+            values={legalValues}
+            readOnly={!canEdit}
+            submitLabel="Enregistrer mes mentions légales"
+            footnote="Nous ne complétons jamais ces informations à votre place : elles engagent votre responsabilité d’éditeur."
+          />
+        </div>
+      ) : null}
     </>
   );
 }

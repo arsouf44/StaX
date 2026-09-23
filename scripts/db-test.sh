@@ -19,8 +19,18 @@ psql "$ADMIN_URL" -q -v ON_ERROR_STOP=1 \
 "$ROOT/scripts/db-apply.sh" "$TARGET_URL" > /dev/null
 
 printf 'Execution des tests de securite...\n'
+# Le statut de psql est lu a part : filtrer la sortie ne doit JAMAIS masquer
+# un echec (auparavant, le `|| true` du filtre rendait la suite toujours
+# verte, meme quand une assertion echouait).
+set +e
 psql "$TARGET_URL" -v ON_ERROR_STOP=1 -f "$ROOT/tests/sql/rls.test.sql" 2>&1 \
   | sed 's/^psql:[^ ]*: NOTICE:  //' \
-  | grep -vE '^(SET|DO|CREATE|INSERT|UPDATE|DELETE|ALTER|GRANT|REVOKE|COMMENT)' || true
+  | grep -vE '^(SET|DO|CREATE|INSERT|UPDATE|DELETE|ALTER|GRANT|REVOKE|COMMENT)'
+status=${PIPESTATUS[0]}
+set -e
+if [ "$status" -ne 0 ]; then
+  printf '\nECHEC des tests de securite (psql a termine avec le code %s).\n' "$status" >&2
+  exit "$status"
+fi
 
 printf '\nBase de test disponible : %s\n' "$TARGET_URL"

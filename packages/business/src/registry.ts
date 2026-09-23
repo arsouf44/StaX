@@ -110,7 +110,7 @@ const SPECS: readonly BusinessSpec[] = [
   {
     id: 'cafe',
     sector: 'restauration',
-    name: 'Cafe / salon de the',
+    name: 'Café / salon de thé',
     pluralName: 'Cafés',
     icon: 'coffee',
     schemaOrgType: 'CafeOrCoffeeShop',
@@ -512,7 +512,7 @@ const SPECS: readonly BusinessSpec[] = [
   {
     id: 'freelance',
     sector: 'services-professionnels',
-    name: 'Independant / freelance',
+    name: 'Indépendant / freelance',
     pluralName: 'Indépendants',
     icon: 'user-round',
     schemaOrgType: 'ProfessionalService',
@@ -612,7 +612,7 @@ const SPECS: readonly BusinessSpec[] = [
   {
     id: 'gite',
     sector: 'hebergement-tourisme',
-    name: 'Gite / location saisonniere',
+    name: 'Gîte / location saisonnière',
     pluralName: 'Gîtes',
     icon: 'tent-tree',
     schemaOrgType: 'LodgingBusiness',
@@ -638,7 +638,7 @@ const SPECS: readonly BusinessSpec[] = [
   {
     id: 'guide-touristique',
     sector: 'hebergement-tourisme',
-    name: 'Guide / activite touristique',
+    name: 'Guide / activité touristique',
     pluralName: 'Guides',
     icon: 'map',
     schemaOrgType: 'TouristAttraction',
@@ -850,7 +850,7 @@ const SPECS: readonly BusinessSpec[] = [
   {
     id: 'ecole',
     sector: 'education',
-    name: 'Ecole / etablissement',
+    name: 'École / établissement',
     pluralName: 'Écoles',
     icon: 'school',
     schemaOrgType: 'EducationalOrganization',

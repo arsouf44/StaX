@@ -41,10 +41,34 @@ certificat, le Worker résout le tenant à partir du nom d’hôte.
 | Espace client, back-office, API | `no-store` | Données personnelles |
 | Ressource versionnée par empreinte | `immutable`, un an | Le nom change avec le contenu |
 
-La clé de cache incorpore le **nom d’hôte** et l’**empreinte de la version
-publiée**. Deux conséquences : deux tenants ne peuvent jamais partager une
-entrée, et une publication invalide mécaniquement les entrées précédentes,
-puisque l’empreinte change.
+La clé de cache de Cloudflare est l’**adresse complète**, nom d’hôte compris :
+deux tenants ne peuvent jamais partager une entrée.
+
+### Ce qui se passe à la publication
+
+1. `app.publish_site` fige une version immuable et la rend visible en une
+   seule transaction : le Worker sert la nouvelle version dès la requête
+   suivante qui n’est pas servie par le cache.
+2. La plateforme **purge** ensuite les pages du site sur la zone
+   (`packages/infrastructure/src/cache-purge.ts`) : toutes les adresses du site
+   (chaque page × chaque nom d’hôte actif), par lots de 30. La purge est
+   tracée dans le journal d’audit (`site.cache_purged`).
+3. Chaque page porte `x-stax-version` (le numéro servi) et
+   `cache-tag: stax-site-<id>` : le support voit quelle version un visiteur a
+   reçue, et une offre Cloudflare qui purge par étiquette peut vider un site
+   d’un coup.
+
+Configuration de la purge :
+
+| Variable | Rôle |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Jeton avec la permission **Zone → Cache Purge → Purge** sur la zone des sites |
+| `CLOUDFLARE_SITES_ZONE_ID` | Zone qui sert `*.sites.stax.fr` (à défaut : `CLOUDFLARE_ZONE_ID`) |
+
+Sans ces variables, la purge est **sautée et le dit** (le dialogue de
+publication n’échoue pas) : une publication devient visible au plus tard à
+l’expiration du cache partagé, soit une minute. Une purge qui échoue n’annule
+jamais la publication : elle est journalisée, la version reste en ligne.
 
 ---
 

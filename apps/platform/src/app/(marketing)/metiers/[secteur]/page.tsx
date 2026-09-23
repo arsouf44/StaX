@@ -44,10 +44,10 @@ export default async function SectorPage({ params }: { params: Promise<{ secteur
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <Breadcrumb
             className="mb-8"
@@ -116,10 +116,10 @@ export default async function SectorPage({ params }: { params: Promise<{ secteur
             configurent en conséquence.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <ButtonLink href="/commander" size="lg">
+            <ButtonLink variant="accent" href="/commander" size="pill-lg">
               Commander mon site
             </ButtonLink>
-            <ButtonLink href="/tarifs" variant="secondary" size="lg">
+            <ButtonLink href="/tarifs" variant="secondary" size="pill-lg">
               Voir les tarifs
             </ButtonLink>
           </div>

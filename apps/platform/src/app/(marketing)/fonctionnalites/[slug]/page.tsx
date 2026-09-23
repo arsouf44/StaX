@@ -55,10 +55,10 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
   return (
     <>
       <Section className="relative overflow-hidden pb-0">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <Breadcrumb
             className="mb-8"
@@ -171,10 +171,10 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
                     ))}
                 </ul>
                 <div className="mt-6 border-t border-[var(--border)] pt-6">
-                  <ButtonLink href="/commander" block>
+                  <ButtonLink variant="accent" size="pill" href="/commander" block>
                     Commander mon site
                   </ButtonLink>
-                  <ButtonLink href="/tarifs" variant="ghost" block className="mt-2">
+                  <ButtonLink size="pill" href="/tarifs" variant="ghost" block className="mt-2">
                     Voir les tarifs
                   </ButtonLink>
                 </div>

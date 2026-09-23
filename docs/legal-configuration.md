@@ -33,6 +33,7 @@ Volontairement laid et impossible à confondre avec une vraie valeur.
 | `LEGAL_DIRECTOR` | Directeur de la publication (personne physique, LCEN) |
 | `LEGAL_HOST` | Raison sociale de l’hébergeur |
 | `LEGAL_HOST_ADDRESS` | Adresse et contact de l’hébergeur |
+| `LEGAL_HOST_PHONE` | Téléphone de l’hébergeur (LCEN art. 6 III, modifié en 2024) |
 | `LEGAL_DPO_CONTACT` | Contact pour l’exercice des droits RGPD |
 | `SUPPORT_EMAIL` | Adresse de contact publique |
 

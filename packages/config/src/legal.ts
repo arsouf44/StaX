@@ -51,6 +51,7 @@ export type LegalKey =
   | 'LEGAL_DIRECTOR'
   | 'LEGAL_HOST'
   | 'LEGAL_HOST_ADDRESS'
+  | 'LEGAL_HOST_PHONE'
   | 'LEGAL_DPO_CONTACT'
   | 'LEGAL_MEDIATOR'
   | 'SUPPORT_EMAIL'
@@ -151,6 +152,13 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     defaultValue:
       'Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis — Supabase, Inc., 970 Toa Payoh North, Singapour',
     hint: 'Adresse postale et moyen de contact de l’hébergeur.',
+  },
+  {
+    key: 'LEGAL_HOST_PHONE',
+    label: 'Téléphone de l’hébergeur',
+    required: false,
+    placeholder: '[A CONFIGURER — telephone de l’hebergeur]',
+    hint: 'Exigé par l’article 6 III de la LCEN (modifié par la loi du 21 mai 2024) : numéro de téléphone du prestataire d’hébergement, tel qu’il le publie.',
   },
   {
     key: 'LEGAL_DPO_CONTACT',
@@ -374,5 +382,35 @@ export function maintenancePolicyConfig(): MaintenancePolicyConfig {
     suspensionRetentionDays: int('MAINTENANCE_SUSPENSION_RETENTION_DAYS', 90),
     archiveRetentionDays: int('MAINTENANCE_ARCHIVE_RETENTION_DAYS', 365),
     financialRetentionYears: 10,
+  };
+}
+
+/**
+ * Identite de StaX en tant qu HEBERGEUR des sites de ses clients.
+ *
+ * Chaque site client doit nommer son hebergeur dans ses mentions legales
+ * (article 6 III de la LCEN) : c est StaX, qui fournit l hebergement. Seules
+ * les valeurs reellement configurees sont renvoyees — jamais un marqueur
+ * « [A CONFIGURER] », qui n a rien a faire sur le site d un client.
+ */
+export interface SiteHostIdentity {
+  name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  reportUrl: string | null;
+}
+
+export function siteHostIdentity(platformBaseUrl: string | null): SiteHostIdentity {
+  const configured = (key: LegalKey): string | null =>
+    isLegalValueConfigured(key) ? legalValue(key) : null;
+  return {
+    name: configured('LEGAL_COMPANY_NAME') ?? 'StaX',
+    address: configured('LEGAL_ADDRESS'),
+    phone: configured('SUPPORT_PHONE'),
+    email: configured('SUPPORT_EMAIL'),
+    reportUrl: platformBaseUrl
+      ? `${platformBaseUrl.replace(/\/+$/, '')}/signaler-un-contenu`
+      : null,
   };
 }

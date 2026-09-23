@@ -86,6 +86,10 @@ export const HANDLED_PLATFORM_EVENTS = [
   'invoice.paid',
   'invoice.payment_failed',
   'invoice.finalized',
+  // Rappel de reconduction (article L215-1 du Code de la consommation) :
+  // Stripe l'emet avant chaque echeance, selon le delai regle dans le tableau
+  // de bord (Facturation > Abonnements : 45 jours, voir docs/stripe-connect.md).
+  'invoice.upcoming',
 ] as const;
 
 export const HANDLED_CONNECT_EVENTS = [

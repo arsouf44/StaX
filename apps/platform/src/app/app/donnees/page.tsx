@@ -42,6 +42,7 @@ export default async function DataPage() {
             contacts: true,
             reservations: modules.includes('booking'),
             commandes: modules.includes('orders'),
+            comptes: modules.includes('customer-accounts'),
           }}
         />
 

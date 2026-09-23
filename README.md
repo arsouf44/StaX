@@ -10,22 +10,26 @@ photos, horaires, messages reçus, réservations, commandes et encaissements.
 
 ## Ce que le produit fait réellement
 
-| Capacité                                                        | État | Où c’est implémenté                                      |
-| --------------------------------------------------------------- | ---- | -------------------------------------------------------- |
-| Vendre des sites (offres, panier, paiement)                     | ✅   | `apps/platform/src/app/(commande)` + `packages/payments` |
-| Recevoir commandes et paiements                                 | ✅   | webhooks Stripe signés + `app.apply_order_paid`          |
-| Créer et publier des sites clients                              | ✅   | `app.publish_site` (instantané figé, immuable)           |
-| Héberger et servir les sites publiés                            | ✅   | `apps/site-runtime` (Worker multi-tenant)                |
-| Espace client (contenus, messages, factures)                    | ✅   | `apps/platform/src/app/app`                              |
-| Formulaires, prospects, réservations sur les sites              | ✅   | `app.submit_form`, `app.create_booking`                  |
-| Domaine propre par client                                       | ✅   | `site_domains` + résolution par nom d’hôte               |
-| Encaissements sur les sites clients                             | ✅   | Stripe Connect, commission à zéro                        |
-| Abonnement de maintenance                                       | ✅   | `subscriptions` + webhooks                               |
-| Projets sur mesure sur devis                                    | ✅   | `/devis` → `quotes`                                      |
-| Éditeur complet : ajout, duplication, ordre, aperçu, historique | ✅   | `apps/platform/src/app/app/editeur`                      |
-| Boutique en ligne, du panier à l’encaissement                   | ✅   | `app.create_shop_order`, `/api/checkout`                 |
-| Comptes client sur les sites, sans mot de passe                 | ✅   | `site_customers` + `/compte`                             |
-| Registre des violations de données (art. 33.5)                  | ✅   | `data_breaches` + `/admin/securite/violations`           |
+| Capacité                                                        | État | Où c’est implémenté                                       |
+| --------------------------------------------------------------- | ---- | --------------------------------------------------------- |
+| Vendre des sites (offres, panier, paiement)                     | ✅   | `apps/platform/src/app/(commande)` + `packages/payments`  |
+| Recevoir commandes et paiements                                 | ✅   | webhooks Stripe signés + `app.apply_order_paid`           |
+| Créer et publier des sites clients                              | ✅   | `app.publish_site` (instantané figé, immuable)            |
+| Héberger et servir les sites publiés                            | ✅   | `apps/site-runtime` (Worker multi-tenant)                 |
+| Espace client (contenus, messages, factures)                    | ✅   | `apps/platform/src/app/app`                               |
+| Formulaires, prospects, réservations sur les sites              | ✅   | `app.submit_form`, `app.create_booking`                   |
+| Domaine propre par client                                       | ✅   | `site_domains` + résolution par nom d’hôte                |
+| Encaissements sur les sites clients                             | ✅   | Stripe Connect, commission à zéro                         |
+| Abonnement de maintenance                                       | ✅   | `subscriptions` + webhooks                                |
+| Projets sur mesure sur devis                                    | ✅   | `/devis` → `quotes`                                       |
+| Éditeur visuel : clic sur l’aperçu, sections, photos, téléphone | ✅   | `apps/platform/src/app/app/editeur`                       |
+| Tout réversible : annuler/rétablir, corbeille, versions         | ✅   | `editor_revisions`, `draft_checkpoints`, `site_versions`  |
+| Publication vérifiée, immuable, purge du cache, retour arrière  | ✅   | `app.publish_site`, `app.rollback_site`, `cache-purge.ts` |
+| Comptes internes StaX : sites illimités sans paiement           | ✅   | `app.create_internal_order`, `pnpm internal:bootstrap`    |
+| Intervention de l’équipe StaX, tracée et visible du client      | ✅   | sessions d’assistance, `app.org_can`                      |
+| Boutique en ligne, du panier à l’encaissement                   | ✅   | `app.create_shop_order`, `/api/checkout`                  |
+| Comptes client sur les sites, sans mot de passe                 | ✅   | `site_customers` + `/compte`                              |
+| Registre des violations de données (art. 33.5)                  | ✅   | `data_breaches` + `/admin/securite/violations`            |
 
 > Aucune ligne de ce tableau n’est une intention : chacune correspond à du code
 > exécuté et, pour les points sensibles, à une assertion de test.
@@ -54,6 +58,9 @@ pnpm db:types              # régénère les types TypeScript
 # 4. Compte administrateur (secret fourni au moment de l’exécution)
 ADMIN_BOOTSTRAP_PASSWORD="$(openssl rand -base64 24)" pnpm admin:bootstrap
 
+# 4 bis. Compte interne StaX (sites sans paiement) — voir docs/admin-bootstrap.md
+INTERNAL_OWNER_EMAIL=… INTERNAL_OWNER_PASSWORD='…' pnpm internal:bootstrap
+
 # 5. Développement
 pnpm dev                   # plateforme, http://localhost:3000
 pnpm dev:site              # moteur des sites clients, http://localhost:3001
@@ -74,7 +81,7 @@ pnpm dev:site              # moteur des sites clients, http://localhost:3001
 
 ```bash
 pnpm verify                # format + lint + typecheck + tests
-scripts/db-test.sh         # 175 assertions de sécurité SQL
+scripts/db-test.sh         # 309 assertions de sécurité SQL (échoue au premier échec)
 pnpm build:cf              # build Cloudflare des deux applications
 ```
 
@@ -160,21 +167,51 @@ Documentation détaillée dans [`docs/`](./docs) :
 
 ## Qualité
 
-| Contrôle                                   | Commande             | État |
-| ------------------------------------------ | -------------------- | ---- |
-| Formatage                                  | `pnpm format:check`  | ✅   |
-| Lint (0 avertissement toléré)              | `pnpm lint`          | ✅   |
-| Types (strict, `noUncheckedIndexedAccess`) | `pnpm typecheck`     | ✅   |
-| Tests unitaires et d’intégration           | `pnpm test`          | ✅   |
-| Assertions de sécurité SQL                 | `scripts/db-test.sh` | ✅   |
-| Build production                           | `pnpm build`         | ✅   |
-| Build Cloudflare                           | `pnpm build:cf`      | ✅   |
-| Parcours navigateur                        | `pnpm test:e2e`      | ✅   |
+| Contrôle                                   | Commande              | État |
+| ------------------------------------------ | --------------------- | ---- |
+| Formatage                                  | `pnpm format:check`   | ✅   |
+| Lint (0 avertissement toléré)              | `pnpm lint`           | ✅   |
+| Types (strict, `noUncheckedIndexedAccess`) | `pnpm typecheck`      | ✅   |
+| Tests unitaires et d’intégration           | `pnpm test`           | ✅   |
+| Assertions de sécurité SQL                 | `scripts/db-test.sh`  | ✅   |
+| Build production                           | `pnpm build`          | ✅   |
+| Build Cloudflare                           | `pnpm build:cf`       | ✅   |
+| Parcours navigateur                        | `pnpm test:e2e`       | ✅   |
+| Parcours complets contre une vraie pile    | `pnpm test:e2e:stack` | ✅   |
 
 Les tests d’intégration et les assertions SQL ont besoin d’une base :
 `STAX_TEST_DATABASE_URL=… pnpm test`. **Sans elle, ils sont sautés, jamais
 passés en silence** — un test vert sur une suite sautée est pire qu’un test
 rouge.
+
+### Parcours complets contre une vraie pile
+
+`tests/e2e/stack` monte, sans Docker, une pile locale fidèle : PostgreSQL avec
+toutes les migrations, l’authentification Supabase (GoTrue), l’API PostgREST et
+un stockage de fichiers soumis à la même règle que la production. La plateforme
+tourne en build de production, le moteur des sites en Worker local
+(`*.sites.stax.test`).
+
+```bash
+pnpm e2e:stack start       # base, authentification, API, stockage
+pnpm build                 # build de production
+pnpm test:e2e:stack        # démarre plateforme + sites, puis les parcours
+```
+
+Les parcours (`tests/e2e/journeys`) vérifient chaque publication par une
+**vraie requête HTTP sur l’adresse publique du site** :
+
+- un client se connecte, modifie un titre en cliquant dessus, remplace une
+  photo, ajoute, déplace, supprime puis restaure une section, vérifie le rendu
+  téléphone, publie ; le site public sert la nouvelle version ; une
+  modification non publiée n’y apparaît pas ; il revient à la première version ;
+- annuler/rétablir, comparer, restaurer une version sans rien détruire, page
+  supprimée puis restaurée, intervention de l’équipe StaX visible du client ;
+- compte interne : commande Ultra Premium sans paiement, site créé, modifié et
+  publié ; le privilège est refusé à un client ordinaire par la base.
+
+Le paiement Stripe y est remplacé par un webhook **signé** avec un secret
+jetable : c’est le vrai chemin « paiement reçu → site préparé », sans réseau.
 
 ---
 

@@ -103,6 +103,12 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
         icon: 'file-text',
         minimum: 'platform_admin',
       },
+      {
+        href: '/admin/signalements',
+        label: 'Signalements',
+        icon: 'flag',
+        minimum: 'support',
+      },
       { href: '/admin/coupons', label: 'Codes promo', icon: 'badge', minimum: 'platform_admin' },
       {
         href: '/admin/feature-flags',

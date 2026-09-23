@@ -1,10 +1,11 @@
-import { readEnv } from '@stax/config';
+import { readEnv, siteHostIdentity } from '@stax/config';
 import { resolveBusiness } from '@stax/business';
 import { mediaPublicUrl } from '@stax/database';
 import { generateNonce, issueCsrfToken } from '@stax/security';
 import {
   emptySiteData,
   normalizePath,
+  parseLegalIdentity,
   resolveTheme,
   type RenderContext,
   type RenderablePage,
@@ -73,6 +74,7 @@ export async function buildPageContext(
     hasCustomerAccounts: site.hasCustomerAccounts,
     theme,
     settings: site.settings,
+    host: siteHostIdentity(readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? null),
     pages: site.snapshot.pages,
     currentPath: normalizePath(page.path),
     enabledModules: site.enabledModules,
@@ -126,6 +128,7 @@ export function fallbackContext(request: Request, siteName: string): RenderConte
       cookieBannerEnabled: false,
       analyticsEnabled: false,
       googleSiteVerification: null,
+      legalIdentity: parseLegalIdentity({}),
     },
     pages: [],
     currentPath: '/',

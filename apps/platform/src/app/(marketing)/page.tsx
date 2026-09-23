@@ -8,10 +8,11 @@ import {
   ButtonLink,
   Container,
   Panel,
+  Parallax,
   Reveal,
+  ScrollTilt,
   Section,
   SectionHeading,
-  Stagger,
 } from '@stax/ui';
 import { Hero } from '~/components/marketing/hero';
 import { BusinessSwitcher } from '~/components/marketing/business-switcher';
@@ -22,7 +23,13 @@ import {
   OperationalIndicators,
   PaymentRoutingDiagram,
 } from '~/components/marketing/diagrams';
-import { BrowserFrame, EditorMock } from '~/components/marketing/product-visuals';
+import {
+  BookingPanel,
+  BrowserFrame,
+  EditorMock,
+  InboxPanel,
+  PaymentPanel,
+} from '~/components/marketing/product-visuals';
 import { entryPriceLabel, getPlans, listSectorsSafe } from '~/lib/catalog';
 import { HOMEPAGE_FAQ } from '~/content/faq';
 
@@ -64,17 +71,17 @@ export default async function HomePage() {
       <Hero entryPrice={entry} businessCount={listBusinesses().length} />
 
       {/* --- Secteurs ---------------------------------------------------- */}
-      <Section spacing="compact" className="border-y border-[var(--border)]">
+      <Section spacing="compact">
         <Container size="wide">
-          <p className="text-center text-xs tracking-[0.12em] text-[var(--muted)] uppercase">
+          <p className="text-center text-sm text-[var(--muted)]">
             Des sites conçus métier par métier
           </p>
-          <ul className="mt-8 flex flex-wrap justify-center gap-2">
+          <ul className="mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-2">
             {(sectors.length > 0 ? sectors : FALLBACK_SECTORS).map((sector) => (
               <li key={sector.slug}>
                 <Link
                   href={`/metiers/${sector.slug}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-sm text-[var(--foreground-muted)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--foreground)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-1)] px-4 py-2 text-sm text-[var(--foreground-muted)] transition-[border-color,color,background-color] duration-300 hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
                 >
                   {sector.label}
                   {'businessCount' in sector && sector.businessCount > 0 ? (
@@ -98,73 +105,75 @@ export default async function HomePage() {
             description="Beaucoup d’entreprises jonglent avec un site chez un prestataire, un formulaire chez un autre, un outil de réservation ailleurs et un tableur pour les clients. StaX réunit tout au même endroit, et en assure la maintenance."
           />
 
-          <div className="mt-14 grid gap-3 lg:grid-cols-6">
-            <Reveal className="lg:col-span-4">
-              <Panel level={2} padding="lg" interactive className="h-full">
-                <h3 className="text-xl font-medium tracking-[-0.02em]">
+          <div className="mt-16 grid gap-16 lg:grid-cols-[1fr_1fr] lg:items-start">
+            <dl className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+              <Reveal as="div" className="py-8">
+                <dt className="text-2xl font-semibold tracking-[-0.03em]">
                   Un site qui reste à jour, sans que vous y pensiez
-                </h3>
-                <p className="measure mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                </dt>
+                <dd className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   Hébergement, certificat HTTPS, sauvegardes, mises à jour de sécurité et
-                  surveillance sont inclus dans la maintenance annuelle. Vous n’avez ni serveur à
-                  gérer, ni extension à mettre à jour, ni panne à surveiller.
-                </p>
-                <OperationalIndicators className="mt-8" />
-              </Panel>
-            </Reveal>
-
-            <Reveal delay={80} className="lg:col-span-2">
-              <Panel level={2} padding="lg" interactive className="flex h-full flex-col">
-                <h3 className="text-xl font-medium tracking-[-0.02em]">
+                  surveillance sont inclus dans la maintenance annuelle. Ni serveur à gérer, ni
+                  extension à mettre à jour, ni panne à surveiller.
+                  <OperationalIndicators className="mt-6" />
+                </dd>
+              </Reveal>
+              <Reveal as="div" delay={60} className="py-8">
+                <dt className="text-2xl font-semibold tracking-[-0.03em]">
                   Vous gardez la main sur vos contenus
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                </dt>
+                <dd className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   Changer un horaire, ajouter une photo, modifier un tarif : c’est vous, en quelques
-                  secondes, sans dépendre de personne.
-                </p>
-                <div className="mt-auto pt-6">
-                  <Link
-                    href="/fonctionnalites/editeur"
-                    className="text-sm font-medium text-[var(--accent)]"
-                  >
+                  secondes, sans dépendre de personne.{' '}
+                  <Link href="/fonctionnalites/editeur" className="font-medium text-accent">
                     Voir l’éditeur →
                   </Link>
-                </div>
-              </Panel>
-            </Reveal>
-
-            {VALUE_TILES.map((tile, index) => (
-              <Reveal key={tile.title} delay={120 + index * 60} className="lg:col-span-2">
-                <Panel level={1} padding="lg" interactive className="h-full">
-                  <div
-                    aria-hidden="true"
-                    className="mb-4 flex size-9 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)]"
-                  >
+                </dd>
+              </Reveal>
+              {VALUE_TILES.map((tile, index) => (
+                <Reveal key={tile.title} as="div" delay={120 + index * 60} className="py-6">
+                  <dt className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em]">
                     <svg
+                      aria-hidden="true"
                       viewBox="0 0 16 16"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="size-4"
+                      className="size-4 shrink-0 text-[var(--accent-text)]"
                     >
                       {tile.icon}
                     </svg>
-                  </div>
-                  <h3 className="text-base font-medium">{tile.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                    {tile.title}
+                  </dt>
+                  <dd className="mt-2 pl-7 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                     {tile.description}
-                  </p>
-                </Panel>
-              </Reveal>
-            ))}
+                  </dd>
+                </Reveal>
+              ))}
+            </dl>
+
+            {/* Les memes ecrans, reunis : ce que le client voit dans son espace. */}
+            <div className="relative hidden lg:sticky lg:top-28 lg:block">
+              <div className="stage relative mx-auto h-[32rem] max-w-md">
+                <Parallax speed={-0.1} className="absolute top-0 left-0 w-72">
+                  <InboxPanel />
+                </Parallax>
+                <Parallax speed={0.12} className="absolute top-40 right-0 w-64">
+                  <BookingPanel />
+                </Parallax>
+                <Parallax speed={-0.06} className="absolute bottom-0 left-10 w-60">
+                  <PaymentPanel />
+                </Parallax>
+              </div>
+            </div>
           </div>
         </Container>
       </Section>
 
       {/* --- Comment ca marche -------------------------------------------- */}
-      <Section className="relative border-y border-[var(--border)]">
+      <Section className="relative bg-[var(--background-subtle)]">
         <div
           aria-hidden="true"
           className="grid-bg pointer-events-none absolute inset-0 -z-10 opacity-40"
@@ -177,7 +186,12 @@ export default async function HomePage() {
                 title="De la commande à la mise en ligne, en quelques jours"
                 description="Vous n’avez rien à construire. Vous nous dites qui vous êtes et ce que vous faites ; nous nous occupons du reste, avec votre validation à chaque étape."
               />
-              <ButtonLink href="/comment-ca-marche" variant="secondary" className="mt-8">
+              <ButtonLink
+                size="pill"
+                href="/comment-ca-marche"
+                variant="secondary"
+                className="mt-8"
+              >
                 Voir le détail de chaque étape
               </ButtonLink>
             </div>
@@ -205,9 +219,9 @@ export default async function HomePage() {
       </Section>
 
       {/* --- Editeur ------------------------------------------------------ */}
-      <Section className="border-y border-[var(--border)]">
+      <Section className="overflow-hidden bg-[var(--background-subtle)]">
         <Container size="wide">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:items-center">
+          <div className="grid gap-16 lg:grid-cols-[0.9fr_1.5fr] lg:items-center">
             <div>
               <SectionHeading
                 eyebrow="Édition"
@@ -223,7 +237,7 @@ export default async function HomePage() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.6"
-                      className="mt-0.5 size-3.5 shrink-0 text-[var(--accent)]"
+                      className="mt-0.5 size-3.5 shrink-0 text-[var(--accent-text)]"
                     >
                       <path d="m3 8.5 3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -233,9 +247,13 @@ export default async function HomePage() {
               </ul>
             </div>
             <Reveal delay={80}>
-              <BrowserFrame url="stax.fr/app/editeur">
-                <EditorMock />
-              </BrowserFrame>
+              <ScrollTilt maxDeg={6}>
+                <div className="stage lg:-mr-24 xl:-mr-40">
+                  <BrowserFrame url="stax.fr/app/editeur">
+                    <EditorMock />
+                  </BrowserFrame>
+                </div>
+              </ScrollTilt>
             </Reveal>
           </div>
         </Container>
@@ -247,43 +265,51 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Modules"
             title="Ce dont votre métier a besoin, et rien de plus"
-            description="Chaque module ajouté une fonctionnalité à votre site et une section à votre espace. Ils s’activent automatiquement selon votre activité, et restent modifiables à tout moment."
+            description="Chaque module ajoute une fonctionnalité à votre site et une section à votre espace. Ils s’activent automatiquement selon votre activité, et restent modifiables à tout moment."
           />
-          <Stagger className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" step={50}>
-            {MODULE_TILES.map((module) => (
-              <Panel key={module.title} level={1} padding="md" interactive className="h-full">
-                <h3 className="text-sm font-medium">{module.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+          <ul className="mt-14 border-t border-[var(--border)]">
+            {MODULE_TILES.map((module, index) => (
+              <Reveal
+                key={module.title}
+                as="li"
+                delay={Math.min(index * 40, 240)}
+                className="group grid gap-2 border-b border-[var(--border)] py-6 transition-colors duration-300 hover:bg-[var(--glass-1)] sm:grid-cols-[1fr_1.4fr_1fr] sm:items-baseline sm:gap-8 sm:px-4"
+              >
+                <h3 className="text-xl font-semibold tracking-[-0.025em] transition-colors group-hover:text-[var(--accent-text)]">
+                  {module.title}
+                </h3>
+                <p className="text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   {module.description}
                 </p>
-                <p className="mt-3 text-xs text-[var(--muted)]">{module.who}</p>
-              </Panel>
+                <p className="text-sm text-[var(--muted)] sm:text-right">{module.who}</p>
+              </Reveal>
             ))}
-          </Stagger>
+          </ul>
         </Container>
       </Section>
 
       {/* --- Domaines ------------------------------------------------------ */}
-      <Section className="border-y border-[var(--border)]">
+      <Section className="bg-[var(--background-subtle)]">
         <Container size="wide">
           <div className="grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:items-center">
             <SectionHeading
               eyebrow="Noms de domaine"
               title="Votre domaine, votre marque, votre adresse"
-              description="Vous arrivez avec votre nom de domaine ou nous vous en trouvons un. Nous le connectons, le certificat HTTPS s’installé automatiquement, et votre site répond sous votre propre adresse."
+              description="Vous arrivez avec votre nom de domaine ou nous vous en trouvons un. Nous le connectons, le certificat HTTPS s’installe automatiquement, et votre site répond sous votre propre adresse."
             />
             <Reveal delay={80}>
               <DomainRoutingDiagram />
             </Reveal>
           </div>
-          <div className="mt-12 grid gap-3 sm:grid-cols-3">
-            {DOMAIN_POINTS.map((point) => (
-              <Panel key={point.title} level={1} padding="md">
-                <h3 className="text-sm font-medium">{point.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+          <div className="mt-16 grid gap-10 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[var(--border)]">
+            {DOMAIN_POINTS.map((point, index) => (
+              <div key={point.title} className="sm:px-8 sm:first:pl-0 sm:last:pr-0">
+                <p className="font-mono text-xs text-accent">0{index + 1}</p>
+                <h3 className="mt-3 text-lg font-semibold tracking-[-0.02em]">{point.title}</h3>
+                <p className="mt-2 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   {point.description}
                 </p>
-              </Panel>
+              </div>
             ))}
           </div>
         </Container>
@@ -299,7 +325,7 @@ export default async function HomePage() {
                 title="L’argent de vos clients va sur votre compte, pas sur le nôtre"
                 description="Quand votre site encaisse un acompte, une commande ou un don, la transaction passe par votre propre compte Stripe, ouvert à votre nom. StaX n’est pas dans ce circuit et ne prélève aucune commission dessus."
               />
-              <div className="mt-8 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5">
+              <div className="mt-10 border-l-2 border-[var(--accent)] pl-5">
                 <p className="text-sm font-medium">Ce que vous payez à StaX</p>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   La création de votre site, puis la maintenance annuelle. C’est tout. Les frais
@@ -309,48 +335,52 @@ export default async function HomePage() {
               </div>
             </div>
             <Reveal delay={80}>
-              <Panel level={2} padding="lg">
-                <PaymentRoutingDiagram />
-              </Panel>
+              <div className="stage">
+                <Panel level={2} padding="lg" className="rounded-[var(--radius-xl)]">
+                  <PaymentRoutingDiagram />
+                </Panel>
+              </div>
             </Reveal>
           </div>
         </Container>
       </Section>
 
       {/* --- Referencement, performance, securite -------------------------- */}
-      <Section className="border-y border-[var(--border)]">
+      <Section className="bg-[var(--background-subtle)]">
         <Container size="wide">
           <SectionHeading
             eyebrow="Les fondations techniques"
             title="Ce qui ne se voit pas, mais qui fait la différence"
             description="Un site lent, mal référencé ou mal protégé coûte des clients. Ces points ne sont pas des options chez StaX : ils sont faits correctement dès le premier jour, sur tous les sites."
           />
-          <div className="mt-12 grid gap-3 md:grid-cols-3">
+          <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-0 md:divide-x md:divide-[var(--border)]">
             {TECHNICAL_PILLARS.map((pillar, index) => (
-              <Reveal key={pillar.title} delay={index * 70}>
-                <Panel level={2} padding="lg" interactive className="h-full">
-                  <h3 className="text-base font-medium">{pillar.title}</h3>
-                  <p className="mt-2.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                    {pillar.description}
-                  </p>
-                  <ul className="mt-5 space-y-2 border-t border-[var(--border)] pt-5">
-                    {pillar.items.map((item) => (
-                      <li key={item} className="flex gap-2.5 text-xs">
-                        <span
-                          aria-hidden="true"
-                          className="mt-1.5 size-1 shrink-0 rounded-full bg-[var(--muted)]"
-                        />
-                        <span className="text-[var(--foreground-muted)]">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={pillar.href}
-                    className="mt-5 inline-block text-xs font-medium text-[var(--accent)]"
-                  >
-                    En savoir plus →
-                  </Link>
-                </Panel>
+              <Reveal
+                key={pillar.title}
+                delay={index * 70}
+                className="md:px-8 md:first:pl-0 md:last:pr-0"
+              >
+                <h3 className="text-2xl font-semibold tracking-[-0.03em]">{pillar.title}</h3>
+                <p className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                  {pillar.description}
+                </p>
+                <ul className="mt-6 space-y-2.5">
+                  {pillar.items.map((item) => (
+                    <li key={item} className="flex gap-3 text-sm">
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
+                      />
+                      <span className="text-[var(--foreground-muted)]">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={pillar.href}
+                  className="mt-6 inline-block text-sm font-medium text-accent"
+                >
+                  En savoir plus →
+                </Link>
               </Reveal>
             ))}
           </div>
@@ -378,7 +408,7 @@ export default async function HomePage() {
       </Section>
 
       {/* --- Garantie ------------------------------------------------------ */}
-      <Section spacing="compact" className="border-y border-[var(--border)]">
+      <Section spacing="compact" className="bg-[var(--background-subtle)]">
         <Container size="wide">
           <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
             <SectionHeading
@@ -412,7 +442,11 @@ export default async function HomePage() {
       {/* --- Sur mesure ---------------------------------------------------- */}
       <Section>
         <Container size="wide">
-          <Panel level={2} padding="xl" className="halo relative overflow-hidden">
+          <Panel
+            level={2}
+            padding="xl"
+            className="halo relative overflow-hidden rounded-[var(--radius-2xl)]"
+          >
             <div aria-hidden="true" className="absolute noise inset-0" />
             <div className="relative grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
               <div>
@@ -421,21 +455,25 @@ export default async function HomePage() {
                   title="Un besoin qui sort du cadre ? Parlons-en."
                   description="Application métier, intégration à votre logiciel de caisse ou de gestion, reprise d’un site existant, volumétries importantes, contraintes réglementaires : nous étudions votre besoin et établissons un devis détaillé, ligne par ligne."
                 />
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <ButtonLink href="/devis" size="lg">
+                <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                  <ButtonLink href="/devis" variant="primary" size="pill-lg">
                     Demander un devis
                   </ButtonLink>
-                  <ButtonLink href="/sur-mesure" variant="glass" size="lg">
+                  <ButtonLink href="/sur-mesure" variant="glass" size="pill-lg">
                     Comment ça se passe
                   </ButtonLink>
                 </div>
               </div>
-              <ul className="space-y-3">
+              <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
                 {CUSTOM_EXAMPLES.map((example) => (
                   <li
                     key={example}
-                    className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-inset)] px-4 py-3 text-sm text-[var(--foreground-muted)]"
+                    className="flex items-center gap-3 py-3.5 text-[0.9375rem] text-[var(--foreground-muted)]"
                   >
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 shrink-0 rounded-full bg-[var(--accent-text)]"
+                    />
                     {example}
                   </li>
                 ))}
@@ -480,7 +518,7 @@ export default async function HomePage() {
       </Section>
 
       {/* --- FAQ ----------------------------------------------------------- */}
-      <Section className="border-t border-[var(--border)]">
+      <Section>
         <Container size="wide">
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.4fr] lg:items-start">
             <div className="lg:sticky lg:top-28">
@@ -499,8 +537,8 @@ export default async function HomePage() {
             <dl className="divide-y divide-[var(--border)]">
               {HOMEPAGE_FAQ.map((item) => (
                 <div key={item.question} className="py-6 first:pt-0">
-                  <dt className="text-base font-medium">{item.question}</dt>
-                  <dd className="measure mt-2.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                  <dt className="text-lg font-semibold tracking-[-0.02em]">{item.question}</dt>
+                  <dd className="measure mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                     {item.answer}
                   </dd>
                 </div>
@@ -513,23 +551,28 @@ export default async function HomePage() {
       {/* --- CTA finale ---------------------------------------------------- */}
       <Section className="relative overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="grid-bg absolute inset-0 opacity-40" />
-          <div className="absolute bottom-[-20rem] left-1/2 h-[32rem] w-[52rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-glow),transparent)] opacity-30 blur-3xl" />
+          <div className="grid-bg grid-bg-fade absolute inset-0 rotate-180 opacity-60" />
+          <div className="absolute bottom-[-22rem] left-1/2 h-[34rem] w-[56rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-glow),transparent)] opacity-40 blur-3xl" />
         </div>
-        <Beam className="absolute inset-x-0 top-0 opacity-50" />
-        <Container size="narrow" className="text-center">
-          <h2 className="text-4xl font-medium tracking-[-0.04em] text-balance sm:text-5xl">
+        <Beam className="absolute inset-x-0 top-0 opacity-40" />
+        <Container size="default" className="text-center">
+          <h2 className="display text-5xl sm:text-7xl lg:text-8xl">
             Votre site professionnel vous attend.
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
             Choisissez votre métier, répondez à quelques questions, et notre équipe construit votre
             site. Vous validez avant la mise en ligne.
           </p>
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <ButtonLink href="/commander" size="xl" className="w-full sm:w-auto">
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <ButtonLink
+              href="/commander"
+              variant="accent"
+              size="pill-lg"
+              className="w-full sm:w-auto"
+            >
               Commander mon site
             </ButtonLink>
-            <ButtonLink href="/contact" variant="glass" size="xl" className="w-full sm:w-auto">
+            <ButtonLink href="/contact" variant="glass" size="pill-lg" className="w-full sm:w-auto">
               Poser une question
             </ButtonLink>
           </div>
@@ -579,7 +622,7 @@ const CREATION_STEPS = [
   {
     title: 'Vous choisissez votre offre et votre métier',
     description:
-      'Deux questions suffisent : votre secteur, puis votre métier précis. Les fonctionnalités adaptées sont préselectionnées.',
+      'Deux questions suffisent : votre secteur, puis votre métier précis. Les fonctionnalités adaptées sont présélectionnées.',
     detail: 'Environ 2 minutes',
   },
   {
@@ -644,7 +687,7 @@ const MODULE_TILES = [
   },
   {
     title: 'Réalisations',
-    description: 'Un portfolio avant/apres qui prouve votre savoir-faire mieux qu’un discours.',
+    description: 'Un portfolio avant/après qui prouve votre savoir-faire mieux qu’un discours.',
     who: 'Artisans, photographes, agences',
   },
   {
@@ -664,7 +707,7 @@ const MODULE_TILES = [
   },
   {
     title: 'Demandes de devis',
-    description: 'Un formulaire structuré qui qualifié la demande avant même votre premier appel.',
+    description: 'Un formulaire structuré qui qualifie la demande avant même votre premier appel.',
     who: 'Artisans, événementiel, services',
   },
 ];

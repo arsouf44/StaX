@@ -29,10 +29,8 @@ export function BrowserFrame({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-[var(--radius-lg)] border shadow-[0_32px_80px_-32px_rgb(0_0_0/0.8)]',
-        tone === 'dark'
-          ? 'border-[var(--glass-border-strong)] bg-[#0b0b0f]'
-          : 'border-black/10 bg-white',
+        'overflow-hidden rounded-[var(--radius-xl)] border shadow-[var(--shadow-stage)]',
+        tone === 'dark' ? 'border-white/10 bg-[#0a0e15]' : 'border-black/10 bg-white',
         className,
       )}
     >
@@ -132,11 +130,11 @@ function NavIcon({ name }: { name: string }) {
 
 export function DashboardMock({ className }: { className?: string }) {
   return (
-    <div className={cn('flex h-full min-h-[26rem] bg-[#0b0b0f] text-white/90', className)}>
+    <div className={cn('flex h-full min-h-[26rem] bg-[#0a0e15] text-white/90', className)}>
       {/* Barre laterale */}
       <aside className="hidden w-52 shrink-0 flex-col border-r border-white/8 p-3 sm:flex">
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-white/8 bg-white/[0.03] p-2">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[#6E6BFF]/15 text-[10px] font-semibold text-[#8B89FF]">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[#147CFF]/15 text-[10px] font-semibold text-[#52B5FF]">
             RD
           </span>
           <div className="min-w-0">
@@ -156,7 +154,7 @@ export function DashboardMock({ className }: { className?: string }) {
               <NavIcon name={item.icon} />
               <span className="truncate">{item.label}</span>
               {item.badge ? (
-                <span className="ml-auto rounded-full bg-[#6E6BFF] px-1.5 text-[9px] font-medium text-white">
+                <span className="ml-auto rounded-full bg-[#147CFF] px-1.5 text-[9px] font-medium text-white">
                   {item.badge}
                 </span>
               ) : null}
@@ -165,8 +163,8 @@ export function DashboardMock({ className }: { className?: string }) {
         </nav>
         <div className="mt-auto rounded-lg border border-white/8 bg-white/[0.02] p-2.5">
           <p className="text-[10px] text-white/50">Site en ligne</p>
-          <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#00C896]">
-            <span className="size-1.5 rounded-full bg-[#00C896]" />
+          <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2FD29B]">
+            <span className="size-1.5 rounded-full bg-[#2FD29B]" />
             restaurant-dupont.fr
           </p>
         </div>
@@ -197,7 +195,7 @@ export function DashboardMock({ className }: { className?: string }) {
               <p className="text-[10px] text-white/45">{stat.label}</p>
               <p className="mt-1 text-lg font-medium tabular-nums">{stat.value}</p>
               {stat.delta ? (
-                <p className="mt-0.5 text-[10px] text-[#00C896] tabular-nums">{stat.delta}</p>
+                <p className="mt-0.5 text-[10px] text-[#2FD29B] tabular-nums">{stat.delta}</p>
               ) : (
                 <p className="mt-0.5 text-[10px] text-white/30">—</p>
               )}
@@ -258,15 +256,15 @@ function SparkChart({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#6E6BFF" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#6E6BFF" stopOpacity="0" />
+          <stop stopColor="#147CFF" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#147CFF" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={`${path} L${width} ${height} L0 ${height} Z`} fill="url(#spark-fill)" />
       <path
         d={path}
         fill="none"
-        stroke="#8B89FF"
+        stroke="#52B5FF"
         strokeWidth="1.5"
         vectorEffect="non-scaling-stroke"
       />
@@ -280,7 +278,7 @@ function SparkChart({ className }: { className?: string }) {
 
 export function EditorMock({ className }: { className?: string }) {
   return (
-    <div className={cn('flex h-full min-h-[24rem] bg-[#0b0b0f] text-white/90', className)}>
+    <div className={cn('flex h-full min-h-[24rem] bg-[#0a0e15] text-white/90', className)}>
       <aside className="hidden w-48 shrink-0 flex-col border-r border-white/8 p-3 md:flex">
         <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
           Sections de la page
@@ -300,7 +298,7 @@ export function EditorMock({ className }: { className?: string }) {
               className={cn(
                 'flex items-center gap-2 rounded-md border px-2 py-1.5 text-[10px]',
                 block.active
-                  ? 'border-[#6E6BFF]/45 bg-[#6E6BFF]/10 text-white'
+                  ? 'border-[#147CFF]/45 bg-[#147CFF]/10 text-white'
                   : 'border-white/8 bg-white/[0.02] text-white/55',
               )}
             >
@@ -358,8 +356,8 @@ export function EditorMock({ className }: { className?: string }) {
         </div>
 
         <div className="p-4">
-          <div className="rounded-lg border border-[#6E6BFF]/45 bg-[#6E6BFF]/[0.06] p-4">
-            <p className="text-[9px] text-[#8B89FF]">Bannière · sélectionnée</p>
+          <div className="rounded-lg border border-[#147CFF]/45 bg-[#147CFF]/[0.06] p-4">
+            <p className="text-[9px] text-[#52B5FF]">Bannière · sélectionnée</p>
             <div className="mt-2.5 space-y-2">
               <div className="h-2.5 w-2/3 rounded bg-white/18" />
               <div className="h-2 w-1/2 rounded bg-white/10" />
@@ -406,7 +404,7 @@ export function EditorMock({ className }: { className?: string }) {
           <div>
             <p className="text-[9px] text-white/40">Fond</p>
             <div className="mt-1 flex gap-1">
-              {['#0b0b0f', '#1a1a20', '#C2703A', '#F7EFE7'].map((color, index) => (
+              {['#0a0e15', '#1a1a20', '#C2703A', '#F7EFE7'].map((color, index) => (
                 <span
                   key={color}
                   className={cn(

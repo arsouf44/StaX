@@ -45,7 +45,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   },
   {
     category: 'tarifs',
-    question: 'Pourquoi un paiement initial ET un abonnement mensuel ?',
+    question: 'Pourquoi un paiement initial ET une maintenance annuelle ?',
     answer:
       'Le paiement initial couvre la conception et la réalisation de votre site : c’est un travail sur mesure. La maintenance annuelle couvre l’hébergement, le nom de domaine, le certificat HTTPS, les sauvegardes, les mises à jour de sécurité, la surveillance et le support. Un site web n’est pas un objet qu’on livre et qu’on oublie : il doit rester à jour et disponible.',
   },
@@ -59,7 +59,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'tarifs',
     question: 'Puis-je arrêter la maintenance ?',
     answer:
-      'Oui, sans engagement de durée. Vous résiliez depuis votre espace, la maintenance prend fin à l’échéance en cours. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vos données ne sont pas supprimées à l’échéance : vous pouvez les exporter ou réactiver la maintenance.',
+      'Oui, à tout moment, en ligne depuis votre espace, sans justification. La maintenance est annuelle et se reconduit chaque année : la résiliation prend effet à l’échéance annuelle en cours, et nous vous rappelons la date de reconduction un à trois mois avant. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vos données ne sont pas supprimées à l’échéance : vous pouvez les exporter ou réactiver la maintenance.',
   },
   {
     category: 'tarifs',
@@ -89,7 +89,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'juridique',
     question: 'Et si le site ne me convient pas ?',
     answer:
-      'Vous disposez de 15 jours après la mise en ligne pour demander un remboursement. Si un nom de domaine a réellement été acheté pour vous, son coût est déduit puisqu’il est déjà engagé ; sinon rien n’est retenu. Cette garantie commerciale s’ajouté à vos droits légaux et ne les remplacé pas.',
+      'Vous disposez de 15 jours après la mise en ligne pour demander un remboursement. Si un nom de domaine a réellement été acheté pour vous, son coût est déduit puisqu’il est déjà engagé ; sinon rien n’est retenu. Cette garantie commerciale s’ajoute à vos droits légaux et ne les remplace pas.',
   },
   {
     category: 'juridique',
@@ -110,7 +110,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
 const HOMEPAGE_QUESTIONS: readonly string[] = FAQ_ITEMS.filter((item) =>
   [
     'Combien de temps faut-il pour avoir mon site en ligne ?',
-    'Pourquoi un paiement initial ET un abonnement mensuel ?',
+    'Pourquoi un paiement initial ET une maintenance annuelle ?',
     'Prenez-vous une commission sur mes ventes ?',
   ].includes(item.question),
 ).map((item) => item.question);

@@ -8,6 +8,7 @@ import { hasPlatformRole } from '@stax/auth';
 import { Alert, Badge, DescriptionList, Panel, Stat, StatusPill, type StatusTone } from '@stax/ui';
 import { requireAdminRole } from '~/lib/admin';
 import { SiteAdminActions, type ActivationCodeView, type AdminVersionView } from './site-actions';
+import { InterveneForm } from './intervene-form';
 
 export const metadata: Metadata = { title: 'Site' };
 
@@ -279,6 +280,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           }
         />
       </div>
+
+      <InterveneForm organizationId={site.organization_id} siteId={site.id} />
 
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <Panel level={1} padding="lg">

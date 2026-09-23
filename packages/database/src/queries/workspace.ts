@@ -48,6 +48,11 @@ export interface Workspace {
   subscription: Subscription | null;
   /** Toutes les organisations de l utilisateur, pour le selecteur de compte. */
   memberships: Array<{ organizationId: UUID; name: string; slug: string; role: OrgRole }>;
+  /**
+   * Intervention de l equipe StaX sur l espace d un client (assistance). Les
+   * droits reels restent ceux verifies en base pour le role plateforme.
+   */
+  staffMode?: boolean;
 }
 
 export async function getProfile(db: Db, userId: UUID): Promise<Profile | null> {
@@ -204,6 +209,59 @@ export async function loadWorkspace(
   };
 }
 
+/**
+ * Espace d un client vu par l equipe StaX, pendant une session d assistance.
+ *
+ * Les droits ne sont PAS decides ici : `my_capabilities` interroge
+ * `app.org_can`, qui n accorde a l equipe que les droits de contenu, et
+ * seulement si une session est ouverte en base sur CETTE organisation.
+ */
+export async function loadStaffWorkspace(
+  db: Db,
+  userId: UUID,
+  organizationId: UUID,
+  siteId: UUID | null,
+): Promise<Workspace | null> {
+  const [profile, organization] = await Promise.all([
+    getProfile(db, userId),
+    (async () =>
+      unwrapMaybe<Organization>(
+        (await db
+          .from('organizations')
+          .select('*')
+          .eq('id', organizationId)
+          .maybeSingle()) as never,
+      ))(),
+  ]);
+  if (!profile || !organization) return null;
+
+  const [capabilities, sites, subscription] = await Promise.all([
+    getCapabilities(db, organization.id),
+    listSites(db, organization.id),
+    getActiveSubscription(db, organization.id),
+  ]);
+  if (!capabilities.includes('content.edit')) return null;
+
+  return {
+    profile,
+    organization,
+    role: 'admin',
+    capabilities,
+    sites,
+    currentSite: sites.find((site) => site.id === siteId) ?? sites[0] ?? null,
+    subscription,
+    memberships: [
+      {
+        organizationId: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        role: 'admin',
+      },
+    ],
+    staffMode: true,
+  };
+}
+
 export function workspaceCan(workspace: Workspace, capability: OrgCapability): boolean {
   return workspace.capabilities.includes(capability);
 }
@@ -224,9 +282,51 @@ export function workspaceCan(workspace: Workspace, capability: OrgCapability): b
  */
 export async function toCsvExport(
   db: Db,
-  collection: 'messages' | 'contacts' | 'reservations' | 'commandes',
+  collection: 'messages' | 'contacts' | 'reservations' | 'commandes' | 'comptes',
 ): Promise<{ ok: true; filename: string; csv: string }> {
   const stamp = new Date().toISOString().slice(0, 10);
+
+  if (collection === 'comptes') {
+    const rows = unwrapList<{
+      email: string;
+      full_name: string | null;
+      phone: string | null;
+      email_verified_at: string | null;
+      last_login_at: string | null;
+      is_blocked: boolean;
+      created_at: string;
+    }>(
+      (await db
+        .from('site_customers')
+        .select('email, full_name, phone, email_verified_at, last_login_at, is_blocked, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10_000)) as never,
+    );
+    return {
+      ok: true,
+      filename: `stax-comptes-clients-${stamp}.csv`,
+      csv: toCsv([
+        [
+          'E-mail',
+          'Nom',
+          'Téléphone',
+          'Adresse confirmée',
+          'Dernière connexion',
+          'Bloqué',
+          'Créé le',
+        ],
+        ...rows.map((row) => [
+          row.email,
+          row.full_name,
+          row.phone,
+          row.email_verified_at ? 'oui' : 'non',
+          row.last_login_at,
+          row.is_blocked ? 'oui' : 'non',
+          row.created_at,
+        ]),
+      ]),
+    };
+  }
 
   if (collection === 'contacts') {
     const rows = unwrapList<{

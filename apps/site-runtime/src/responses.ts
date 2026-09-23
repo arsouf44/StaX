@@ -1,3 +1,4 @@
+import { readEnv } from '@stax/config';
 import { CACHE_POLICIES, securityHeaders } from '@stax/security';
 import { escapeHtml } from '@stax/security';
 import { SITE_STYLESHEET, resolveTheme } from '@stax/site-engine';
@@ -9,20 +10,39 @@ import { SITE_STYLESHEET, resolveTheme } from '@stax/site-engine';
  * un oubli ponctuel sur une route serait une faille silencieuse.
  */
 
+/** Origine du stockage des photos des clients, pour `img-src`. */
+function storageImageOrigins(): string[] {
+  const raw = readEnv('SUPABASE_URL') ?? readEnv('NEXT_PUBLIC_SUPABASE_URL');
+  if (!raw) return [];
+  try {
+    return [new URL(raw).origin];
+  } catch {
+    return [];
+  }
+}
+
 export function htmlResponse(
   body: string,
-  init: { status?: number; nonce: string; cache?: string; allowMaps?: boolean },
+  init: {
+    status?: number;
+    nonce: string;
+    cache?: string;
+    allowMaps?: boolean;
+    headers?: Record<string, string>;
+  },
 ): Response {
   return new Response(body, {
     status: init.status ?? 200,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': init.cache ?? CACHE_POLICIES.private,
+      ...(init.headers ?? {}),
       ...securityHeaders({
         profile: 'tenant-site',
         nonce: init.nonce,
         allowMaps: init.allowMaps ?? false,
         connectSrc: ["'self'"],
+        imgSrc: storageImageOrigins(),
       }),
     },
   });

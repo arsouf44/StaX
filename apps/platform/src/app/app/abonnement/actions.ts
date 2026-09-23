@@ -2,14 +2,16 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { maintenancePolicyConfig } from '@stax/config';
 import { createServiceClient, unwrapMaybe } from '@stax/database';
+import { sendEmail, subscriptionCancelledEmail } from '@stax/emails';
 import {
   cancelSubscriptionAtPeriodEnd,
   createBillingPortalSession,
   resumeSubscription,
 } from '@stax/payments';
 import { cancelSubscriptionSchema } from '@stax/validation';
-import { guardAction } from '~/lib/action-guard';
+import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace, type WorkspaceContext } from '~/lib/workspace';
 
@@ -91,7 +93,7 @@ export async function requestCancellationAction(
 ): Promise<ActionState> {
   const parsed = cancelSubscriptionSchema.safeParse({
     subscriptionId: formData.get('subscriptionId'),
-    reason: formData.get('reason'),
+    reason: formData.get('reason') ?? undefined,
     comment: formData.get('comment') || undefined,
     confirm: formData.get('confirm') === 'on',
   });
@@ -99,14 +101,16 @@ export async function requestCancellationAction(
   if (!parsed.success) {
     return {
       status: 'error',
-      message: 'Indiquez la raison de votre résiliation et confirmez la case.',
+      message: 'Cochez la case de confirmation pour résilier.',
     };
   }
 
   const gate = await requireBillingManager(parsed.data.subscriptionId);
   if (!gate.ok) return gate.state;
 
-  const label = REASON_LABELS[parsed.data.reason] ?? parsed.data.reason;
+  const label = parsed.data.reason
+    ? (REASON_LABELS[parsed.data.reason] ?? parsed.data.reason)
+    : 'Non précisée';
 
   try {
     await cancelSubscriptionAtPeriodEnd(
@@ -133,15 +137,55 @@ export async function requestCancellationAction(
     action: 'subscription.cancel_requested',
     target_type: 'subscription',
     target_id: gate.value.subscriptionId,
-    metadata_safe: { reason: parsed.data.reason },
+    metadata_safe: { reason: parsed.data.reason ?? null },
   });
+
+  // Confirmation sur support durable (article L215-1-1 du Code de la
+  // consommation) : la date de fin et ses effets, par e-mail.
+  const confirmation = await sendCancellationConfirmation(gate.value);
 
   revalidatePath('/app/abonnement');
   return {
     status: 'success',
     message:
-      'Votre demande est prise en compte. Votre site reste en ligne jusqu’à la fin de la période déjà réglée ; vous pouvez revenir en arrière jusque-là.',
+      'Votre résiliation est enregistrée. Votre site reste en ligne jusqu’à la fin de la période déjà réglée ; vous pouvez revenir en arrière jusque-là.' +
+      (confirmation ? ' Une confirmation vous a été envoyée par e-mail.' : ''),
   };
+}
+
+const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
+
+async function sendCancellationConfirmation(
+  context: WorkspaceContext & { subscriptionId: string },
+): Promise<boolean> {
+  const service = createServiceClient();
+  const subscription = unwrapMaybe<{ current_period_end: string | null }>(
+    (await service
+      .from('subscriptions')
+      .select('current_period_end')
+      .eq('id', context.subscriptionId)
+      .maybeSingle()) as never,
+  );
+  if (!subscription?.current_period_end) return false;
+
+  const end = new Date(subscription.current_period_end);
+  const grace = new Date(end.getTime() + maintenancePolicyConfig().gracePeriodDays * 86_400_000);
+  try {
+    const result = await sendEmail(
+      subscriptionCancelledEmail({
+        to: context.workspace.profile.email,
+        firstName: context.workspace.profile.first_name ?? null,
+        endDate: LONG_DATE.format(end),
+        gracePeriodEnd: LONG_DATE.format(grace),
+        billingUrl: absolutePlatformUrl('/app/abonnement'),
+      }),
+      { db: service, organizationId: context.workspace.organization.id },
+    );
+    return result.ok;
+  } catch (error) {
+    console.error('[stax:subscription] confirmation de resiliation non envoyee', error);
+    return false;
+  }
 }
 
 export async function resumeSubscriptionAction(

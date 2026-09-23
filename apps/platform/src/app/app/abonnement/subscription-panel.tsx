@@ -135,7 +135,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
               </form>
             ) : (
               <Button variant="ghost" onClick={() => setCancelling(true)}>
-                Résilier ma maintenance
+                Résilier votre contrat
               </Button>
             )}
           </div>
@@ -150,7 +150,8 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
         open={cancelling}
         onClose={() => setCancelling(false)}
         size="md"
-        title="Résilier votre maintenance"
+        title="Résilier votre contrat"
+        description="Résiliation de votre maintenance annuelle, en ligne et sans justification."
       >
         <form action={cancel} className="space-y-5" noValidate>
           <input type="hidden" name="subscriptionId" value={subscription.id} />
@@ -177,8 +178,12 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
             </ul>
           </div>
 
-          <Field label="Pourquoi nous quittez-vous ?" required>
-            <Select name="reason" defaultValue="no_longer_needed" required>
+          <Field
+            label="Pourquoi nous quittez-vous ?"
+            hint="Facultatif : vous n’avez pas à vous justifier."
+          >
+            <Select name="reason" defaultValue="">
+              <option value="">Je préfère ne pas le préciser</option>
               {REASONS.map((reason) => (
                 <option key={reason.value} value={reason.value}>
                   {reason.label}
@@ -187,17 +192,14 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
             </Select>
           </Field>
 
-          <Field
-            label="Voulez-vous nous en dire plus ?"
-            hint="Facultatif, mais utile : c’est comme ça que nous nous améliorons."
-          >
+          <Field label="Voulez-vous nous en dire plus ?" hint="Facultatif.">
             <Textarea name="comment" rows={3} maxLength={2000} />
           </Field>
 
           <Switch
             name="confirm"
             label="Je confirme vouloir résilier ma maintenance"
-            description="Rien n’est définitif avant la fin de la période en cours."
+            description="Rien n’est définitif avant la fin de la période en cours. Vous recevrez une confirmation par e-mail."
           />
 
           <div className="flex flex-wrap gap-3 border-t border-[var(--border)] pt-5">

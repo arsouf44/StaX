@@ -20,14 +20,15 @@
 /* ==========================================================================
    StaX — systeme de design
    --------------------------------------------------------------------------
-   Direction : infrastructure haut de gamme. Noir profond, blanc pur, gris
-   subtils, enormement d espace, typographie forte. La couleur est rare et
-   toujours signifiante : elle marque un etat, jamais une decoration.
+   Direction : un produit, pas une plaquette. Noir profond, blanc froid, un
+   bleu electrique et deux bleus glacier — et presque rien d autre. La
+   couleur est rare et toujours signifiante : une action, un etat, une ligne
+   de lumiere. Enormement d espace, une typographie systeme tres grande et
+   tres serree, des interfaces reelles mises en scene.
 
-   Au-dessus de cette base, un verre reellement travaille — plusieurs niveaux
-   de profondeur, des bordures lumineuses de 1 px, un grain tres discret et des
-   halos diffus. Le verre ne doit JAMAIS degrader la lisibilite : chaque
-   surface conserve un contraste de texte conforme WCAG AA.
+   Le verre reste leger : une surface translucide, une bordure lumineuse de
+   1 px, jamais au detriment de la lisibilite. Chaque surface conserve un
+   contraste de texte conforme WCAG AA.
    ========================================================================== */
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
@@ -40,81 +41,96 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
+  /* Palette de marque */
+  --ink: #05070b;
+  --ink-2: #0a0e15;
+  --snow: #f8fafc;
+  --electric: #147cff;
+  --glacier: #52b5ff;
+  --ice: #9ddbff;
+
   /* Fonds */
-  --background: #060608;
-  --background-subtle: #0a0a0e;
-  --background-inset: #030304;
+  --background: #05070b;
+  --background-subtle: #0a0e15;
+  --background-inset: #030409;
 
   /* Texte */
-  --foreground: #fafafa;
-  --foreground-muted: #a1a1ab;
-  --muted: #74747f;
-  --muted-strong: #8e8e99;
+  --foreground: #f8fafc;
+  --foreground-muted: #a3adbd;
+  --muted: #768194;
+  --muted-strong: #8f99aa;
 
   /* Surfaces opaques */
-  --surface: #0e0e12;
-  --surface-elevated: #16161c;
-  --surface-hover: #1c1c23;
+  --surface: #0a0e15;
+  --surface-elevated: #10151f;
+  --surface-hover: #151c28;
 
-  /* Verre — trois niveaux de profondeur */
-  --glass-1: rgb(255 255 255 / 0.028);
-  --glass-2: rgb(255 255 255 / 0.05);
-  --glass-3: rgb(14 14 18 / 0.72);
-  --glass-border: rgb(255 255 255 / 0.09);
-  --glass-border-strong: rgb(255 255 255 / 0.16);
-  --glass-sheen: rgb(255 255 255 / 0.22);
+  /* Verre — trois niveaux de profondeur, teintes froides */
+  --glass-1: rgb(226 236 255 / 0.03);
+  --glass-2: rgb(226 236 255 / 0.052);
+  --glass-3: rgb(10 14 21 / 0.74);
+  --glass-border: rgb(226 236 255 / 0.09);
+  --glass-border-strong: rgb(226 236 255 / 0.16);
+  --glass-sheen: rgb(226 240 255 / 0.24);
   --glass-blur-sm: 10px;
   --glass-blur-md: 20px;
   --glass-blur-lg: 40px;
 
   /* Traits */
-  --border: rgb(255 255 255 / 0.08);
-  --border-strong: rgb(255 255 255 / 0.14);
-  --border-focus: rgb(110 107 255 / 0.65);
+  --border: rgb(226 236 255 / 0.08);
+  --border-strong: rgb(226 236 255 / 0.15);
+  --border-focus: rgb(82 181 255 / 0.7);
 
-  /* Accent — employe avec parcimonie : focus, etats actifs, lignes lumineuses */
-  --accent: #6e6bff;
-  --accent-soft: rgb(110 107 255 / 0.14);
-  --accent-glow: rgb(110 107 255 / 0.35);
+  /* Accent — le bleu electrique : actions, focus, lignes de lumiere */
+  --accent: #147cff;
+  --accent-hover: #3a92ff;
+  --accent-soft: rgb(20 124 255 / 0.14);
+  --accent-glow: rgb(20 124 255 / 0.34);
   --accent-foreground: #ffffff;
+  /* Accent lisible en petit texte sur fond noir */
+  --accent-text: #52b5ff;
 
-  /* Action principale : contraste maximal, jamais un degrade */
-  --primary: #fafafa;
-  --primary-foreground: #08080a;
+  /* Action principale : blanc froid, contraste maximal */
+  --primary: #f8fafc;
+  --primary-foreground: #05070b;
 
   /* Etats */
-  --success: #00c896;
-  --success-soft: rgb(0 200 150 / 0.12);
-  --warning: #f5a524;
-  --warning-soft: rgb(245 165 36 / 0.12);
-  --danger: #ff5c5c;
-  --danger-soft: rgb(255 92 92 / 0.12);
-  --info: #4da6ff;
-  --info-soft: rgb(77 166 255 / 0.12);
+  --success: #2fd29b;
+  --success-soft: rgb(47 210 155 / 0.12);
+  --warning: #f5b33c;
+  --warning-soft: rgb(245 179 60 / 0.12);
+  --danger: #ff5f6d;
+  --danger-soft: rgb(255 95 109 / 0.12);
+  --info: #52b5ff;
+  --info-soft: rgb(82 181 255 / 0.12);
 
   /* Rayons */
   --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 26px;
-  --radius-2xl: 34px;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
 
   /* Ombres — diffuses, jamais dures */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 24px -8px rgb(0 0 0 / 0.55);
   --shadow-lg: 0 24px 64px -20px rgb(0 0 0 / 0.7);
   --shadow-glass: 0 1px 0 0 var(--glass-sheen) inset, 0 24px 64px -24px rgb(0 0 0 / 0.8);
-  --shadow-glass-sm: 0 1px 0 0 rgb(255 255 255 / 0.12) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-glass-sm: 0 1px 0 0 rgb(226 240 255 / 0.12) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
   --shadow-focus: 0 0 0 1px var(--background), 0 0 0 3px var(--border-focus);
+  /* Mise en scene d une interface : ombre portee profonde + halo bleu tres bas */
+  --shadow-stage:
+    0 1px 0 0 rgb(226 240 255 / 0.1) inset, 0 40px 120px -40px rgb(0 0 0 / 0.9),
+    0 0 0 1px rgb(226 236 255 / 0.06);
 
   /* Grille technique de fond */
-  --grid-line: rgb(255 255 255 / 0.035);
-  --grid-line-strong: rgb(255 255 255 / 0.06);
-  --grid-size: 64px;
+  --grid-line: rgb(226 236 255 / 0.03);
+  --grid-line-strong: rgb(226 236 255 / 0.055);
+  --grid-size: 72px;
 
   /* Grain — texture tres discrete, jamais visible consciemment */
-  --noise-opacity: 0.035;
+  --noise-opacity: 0.03;
 }
 
 /* --------------------------------------------------------------------------
@@ -124,51 +140,56 @@
   color-scheme: light;
 
   --background: #ffffff;
-  --background-subtle: #fafafa;
-  --background-inset: #f4f4f5;
+  --background-subtle: #f5f7fa;
+  --background-inset: #eef2f7;
 
-  --foreground: #08080a;
-  --foreground-muted: #52525b;
-  --muted: #71717a;
-  --muted-strong: #52525b;
+  --foreground: #05070b;
+  --foreground-muted: #4a5465;
+  --muted: #667085;
+  --muted-strong: #4a5465;
 
   --surface: #ffffff;
   --surface-elevated: #ffffff;
-  --surface-hover: #f4f4f5;
+  --surface-hover: #f1f4f9;
 
   /* En mode clair, le verre s appuie sur du blanc laiteux plutot que sur de
      la transparence pure : un verre sombre sur fond clair devient sale. */
-  --glass-1: rgb(255 255 255 / 0.7);
-  --glass-2: rgb(255 255 255 / 0.82);
-  --glass-3: rgb(255 255 255 / 0.9);
-  --glass-border: rgb(9 9 11 / 0.08);
-  --glass-border-strong: rgb(9 9 11 / 0.14);
+  --glass-1: rgb(255 255 255 / 0.72);
+  --glass-2: rgb(255 255 255 / 0.84);
+  --glass-3: rgb(255 255 255 / 0.92);
+  --glass-border: rgb(5 7 11 / 0.08);
+  --glass-border-strong: rgb(5 7 11 / 0.14);
   --glass-sheen: rgb(255 255 255 / 0.9);
 
-  --border: rgb(9 9 11 / 0.09);
-  --border-strong: rgb(9 9 11 / 0.16);
+  --border: rgb(5 7 11 / 0.09);
+  --border-strong: rgb(5 7 11 / 0.16);
+  --border-focus: rgb(11 102 218 / 0.6);
 
-  --accent: #5b57f5;
-  --accent-soft: rgb(91 87 245 / 0.1);
-  --accent-glow: rgb(91 87 245 / 0.25);
+  /* Le bleu electrique pur manque de contraste sur blanc : il est assombri. */
+  --accent: #0b66da;
+  --accent-hover: #0a58bd;
+  --accent-soft: rgb(11 102 218 / 0.09);
+  --accent-glow: rgb(20 124 255 / 0.22);
+  --accent-text: #0b66da;
 
-  --primary: #08080a;
+  --primary: #05070b;
   --primary-foreground: #ffffff;
 
-  --success: #00996f;
+  --success: #008f65;
   --warning: #b45309;
-  --danger: #dc2626;
+  --danger: #d92d3a;
   --info: #0369a1;
 
-  --shadow-sm: 0 1px 2px rgb(9 9 11 / 0.06);
-  --shadow-md: 0 8px 24px -10px rgb(9 9 11 / 0.14);
-  --shadow-lg: 0 24px 64px -24px rgb(9 9 11 / 0.2);
-  --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 20px 48px -24px rgb(9 9 11 / 0.18);
-  --shadow-glass-sm: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 6px 20px -12px rgb(9 9 11 / 0.14);
+  --shadow-sm: 0 1px 2px rgb(5 7 11 / 0.06);
+  --shadow-md: 0 8px 24px -10px rgb(5 7 11 / 0.14);
+  --shadow-lg: 0 24px 64px -24px rgb(5 7 11 / 0.2);
+  --shadow-glass: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 20px 48px -24px rgb(5 7 11 / 0.18);
+  --shadow-glass-sm: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 6px 20px -12px rgb(5 7 11 / 0.14);
+  --shadow-stage: 0 40px 100px -40px rgb(5 7 11 / 0.35), 0 0 0 1px rgb(5 7 11 / 0.08);
 
-  --grid-line: rgb(9 9 11 / 0.045);
-  --grid-line-strong: rgb(9 9 11 / 0.07);
-  --noise-opacity: 0.018;
+  --grid-line: rgb(5 7 11 / 0.045);
+  --grid-line-strong: rgb(5 7 11 / 0.07);
+  --noise-opacity: 0.016;
 }
 
 /* --------------------------------------------------------------------------
@@ -190,6 +211,12 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-electric: var(--electric);
+  --color-glacier: var(--glacier);
+  --color-ice: var(--ice);
+  --color-ink: var(--ink);
+  --color-snow: var(--snow);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-success: var(--success);
@@ -211,11 +238,12 @@
   --shadow-glass: var(--shadow-glass);
   --shadow-glass-sm: var(--shadow-glass-sm);
 
+  /* Typographie systeme : SF Pro sur les appareils Apple, Helvetica ou Arial
+     ailleurs. Aucune police a telecharger, aucun effet « futuriste ». */
   --font-sans:
-    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
-    'Helvetica Neue', sans-serif;
-  --font-mono:
-    var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Echelle typographique : ecarts nets, jamais de texte minuscule partout */
   --text-2xs: 0.6875rem;
@@ -242,6 +270,10 @@
   --text-6xl--line-height: 1.02;
   --text-7xl: 4.75rem;
   --text-7xl--line-height: 0.98;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 0.95;
+  --text-9xl: 7.5rem;
+  --text-9xl--line-height: 0.92;
 
   --animate-reveal: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-shimmer: shimmer 2.4s linear infinite;
@@ -276,7 +308,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    font-feature-settings: 'cv11', 'ss01';
     font-variation-settings: normal;
     min-height: 100dvh;
     /* `clip` et non `hidden` : `hidden` ferait du body un conteneur de
@@ -290,8 +321,8 @@
   h4,
   h5,
   h6 {
-    font-weight: 560;
-    letter-spacing: -0.022em;
+    font-weight: 600;
+    letter-spacing: -0.024em;
     text-wrap: balance;
   }
 
@@ -506,6 +537,62 @@
   }
   .cursor-glow:hover::before {
     opacity: 1;
+  }
+
+  /* Titre d affiche : tres grand, tres serre, comme une page produit */
+  .display {
+    font-weight: 650;
+    letter-spacing: -0.048em;
+    line-height: 0.96;
+    text-wrap: balance;
+  }
+
+  /* Accent de texte lisible (bleu glacier sur fond sombre) */
+  .text-accent {
+    color: var(--accent-text);
+  }
+
+  /* Scene d interface : l ecran est pose, eclaire par le dessous, jamais colle
+     au fond. La lumiere reste bleue et tres basse. */
+  .stage {
+    position: relative;
+    isolation: isolate;
+  }
+  .stage::before {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: -6%;
+    height: 40%;
+    z-index: -1;
+    background: radial-gradient(50% 60% at 50% 100%, var(--accent-glow), transparent 75%);
+    filter: blur(40px);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .stage-screen {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-stage);
+  }
+
+  /* Projecteur de fond : une seule source de lumiere froide, en haut */
+  .spotlight {
+    background:
+      radial-gradient(60% 45% at 50% -5%, rgb(20 124 255 / 0.2), transparent 70%),
+      radial-gradient(30% 25% at 50% 0%, rgb(157 219 255 / 0.1), transparent 70%);
+  }
+
+  /* Ligne fine de separation, qui s eteint sur les bords */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-strong) 20%,
+      var(--border-strong) 80%,
+      transparent
+    );
   }
 
   /* Bandes de defilement horizontal sans barre visible */

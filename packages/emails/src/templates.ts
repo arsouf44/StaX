@@ -576,6 +576,158 @@ export function refundProcessedEmail(
   });
 }
 
+/**
+ * Rappel de reconduction de la maintenance annuelle.
+ *
+ * Envoye entre trois mois et un mois avant l'echeance : pour un client non
+ * professionnel, l'article L215-1 du Code de la consommation l'impose, faute
+ * de quoi il peut resilier a tout moment apres la reconduction. Nous
+ * l'envoyons a tous nos clients, par loyaute.
+ */
+export function renewalReminderEmail(
+  ctx: BaseContext & { renewalDate: string; amount: string; cancelUrl: string },
+): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'renewal_reminder',
+    subject: `Votre maintenance sera reconduite le ${ctx.renewalDate}`,
+    preheader: `Reconduction le ${ctx.renewalDate} pour ${ctx.amount}. Vous pouvez résilier d’ici là.`,
+    heading: 'Reconduction de votre maintenance',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(
+        `Votre maintenance annuelle sera reconduite automatiquement le ${ctx.renewalDate}, ` +
+          `pour une nouvelle année, au prix de ${ctx.amount}.`,
+      ),
+      paragraph(
+        'Si vous ne souhaitez pas la reconduire, vous pouvez résilier en ligne en quelques ' +
+          'clics d’ici cette date, sans frais ni justification. Votre site reste en ligne ' +
+          'jusqu’à l’échéance.',
+      ),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Maintenance reconduite le ${ctx.renewalDate} pour ${ctx.amount}.`,
+      `Pour ne pas la reconduire : ${ctx.cancelUrl}`,
+    ],
+    action: { label: 'Résilier votre contrat', url: ctx.cancelUrl },
+    secondaryAction: { label: 'Gérer mon abonnement', url: `${platformUrl()}/app/abonnement` },
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Signalements de contenus (DSA)                                             */
+/* -------------------------------------------------------------------------- */
+
+export function contentReportReceivedEmail(ctx: {
+  to: string;
+  reference: string;
+  url: string;
+}): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'content_report_received',
+    subject: `Signalement reçu — ${ctx.reference}`,
+    preheader: 'Votre signalement sera examiné par une personne.',
+    heading: 'Nous avons bien reçu votre signalement',
+    bodyHtml: [
+      paragraph('Bonjour,'),
+      paragraph(
+        'Votre signalement a bien été enregistré. Il sera examiné par une personne de notre ' +
+          'équipe, sans décision automatisée, et vous serez informé de la suite qui lui est donnée.',
+      ),
+      definitionList([
+        ['Référence', ctx.reference],
+        ['Contenu signalé', ctx.url],
+      ]),
+      paragraph('En cas de danger immédiat pour une personne, appelez le 17 ou le 112.'),
+    ].join(''),
+    bodyText: [
+      'Bonjour,',
+      `Signalement enregistré (${ctx.reference}) pour ${ctx.url}.`,
+      'Il sera examiné par une personne et vous serez informé de la suite donnée.',
+    ],
+  });
+}
+
+export function contentReportDecisionEmail(ctx: {
+  to: string;
+  reference: string;
+  url: string;
+  actioned: boolean;
+  decision: string;
+}): EmailMessage {
+  const outcome = ctx.actioned
+    ? 'Après examen, l’accès au contenu signalé a été retiré ou restreint.'
+    : 'Après examen, nous n’avons pas retiré le contenu signalé.';
+  return shell({
+    to: ctx.to,
+    template: 'content_report_decision',
+    subject: `Suite donnée à votre signalement — ${ctx.reference}`,
+    preheader: outcome,
+    heading: 'Suite donnée à votre signalement',
+    bodyHtml: [
+      paragraph('Bonjour,'),
+      paragraph(outcome),
+      definitionList([
+        ['Référence', ctx.reference],
+        ['Contenu signalé', ctx.url],
+        ['Motifs', ctx.decision],
+      ]),
+      paragraph(
+        'Cette décision a été prise par une personne, sans recours à un traitement automatisé. ' +
+          'Si vous la contestez, vous pouvez nous répondre en indiquant la référence ci-dessus, ' +
+          'ou saisir la juridiction compétente.',
+      ),
+    ].join(''),
+    bodyText: [
+      'Bonjour,',
+      outcome,
+      `Référence : ${ctx.reference}. Motifs : ${ctx.decision}`,
+      'Vous pouvez contester cette décision en répondant à ce message.',
+    ],
+  });
+}
+
+/**
+ * Exposé des motifs adresse a l'editeur du site quand un contenu est retire ou
+ * restreint (reglement (UE) 2022/2065, article 17).
+ */
+export function contentRestrictedEmail(
+  ctx: BaseContext & { reference: string; url: string; decision: string },
+): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'content_restricted',
+    subject: `Un contenu de votre site a été restreint — ${ctx.reference}`,
+    preheader: 'Voici les motifs de cette décision et comment la contester.',
+    heading: 'Un contenu de votre site a été restreint',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(
+        'À la suite d’un signalement, nous avons examiné un contenu publié sur votre site et ' +
+          'avons décidé d’en retirer ou d’en restreindre l’accès.',
+      ),
+      definitionList([
+        ['Référence', ctx.reference],
+        ['Contenu concerné', ctx.url],
+        ['Motifs', ctx.decision],
+      ]),
+      paragraph(
+        'Cette décision a été prise par une personne, sans traitement automatisé. Vous pouvez ' +
+          'la contester en répondant à ce message avec vos explications : elle sera réexaminée. ' +
+          'Vous conservez la possibilité de saisir la juridiction compétente.',
+      ),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Contenu restreint (${ctx.reference}) : ${ctx.url}.`,
+      `Motifs : ${ctx.decision}`,
+      'Vous pouvez contester cette décision en répondant à ce message.',
+    ],
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Interne                                                                    */
 /* -------------------------------------------------------------------------- */

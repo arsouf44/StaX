@@ -151,19 +151,19 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
   return (
     <div
       className={cn(
-        'relative flex flex-col rounded-[var(--radius-lg)] p-6',
+        'relative flex flex-col rounded-[var(--radius-xl)] p-7 transition-[border-color,transform] duration-300',
         featured
-          ? 'glass-edge ring-1 glass-2 ring-[var(--accent)]/30'
-          : 'border border-[var(--border)] bg-[var(--surface)]',
+          ? 'glass-edge bg-[linear-gradient(180deg,rgb(20_124_255/0.14),transparent_45%)] ring-1 glass-2 ring-[var(--accent)]/45 lg:-translate-y-2'
+          : 'border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]',
       )}
     >
       {featured ? (
-        <span className="absolute -top-2.5 left-6 rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-2xs font-medium text-white">
+        <span className="absolute -top-3 left-7 rounded-full bg-[var(--accent)] px-3 py-1 text-2xs font-medium text-white shadow-[0_8px_24px_-10px_var(--accent-glow)]">
           {plan.badge}
         </span>
       ) : null}
 
-      <h3 className="text-lg font-medium tracking-[-0.02em]">{plan.name}</h3>
+      <h3 className="text-xl font-semibold tracking-[-0.025em]">{plan.name}</h3>
       {plan.tagline ? (
         <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">{plan.tagline}</p>
       ) : null}
@@ -171,7 +171,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
       <div className="mt-6">
         {plan.isQuoteOnly ? (
           <>
-            <p className="text-3xl font-medium tracking-[-0.03em]">Sur devis</p>
+            <p className="text-4xl font-semibold tracking-[-0.04em]">Sur devis</p>
             <p className="mt-1.5 text-xs text-[var(--muted)]">
               Chiffrage détaillé après étude de votre besoin
             </p>
@@ -179,7 +179,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
         ) : (
           <>
             <p className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-medium tracking-[-0.03em] tabular-nums">
+              <span className="text-[2rem] font-semibold tracking-[-0.04em] tabular-nums xl:text-[2.25rem]">
                 {formatMoney(plan.setupPriceCents)}
               </span>
               <span className="text-xs text-[var(--muted)]">HT à la commande</span>
@@ -217,9 +217,10 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
 
       <ButtonLink
         href={plan.isQuoteOnly ? '/devis' : `/commander?offre=${plan.slug}`}
-        variant={featured ? 'primary' : 'secondary'}
+        variant={featured ? 'accent' : 'secondary'}
+        size="pill"
         block
-        className="mt-6"
+        className="mt-7"
       >
         {plan.isQuoteOnly ? 'Demander un devis' : 'Choisir cette offre'}
       </ButtonLink>
@@ -235,7 +236,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
               strokeWidth="1.6"
               className={cn(
                 'mt-0.5 size-3.5 shrink-0',
-                featured ? 'text-[var(--accent)]' : 'text-[var(--success)]',
+                featured ? 'text-[var(--accent-text)]' : 'text-[var(--muted-strong)]',
               )}
             >
               <path d="m3 8.5 3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
@@ -278,7 +279,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanView[] }) {
       role="region"
       aria-label="Comparaison détaillée des offres"
       tabIndex={0}
-      className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+      className="relative overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
     >
       <table className="w-full min-w-[42rem] border-collapse text-sm">
         <caption className="sr-only">

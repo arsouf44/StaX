@@ -1,8 +1,9 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import { createUserClient } from '@stax/database';
-import { loadWorkspace, type Workspace } from '@stax/database';
+import { createServiceClient, createUserClient } from '@stax/database';
+import { loadStaffWorkspace, loadWorkspace, type Workspace } from '@stax/database';
+import { IMPERSONATION_COOKIE, verifyImpersonation } from '@stax/auth';
 import type { Db } from '@stax/database';
 import type { OrgCapability } from '@stax/types';
 import { hasPlatformRole } from '@stax/auth';
@@ -35,6 +36,30 @@ export const getWorkspace = cache(async (): Promise<WorkspaceContext> => {
   const store = await cookies();
 
   const db = createUserClient(session.user.accessToken);
+
+  // Equipe StaX en session d assistance : l espace du CLIENT, avec les seuls
+  // droits de contenu que la base lui accorde pendant la session.
+  const supportToken = store.get(IMPERSONATION_COOKIE)?.value ?? null;
+  if (supportToken && session.profile.platform_role) {
+    const active = await verifyImpersonation(createServiceClient(), supportToken, session.user.id);
+    if (active) {
+      const staffWorkspace = await loadStaffWorkspace(
+        db,
+        session.user.id,
+        active.organizationId,
+        store.get(SITE_COOKIE)?.value ?? null,
+      );
+      if (staffWorkspace) {
+        return {
+          workspace: staffWorkspace,
+          db,
+          accessToken: session.user.accessToken,
+          userId: session.user.id,
+        };
+      }
+    }
+  }
+
   const workspace = await loadWorkspace(db, session.user.id, {
     organizationId: store.get(ORG_COOKIE)?.value ?? null,
     siteId: store.get(SITE_COOKIE)?.value ?? null,

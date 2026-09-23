@@ -87,6 +87,44 @@ function useScrollLock(active: boolean) {
 }
 
 /**
+ * Couches ouvertes, de la plus ancienne a la plus recente.
+ *
+ * Echap ferme la couche du DESSUS, et elle seule : une comparaison ouverte
+ * depuis l historique se ferme, l historique reste ouvert. Sans cette pile,
+ * chaque couche ecoutait la touche pour son compte et Echap fermait celle du
+ * dessous en laissant l autre a l ecran.
+ */
+const escapeStack: object[] = [];
+
+function useEscapeToClose(open: boolean, dismissible: boolean, onClose: () => void): void {
+  const onCloseRef = useRef(onClose);
+  const dismissibleRef = useRef(dismissible);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    dismissibleRef.current = dismissible;
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const entry = {};
+    escapeStack.push(entry);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (escapeStack[escapeStack.length - 1] !== entry) return;
+      // Une couche qui ne se ferme pas (publication en cours) retient quand
+      // meme la touche : celle du dessous ne doit pas se fermer a sa place.
+      if (dismissibleRef.current) onCloseRef.current();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      const index = escapeStack.indexOf(entry);
+      if (index >= 0) escapeStack.splice(index, 1);
+    };
+  }, [open]);
+}
+
+/**
  * Rend une couche superposee directement sous `<body>`.
  *
  * `position: fixed` et `z-index` ne suffisent pas : un ancetre qui cree un
@@ -148,14 +186,7 @@ export function Dialog({
   useFocusTrap(open, panelRef);
   useScrollLock(open);
 
-  useEffect(() => {
-    if (!open || !dismissible) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, dismissible, onClose]);
+  useEscapeToClose(open, dismissible, onClose);
 
   if (!open) return null;
 
@@ -322,14 +353,7 @@ export function Sheet({ open, onClose, title, children, side = 'right', footer }
   useFocusTrap(open, panelRef);
   useScrollLock(open);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+  useEscapeToClose(open, true, onClose);
 
   if (!open) return null;
 

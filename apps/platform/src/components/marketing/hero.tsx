@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ButtonLink, Container } from '@stax/ui';
-import { Parallax, Reveal } from '@stax/ui';
+import { Parallax, Reveal, ScrollTilt } from '@stax/ui';
 import {
   BookingPanel,
   BrowserFrame,
@@ -13,10 +13,11 @@ import {
 /**
  * Banniere d accueil.
  *
- * Composition en couches : une grille technique qui se prolonge sous la
- * section, une representation du produit posee dans un navigateur, et des
- * panneaux de verre qui flottent au-dessus. Le tout en HTML et SVG — rien a
- * telecharger, rien a maintenir en capture d ecran.
+ * Une affiche : un titre tres grand et court, une phrase, deux actions — puis
+ * le produit lui-meme, pose sur une scene eclairee par le dessous, qui se
+ * redresse au defilement. Les panneaux de verre (messages, paiement,
+ * reservation, publication) sont de vrais ecrans de l espace client. Le tout
+ * en HTML et SVG — rien a telecharger, rien a maintenir en capture d ecran.
  */
 export function Hero({
   entryPrice,
@@ -32,20 +33,19 @@ export function Hero({
   businessCount: number;
 }) {
   return (
-    <section className="relative overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-24">
-      {/* Fond : grille + halo, purement decoratifs */}
+    <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
+      {/* Fond : une seule source de lumiere froide, et une grille qui s eteint */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="grid-bg grid-bg-fade absolute inset-0" />
-        <div className="absolute top-[-18rem] left-1/2 h-[36rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-glow),transparent)] opacity-40 blur-3xl" />
-        <div className="beam absolute inset-x-0 top-16 h-px opacity-30" />
+        <div className="spotlight absolute inset-0" />
+        <div className="grid-bg grid-bg-fade absolute inset-0 opacity-70" />
       </div>
 
       <Container size="wide">
-        <div className="mx-auto max-w-4xl text-center">
+        <div className="mx-auto max-w-6xl text-center">
           <Reveal>
             <Link
               href="/metiers"
-              className="glass-edge inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-[var(--foreground-muted)] glass-2 transition-colors hover:text-[var(--foreground)]"
+              className="glass-edge inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-[var(--foreground-muted)] glass-2 transition-colors hover:text-[var(--foreground)]"
             >
               <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--success)]" />
               {businessCount} métiers configurés, du restaurant au plombier
@@ -63,7 +63,7 @@ export function Hero({
           </Reveal>
 
           <Reveal delay={60}>
-            <h1 className="mt-7 text-[2.5rem] leading-[1.02] font-medium tracking-[-0.045em] text-balance sm:text-6xl sm:leading-[0.98] lg:text-7xl">
+            <h1 className="display mt-8 text-[2.75rem] sm:text-6xl lg:text-[4.75rem] xl:text-[5.75rem]">
               <span className="text-gradient">Votre site professionnel.</span>
               <br />
               Construit pour votre métier.
@@ -71,47 +71,47 @@ export function Hero({
           </Reveal>
 
           <Reveal delay={120}>
-            <p className="mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
-              Nous concevons, hébergeons et maintenons votre site. Vous modifiez vos contenus quand
-              vous voulez, recevez vos messages et vos réservations, encaissez vos paiements —
-              depuis un seul espace, sans rien installer.
+            <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)] sm:text-xl">
+              Nous concevons, hébergeons et maintenons votre site. Contenus, messages, réservations
+              et paiements : vous gérez tout depuis un seul espace.
             </p>
           </Reveal>
 
           <Reveal delay={180}>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-              <ButtonLink href="/commander" size="lg" className="w-full sm:w-auto">
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <ButtonLink
+                href="/commander"
+                variant="accent"
+                size="pill-lg"
+                className="w-full sm:w-auto"
+              >
                 Commander mon site
               </ButtonLink>
               <ButtonLink
                 href="/comment-ca-marche"
                 variant="glass"
-                size="lg"
+                size="pill-lg"
                 className="w-full sm:w-auto"
               >
                 Découvrir la plateforme
               </ButtonLink>
             </div>
-            <p className="mt-4 text-xs text-[var(--muted)]">
-              {entryPrice ? `${entryPrice} · ` : ''}Sans engagement de durée
+            <p className="mt-5 text-xs text-[var(--muted)]">
+              {entryPrice ? `${entryPrice} · ` : ''}Maintenance annuelle résiliable en ligne
             </p>
           </Reveal>
         </div>
 
         {/* Representation du produit */}
-        <div className="relative mt-16 sm:mt-20">
+        <div className="relative mt-16 sm:mt-24">
           <Reveal delay={240}>
-            <Parallax speed={0.05}>
-              <div className="relative mx-auto max-w-5xl">
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-x-8 -top-6 bottom-0 rounded-[var(--radius-2xl)] bg-[var(--accent-glow)] opacity-20 blur-3xl"
-                />
+            <ScrollTilt>
+              <div className="stage relative mx-auto max-w-5xl">
                 <BrowserFrame url="stax.fr/app" className="relative">
                   <DashboardMock />
                 </BrowserFrame>
               </div>
-            </Parallax>
+            </ScrollTilt>
           </Reveal>
 
           {/* Panneaux flottants : masques sous 1024 px pour ne pas encombrer */}

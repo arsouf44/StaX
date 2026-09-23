@@ -1,13 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createUserClient, featureAccess, loadFeatureSnapshot, unwrapMaybe } from '@stax/database';
-import { safeFileName, tenantStoragePath } from '@stax/security';
+import { createUserClient, unwrapMaybe } from '@stax/database';
 import { optionalText, uuidSchema } from '@stax/validation';
 import { z } from 'zod';
-import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace } from '~/lib/workspace';
+import { storeMediaFile } from '~/lib/media-store';
 
 /**
  * Bibliotheque de medias.
@@ -26,115 +25,18 @@ import { getWorkspace } from '~/lib/workspace';
  * et jamais insere en ligne dans une page : un SVG peut contenir du script.
  */
 
-const MAX_BYTES = 12 * 1024 * 1024;
-
-const ACCEPTED = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/avif',
-  'image/gif',
-  'image/svg+xml',
-  'application/pdf',
-  'video/mp4',
-  'video/webm',
-]);
-
 export async function uploadMediaAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { workspace, db, accessToken, userId } = await getWorkspace();
-
-  if (!workspace.capabilities.includes('media.manage')) {
-    return {
-      status: 'error',
-      message: 'Votre rôle ne permet pas d’ajouter des fichiers.',
-    };
-  }
-
-  const guard = await guardAction({ limit: 'mediaUpload', userId });
-  if (!guard.ok) return { status: 'error', message: guard.message };
-
-  const file = formData.get('file');
-  if (!(file instanceof File) || file.size === 0) {
-    return { status: 'error', message: 'Choisissez un fichier à envoyer.' };
-  }
-
-  if (file.size > MAX_BYTES) {
-    return {
-      status: 'error',
-      message:
-        'Ce fichier dépasse 12 Mo. Une photo de site web n’a pas besoin d’être aussi lourde : réduisez-la avant de l’envoyer.',
-    };
-  }
-
-  if (!ACCEPTED.has(file.type)) {
-    return {
-      status: 'error',
-      message:
-        'Ce type de fichier n’est pas accepté. Formats possibles : JPEG, PNG, WebP, AVIF, GIF, SVG, PDF, MP4 et WebM.',
-    };
-  }
-
+  const context = await getWorkspace();
   const rawAlt = formData.get('altText');
-  const altText = typeof rawAlt === 'string' ? rawAlt.trim().slice(0, 200) : '';
-
-  const access = featureAccess(await loadFeatureSnapshot(db, workspace.organization.id));
-  const quotaMb = access.limit('max_media_mb');
-  if (quotaMb !== null) {
-    const usedMb = access.usage('max_media_mb');
-    if (usedMb >= quotaMb) {
-      return {
-        status: 'error',
-        message: `Votre offre inclut ${quotaMb} Mo de fichiers. Supprimez des fichiers inutilisés ou changez d’offre.`,
-      };
-    }
-  }
-
-  // Le chemin est construit ici : organisation, site, horodatage, nom nettoye.
-  // Rien de ce qui vient du navigateur n'y entre sans passer par safeFileName.
-  const storagePath = tenantStoragePath(
-    workspace.organization.id,
-    workspace.currentSite?.id ?? null,
-    safeFileName(file.name),
+  const result = await storeMediaFile(
+    context,
+    formData.get('file'),
+    typeof rawAlt === 'string' ? rawAlt : '',
   );
-
-  const storage = createUserClient(accessToken).storage.from('site-media');
-
-  const { error: uploadError } = await storage.upload(storagePath, file, {
-    contentType: file.type,
-    cacheControl: '31536000',
-    upsert: false,
-  });
-
-  if (uploadError) {
-    console.error('[stax:media] envoi refuse', uploadError.message);
-    return {
-      status: 'error',
-      message: 'L’envoi a échoué. Réessayez, et contactez-nous si le problème persiste.',
-    };
-  }
-
-  const { error } = await db.from('media').insert({
-    organization_id: workspace.organization.id,
-    site_id: workspace.currentSite?.id ?? null,
-    storage_bucket: 'site-media',
-    storage_path: storagePath,
-    file_name: safeFileName(file.name),
-    mime_type: file.type,
-    size_bytes: file.size,
-    alt_text: altText === '' ? null : altText,
-    uploaded_by: userId,
-    is_public: true,
-  });
-
-  if (error) {
-    // La ligne n'a pas pu etre ecrite : on retire le fichier pour ne pas
-    // laisser d'orphelin qui consommerait du quota sans jamais etre visible.
-    await storage.remove([storagePath]);
-    return { status: 'error', message: 'Ce fichier n’a pas pu être enregistré.' };
-  }
+  if (!result.ok) return { status: 'error', message: result.message };
 
   revalidatePath('/app/media');
   return { status: 'success', message: 'Fichier ajouté.' };
@@ -179,20 +81,91 @@ export async function describeMediaAction(
   return { status: 'success', message: 'Description enregistrée.' };
 }
 
+function mediaIdFrom(formData: FormData): string | null {
+  const mediaId = formData.get('mediaId');
+  return typeof mediaId === 'string' && uuidSchema.safeParse(mediaId).success ? mediaId : null;
+}
+
+/**
+ * « Supprimer » place le fichier dans la corbeille. Il reste en ligne tant
+ * qu une page publiee l utilise, et se restaure d un clic.
+ */
 export async function deleteMediaAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { workspace, db, accessToken } = await getWorkspace();
+  const { workspace, db, userId } = await getWorkspace();
 
   if (!workspace.capabilities.includes('media.manage')) {
     return { status: 'error', message: 'Votre rôle ne permet pas de supprimer ces fichiers.' };
   }
 
-  const mediaId = formData.get('mediaId');
-  if (typeof mediaId !== 'string' || !uuidSchema.safeParse(mediaId).success) {
-    return { status: 'error', message: 'Ce fichier est introuvable.' };
+  const mediaId = mediaIdFrom(formData);
+  if (!mediaId) return { status: 'error', message: 'Ce fichier est introuvable.' };
+
+  const { data, error } = await db
+    .from('media')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+    .eq('id', mediaId)
+    .eq('organization_id', workspace.organization.id)
+    .is('deleted_at', null)
+    .select('id');
+
+  if (error || !data || data.length === 0) {
+    return { status: 'error', message: 'Ce fichier n’a pas pu être déplacé dans la corbeille.' };
   }
+
+  revalidatePath('/app/media');
+  return {
+    status: 'success',
+    message: 'Fichier placé dans la corbeille. Vous pouvez le restaurer à tout moment.',
+  };
+}
+
+export async function restoreMediaAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const { workspace, db } = await getWorkspace();
+  if (!workspace.capabilities.includes('media.manage')) {
+    return { status: 'error', message: 'Votre rôle ne permet pas de modifier ces fichiers.' };
+  }
+  const mediaId = mediaIdFrom(formData);
+  if (!mediaId) return { status: 'error', message: 'Ce fichier est introuvable.' };
+
+  const { error } = await db
+    .from('media')
+    .update({ deleted_at: null, deleted_by: null })
+    .eq('id', mediaId)
+    .eq('organization_id', workspace.organization.id);
+  if (error) return { status: 'error', message: 'Ce fichier n’a pas pu être restauré.' };
+
+  revalidatePath('/app/media');
+  return { status: 'success', message: 'Fichier restauré.' };
+}
+
+/**
+ * Suppression DEFINITIVE — uniquement depuis la corbeille, et reservee aux
+ * personnes qui peuvent publier. Le fichier disparait aussi du stockage.
+ */
+export async function purgeMediaAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const { workspace, db, accessToken } = await getWorkspace();
+
+  if (
+    !workspace.capabilities.includes('media.manage') ||
+    !workspace.capabilities.includes('content.publish')
+  ) {
+    return {
+      status: 'error',
+      message: 'La suppression définitive est réservée aux personnes qui peuvent publier.',
+    };
+  }
+
+  const mediaId = mediaIdFrom(formData);
+  if (!mediaId) return { status: 'error', message: 'Ce fichier est introuvable.' };
 
   const media = unwrapMaybe<{ id: string; storage_bucket: string; storage_path: string }>(
     (await db
@@ -200,10 +173,16 @@ export async function deleteMediaAction(
       .select('id, storage_bucket, storage_path')
       .eq('id', mediaId)
       .eq('organization_id', workspace.organization.id)
+      .not('deleted_at', 'is', null)
       .maybeSingle()) as never,
   );
 
-  if (!media) return { status: 'error', message: 'Ce fichier est introuvable.' };
+  if (!media) {
+    return {
+      status: 'error',
+      message: 'Seul un fichier déjà dans la corbeille peut être supprimé définitivement.',
+    };
+  }
 
   const { error } = await db
     .from('media')
@@ -215,17 +194,14 @@ export async function deleteMediaAction(
     return {
       status: 'error',
       message:
-        'Ce fichier n’a pas pu être supprimé. Il est peut-être encore utilisé sur une de vos pages.',
+        'Ce fichier n’a pas pu être supprimé. Il est peut-être encore utilisé comme logo ou image de partage.',
     };
   }
 
-  // La ligne est partie : on nettoie le stockage. Si cet appel echoue, un
-  // fichier orphelin subsiste — genant, mais sans consequence pour le client,
-  // alors que l'inverse afficherait une image cassee sur son site.
   await createUserClient(accessToken)
     .storage.from(media.storage_bucket)
     .remove([media.storage_path]);
 
   revalidatePath('/app/media');
-  return { status: 'success', message: 'Fichier supprimé.' };
+  return { status: 'success', message: 'Fichier supprimé définitivement.' };
 }

@@ -63,6 +63,67 @@ Attribution depuis le back-office, par un `platform_owner` uniquement.
 
 ---
 
+## Compte interne StaX (sites sans paiement)
+
+Un compte interne peut créer **autant de sites qu’il veut, sur n’importe quelle
+offre et n’importe quel métier, sans jamais payer**. Il sert à l’équipe (sites
+de démonstration, sites offerts, comptes de test commerciaux).
+
+### Ce qui fait le privilège — et ce qui ne le fait pas
+
+Comme pour le propriétaire : **l’adresse e-mail ne confère rien**. Le privilège
+est porté par le profil (`account_type = 'internal'`, `billing_exempt`,
+`unlimited_sites`, `all_features`), écrit uniquement avec la clé de service et
+protégé par le déclencheur `app.guard_account_privileges`. Aucun test du type
+`if (email === …)` n’existe, ni côté navigateur ni côté serveur.
+
+La commande sans paiement passe par `app.create_internal_order`, qui **vérifie
+en base** que la personne connectée est un compte interne exonéré, puis crée
+dans la même transaction : l’organisation, une commande `internal` à 0 € (prix
+catalogue intégralement remis, ligne `internal_waiver`), le site sur l’offre
+choisie, le projet, les pages, sections et formulaires du métier, l’adresse
+`<sous-domaine>.sites.stax.fr`, et une trace d’audit
+(`order.internal_created`). Aucun passage par Stripe, aucun paiement ni créance
+fictifs. Une commande interne ne peut jamais basculer en « payée ».
+
+Un client ordinaire qui appelle la même fonction est refusé par la base, et ne
+peut pas s’attribuer le statut lui-même : c’est vérifié par la suite SQL et par
+un parcours navigateur.
+
+### Approvisionnement
+
+Le mot de passe est un **secret d’approvisionnement** : il n’est écrit ni dans
+Git, ni dans une migration, ni dans le front, ni dans `.env.example`, ni dans
+un journal. Il est fourni au moment de l’exécution :
+
+```bash
+INTERNAL_OWNER_EMAIL=a.gomez@macrobot-ai.com \
+INTERNAL_OWNER_NAME="Arsene Gomez" \
+INTERNAL_OWNER_PASSWORD='…' \
+SUPABASE_URL=https://xxx.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=… \
+pnpm internal:bootstrap
+```
+
+Le script `scripts/bootstrap-internal-owner.ts` :
+
+- crée le compte s’il n’existe pas (adresse confirmée), sinon le retrouve ;
+- **ne touche pas** au mot de passe d’un compte existant, sauf
+  `INTERNAL_OWNER_RESET_PASSWORD=true` ;
+- exige 12 caractères au moins ; **n’affiche ni ne journalise** jamais le mot
+  de passe ;
+- pose les privilèges internes et écrit une trace d’audit
+  (`account.internal_provisioned`) sans aucun secret ;
+- est **idempotent** : le relancer ne change rien de plus.
+
+Ensuite, depuis `/commander` : choisir l’offre et le métier, cocher « Je confirme
+la création de ce site dans le cadre d’une commande interne StaX, sans
+paiement » et cliquer « Créer le site maintenant ». Le site s’ouvre dans
+l’espace client, prêt à être modifié et publié. « Créer un nouveau site »
+reste accessible depuis le menu du compte.
+
+---
+
 ## Si le compte propriétaire est perdu
 
 Il n’existe **aucune** procédure de récupération dans l’application : ce serait

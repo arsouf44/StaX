@@ -27,6 +27,8 @@ export interface ResolvedSite {
   siteStatus: string;
   domainStatus: string;
   versionId: string | null;
+  /** Numero de la version servie, expose dans l en-tete `X-StaX-Version`. */
+  versionNumber: number | null;
   contentHash: string | null;
   snapshot: ParsedSnapshot;
   settings: SiteSettingsView;
@@ -52,6 +54,7 @@ interface ResolveRow {
   site_status: string;
   domain_status: string;
   version_id: string | null;
+  version_number: number | null;
   content_hash: string | null;
   snapshot: unknown;
   enabled_modules: string[] | null;
@@ -114,6 +117,7 @@ export async function resolveSite(host: string | null): Promise<ResolutionOutcom
       siteStatus: row.site_status,
       domainStatus: row.domain_status,
       versionId: row.version_id,
+      versionNumber: row.version_number ?? null,
       contentHash: row.content_hash,
       snapshot,
       settings,

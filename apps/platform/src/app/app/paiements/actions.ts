@@ -1,8 +1,15 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { platformUrl, readEnv } from '@stax/config';
 import { createServiceClient, unwrapMaybe } from '@stax/database';
-import { createConnectedAccount, createLoginLink, createOnboardingLink } from '@stax/payments';
+import {
+  connectOAuthUrl,
+  createConnectedAccount,
+  createLoginLink,
+  createOnboardingLink,
+} from '@stax/payments';
+import { signConnectState } from '~/lib/stripe-connect-state';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace } from '~/lib/workspace';
@@ -134,4 +141,47 @@ export async function openStripeDashboardAction(
   }
 
   redirect(link);
+}
+
+/**
+ * « J'ai deja un compte Stripe » : le client se connecte chez Stripe et
+ * autorise StaX a creer des paiements sur SON compte. Rien n'est ouvert au nom
+ * de StaX, et aucun justificatif n'est a refournir.
+ */
+export async function connectExistingStripeAction(
+  _previous: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const context = await requireBillingManager();
+  if (!context) {
+    return {
+      status: 'error',
+      message: 'Seul un propriétaire de votre organisation peut relier un compte Stripe.',
+    };
+  }
+  const clientId = readEnv('STRIPE_CONNECT_CLIENT_ID');
+  if (!clientId) {
+    return {
+      status: 'error',
+      message:
+        'La liaison d’un compte Stripe existant n’est pas encore disponible. Utilisez « Activer les paiements ».',
+    };
+  }
+
+  const guard = await guardAction({ limit: 'apiWrite', userId: context.userId });
+  if (!guard.ok) return { status: 'error', message: guard.message };
+
+  const state = await signConnectState({
+    organizationId: context.workspace.organization.id,
+    userId: context.userId,
+  });
+  redirect(
+    connectOAuthUrl({
+      clientId,
+      state,
+      redirectUri: `${platformUrl()}/api/stripe/connect/retour`,
+      email: context.workspace.profile.email,
+      businessName: context.workspace.organization.name,
+    }),
+  );
 }

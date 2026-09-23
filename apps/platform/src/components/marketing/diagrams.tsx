@@ -34,7 +34,7 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
                 aria-hidden="true"
                 className="size-1.5 shrink-0 rounded-full"
                 style={{
-                  background: ['#6E6BFF', '#00C896', '#F5A524', '#4DA6FF'][index],
+                  background: ['#147CFF', '#2FD29B', '#F5A524', '#9DDBFF'][index],
                 }}
               />
               <code className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--foreground-muted)]">
@@ -134,7 +134,7 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
                     style={{
                       background:
                         bar === 0
-                          ? ['#6E6BFF', '#00C896', '#F5A524'][index]
+                          ? ['#147CFF', '#2FD29B', '#F5A524'][index]
                           : 'var(--border-strong)',
                       opacity: bar === 0 ? 0.9 : 0.4,
                     }}
@@ -240,7 +240,7 @@ function Node({
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{title}</p>
         {badge ? (
-          <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] text-[var(--accent)]">
+          <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] text-[var(--accent-text)]">
             {badge}
           </span>
         ) : null}
@@ -329,7 +329,7 @@ export function OperationalIndicators({ className }: { className?: string }) {
     { label: 'Surveillance', value: 'Permanente', tone: 'success' as const },
   ];
   return (
-    <div className={cn('grid gap-2 sm:grid-cols-2 lg:grid-cols-4', className)}>
+    <div className={cn('grid gap-2 sm:grid-cols-2', className)}>
       {items.map((item) => (
         <div
           key={item.label}

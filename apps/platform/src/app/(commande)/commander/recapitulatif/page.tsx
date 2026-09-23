@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { resolveBusiness } from '@stax/business';
-import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
+import {
+  formatMaintenance,
+  formatMoney,
+  grossFromNet,
+  maintenanceTrialDays,
+  vatFromNet,
+} from '@stax/payments';
 import { refundPolicyConfig, sitesDomain } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
@@ -10,7 +16,7 @@ import { getPlans } from '~/lib/catalog';
 import { readOrderDraft } from '~/lib/order-draft';
 import { getSession } from '~/lib/session';
 import { TERMS_VERSION } from '~/content/legal';
-import { CheckoutForm } from './checkout-form';
+import { CheckoutForm, InternalOrderForm } from './checkout-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +32,22 @@ const DOMAIN_LABELS: Record<string, string> = {
   none: 'À définir ensemble',
 };
 
+function nextSteps(trialDays: number): string[] {
+  return [
+    'Votre espace s’ouvre immédiatement et vous pouvez suivre l’avancement.',
+    'Nous construisons une première version à partir de vos informations.',
+    'Vous la relisez en aperçu privé et demandez vos corrections.',
+    'Nous publions après votre accord explicite. Votre première année de maintenance commence ' +
+      `à la mise en ligne, et au plus tard ${trialDays} jours après la commande.`,
+  ];
+}
+
+const INTERNAL_NEXT_STEPS = [
+  'Le site est créé tout de suite, avec ses pages, ses sections et son formulaire de contact.',
+  'Vous le modifiez vous-même dans l’éditeur : textes, photos, sections, couleurs.',
+  'Vous le mettez en ligne quand vous voulez, sur son adresse temporaire ou votre domaine.',
+];
+
 export default async function OrderSummaryPage() {
   const draft = await readOrderDraft();
   if (!draft.planSlug) redirect('/commander');
@@ -39,6 +61,11 @@ export default async function OrderSummaryPage() {
 
   const business = resolveBusiness(draft.businessTypeSlug);
   const refund = refundPolicyConfig();
+
+  // Affichage seulement : c est `create_internal_order` qui verifie, en base,
+  // que le compte est bien un compte interne exonere.
+  const internal =
+    session.profile?.account_type === 'internal' && session.profile.billing_exempt === true;
 
   // Montants affiches : calcules ici pour l affichage uniquement. Ceux qui
   // partent chez Stripe sont ceux que la BASE fige a la creation de la
@@ -59,8 +86,9 @@ export default async function OrderSummaryPage() {
 
       <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Récapitulatif</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-        Vérifiez ces informations avant de régler. Vous pourrez tout modifier ensuite depuis votre
-        espace.
+        {internal
+          ? 'Vérifiez ces informations avant de créer le site. Vous pourrez tout modifier ensuite depuis votre espace.'
+          : 'Vérifiez ces informations avant de régler. Vous pourrez tout modifier ensuite depuis votre espace.'}
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
@@ -88,96 +116,118 @@ export default async function OrderSummaryPage() {
           </Panel>
 
           <Panel level={1} padding="lg">
-            <h2 className="text-sm font-medium">Ce qui se passe après le paiement</h2>
+            <h2 className="text-sm font-medium">
+              {internal ? 'Ce qui se passe ensuite' : 'Ce qui se passe après le paiement'}
+            </h2>
             <ol className="mt-4 space-y-3 text-sm text-[var(--foreground-muted)]">
-              <li>
-                <strong className="text-[var(--foreground)]">1.</strong> Votre espace s’ouvre
-                immédiatement et vous pouvez suivre l’avancement.
-              </li>
-              <li>
-                <strong className="text-[var(--foreground)]">2.</strong> Nous construisons une
-                première version à partir de vos informations.
-              </li>
-              <li>
-                <strong className="text-[var(--foreground)]">3.</strong> Vous la relisez en aperçu
-                privé et demandez vos corrections.
-              </li>
-              <li>
-                <strong className="text-[var(--foreground)]">4.</strong> Nous publions après votre
-                accord explicite. La maintenance ne commence qu’à ce moment-là.
-              </li>
+              {(internal ? INTERNAL_NEXT_STEPS : nextSteps(maintenanceTrialDays())).map(
+                (step, index) => (
+                  <li key={step}>
+                    <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
+                  </li>
+                ),
+              )}
             </ol>
           </Panel>
         </div>
 
         <aside className="lg:sticky lg:top-6">
-          <Panel level={3} padding="lg">
-            <h2 className="text-sm font-medium">À régler aujourd’hui</h2>
-
-            <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-[var(--foreground-muted)]">Création du site (HT)</dt>
-                <dd className="tabular-nums">{formatMoney(setupNet, plan.currency)}</dd>
+          {internal ? (
+            <Panel level={3} padding="lg">
+              <p className="inline-flex rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
+                Compte interne StaX
+              </p>
+              <h2 className="mt-3 text-sm font-medium">Aucun paiement</h2>
+              <dl className="mt-4 space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[var(--foreground-muted)]">Prix catalogue (HT)</dt>
+                  <dd className="tabular-nums line-through">
+                    {formatMoney(setupNet, plan.currency)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-2 text-base font-medium">
+                  <dt>À régler</dt>
+                  <dd className="tabular-nums">{formatMoney(0, plan.currency)}</dd>
+                </div>
+              </dl>
+              <p className="mt-4 text-sm text-[var(--foreground-muted)]">
+                Le site est créé immédiatement, avec toutes les fonctionnalités, et s’ouvre dans
+                votre espace. La commande est enregistrée comme interne : aucune facture, aucun
+                prélèvement.
+              </p>
+              <div className="mt-6">
+                <InternalOrderForm />
               </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-[var(--foreground-muted)]">
-                  TVA {(plan.vatRateBps / 100).toFixed(0)} %
-                </dt>
-                <dd className="tabular-nums">{formatMoney(setupVat, plan.currency)}</dd>
+            </Panel>
+          ) : (
+            <Panel level={3} padding="lg">
+              <h2 className="text-sm font-medium">À régler aujourd’hui</h2>
+
+              <dl className="mt-4 space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[var(--foreground-muted)]">Création du site (HT)</dt>
+                  <dd className="tabular-nums">{formatMoney(setupNet, plan.currency)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-[var(--foreground-muted)]">
+                    TVA {(plan.vatRateBps / 100).toFixed(0)} %
+                  </dt>
+                  <dd className="tabular-nums">{formatMoney(setupVat, plan.currency)}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-2 text-base font-medium">
+                  <dt>Total TTC</dt>
+                  <dd className="tabular-nums">{formatMoney(setupGross, plan.currency)}</dd>
+                </div>
+              </dl>
+
+              <p className="mt-5 border-t border-[var(--border)] pt-4 text-sm text-[var(--foreground-muted)]">
+                Puis{' '}
+                <strong className="text-[var(--foreground)]">
+                  {formatMaintenance(maintenanceGross, plan.currency, plan.billingInterval)}
+                </strong>{' '}
+                de maintenance, prélevée à partir de la mise en ligne de votre site. Résiliable à
+                tout moment depuis votre espace.
+              </p>
+
+              <div className="mt-6">
+                {session.user ? (
+                  <CheckoutForm termsVersion={TERMS_VERSION} refundWindowDays={refund.windowDays} />
+                ) : (
+                  <>
+                    <Alert tone="info" live="status" className="mb-4">
+                      Créez votre compte ou connectez-vous pour finaliser. Votre commande est
+                      conservée.
+                    </Alert>
+                    <div className="space-y-2">
+                      <ButtonLink
+                        href="/inscription?suivant=%2Fcommander%2Frecapitulatif"
+                        block
+                        size="lg"
+                      >
+                        Créer mon compte
+                      </ButtonLink>
+                      <ButtonLink
+                        href="/connexion?suivant=%2Fcommander%2Frecapitulatif"
+                        variant="secondary"
+                        block
+                      >
+                        J’ai déjà un compte
+                      </ButtonLink>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-2 text-base font-medium">
-                <dt>Total TTC</dt>
-                <dd className="tabular-nums">{formatMoney(setupGross, plan.currency)}</dd>
-              </div>
-            </dl>
 
-            <p className="mt-5 border-t border-[var(--border)] pt-4 text-sm text-[var(--foreground-muted)]">
-              Puis{' '}
-              <strong className="text-[var(--foreground)]">
-                {formatMaintenance(maintenanceGross, plan.currency, plan.billingInterval)}
-              </strong>{' '}
-              de maintenance, prélevée à partir de la mise en ligne de votre site. Résiliable à tout
-              moment depuis votre espace.
-            </p>
-
-            <div className="mt-6">
-              {session.user ? (
-                <CheckoutForm termsVersion={TERMS_VERSION} refundWindowDays={refund.windowDays} />
-              ) : (
-                <>
-                  <Alert tone="info" live="status" className="mb-4">
-                    Créez votre compte ou connectez-vous pour finaliser. Votre commande est
-                    conservée.
-                  </Alert>
-                  <div className="space-y-2">
-                    <ButtonLink
-                      href="/inscription?suivant=%2Fcommander%2Frecapitulatif"
-                      block
-                      size="lg"
-                    >
-                      Créer mon compte
-                    </ButtonLink>
-                    <ButtonLink
-                      href="/connexion?suivant=%2Fcommander%2Frecapitulatif"
-                      variant="secondary"
-                      block
-                    >
-                      J’ai déjà un compte
-                    </ButtonLink>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <p className="mt-5 text-xs leading-relaxed text-[var(--muted)]">
-              Paiement traité par Stripe. Aucune donnée de carte ne transite par StaX ni n’est
-              conservée par nos soins.{' '}
-              <Link href="/remboursements" className="underline underline-offset-2">
-                Garantie de {refund.windowDays} jours
-              </Link>{' '}
-              après la mise en ligne.
-            </p>
-          </Panel>
+              <p className="mt-5 text-xs leading-relaxed text-[var(--muted)]">
+                Paiement traité par Stripe. Aucune donnée de carte ne transite par StaX ni n’est
+                conservée par nos soins.{' '}
+                <Link href="/remboursements" className="underline underline-offset-2">
+                  Garantie de {refund.windowDays} jours
+                </Link>{' '}
+                après la mise en ligne.
+              </p>
+            </Panel>
+          )}
         </aside>
       </div>
     </>

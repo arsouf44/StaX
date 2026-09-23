@@ -9,10 +9,10 @@ import { PRIMARY_NAV, type NavGroup } from '~/lib/navigation';
 /**
  * En-tete du site public.
  *
- * Verre translucide qui se densifie au defilement, menus deroulants au survol
- * ET au clavier, et panneau lateral sur mobile. La navigation reste
- * entierement utilisable sans souris : chaque groupe est un bouton, chaque
- * menu se ferme avec Echap.
+ * Une pastille de verre qui flotte au-dessus de la page et se densifie au
+ * defilement. Menus deroulants au survol ET au clavier, panneau lateral sur
+ * mobile. La navigation reste entierement utilisable sans souris : chaque
+ * groupe est un bouton, chaque menu se ferme avec Echap.
  */
 export function SiteHeader() {
   const pathname = usePathname();
@@ -60,25 +60,26 @@ export function SiteHeader() {
     Boolean(href) && (pathname === href || (href !== '/' && pathname.startsWith(`${href}/`)));
 
   return (
-    <header
-      className={cn(
-        'fixed inset-x-0 top-0 z-50 transition-all duration-300',
-        scrolled
-          ? 'border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_78%,transparent)] backdrop-blur-xl'
-          : 'border-b border-transparent',
-      )}
-    >
-      <div className="mx-auto flex h-16 w-full max-w-[88rem] items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div
+        className={cn(
+          'mx-auto flex h-14 w-full max-w-6xl items-center gap-3 rounded-full border pr-2 pl-4 transition-[background-color,border-color,box-shadow] duration-300 sm:pl-5',
+          'backdrop-blur-xl backdrop-saturate-150',
+          scrolled
+            ? 'border-[var(--glass-border-strong)] bg-[color-mix(in_oklab,var(--background)_78%,transparent)] shadow-[0_18px_50px_-24px_rgb(0_0_0/0.9)]'
+            : 'border-[var(--glass-border)] bg-[color-mix(in_oklab,var(--background)_45%,transparent)]',
+        )}
+      >
         <Link
           href="/"
           aria-label="StaX — accueil"
-          className="shrink-0 rounded-[var(--radius-sm)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
+          className="shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
         >
-          <Logo size={26} />
+          <Logo size={24} />
         </Link>
 
-        <nav aria-label="Navigation principale" className="hidden flex-1 lg:flex">
-          <ul className="flex items-center gap-1">
+        <nav aria-label="Navigation principale" className="hidden flex-1 justify-center lg:flex">
+          <ul className="flex items-center gap-0.5">
             {PRIMARY_NAV.map((group) => (
               <li
                 key={group.label}
@@ -99,10 +100,10 @@ export function SiteHeader() {
                       aria-haspopup="true"
                       onClick={() => setOpenGroup(openGroup === group.label ? null : group.label)}
                       className={cn(
-                        'inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] px-3 text-sm transition-colors',
+                        'inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[0.8125rem] transition-colors',
                         openGroup === group.label || isActive(group.href)
-                          ? 'text-[var(--foreground)]'
-                          : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]',
+                          ? 'bg-[var(--glass-2)] text-[var(--foreground)]'
+                          : 'text-[var(--foreground-muted)] hover:bg-[var(--glass-1)] hover:text-[var(--foreground)]',
                       )}
                     >
                       {group.label}
@@ -128,10 +129,10 @@ export function SiteHeader() {
                   <Link
                     href={group.href ?? '/'}
                     className={cn(
-                      'inline-flex h-9 items-center rounded-[var(--radius-sm)] px-3 text-sm transition-colors',
+                      'inline-flex h-9 items-center rounded-full px-3.5 text-[0.8125rem] transition-colors',
                       isActive(group.href)
-                        ? 'text-[var(--foreground)]'
-                        : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]',
+                        ? 'bg-[var(--glass-2)] text-[var(--foreground)]'
+                        : 'text-[var(--foreground-muted)] hover:bg-[var(--glass-1)] hover:text-[var(--foreground)]',
                     )}
                   >
                     {group.label}
@@ -142,17 +143,22 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <ButtonLink href="/connexion" variant="ghost" size="sm" className="hidden sm:inline-flex">
+        <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
+          <ButtonLink
+            href="/connexion"
+            variant="ghost"
+            size="pill-sm"
+            className="hidden sm:inline-flex"
+          >
             Se connecter
           </ButtonLink>
-          <ButtonLink href="/commander" variant="primary" size="sm">
+          <ButtonLink href="/commander" variant="accent" size="pill-sm">
             Créer mon site
           </ButtonLink>
           <Button
             variant="ghost"
             size="icon-sm"
-            className="lg:hidden"
+            className="rounded-full lg:hidden"
             aria-label="Ouvrir le menu"
             onClick={() => setMobileOpen(true)}
           >
@@ -196,10 +202,10 @@ export function SiteHeader() {
             </div>
           ))}
           <div className="space-y-2 border-t border-[var(--border)] pt-6">
-            <ButtonLink href="/connexion" variant="secondary" block>
+            <ButtonLink size="pill" href="/connexion" variant="secondary" block>
               Se connecter
             </ButtonLink>
-            <ButtonLink href="/commander" variant="primary" block>
+            <ButtonLink size="pill" href="/commander" variant="accent" block>
               Créer mon site
             </ButtonLink>
           </div>
@@ -214,7 +220,7 @@ function MegaMenu({ group, onNavigate }: { group: NavGroup; onNavigate: () => vo
   return (
     <div
       className={cn(
-        'absolute glass-edge top-[calc(100%+10px)] left-0 z-40 rounded-[var(--radius-lg)] p-2 glass-3',
+        'absolute glass-edge top-[calc(100%+14px)] left-0 z-40 rounded-[var(--radius-xl)] p-2 glass-3',
         'animate-[reveal_0.18s_cubic-bezier(0.16,1,0.3,1)]',
         hasFeatured ? 'w-[46rem]' : 'w-[22rem]',
       )}
@@ -236,7 +242,7 @@ function MegaMenu({ group, onNavigate }: { group: NavGroup; onNavigate: () => vo
                 <span className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
                   {item.label}
                   {item.badge ? (
-                    <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-2xs text-[var(--accent)]">
+                    <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-2xs text-accent">
                       {item.badge}
                     </span>
                   ) : null}
@@ -260,7 +266,7 @@ function MegaMenu({ group, onNavigate }: { group: NavGroup; onNavigate: () => vo
             <Link
               href={group.featured.href}
               onClick={onNavigate}
-              className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--accent)]"
+              className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-accent"
             >
               {group.featured.cta}
               <svg

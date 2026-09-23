@@ -35,10 +35,10 @@ export default async function PricingPage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="spotlight absolute inset-0" />
+          <div className="grid-bg grid-bg-fade absolute inset-0" />
+        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -92,10 +92,11 @@ export default async function PricingPage() {
               </p>
             </Panel>
             <Panel level={1} padding="lg">
-              <h2 className="text-base font-medium">Sans engagement de durée</h2>
+              <h2 className="text-base font-medium">Résiliable en ligne, en quelques clics</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Vous résiliez depuis votre espace, la maintenance prend fin à l’échéance en cours.
-                Vos données restent exportables après la résiliation.
+                La maintenance est annuelle et se reconduit chaque année. Vous résiliez depuis votre
+                espace quand vous voulez : elle prend fin à l’échéance en cours, et nous vous
+                rappelons la date de reconduction à l’avance. Vos données restent exportables.
               </p>
             </Panel>
           </div>
@@ -147,10 +148,10 @@ export default async function PricingPage() {
         <Container size="narrow" className="text-center">
           <h2 className="text-3xl font-medium tracking-[-0.03em]">Une question sur nos tarifs ?</h2>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <ButtonLink href="/commander" size="lg">
+            <ButtonLink variant="accent" href="/commander" size="pill-lg">
               Commander mon site
             </ButtonLink>
-            <ButtonLink href="/contact" variant="secondary" size="lg">
+            <ButtonLink href="/contact" variant="secondary" size="pill-lg">
               Nous écrire
             </ButtonLink>
           </div>

@@ -25,6 +25,19 @@ loadRootEnv(import.meta.dirname);
  * casserait l'amorcage de Next sur une page sans nonce. Deux politiques
  * differentes pour deux contraintes differentes, chacune assumee.
  */
+/**
+ * Origine du stockage des photos des clients (Supabase). En production elle
+ * est en https, donc deja couverte par `https:` ; la nommer garde la CSP
+ * exacte et permet a la pile locale (http) d afficher les photos.
+ */
+const STORAGE_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').origin;
+  } catch {
+    return null;
+  }
+})();
+
 const PUBLIC_CSP = [
   "default-src 'self'",
   // PAS d'empreinte ici, et c'est deliberé : « 'unsafe-inline' is ignored if
@@ -33,9 +46,9 @@ const PUBLIC_CSP = [
   // Next sur les pages prerendues — qui, eux, n'ont pas d'empreinte stable.
   // Le script de theme est couvert par 'unsafe-inline' comme les autres.
   "script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https:",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  ["img-src 'self' data: blob: https:", STORAGE_ORIGIN].filter(Boolean).join(' '),
   "media-src 'self' https:",
   "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com",
@@ -45,7 +58,9 @@ const PUBLIC_CSP = [
   "frame-ancestors 'self'",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
-  'upgrade-insecure-requests',
+  // Sauf pile locale en http : la directive transformerait chaque photo
+  // http://127.0.0.1 en https:// injoignable.
+  ...(STORAGE_ORIGIN?.startsWith('http:') ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 /**
@@ -138,6 +153,15 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'Cache-Control', value: 'no-store' },
           { key: 'X-Frame-Options', value: 'DENY' },
+        ],
+      },
+      {
+        // Polices des sites clients, auto-hebergees : l apercu de l editeur
+        // est un document isole (origine opaque), qui les charge en CORS.
+        source: '/_stax/fonts/:file*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
     ];

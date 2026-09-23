@@ -5,6 +5,8 @@ par lecture de fichier, requête SQL ou exécution. Un écran présent sans back
 complet est compté **non terminé**, comme demandé.
 
 Date : 2026-09-21 · Branche : `claude/saas-web-builder-platform-lsbygs`
+Mise à jour : 2026-09-22 (éditeur visuel, comptes internes, parcours réels —
+§ 2 et § 11) · Branche : `claude/busy-turing-xwqbpn`
 
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
@@ -44,36 +46,37 @@ désormais le FormData réel du framework.
 
 ---
 
-## 2. Éditeur client — **OK**
+## 2. Éditeur client — **OK** (réécrit, vérifié dans un vrai navigateur)
 
-| Capacité | État réel | Fichiers |
+L’éditeur est un **éditeur visuel en trois zones** (`apps/platform/src/app/app/editeur`) :
+structure de la page à gauche, **vrai rendu** au centre (le moteur public, sur
+le brouillon), réglages à droite. Sur téléphone, les trois zones deviennent
+des onglets et l’aperçu s’ouvre au format téléphone.
+
+| Capacité | État réel | Où |
 |---|---|---|
-| Modifier le contenu d'une section | **OK** — champs dérivés des schémas Zod, revalidés serveur | `editeur/actions.ts:updateBlockAction` |
-| Enregistrement automatique | **OK** — 1,2 s après la dernière frappe, plus bouton explicite et état affiché | `editeur/block-form.tsx` |
-| Réordonner | **OK** — glisser-déposer **et** boutons monter/descendre (clavier, tactile) | `editeur/editor.tsx`, `reorderBlocksAction` |
-| Masquer / afficher | **OK** | `toggleBlockVisibilityAction` |
-| **Ajouter une section** | **OK** — sélecteur groupé par intention, limité aux modules actifs de l'offre, contenu initial pris au registre (jamais au navigateur) | `editeur/block-picker.tsx`, `addBlockAction` |
-| **Choisir le type de section** | **OK** — sections uniques (bannière) désactivées si déjà présentes | idem |
-| **Dupliquer** | **OK** — la copie se place juste après l'original | `duplicateBlockAction` |
-| **Supprimer** | **OK** — confirmation rappelant que le site en ligne ne change pas | `deleteBlockAction` |
-| **Historique des versions** | **OK** — 20 dernières publications, auteur, date, version en ligne signalée | `editeur/version-history.tsx` |
-| **Retour à une version** | **OK** — `rollback_site` republie l'instantané sous un nouveau numéro. Le libellé dit ce qui se passe vraiment : le site en ligne change tout de suite, le brouillon n'est pas touché | `rollbackSiteAction` |
-| **Aperçu desktop / tablette / téléphone** | **OK** — rendu par le **moteur public**, sur le snapshot du brouillon : aperçu et mise en ligne ne peuvent pas diverger | `editeur/apercu/route.ts`, `…21_draft_preview.sql` |
-| Publier | **OK** — instantané figé, atomique | `publishSiteAction` |
-| Brouillon séparé du publié | **OK** — structurel | `app.publish_site` |
+| Cliquer sur un élément de l’aperçu pour le modifier | **OK** — le titre, la photo ou le bouton cliqué ouvre son champ, curseur dedans | `render/editor-script.ts`, `field-editors.tsx` |
+| Texte, photo (envoi ou bibliothèque), boutons et destination | **OK** — « Où mène ce bouton ? » : une page, un site, un téléphone, un e-mail | `field-editors.tsx` |
+| Ajouter une section (contenu de départ réel, jamais de faux avis) | **OK** | `section-library.tsx`, `createStarterBlock` |
+| Dupliquer, monter/descendre, glisser, masquer, variante d’apparence | **OK** | `properties-panel.tsx` |
+| Supprimer → corbeille, restaurer, purge définitive séparée | **OK** — sections, pages et photos | `deleted_at`, `purge_trash_item` |
+| Annuler / rétablir (boutons, Ctrl+Z / Ctrl+Maj+Z) | **OK** — côté serveur, par page, frappe regroupée | `editor_revisions`, `app.editor_undo/redo` |
+| Enregistrement automatique + points de sauvegarde | **OK** — un point par fenêtre de 10 min, un point avant chaque restauration | `draft_checkpoints` |
+| Aperçu ordinateur / tablette / téléphone | **OK** — rendu à la vraie largeur puis réduit | `preview-frame.tsx` |
+| Vérification avant publication | **OK** — bloquant vs conseil, « Corriger » amène à la section | `publication-checks.ts` |
+| Publication | **OK** — version immuable, atomique, purge du cache, `x-stax-version` | `app.publish_site`, `cache-purge.ts` |
+| Historique : Voir, Comparer, Restaurer, Republier | **OK** — restaurer ne détruit jamais les versions suivantes | `history-panel.tsx`, `app.rollback_site` |
+| Auteur de chaque version : vous, un membre, l’équipe StaX | **OK** | `actor_kind` |
+| Conflit entre deux onglets | **OK** — refus explicite, rechargement | `p_base_seq`, `40001` |
 
-**Sécurité de l'aperçu** : le contenu affiché est écrit par le client. Le servir
-depuis l'origine de la plateforme reviendrait à offrir une exécution de script
-dans la session de la personne connectée. Deux barrières : l'en-tête
-`Content-Security-Policy: sandbox allow-scripts` place le document dans une
-origine opaque, et l'iframe porte `sandbox` sans `allow-same-origin`.
-`allow-forms` est volontairement absent. Le site prévisualisé n'est jamais
-désigné par le navigateur : il vient de l'espace de travail résolu côté serveur,
-et la fonction SQL exige `content.edit` (9 assertions SQL).
+**Sécurité de l’aperçu** : le contenu affiché est écrit par le client. Il est
+servi avec `Content-Security-Policy: sandbox allow-scripts` (origine opaque) et
+l’iframe porte `sandbox` sans `allow-same-origin` : il ne peut rien lire de la
+plateforme, il ne fait qu’envoyer des messages (identifiant de section, champ
+cliqué) à l’origine exacte de l’éditeur. La mesure d’audience n’y part jamais.
 
-**Reste hors éditeur de sections** : pages et navigation se modifient depuis
-`/app/site`, thème et images depuis `/app/site/apparence` et `/app/media`, SEO
-depuis `/app/site/referencement`.
+**Preuve** : les parcours `tests/e2e/journeys` (voir § 11) et les assertions
+SQL « Editeur et versions ».
 
 ---
 
@@ -302,11 +305,71 @@ documenté qui ne fonctionnait pas.
 
 ---
 
+## 11. Parcours réels dans un navigateur — ce qu’ils ont révélé (2026-09-22)
+
+Les parcours ont été déroulés contre une pile complète (base, authentification,
+API, stockage, plateforme en build de production, moteur des sites), chaque
+publication vérifiée par une requête HTTP sur l’adresse publique. Ils ont
+trouvé des pannes qu’aucun test existant ne voyait :
+
+| Panne | Conséquence réelle | Correction |
+|---|---|---|
+| Le site créé au paiement n’avait pas d’offre (`plan_id` vide) | **Un client qui payait n’avait aucun droit d’offre** : 0 Mo pour ses photos, pas de réservations… | migration `0036`, rattrapage des sites existants |
+| `scripts/db-test.sh` rendait toujours un succès | Une assertion SQL en échec ne faisait **jamais** échouer la CI | statut de `psql` lu à part |
+| Les messages de l’aperçu visaient l’origine interne du serveur | Cliquer sur un titre ne sélectionnait rien (risque identique derrière un mandataire) | origine prise sur la requête du navigateur |
+| La boîte de publication s’ouvrait derrière l’éditeur | Impossible de publier | niveaux d’empilement |
+| Le contenu par défaut de « Contenu intégré » était refusé par son propre schéma | L’éditeur plantait sur tout site qui proposait cette section | schéma et vérification avant publication |
+| `/app/disponibilites` annoncé par le module Réservations, inexistant | 404, réservations impossibles à configurer | page créée |
+| Echap fermait la couche du dessous | La comparaison restait à l’écran, l’historique disparaissait | pile des couches |
+| Aperçu « ordinateur » rendu à la largeur de la colonne | Menu de téléphone affiché en mode ordinateur | rendu à 1 280 px puis réduit |
+| Aperçu au format ordinateur sur un téléphone | Illisible | format téléphone par défaut |
+| Espace client sur téléphone | Contenu comprimé par la colonne du menu | menu au-dessus |
+| Animations d’apparition rejouées à chaque enregistrement | L’aperçu clignotait à chaque lettre | coupées dans l’aperçu |
+| La mesure d’audience partait depuis l’aperçu | Le client comptait ses propres visites | coupée dans l’aperçu |
+| Boulangerie, caviste, traiteur : textes de restaurant | « Réservez votre table », pages « Le restaurant » et « La carte » | accroches et pages par métier |
+| Libellés sans accents (métiers, sections) | « Cafe / salon de the », « Horaires d ouverture » sur les sites | migration `0035`, registre |
+
+Parcours automatisés (`pnpm test:e2e:stack`, 6 parcours) :
+
+1. **Client, 16 étapes** : connexion → éditeur → titre modifié en cliquant sur
+   l’aperçu → photo remplacée (réellement chargée) → section ajoutée → déplacée →
+   supprimée puis restaurée → rendu téléphone → publication → requête HTTP sur
+   l’adresse publique → nouvelle version servie (`x-stax-version`) → nouvelle
+   modification non publiée → le site public montre toujours l’ancienne →
+   publication → retour à la première version → requête HTTP : la première
+   version est de nouveau servie, les versions intermédiaires restent dans
+   l’historique.
+2. **Compte interne** : commande Ultra Premium dans le tunnel, aucun paiement
+   affiché, aucune requête vers Stripe, site créé immédiatement, commande
+   interne à 0 € sans encaissement, édition, publication réelle, seconde
+   commande sur une autre offre.
+3. **Privilège vérifié par la base** : un client ordinaire est refusé et ne
+   peut pas s’attribuer le statut interne.
+4. **Tout est réversible** : annuler/rétablir, comparer, restaurer une version
+   sans rien détruire, site en ligne inchangé.
+5. **Page supprimée** puis restaurée depuis la corbeille.
+6. **Équipe StaX** : refusée sans session d’assistance ; en session, son
+   intervention apparaît « Équipe StaX » dans l’historique du client.
+
+---
+
 ## Ce qui reste non terminé, sans détour
 
+0. **Migrations `0029` à `0036` à appliquer sur le projet Supabase réel**, puis
+   `pnpm internal:bootstrap` avec le mot de passe du compte interne fourni dans
+   l’environnement. Tant que ce n’est pas fait, la production n’a ni l’éditeur
+   réversible, ni les comptes internes, ni la correction des offres payées.
+
 1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
-   est prouvée par 270 assertions SQL et 12 parcours d'intégration, mais pas
-   encore par deux sessions réelles ouvertes en parallèle.
+   est prouvée par 309 assertions SQL, 27 tests d'intégration et les parcours
+   de § 11 (qui opèrent chacun sur leur propre client), mais pas encore par
+   deux sessions réelles ouvertes en parallèle sur le même écran.
+
+1 bis. **Les parcours de § 11 ne tournent pas encore en CI** : ils montent la
+   pile locale (binaires GoTrue et PostgREST téléchargés par
+   `tests/e2e/stack/stack.sh`). La CI exécute les 309 assertions SQL, qui
+   couvrent les mêmes règles côté base ; brancher les parcours est l'étape
+   suivante.
 
 2. **Envoi des e-mails.** L'inscription aboutit et Supabase accepte l'e-mail de
    confirmation, mais le serveur SMTP par défaut de Supabase est limité à

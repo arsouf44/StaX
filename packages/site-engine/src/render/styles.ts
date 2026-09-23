@@ -208,6 +208,13 @@ details.faq p{padding-bottom:1.25rem;color:var(--site-muted);max-width:52rem}
 
 .embed{position:relative;width:100%;border-radius:var(--site-radius-lg);overflow:hidden;background:var(--site-surface)}
 .embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.embed-gated{display:flex;align-items:center;justify-content:center;border:1px solid var(--site-border)}
+.embed-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.5rem;text-align:center;font-size:.875rem;color:var(--site-muted)}
+.embed-gate p{max-width:32rem;margin:0}
+.legal-list{display:grid;grid-template-columns:minmax(9rem,14rem) 1fr;gap:.6rem 1.5rem;margin:1.25rem 0}
+.legal-list dt{font-weight:500}
+.legal-list dd{margin:0;color:var(--site-muted)}
+@media (max-width:640px){.legal-list{grid-template-columns:1fr;gap:.15rem}.legal-list dd{margin-bottom:.6rem}}
 .ar-16-9{aspect-ratio:16/9}.ar-4-3{aspect-ratio:4/3}.ar-1-1{aspect-ratio:1}
 
 .stats{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr))}

@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { boundedText, emailSchema, honeypotSchema, optionalText, uuidSchema } from './common';
+import {
+  boundedText,
+  consentCheckbox,
+  emailSchema,
+  honeypotSchema,
+  optionalText,
+  uuidSchema,
+} from './common';
 
 /**
  * RGPD : consentement, demandes d exercice des droits, cookies.
@@ -80,3 +87,55 @@ export const accountDeletionSchema = z
     }),
   })
   .strict();
+
+/**
+ * Signalement d'un contenu illicite (reglement (UE) 2022/2065, article 16).
+ *
+ * L'identite est exigee, sauf pour un contenu d'abus sur mineurs : c'est la
+ * seule exception que le reglement prevoit, et elle ne doit pas decourager un
+ * signalement de ce type.
+ */
+export const CONTENT_REPORT_CATEGORIES = [
+  'illegal',
+  'intellectual_property',
+  'privacy',
+  'defamation',
+  'fraud',
+  'hate',
+  'child_abuse',
+  'other',
+] as const;
+
+export const contentReportSchema = z
+  .object({
+    url: z
+      .string()
+      .trim()
+      .max(2000, 'Adresse trop longue.')
+      .regex(/^https?:\/\/[^\s/]+/i, 'Indiquez l’adresse complète, commençant par https://'),
+    category: z.enum(CONTENT_REPORT_CATEGORIES),
+    explanation: boundedText(20, 5000, 'Votre explication'),
+    name: optionalText(120),
+    email: emailSchema.optional().or(z.literal('').transform(() => undefined)),
+    goodFaith: consentCheckbox(
+      'Confirmez que votre signalement est fait de bonne foi et que les informations sont exactes.',
+    ),
+    website: honeypotSchema,
+    turnstileToken: z.string().max(4096).optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.category === 'child_abuse') return;
+    if (!value.name) {
+      context.addIssue({ code: 'custom', path: ['name'], message: 'Indiquez votre nom.' });
+    }
+    if (!value.email) {
+      context.addIssue({
+        code: 'custom',
+        path: ['email'],
+        message: 'Indiquez votre adresse e-mail pour recevoir la réponse.',
+      });
+    }
+  });
+
+export type ContentReportInput = z.infer<typeof contentReportSchema>;

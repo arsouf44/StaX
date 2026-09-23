@@ -14,6 +14,7 @@ import {
   Stat,
   StatusPill,
 } from '@stax/ui';
+import { publicSiteUrl } from '@stax/config';
 import { getWorkspace } from '~/lib/workspace';
 import { featureAccess, loadFeatureSnapshot } from '@stax/database';
 
@@ -30,7 +31,12 @@ export const metadata: Metadata = { title: 'Tableau de bord' };
  * de donnee », jamais un zero qui ressemblerait a un echec.
  */
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
   const business = resolveBusiness(site?.businessTypeSlug);
@@ -80,6 +86,83 @@ export default async function DashboardPage() {
 
   const firstName = workspace.profile.first_name ?? '';
 
+  // Etat du site et premiers pas : lus en une fois, avec le jeton de la
+  // personne. Chaque etape renvoie a l ecran ou la faire.
+  const [siteRow, themeRow, settingsRow, mediaCount, pageCount] = site
+    ? await Promise.all([
+        db
+          .from('sites')
+          .select('draft_updated_at, last_published_at, published_version_id')
+          .eq('id', site.id)
+          .maybeSingle(),
+        db.from('site_themes').select('logo_media_id').eq('site_id', site.id).maybeSingle(),
+        db
+          .from('site_settings')
+          .select('email, phone, seo_description, description')
+          .eq('site_id', site.id)
+          .maybeSingle(),
+        db
+          .from('media')
+          .select('id', { count: 'exact', head: true })
+          .eq('organization_id', workspace.organization.id)
+          .is('deleted_at', null),
+        db
+          .from('site_pages')
+          .select('id', { count: 'exact', head: true })
+          .eq('site_id', site.id)
+          .is('deleted_at', null),
+      ])
+    : [null, null, null, null, null];
+
+  const siteState = (siteRow?.data ?? null) as {
+    draft_updated_at: string | null;
+    last_published_at: string | null;
+    published_version_id: string | null;
+  } | null;
+  const settingsState = (settingsRow?.data ?? null) as {
+    email: string | null;
+    phone: string | null;
+    seo_description: string | null;
+    description: string | null;
+  } | null;
+  const isPublished = Boolean(siteState?.published_version_id);
+  const hasPendingChanges = Boolean(
+    siteState?.draft_updated_at &&
+    (!siteState.last_published_at || siteState.draft_updated_at > siteState.last_published_at),
+  );
+  const activeHost =
+    site?.domains.find((domain) => domain.is_primary && domain.status === 'active')?.hostname ??
+    site?.domains.find((domain) => domain.status === 'active')?.hostname ??
+    null;
+  const canEdit = workspace.capabilities.includes('content.edit');
+
+  const steps = site
+    ? [
+        {
+          done: Boolean((themeRow?.data as { logo_media_id: string | null } | null)?.logo_media_id),
+          label: 'Ajouter votre logo',
+          href: '/app/site/apparence',
+        },
+        {
+          done: Boolean(settingsState?.email || settingsState?.phone),
+          label: 'Indiquer vos coordonnées',
+          href: '/app/entreprise',
+        },
+        {
+          done: (mediaCount?.count ?? 0) > 0,
+          label: 'Ajouter vos photos',
+          href: '/app/media',
+        },
+        {
+          done: Boolean(settingsState?.seo_description || settingsState?.description),
+          label: 'Décrire votre activité pour Google',
+          href: '/app/site/referencement',
+        },
+        { done: isPublished, label: 'Mettre votre site en ligne', href: '/app/editeur' },
+      ]
+    : [];
+  const stepsDone = steps.filter((step) => step.done).length;
+
   return (
     <div className="space-y-8">
       <div>
@@ -92,6 +175,92 @@ export default async function DashboardPage() {
             : 'Votre espace est prêt. Il ne manque plus que votre site.'}
         </p>
       </div>
+
+      {params.commande === 'interne' ? (
+        <Alert tone="success" live="status" title="Site créé, sans paiement">
+          Commande interne enregistrée : le site est prêt dans votre espace, avec des pages et des
+          textes d’exemple adaptés au métier. Personnalisez-le puis mettez-le en ligne.
+        </Alert>
+      ) : null}
+
+      {site ? (
+        <Panel level={2} padding="lg" data-testid="my-site">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
+                Mon site
+              </p>
+              <h2 className="mt-1 text-xl font-medium">{site.name}</h2>
+              <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+                {activeHost ?? 'Adresse en cours de préparation'}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {site.status === 'suspended' ? (
+                  <StatusPill tone="warning">Suspendu</StatusPill>
+                ) : isPublished ? (
+                  <StatusPill tone="success">En ligne</StatusPill>
+                ) : (
+                  <StatusPill tone="neutral">Pas encore en ligne</StatusPill>
+                )}
+                {hasPendingChanges && isPublished ? (
+                  <StatusPill tone="warning">Modifications non publiées</StatusPill>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {canEdit && (pageCount?.count ?? 0) > 0 ? (
+                <ButtonLink href="/app/editeur" size="lg">
+                  <Icon name="pencil" size={16} aria-hidden="true" />
+                  Modifier mon site
+                </ButtonLink>
+              ) : canEdit ? (
+                <ButtonLink href="/app/editeur" size="lg">
+                  Préparer mon site
+                </ButtonLink>
+              ) : null}
+              {isPublished && activeHost ? (
+                <a
+                  href={publicSiteUrl(activeHost)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-12 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-strong)] px-5 text-sm font-medium hover:bg-[var(--surface-hover)]"
+                >
+                  <Icon name="globe" size={16} aria-hidden="true" />
+                  Voir mon site
+                </a>
+              ) : null}
+            </div>
+          </div>
+
+          {stepsDone < steps.length ? (
+            <div className="mt-6 border-t border-[var(--border)] pt-5">
+              <p className="text-sm font-medium">
+                Pour bien démarrer · {stepsDone} sur {steps.length}
+              </p>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {steps.map((step) => (
+                  <li key={step.label}>
+                    <Link
+                      href={step.href}
+                      className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface)]"
+                    >
+                      <Icon
+                        name={step.done ? 'circle-check' : 'plus'}
+                        size={14}
+                        className={step.done ? 'text-[var(--success)]' : 'text-[var(--muted)]'}
+                        aria-hidden="true"
+                      />
+                      <span className={step.done ? 'text-[var(--muted)] line-through' : ''}>
+                        {step.label}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </Panel>
+      ) : null}
 
       {!site ? (
         <EmptyState
@@ -120,12 +289,12 @@ export default async function DashboardPage() {
         </Alert>
       ) : null}
 
-      {site && site.status !== 'live' && site.status !== 'suspended' ? (
+      {site && !isPublished && site.status !== 'suspended' ? (
         <Alert tone="info" live="status" title="Votre site n’est pas encore en ligne">
-          Vous pouvez le relire en aperçu privé et demander vos corrections. Nous le publions dès
-          que vous nous donnez votre accord.
+          Relisez-le dans l’éditeur, modifiez ce que vous voulez, puis cliquez sur « Mettre en ligne
+          ». Vous préférez que nous nous en chargions ? Écrivez-nous depuis votre projet.
           <span className="mt-3 block">
-            <ButtonLink href="/app/projet" size="sm">
+            <ButtonLink href="/app/projet" size="sm" variant="secondary">
               Suivre mon projet
             </ButtonLink>
           </span>

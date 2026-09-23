@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { unwrapList, unwrapMaybe } from '@stax/database';
+import { unwrapList } from '@stax/database';
+import { legalIdentitySchema } from '@stax/site-engine';
 import {
   fieldErrors,
   navigationSchema,
@@ -170,6 +171,61 @@ export async function saveBusinessIdentityAction(
 
   revalidatePath('/app/entreprise');
   return SAVED;
+}
+
+/* --- Mentions legales ------------------------------------------------------ */
+
+const LEGAL_KEYS = [
+  'legalName',
+  'legalForm',
+  'capital',
+  'registration',
+  'vatNumber',
+  'address',
+  'publicationDirector',
+  'regulatedProfession',
+  'mediator',
+  'privacyContact',
+] as const;
+
+/**
+ * Identite legale du client, editeur de son site. Enregistree telle que
+ * saisie : les champs obligatoires sont exiges a la PUBLICATION (qui dit
+ * lesquels manquent), pas ici — on peut remplir en plusieurs fois.
+ */
+export async function saveLegalIdentityAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const gate = await requireSiteEditor();
+  if (!gate.ok) return gate.state;
+
+  const parsed = legalIdentitySchema.safeParse(
+    Object.fromEntries(LEGAL_KEYS.map((key) => [key, text(formData, key)])),
+  );
+  if (!parsed.success) {
+    return {
+      status: 'error',
+      message: 'Certaines informations sont trop longues.',
+      errors: fieldErrors(parsed.error),
+    };
+  }
+
+  const { error } = await gate.value.db.from('site_settings').upsert(
+    {
+      site_id: gate.value.siteId,
+      legal_identity: parsed.data,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'site_id' },
+  );
+  if (error) return failure();
+
+  revalidatePath('/app/entreprise');
+  return {
+    status: 'success',
+    message: 'Mentions légales enregistrées. Elles seront en ligne à la prochaine publication.',
+  };
 }
 
 /* --- Referencement -------------------------------------------------------- */
@@ -383,6 +439,7 @@ export async function savePageAction(
       .from('site_pages')
       .select('id, path, sort_order, kind')
       .eq('site_id', gate.value.siteId)
+      .is('deleted_at', null)
       .order('sort_order', { ascending: true })) as never,
   );
 
@@ -448,6 +505,10 @@ export async function savePageAction(
   return { status: 'success', message: 'Page créée. Ajoutez-y du contenu depuis l’éditeur.' };
 }
 
+/**
+ * « Supprimer une page » la place dans la corbeille : son contenu est
+ * conserve, elle se restaure d un clic. La page d accueil ne peut pas partir.
+ */
 export async function deletePageAction(
   _previous: ActionState,
   formData: FormData,
@@ -460,35 +521,52 @@ export async function deletePageAction(
     return failure('Cette page est introuvable.');
   }
 
-  const page = unwrapMaybe<{ id: string; kind: string }>(
-    (await gate.value.db
-      .from('site_pages')
-      .select('id, kind')
-      .eq('id', pageId)
-      .eq('site_id', gate.value.siteId)
-      .maybeSingle()) as never,
-  );
-
-  if (!page) return failure('Cette page est introuvable.');
-
-  if (page.kind === 'home') {
-    return {
-      status: 'error',
-      message: 'La page d’accueil ne peut pas être supprimée.',
-    };
+  const { error } = await gate.value.db.rpc('trash_page', { p_page: pageId });
+  if (error) {
+    return failure(
+      error.message.includes('accueil')
+        ? 'La page d’accueil ne peut pas être supprimée.'
+        : 'Cette page n’a pas pu être supprimée.',
+    );
   }
 
-  const { error } = await gate.value.db
-    .from('site_pages')
-    .delete()
-    .eq('id', page.id)
-    .eq('site_id', gate.value.siteId);
-
-  if (error) return failure('Cette page n’a pas pu être supprimée.');
-
   revalidatePath('/app/site/pages');
+  revalidatePath('/app/editeur');
   return {
     status: 'success',
-    message: 'Page supprimée. Publiez votre site pour que le changement soit visible en ligne.',
+    message:
+      'Page placée dans la corbeille. Votre site en ligne ne change qu’à la prochaine publication, et vous pouvez la restaurer à tout moment.',
+  };
+}
+
+export async function restorePageAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const gate = await requireSiteEditor();
+  if (!gate.ok) return gate.state;
+
+  const pageId = formData.get('pageId');
+  if (typeof pageId !== 'string' || !uuidSchema.safeParse(pageId).success) {
+    return failure('Cette page est introuvable.');
+  }
+
+  const { data, error } = await gate.value.db.rpc('restore_page', { p_page: pageId });
+  if (error) {
+    return failure(
+      error.message.includes('Limite')
+        ? 'Votre offre a atteint son nombre de pages. Supprimez-en une autre avant de restaurer celle-ci.'
+        : 'Cette page n’a pas pu être restaurée.',
+    );
+  }
+
+  const result = (data ?? {}) as { renamed?: boolean; path?: string };
+  revalidatePath('/app/site/pages');
+  revalidatePath('/app/editeur');
+  return {
+    status: 'success',
+    message: result.renamed
+      ? `Page restaurée à l’adresse ${result.path ?? ''} (l’ancienne était déjà prise).`
+      : 'Page restaurée.',
   };
 }

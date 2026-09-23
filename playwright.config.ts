@@ -15,6 +15,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  // Les parcours complets tournent contre la pile locale, avec leur propre
+  // configuration : playwright.stack.config.ts.
+  testIgnore: ['**/journeys/**', '**/stack/**'],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

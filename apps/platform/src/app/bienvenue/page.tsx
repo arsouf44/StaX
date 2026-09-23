@@ -32,6 +32,11 @@ export default async function WelcomePage() {
   );
   if (memberships.length > 0) redirect('/app');
 
+  // Affichage seulement : c est la base qui refuse une commande sans paiement
+  // a un compte qui n est pas interne.
+  const internal =
+    session.profile?.account_type === 'internal' && session.profile.billing_exempt === true;
+
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="py-8">
@@ -53,13 +58,16 @@ export default async function WelcomePage() {
 
             <div className="mt-8 space-y-4">
               <Panel level={2} padding="lg">
-                <h2 className="text-base font-medium">Je veux commander un site</h2>
+                <h2 className="text-base font-medium">
+                  {internal ? 'Créer un site' : 'Je veux commander un site'}
+                </h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez tout
-                  modifier ensuite.
+                  {internal
+                    ? 'Compte interne StaX : choisissez n’importe quelle offre et n’importe quel métier. Aucun paiement ne vous sera demandé, le site est créé immédiatement.'
+                    : 'Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez tout modifier ensuite.'}
                 </p>
                 <ButtonLink href="/commander" className="mt-4">
-                  Commander mon site
+                  {internal ? 'Créer un site' : 'Commander mon site'}
                 </ButtonLink>
               </Panel>
 

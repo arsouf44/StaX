@@ -116,6 +116,64 @@ export function Parallax({
 }
 
 /**
+ * Inclinaison au defilement : une interface arrive legerement basculee vers
+ * l arriere, puis se redresse a mesure qu elle monte vers le centre de
+ * l ecran — comme un appareil pose que l on releve. Amplitude faible (8 deg
+ * maximum), aucune animation continue, et rien du tout si l utilisateur
+ * demande moins de mouvement.
+ */
+export function ScrollTilt({
+  children,
+  className,
+  maxDeg = 8,
+}: {
+  children: ReactNode;
+  className?: string;
+  maxDeg?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduced = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (reduced) return;
+    const element = ref.current;
+    if (!element) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const rect = element.getBoundingClientRect();
+      // 1 quand le haut de l element est en bas de l ecran, 0 quand il atteint le tiers haut.
+      const progress = Math.min(
+        Math.max((rect.top - window.innerHeight * 0.25) / (window.innerHeight * 0.75), 0),
+        1,
+      );
+      const angle = progress * maxDeg;
+      const scale = 1 - progress * 0.04;
+      element.style.transform = `perspective(2200px) rotateX(${angle.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+    };
+    const onScroll = () => {
+      if (frame === 0) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [maxDeg, reduced]);
+
+  return (
+    <div ref={ref} className={cn('origin-top will-change-transform', className)}>
+      {children}
+    </div>
+  );
+}
+
+/**
  * Surface qui reagit doucement au curseur.
  * Le suivi est desactive sur les appareils tactiles : il n y a pas de curseur,
  * et l ecoute couterait des cycles pour rien.
