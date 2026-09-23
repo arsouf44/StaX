@@ -7,13 +7,11 @@ import { formatMaintenance, maintenancePeriodLabel } from '@stax/payments/money'
 /**
  * Periodicite de la maintenance.
  *
- * Ce test existe a cause d'un defaut reel : la maintenance StaX est facturee a
- * l'annee, et neuf ecrans affichaient pourtant « / mois » — dont le tunnel de
- * commande, la confirmation et la facturation. Un client lisait « 32 € / mois »
- * pour un contrat a 32 € / an : un prix douze fois trop eleve, annonce au
- * moment precis ou il decide d'acheter.
- *
- * Aucune exception ne signale ce genre d'erreur. Seule une regle le peut.
+ * La maintenance StaX est MENSUELLE et commence a la LIVRAISON du site. Un
+ * libelle « / an », « annuelle » ou « premiere annee de maintenance » oublie
+ * dans un ecran annoncerait un prix ou un engagement faux au moment ou la
+ * personne decide d'acheter. Aucune exception ne signale ce genre d'erreur :
+ * seule une regle le peut.
  */
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -38,45 +36,43 @@ function sourceFiles(directory: string, files: string[] = []): string[] {
 }
 
 describe('periodicite de la maintenance', () => {
-  /**
-   * `Intl` separe les milliers et l'euro par des espaces insecables etroits.
-   * Les comparer caractere par caractere rendrait le test fragile sans rien
-   * verifier de plus : on normalise les espaces.
-   */
   const spaces = (value: string) => value.replace(/\s+/gu, ' ');
 
-  it('formate selon la periodicite du contrat, pas selon une hypothese', () => {
-    expect(spaces(formatMaintenance(2200))).toBe('22 € / an');
+  it('formate en mensuel par defaut, et respecte un contrat annuel ancien', () => {
+    expect(spaces(formatMaintenance(1200))).toBe('12 € / mois');
+    expect(spaces(formatMaintenance(1600, 'EUR', 'month'))).toBe('16 € / mois');
     expect(spaces(formatMaintenance(3200, 'EUR', 'year'))).toBe('32 € / an');
-    expect(spaces(formatMaintenance(3200, 'EUR', 'month'))).toBe('32 € / mois');
-    expect(spaces(formatMaintenance(109_900, 'EUR', 'year'))).toBe('1 099 € / an');
+    expect(maintenancePeriodLabel()).toBe('par mois');
     expect(maintenancePeriodLabel('year')).toBe('par an');
-    expect(maintenancePeriodLabel('month')).toBe('par mois');
   });
 
-  it('n’écrit « par mois » nulle part ailleurs que dans le formateur', () => {
+  it('n’annonce nulle part une maintenance annuelle', () => {
     const offenders: string[] = [];
 
     for (const file of [
       ...sourceFiles(join(ROOT, 'apps/platform/src')),
-      ...sourceFiles(join(ROOT, 'packages/site-engine/src')),
       ...sourceFiles(join(ROOT, 'packages/emails/src')),
+      ...sourceFiles(join(ROOT, 'packages/config/src')),
     ]) {
       if (ALLOWED.has(file)) continue;
       const source = readFileSync(file, 'utf8');
 
       for (const [index, line] of source.split('\n').entries()) {
-        // Les commentaires expliquent souvent POURQUOI la règle existe :
+        // Les commentaires expliquent souvent POURQUOI la regle existe :
         // ils ne s'affichent nulle part.
         const trimmed = line.trim();
         if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) {
           continue;
         }
-        // Une expression qui lit `billing_interval` choisit le libellé, elle
-        // ne le suppose pas : c'est exactement ce qu'on veut.
+        // Une expression qui lit `billing_interval` choisit le libelle selon le
+        // contrat (anciens contrats annuels) : c'est exactement ce qu'on veut.
         if (line.includes('billing_interval') || line.includes('billingInterval')) continue;
 
-        if (/\/\s*mois|par mois|maintenance mensuelle|mensuelle\b/i.test(line)) {
+        if (
+          /\/\s*an\b|par an\b|maintenance annuelle|annuelle de maintenance|première année de maintenance|abonnement annuel/i.test(
+            line,
+          )
+        ) {
           offenders.push(`${file.slice(ROOT.length)}:${index + 1} — ${trimmed.slice(0, 90)}`);
         }
       }
@@ -84,7 +80,7 @@ describe('periodicite de la maintenance', () => {
 
     expect(
       offenders,
-      `La maintenance est annuelle. Utilisez formatMaintenance() :\n${offenders.join('\n')}`,
+      `La maintenance est mensuelle. Utilisez formatMaintenance() :\n${offenders.join('\n')}`,
     ).toEqual([]);
   });
 });

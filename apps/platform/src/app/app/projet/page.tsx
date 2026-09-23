@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { unwrapList, unwrapMaybe } from '@stax/database';
+import { mediaPublicUrl, unwrapList, unwrapMaybe } from '@stax/database';
 import { PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@stax/payments';
 import { Alert, ButtonLink, EmptyState, Icon, Panel, StatusPill, cn } from '@stax/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { ProjectConversation } from './project-conversation';
+import { ProjectFiles, type ProjectFileView } from './project-files';
+import { ProjectReview } from './project-review';
 
 export const metadata: Metadata = { title: 'Mon projet' };
 
@@ -53,7 +55,7 @@ export default async function ProjectPage() {
     );
   }
 
-  const [messages, events] = await Promise.all([
+  const [messages, events, fileRows] = await Promise.all([
     db
       .from('project_messages')
       .select('id, author_side, body, created_at')
@@ -67,7 +69,34 @@ export default async function ProjectPage() {
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(30),
+    db
+      .from('project_files')
+      .select('id, file_name, kind, direction, created_at, storage_bucket, storage_path')
+      .eq('project_id', project.id)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
+
+  const files: ProjectFileView[] = unwrapList<{
+    id: string;
+    file_name: string;
+    kind: string;
+    direction: 'inbound' | 'outbound';
+    created_at: string;
+    storage_bucket: string;
+    storage_path: string;
+  }>(fileRows as never).map((row) => ({
+    id: row.id,
+    fileName: row.file_name,
+    kind: row.kind,
+    direction: row.direction,
+    createdAt: row.created_at,
+    // Seuls les fichiers de la mediatheque (publique) ont une adresse directe.
+    url:
+      row.storage_bucket === 'site-media'
+        ? mediaPublicUrl(row.storage_bucket, row.storage_path)
+        : null,
+  }));
 
   const currentIndex = PROJECT_TIMELINE.findIndex((step) =>
     (step.statuses as readonly string[]).includes(project.status),
@@ -102,10 +131,14 @@ export default async function ProjectPage() {
       />
 
       {project.status === 'client_review' ? (
-        <Alert tone="info" className="mb-6" live="status" title="Votre relecture est attendue">
-          Votre site vous attend en aperçu privé. Relisez-le tranquillement et dites-nous ce que
-          vous souhaitez modifier : nous ne publions rien sans votre accord explicite.
-        </Alert>
+        <ProjectReview
+          projectId={project.id}
+          request={
+            history.find(
+              (event) => event.kind === 'phase' && event.title === 'Votre validation est attendue',
+            )?.description ?? null
+          }
+        />
       ) : null}
 
       {project.status === 'questionnaire_pending' || project.status === 'assets_pending' ? (
@@ -174,6 +207,11 @@ export default async function ProjectPage() {
         <ProjectConversation projectId={project.id} messages={conversation} />
 
         <aside className="space-y-4">
+          <ProjectFiles
+            projectId={project.id}
+            files={files}
+            canUpload={workspace.capabilities.includes('media.manage')}
+          />
           <Panel level={1} padding="md">
             <h2 className="text-sm font-medium">Historique</h2>
             {history.length === 0 ? (

@@ -87,6 +87,13 @@ export const PROJECT_STATUSES = [
   'ordered',
   'questionnaire_pending',
   'assets_pending',
+  // Parcours d'un site concu et developpe individuellement (0042).
+  'design',
+  'development',
+  'verification',
+  'deploying',
+  'delivered',
+  // Etats anterieurs, toujours valides pour les projets existants.
   'in_progress',
   'internal_review',
   'client_review',

@@ -3,15 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { publicSiteUrl, readEnv, publicEnv } from '@stax/config';
-import {
-  createUserClient,
-  featureAccess,
-  loadFeatureSnapshot,
-  mediaPublicUrl,
-  unwrapList,
-  unwrapMaybe,
-  type Db,
-} from '@stax/database';
+import { createUserClient, mediaPublicUrl, unwrapList, unwrapMaybe, type Db } from '@stax/database';
 import { purgeSiteCache } from '@stax/infrastructure';
 import {
   availableBlocks,
@@ -28,7 +20,6 @@ import { uuidSchema } from '@stax/validation';
 import { requireSession } from '~/lib/session';
 import { getWorkspace } from '~/lib/workspace';
 import { storeMediaFile } from '~/lib/media-store';
-import { provisionExistingSite } from '~/lib/site-provisioning';
 import {
   loadEditorStatus,
   loadHistory,
@@ -734,67 +725,5 @@ export async function republishVersionAction(
     status: 'success',
     message: `Cette version est de nouveau en ligne (publiée comme version ${outcome.versionNumber}). Les versions suivantes restent dans l’historique.`,
     outcome,
-  };
-}
-
-/**
- * Prepare un site encore vide. Deux points de depart : une page d accueil
- * vierge (plus les pages legales obligatoires), ou le modele complet du
- * metier. Sans effet sur un site qui a deja des pages : la base le verifie
- * elle-meme.
- */
-export async function prepareSiteAction(mode: unknown = 'template'): Promise<EditorResult> {
-  const blank = mode === 'blank';
-  const { workspace, db } = await getWorkspace();
-  const site = workspace.currentSite;
-  if (!site) return failure('Aucun site à préparer.');
-  if (!workspace.capabilities.includes('content.edit')) {
-    return failure('Votre rôle ne permet pas de modifier ce site.');
-  }
-
-  const snapshot = await loadFeatureSnapshot(db, workspace.organization.id);
-  const access = featureAccess(snapshot);
-
-  // L'adresse temporaire choisie a la commande est respectee.
-  const order = unwrapMaybe<{ requested_domain: string | null; domain_handling: string | null }>(
-    (await db
-      .from('orders')
-      .select('requested_domain, domain_handling')
-      .eq('site_id', site.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()) as never,
-  );
-  const subdomain =
-    order?.domain_handling === 'subdomain_only' && order.requested_domain
-      ? (order.requested_domain.split('.')[0] ?? null)
-      : null;
-
-  const result = await provisionExistingSite(
-    db,
-    {
-      id: site.id,
-      name: site.name,
-      businessTypeSlug: site.businessTypeSlug,
-      organizationId: workspace.organization.id,
-    },
-    {
-      hasFeature: (feature) => access.has(feature as never),
-      details: {
-        email: workspace.organization.billing_email,
-        phone: workspace.organization.phone,
-        city: workspace.organization.city,
-      },
-      blank,
-      subdomain,
-    },
-  );
-  if (!result.ok) return failure('Le site n’a pas pu être préparé. Réessayez dans un instant.');
-  revalidatePath('/app', 'layout');
-  return {
-    status: 'success',
-    message: blank
-      ? 'Page d’accueil vierge créée : ajoutez vos premières sections.'
-      : 'Le modèle du métier est en place : personnalisez-le.',
   };
 }

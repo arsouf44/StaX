@@ -5,9 +5,9 @@ import { Alert, ButtonLink, EmptyState, Icon, PermissionDenied } from '@stax/ui'
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { blockMetas, loadEditorStatus, loadPageBlocks, loadPageTrash } from './data';
-import { PrepareSiteButton } from './prepare-site';
 import type { EditorPageRef } from './types';
 import { VisualEditor } from './visual-editor';
+import { ContractEditorPage } from './contract/editor-page';
 
 export const metadata: Metadata = { title: 'Modifier mon site' };
 
@@ -37,6 +37,9 @@ export default async function EditorPage({
   }
 
   const site = workspace.currentSite;
+  if (site && site.architecture === 'external_repository') {
+    return <ContractEditorPage site={site} />;
+  }
   if (!site) {
     return (
       <>
@@ -61,17 +64,15 @@ export default async function EditorPage({
   );
 
   if (pages.length === 0) {
+    // Aucun site n'est plus prepare a partir d'un modele : un site sans page
+    // est un projet en cours chez StaX, pas une coquille a remplir.
     return (
       <>
         <PageHeader title="Modifier mon site" />
-        <Alert tone="info" live="status" title="Ce site n’a pas encore de pages">
-          Partez d’une page d’accueil vierge pour construire le site de zéro — les pages légales
-          obligatoires sont ajoutées d’office et se remplissent d’après « Mon entreprise ». Ou
-          partez du modèle du métier : des pages et des textes d’exemple, à remplacer.
+        <Alert tone="info" live="status" title="Votre site est en cours de réalisation">
+          L’équipe StaX conçoit et développe votre site. Vous pourrez modifier ses contenus dès sa
+          livraison ; en attendant, suivez l’avancement depuis « Mon projet ».
         </Alert>
-        <div className="mt-6">
-          <PrepareSiteButton />
-        </div>
       </>
     );
   }

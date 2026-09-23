@@ -77,6 +77,87 @@ export default async function DomainPage() {
     );
   }
 
+  // Site independant : son domaine est relie a SON projet Cloudflare par
+  // l'equipe StaX (la base refuse qu'un client le rattache lui-meme). Le
+  // client voit l'etat reel, et sait a qui s'adresser.
+  if (site.architecture === 'external_repository') {
+    const external = unwrapList<{
+      id: string;
+      hostname: string;
+      status: string;
+      is_primary: boolean;
+      https_ok: boolean | null;
+      dns_target: string | null;
+      last_checked_at: string | null;
+    }>(
+      (await db
+        .from('site_domains')
+        .select('id, hostname, status, is_primary, https_ok, dns_target, last_checked_at')
+        .eq('site_id', site.id)
+        .neq('status', 'detached')
+        .order('is_primary', { ascending: false })) as never,
+    );
+    return (
+      <>
+        <PageHeader
+          title="Nom de domaine"
+          description="L’adresse de votre site. Nous la relions à votre site, vérifions son certificat HTTPS et la surveillons."
+        />
+        <Panel level={1} padding="lg">
+          {external.length === 0 ? (
+            <p className="text-sm text-[var(--foreground-muted)]">
+              Aucun domaine n’est encore relié à votre site. Nous le définissons avec vous avant la
+              mise en ligne.
+            </p>
+          ) : (
+            <ul className="divide-y divide-[var(--border)]">
+              {external.map((domain) => {
+                const view = STATUS_VIEW[domain.status] ?? STATUS_VIEW.pending;
+                return (
+                  <li key={domain.id} className="py-3 text-sm">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono">{domain.hostname}</span>
+                      {domain.is_primary ? (
+                        <span className="text-xs text-[var(--muted)]">principal</span>
+                      ) : null}
+                      <span className="text-xs">{view?.label}</span>
+                      <span className="text-xs text-[var(--muted)]">
+                        HTTPS{' '}
+                        {domain.https_ok
+                          ? 'valide'
+                          : domain.https_ok === false
+                            ? 'en échec'
+                            : 'en vérification'}
+                      </span>
+                    </p>
+                    {domain.status !== 'active' && domain.dns_target ? (
+                      <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+                        Enregistrement attendu chez votre hébergeur DNS : CNAME {domain.hostname} →{' '}
+                        <span className="font-mono">{domain.dns_target}</span>
+                      </p>
+                    ) : null}
+                    {domain.last_checked_at ? (
+                      <p className="mt-1 text-2xs text-[var(--muted)]">
+                        Vérifié le {DATE_TIME.format(new Date(domain.last_checked_at))}
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="mt-4 text-sm text-[var(--foreground-muted)]">
+            Changer de domaine, en ajouter un ou transférer celui-ci : écrivez-nous, nous nous en
+            occupons.
+          </p>
+          <ButtonLink href="/app/support" variant="secondary" className="mt-3">
+            Nous écrire
+          </ButtonLink>
+        </Panel>
+      </>
+    );
+  }
+
   const access = featureAccess(await loadFeatureSnapshot(db, workspace.organization.id));
   const included = access.has('custom_domain');
 

@@ -2934,6 +2934,58 @@ begin
 end;
 $$;
 
+\echo '--- Validation du client pendant le projet ---'
+do $$
+declare
+  staff     uuid := (select v from t.fixtures where k='staff');
+  bob       uuid := (select v from t.fixtures where k='bob');
+  dana      uuid;
+  v_result  jsonb;
+  v_org     uuid;
+  v_site    uuid;
+  v_project uuid;
+  v_essentiel uuid := (select id from public.plans where slug = 'essentiel' and is_active and valid_until is null);
+begin
+  perform set_config('request.jwt.claims', null, true);
+  insert into auth.users (email) values ('dana@client-z.test') returning id into dana;
+  v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
+    'Atelier Z', 'restaurant', v_essentiel, 'Lille'));
+  v_org := (v_result ->> 'organizationId')::uuid;
+  v_site := (v_result ->> 'siteId')::uuid;
+  insert into public.organization_members (organization_id, user_id, role) values (v_org, dana, 'owner');
+  v_project := (select id from public.projects where site_id = v_site order by created_at desc limit 1);
+
+  v_result := t.json_as(dana, format('public.respond_to_project_review(%L::uuid, true, null)', v_project));
+  perform t.assert(v_result ->> 'code' = 'not_awaiting_review',
+    'Le client ne « valide » rien tant qu''aucune validation n''est demandee');
+
+  perform t.json_as(staff, format('public.set_project_phase(%L::uuid, %L, %L)', v_site, 'design', 'Maquettes'));
+  perform t.json_as(staff, format('public.set_project_phase(%L::uuid, %L, %L)', v_site, 'client_review',
+    'Les maquettes sont pretes'));
+  perform t.assert(t.denied_as(bob, format('select public.respond_to_project_review(%L, true, null)', v_project)),
+    'Un autre client ne peut pas valider le projet d''une autre societe');
+
+  v_result := t.json_as(dana, format('public.respond_to_project_review(%L::uuid, false, null)', v_project));
+  perform t.assert(v_result ->> 'code' = 'message_required',
+    'Demander des corrections exige de les decrire');
+
+  v_result := t.json_as(dana, format('public.respond_to_project_review(%L::uuid, false, %L)', v_project,
+    'Le logo doit etre plus grand'));
+  perform t.assert((v_result ->> 'ok')::boolean
+                   and (select status::text from public.projects where id = v_project) = 'changes_requested',
+    'Le client demande des corrections : le projet passe en corrections');
+
+  perform t.json_as(staff, format('public.set_project_phase(%L::uuid, %L, null)', v_site, 'client_review'));
+  v_result := t.json_as(dana, format('public.respond_to_project_review(%L::uuid, true, %L)', v_project,
+    'Parfait, merci'));
+  perform t.assert((select status::text from public.projects where id = v_project) = 'development',
+    'Le client valide la conception : le projet passe au developpement');
+  perform t.assert(exists (select 1 from public.project_events
+                            where project_id = v_project and kind = 'client_approved' and is_public),
+    'La validation du client est inscrite dans l''historique du projet');
+end;
+$$;
+
 -- -----------------------------------------------------------------------------
 --  Maintenance : elle commence a la livraison, jamais a la commande
 -- -----------------------------------------------------------------------------

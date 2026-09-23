@@ -96,9 +96,7 @@ export async function syncInstallationsAction(payload: unknown): Promise<ActionS
   return toState(result);
 }
 
-export async function listRepositoriesAction(
-  payload: unknown,
-): Promise<
+export async function listRepositoriesAction(payload: unknown): Promise<
   ActionState & {
     repositories?: Array<
       Pick<InstallationRepository, 'id' | 'fullName' | 'defaultBranch' | 'archived' | 'private'>

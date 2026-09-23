@@ -230,10 +230,21 @@ export interface Site {
    */
   delivered_at: Timestamp | null;
   delivered_by: UUID | null;
+  /**
+   * `external_repository` : site concu et developpe individuellement, dans son
+   * propre depot GitHub, deploye par son propre projet Cloudflare, gere depuis
+   * StaX apres livraison. `legacy_engine` : site anterieur, rendu par l'ancien
+   * moteur multi-tenant.
+   */
+  architecture: SiteArchitecture;
+  /** Version de contenu actuellement en production (sites independants). */
+  production_release_id: UUID | null;
   created_by: UUID | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 }
+
+export type SiteArchitecture = 'external_repository' | 'legacy_engine';
 
 export interface SiteDomain {
   id: UUID;

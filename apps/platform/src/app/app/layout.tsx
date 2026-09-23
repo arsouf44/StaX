@@ -46,6 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     hasFeature: (key) => access.has(key),
     can: (capability) => workspace.capabilities.includes(capability),
     siteDelivered: !underConstruction,
+    architecture: workspace.currentSite?.architecture,
   });
 
   return (
