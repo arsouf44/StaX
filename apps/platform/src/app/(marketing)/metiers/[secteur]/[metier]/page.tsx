@@ -19,7 +19,7 @@ import {
   MODULES,
 } from '@stax/business';
 import { BrowserFrame, SitePreview } from '~/components/marketing/product-visuals';
-import { entryPriceLabel } from '~/lib/catalog';
+import { entryPriceLabel, getPlans } from '~/lib/catalog';
 
 /**
  * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
@@ -47,11 +47,11 @@ export async function generateMetadata({
   if (!business || business.sector !== secteur) return { title: 'Métier introuvable' };
   return {
     title: `Site internet pour ${business.name.toLowerCase()}`,
-    description: `Un site professionnel conçu pour votre métier de ${business.name.toLowerCase()} : ${business.modules
+    description: `Un site professionnel conçu et développé pour votre entreprise de ${business.name.toLowerCase()} : ${business.modules
       .slice(0, 4)
       .map((id) => MODULES[id]?.label.toLowerCase())
       .filter(Boolean)
-      .join(', ')}. Création, hébergement et maintenance par StaX.`,
+      .join(', ')}. Nous créons votre site, vous le gérez ensuite.`,
     alternates: { canonical: `/metiers/${secteur}/${metier}` },
   };
 }
@@ -77,7 +77,17 @@ export default async function BusinessPage({
     .map((id) => MODULES[id])
     .filter((mod): mod is NonNullable<typeof mod> => Boolean(mod));
   const siblings = listBusinessesBySector(secteur).filter((item) => item.id !== business.id);
-  const entry = await entryPriceLabel();
+  const [entry, plans] = await Promise.all([entryPriceLabel(), getPlans()]);
+
+  // Offre la moins chere qui comprend REELLEMENT le droit d'un module, lue
+  // dans le catalogue : jamais une etiquette « Premium » posee a la main.
+  const purchasable = plans
+    .filter((plan) => !plan.isQuoteOnly)
+    .sort((a, b) => a.setupPriceCents - b.setupPriceCents);
+  const minimumPlan = (featureKey: string): string | null =>
+    purchasable.find((plan) =>
+      plan.features.some((feature) => feature.key === featureKey && feature.enabled),
+    )?.name ?? null;
 
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -88,11 +98,11 @@ export default async function BusinessPage({
         name: `Que contient un site StaX pour un ${business.name.toLowerCase()} ?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Les pages recommandées pour ce métier (${business.recommendedPages
-            .map((page) => page.title)
-            .join(', ')}) et les modules adaptés : ${modules
+          text: `Un site conçu et développé pour votre entreprise, avec les pages et les fonctionnalités utiles à ce métier — par exemple ${business.recommendedPages
+            .map((page) => page.title.toLowerCase())
+            .join(', ')} ; ${modules
             .map((mod) => mod.label.toLowerCase())
-            .join(', ')}.`,
+            .join(', ')} — selon l’offre choisie.`,
         },
       },
       {
@@ -104,9 +114,10 @@ export default async function BusinessPage({
           // donnees structurees, donc reprise telle quelle par les moteurs de
           // recherche. Un prix perime y reste visible longtemps.
           text:
-            (entry ? `${entry} à la commande, puis la maintenance. ` : '') +
-            'L’offre Premium ajoute les réservations et les actualités ; l’offre Ultra Premium ' +
-            'ajoute la boutique, l’encaissement en ligne et un design entièrement sur mesure.',
+            (entry ? `${entry}, à partir de la livraison du site. ` : '') +
+            'L’offre Premium ajoute notamment les réservations et les actualités ; l’offre Ultra ' +
+            'Premium ajoute la boutique et l’encaissement en ligne ; l’offre Exceptionnel ajoute ' +
+            'une direction artistique poussée, travaillée écran par écran.',
         },
       },
     ],
@@ -141,7 +152,7 @@ export default async function BusinessPage({
                 as="h1"
                 eyebrow={sector.label}
                 title={`Un site pour votre activité de ${business.name.toLowerCase()}`}
-                description={`Les pages, les fonctionnalités et le vocabulaire de votre espace sont adaptés à ce métier. Vous gérez vos ${business.vocabulary.offeringPlural}, vos ${business.vocabulary.customerPlural} et vos contenus sans intermédiaire.`}
+                description={`Nous concevons et développons votre site pour votre entreprise, en tenant compte de ce que ce métier demande. Une fois votre site livré, vous gérez vos ${business.vocabulary.offeringPlural}, vos ${business.vocabulary.customerPlural} et vos contenus depuis StaX.`}
               />
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <ButtonLink href={`/commander?metier=${business.id}`} size="pill-lg">
@@ -160,7 +171,7 @@ export default async function BusinessPage({
                 <SitePreview variant={previewFor(sector.id)} />
               </BrowserFrame>
               <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                Exemple de mise en page — démonstration, pas un client réel.
+                Illustration — chaque site est conçu individuellement, ce n’est pas un modèle.
               </p>
             </Reveal>
           </div>
@@ -171,7 +182,9 @@ export default async function BusinessPage({
         <Container size="wide">
           <div className="grid gap-12 lg:grid-cols-2">
             <div>
-              <h2 className="text-xl font-medium tracking-[-0.02em]">Les pages de votre site</h2>
+              <h2 className="text-xl font-medium tracking-[-0.02em]">
+                Les pages souvent utiles pour ce métier
+              </h2>
               <ol className="mt-5 space-y-2">
                 {business.recommendedPages.map((page, index) => (
                   <li
@@ -187,14 +200,14 @@ export default async function BusinessPage({
                 ))}
               </ol>
               <p className="mt-4 text-xs text-[var(--muted)]">
-                Cette structure est un point de départ : vous pouvez ajouter, renommer ou supprimer
-                des pages depuis votre espace.
+                Un point de départ pour en parler ensemble : la structure de votre site est définie
+                avec vous pendant la conception, dans les limites de votre offre.
               </p>
             </div>
 
             <div>
               <h2 className="text-xl font-medium tracking-[-0.02em]">
-                Les fonctionnalités activées
+                Les fonctionnalités souvent utiles
               </h2>
               <ul className="mt-5 grid gap-2">
                 {modules.map((mod) => (
@@ -206,7 +219,9 @@ export default async function BusinessPage({
                       <span className="text-sm font-medium">{mod.label}</span>
                       {mod.requiredFeature ? (
                         <span className="shrink-0 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-2 py-0.5 text-2xs text-[var(--accent-text)]">
-                          Premium
+                          {minimumPlan(mod.requiredFeature)
+                            ? `Dès ${minimumPlan(mod.requiredFeature)}`
+                            : 'Selon l’offre'}
                         </span>
                       ) : null}
                     </div>
@@ -272,11 +287,12 @@ export default async function BusinessPage({
         <Container size="narrow">
           <Panel level={2} padding="xl" className="text-center">
             <h2 className="text-3xl font-medium tracking-[-0.03em]">
-              Votre site de {business.name.toLowerCase()}, en quelques jours
+              Votre site de {business.name.toLowerCase()}, conçu pour votre entreprise
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
-              Vous répondez au questionnaire, nous construisons, vous validez. La maintenance et
-              l’hébergement sont inclus.
+              Vous nous présentez votre activité, nous concevons et développons votre site, puis
+              nous vous le livrons en ligne. La maintenance mensuelle — hébergement, publication,
+              support — ne commence qu’à la livraison.
             </p>
             <ButtonLink href={`/commander?metier=${business.id}`} size="pill-lg" className="mt-8">
               Commander mon site

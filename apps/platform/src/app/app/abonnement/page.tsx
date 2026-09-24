@@ -6,6 +6,7 @@ import { EmptyState, Icon, Panel, PermissionDenied } from '@stax/ui';
 import type { StatusTone } from '@stax/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
+import { MAINTENANCE_EXCLUDES, MAINTENANCE_INCLUDES } from '~/content/maintenance';
 import { SubscriptionPanel, type SubscriptionView } from './subscription-panel';
 
 export const metadata: Metadata = { title: 'Maintenance' };
@@ -39,7 +40,11 @@ export default async function SubscriptionPage() {
         id: subscription.id,
         statusLabel: SUBSCRIPTION_STATUS_LABELS[subscription.status] ?? subscription.status,
         statusTone: TONES[subscription.status] ?? 'neutral',
-        priceLabel: formatMaintenance(subscription.maintenance_price_cents, 'EUR'),
+        priceLabel: formatMaintenance(
+          subscription.maintenance_price_cents,
+          subscription.currency,
+          subscription.billing_interval,
+        ),
         periodEndLabel: subscription.current_period_end
           ? DATE.format(new Date(subscription.current_period_end))
           : null,
@@ -53,7 +58,7 @@ export default async function SubscriptionPage() {
     <>
       <PageHeader
         title="Maintenance"
-        description="Ce que couvre votre abonnement annuel de maintenance, et comment le gérer."
+        description="Ce que couvre votre maintenance mensuelle, et comment la gérer."
       />
 
       {view ? (
@@ -62,7 +67,7 @@ export default async function SubscriptionPage() {
         <EmptyState
           icon={<Icon name="shield-check" size={24} />}
           title="Aucun abonnement actif"
-          description="Votre maintenance démarre automatiquement à la mise en ligne de votre site. Vous ne payez rien avant."
+          description="Votre maintenance démarre à la livraison de votre site, une fois celui-ci en ligne. Rien n’est prélevé avant."
         />
       )}
 
@@ -70,17 +75,13 @@ export default async function SubscriptionPage() {
         <Panel level={1} padding="lg">
           <h2 className="text-sm font-medium">Ce que couvre la maintenance</h2>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-            <li>Hébergement, nom de domaine rattaché et certificat HTTPS renouvelé.</li>
-            <li>
-              Mises à jour techniques et correctifs de sécurité, sans intervention de votre part.
-            </li>
-            <li>Sauvegardes régulières et restauration en cas de problème.</li>
-            <li>Surveillance de la disponibilité de votre site.</li>
-            <li>Assistance par e-mail pour l’usage de votre espace.</li>
+            {MAINTENANCE_INCLUDES.map((item) => (
+              <li key={item}>{item}.</li>
+            ))}
           </ul>
           <p className="mt-4 text-xs leading-relaxed text-[var(--muted)]">
-            Les refontes, nouvelles pages sur mesure et développements spécifiques ne sont pas
-            inclus : ils font l’objet d’un devis distinct.
+            Ne sont pas inclus, et font l’objet d’un devis distinct :{' '}
+            {MAINTENANCE_EXCLUDES.map((item) => item.toLowerCase()).join(' ; ')}.
           </p>
         </Panel>
 
@@ -93,7 +94,7 @@ export default async function SubscriptionPage() {
 
           <h2 className="mt-6 text-sm font-medium">Garantie de remboursement</h2>
           <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Vous disposez de {refund.windowDays} jours après la mise en ligne de votre site pour
+            Vous disposez de {refund.windowDays} jours après la livraison de votre site pour
             demander un remboursement. Si un nom de domaine a réellement été acheté pour vous, son
             coût est déduit puisqu’il est déjà engagé ; sinon rien n’est retenu.
           </p>

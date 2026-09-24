@@ -78,7 +78,7 @@ export default async function SectorPage({ params }: { params: Promise<{ secteur
                   <Panel level={1} padding="md" interactive className="h-full">
                     <h3 className="text-sm font-medium">{business.name}</h3>
                     <p className="mt-1.5 text-xs text-[var(--muted)]">
-                      {business.modules.length} modules activés automatiquement
+                      {business.modules.length} fonctionnalités souvent utiles
                     </p>
                   </Panel>
                 </Link>
@@ -91,9 +91,9 @@ export default async function SectorPage({ params }: { params: Promise<{ secteur
       <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="wide">
           <SectionHeading
-            eyebrow="Inclus par défaut"
-            title="Ce que votre site contient dès le départ"
-            description="Ces modules sont activés automatiquement pour tous les métiers du secteur. Vous pouvez en ajouter ou en retirer à tout moment."
+            eyebrow="Souvent utiles"
+            title="Les fonctionnalités que nous vous suggérerons"
+            description="Selon votre activité et votre offre, nous développons dans votre site celles qui vous servent réellement. Rien n’est activé par principe."
           />
           <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {modules.map((mod) => (
@@ -112,8 +112,8 @@ export default async function SectorPage({ params }: { params: Promise<{ secteur
         <Container size="narrow" className="text-center">
           <h2 className="text-3xl font-medium tracking-[-0.03em]">Prêt à commencer ?</h2>
           <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
-            Choisissez votre métier précis lors de la commande : votre site et votre espace se
-            configurent en conséquence.
+            Indiquez votre métier lors de la commande : le questionnaire s’y adapte, et nous
+            concevons votre site pour votre entreprise.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink variant="accent" href="/commander" size="pill-lg">

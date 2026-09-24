@@ -227,9 +227,11 @@ describe('contenu', () => {
       fr: [{ type: 'paragraph', children: [{ text: '<img src=x onerror=alert(1)>' }] }],
     };
     const result = validateContent(manifest, input, { mode: 'publish' });
-    const html = richTextToHtml(
-      (result.content.pages['accueil']?.sections['hero']?.['texte'] as Record<string, never>)['fr'],
-    );
+    const localized = result.content.pages['accueil']?.sections['hero']?.['texte'] as Record<
+      string,
+      Parameters<typeof richTextToHtml>[0]
+    >;
+    const html = richTextToHtml(localized['fr'] ?? []);
     expect(html).toBe('<p>&lt;img src=x onerror=alert(1)&gt;</p>');
 
     // Un bloc « html » n'existe pas dans le contrat.

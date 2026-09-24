@@ -151,7 +151,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
         onClose={() => setCancelling(false)}
         size="md"
         title="Résilier votre contrat"
-        description="Résiliation de votre maintenance annuelle, en ligne et sans justification."
+        description="Résiliation de votre maintenance mensuelle, en ligne et sans justification."
       >
         <form action={cancel} className="space-y-5" noValidate>
           <input type="hidden" name="subscriptionId" value={subscription.id} />
@@ -171,8 +171,9 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
               </li>
               <li>Vous pouvez revenir en arrière à tout moment jusqu’à cette date.</li>
               <li>
-                Ensuite, votre site est mis hors ligne, mais vos données restent conservées et
-                exportables pendant une période de continuité.
+                Ensuite, après une période de continuité, votre site peut être suspendu : vos
+                données restent conservées et exportables, et vous pouvez demander une copie du code
+                source de votre site.
               </li>
               <li>Votre nom de domaine vous appartient : vous le gardez.</li>
             </ul>

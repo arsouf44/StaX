@@ -157,6 +157,8 @@ export interface BusinessModuleRow {
 /** Periodicite d'une facturation recurrente. */
 export type BillingInterval = 'year' | 'month';
 
+export type PlanHighlight = 'none' | 'popular' | 'signature';
+
 export interface PlanRow {
   id: UUID;
   slug: string;
@@ -167,7 +169,8 @@ export interface PlanRow {
   badge: string | null;
   setup_price_cents: Cents;
   maintenance_price_cents: Cents;
-  /** `year` pour toutes les offres StaX. La colonne existe pour ne pas
+  /** `month` pour les offres en vigueur ; `year` subsiste pour les contrats
+   *  vendus avant la maintenance mensuelle. La colonne existe pour ne pas
    *  supposer la periodicite dans le code qui affiche un prix. */
   billing_interval: BillingInterval;
   currency: Currency;
@@ -177,6 +180,12 @@ export interface PlanRow {
   is_active: boolean;
   is_public: boolean;
   sort_order: number;
+  /** Mise en avant de la carte : `popular` (recommandee), `signature`
+   *  (categorie superieure). Lue, jamais deduite du nom de l'offre. */
+  highlight: PlanHighlight;
+  /** Delai annonce en semaines, a compter de la reception des elements. */
+  delivery_weeks_min: number | null;
+  delivery_weeks_max: number | null;
   stripe_setup_price_id: string | null;
   stripe_maintenance_price_id: string | null;
   stripe_product_id: string | null;

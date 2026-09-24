@@ -202,8 +202,8 @@ export function orderConfirmedEmail(
     reference: string;
     planName: string;
     setupAmount: string;
+    /** Deja formate avec sa periodicite : « 12 € / mois ». */
     maintenanceAmount: string;
-    firstMaintenanceDate: string;
     orderUrl: string;
   },
 ): EmailMessage {
@@ -220,19 +220,22 @@ export function orderConfirmedEmail(
         ['Reference', ctx.reference],
         ['Offre', ctx.planName],
         ['Paiement initial', ctx.setupAmount],
-        ['Maintenance annuelle', ctx.maintenanceAmount],
-        ['Première échéance de maintenance', ctx.firstMaintenanceDate],
+        ['Maintenance', `${ctx.maintenanceAmount}, à partir de la livraison de votre site`],
       ]),
       paragraph(
+        'Rien n’est prélevé au titre de la maintenance avant la livraison : elle commence le ' +
+          'jour où nous vous remettons votre site, en ligne.',
+      ),
+      paragraph(
         'Prochaine étape : complétez le questionnaire de votre projet. Plus vos réponses ' +
-          'sont précises, plus votre site vous ressemblera.',
+          'sont précises, mieux nous concevrons votre site.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Commande ${ctx.reference} confirmée.`,
-      `Offre : ${ctx.planName} — ${ctx.setupAmount} puis ${ctx.maintenanceAmount} par an.`,
-      `Première échéance de maintenance : ${ctx.firstMaintenanceDate}.`,
+      `Offre : ${ctx.planName} — ${ctx.setupAmount}, puis ${ctx.maintenanceAmount} de maintenance.`,
+      'La maintenance commence à la livraison de votre site : rien n’est prélevé avant.',
     ],
     action: { label: 'Compléter mon questionnaire', url: ctx.orderUrl },
   });
@@ -313,6 +316,58 @@ export function sitePublishedEmail(
     ],
     action: { label: 'Voir mon site', url: ctx.siteUrl },
     secondaryAction: { label: 'Gérer mon site', url: ctx.appUrl },
+  });
+}
+
+/**
+ * Livraison d'un site concu et developpe par l'equipe : il est en ligne,
+ * l'editeur s'ouvre, et la maintenance mensuelle commence ce jour-la.
+ */
+export function siteDeliveredEmail(
+  ctx: BaseContext & {
+    siteUrl: string | null;
+    appUrl: string;
+    /** Deja formate avec sa periodicite, ou `null` sans maintenance facturee. */
+    maintenanceAmount: string | null;
+    refundDeadline: string | null;
+  },
+): EmailMessage {
+  const rows: Array<[string, string]> = [];
+  if (ctx.siteUrl) rows.push(['Adresse de votre site', ctx.siteUrl]);
+  if (ctx.maintenanceAmount) {
+    rows.push(['Maintenance', `${ctx.maintenanceAmount}, à partir d’aujourd’hui`]);
+  }
+  if (ctx.refundDeadline) {
+    rows.push(['Garantie commerciale', `jusqu’au ${ctx.refundDeadline}`]);
+  }
+
+  return shell({
+    to: ctx.to,
+    template: 'site_delivered',
+    subject: 'Votre site vous est livré',
+    preheader: 'Il est en ligne : vous pouvez désormais le modifier depuis StaX.',
+    heading: 'Votre site vous est livré',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      strongLine('Votre site est en ligne, et il est désormais entre vos mains.'),
+      paragraph(
+        'Depuis votre espace, vous pouvez modifier son contenu, voir l’aperçu de votre vrai ' +
+          'site, enregistrer un brouillon puis publier : vos modifications sont réellement ' +
+          'déployées, et chaque version reste restaurable.',
+      ),
+      paragraph(
+        'Pour une nouvelle page, une nouvelle fonctionnalité ou un changement de design, ' +
+          'écrivez-nous depuis votre espace.',
+      ),
+      rows.length > 0 ? definitionList(rows) : '',
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      'Votre site vous est livré : il est en ligne et vous pouvez le modifier depuis StaX.',
+      ...rows.map(([label, value]) => `${label} : ${value}.`),
+    ],
+    action: { label: 'Ouvrir mon espace', url: ctx.appUrl },
+    ...(ctx.siteUrl ? { secondaryAction: { label: 'Voir mon site', url: ctx.siteUrl } } : {}),
   });
 }
 
@@ -449,10 +504,13 @@ export function salesInvoiceIssuedEmail(
     companyName: string;
     planName: string;
     setupAmount: string;
+    /** Deja formate avec sa periodicite : « 12 € / mois ». */
     maintenanceAmount: string;
     totalAmount: string;
     dueLabel: string;
     claimUrl: string;
+    /** Delai de realisation de l'offre ; a defaut, la politique generale. */
+    deliveryLabel?: string;
   },
 ): EmailMessage {
   return shell({
@@ -471,7 +529,7 @@ export function salesInvoiceIssuedEmail(
         ['Numéro de facture', ctx.invoiceNumber],
         ['Offre', ctx.planName],
         ['Création du site', ctx.setupAmount],
-        ['Maintenance annuelle', ctx.maintenanceAmount],
+        ['Maintenance', `${ctx.maintenanceAmount}, à partir de la livraison`],
         ['Total à régler', ctx.totalAmount],
         ['Échéance', ctx.dueLabel],
       ]),
@@ -485,14 +543,14 @@ export function salesInvoiceIssuedEmail(
     bodyText: [
       hello(ctx.firstName),
       `Facture ${ctx.invoiceNumber} — ${ctx.planName}.`,
-      `Création du site : ${ctx.setupAmount}. Maintenance annuelle : ${ctx.maintenanceAmount}.`,
+      `Création du site : ${ctx.setupAmount}. Maintenance : ${ctx.maintenanceAmount}, à partir de la livraison.`,
       `Total à régler : ${ctx.totalAmount}, avant le ${ctx.dueLabel}.`,
       `Créez votre compte avec cette adresse e-mail, puis saisissez le numéro ${ctx.invoiceNumber}.`,
     ],
     action: { label: 'Rattacher ma facture', url: ctx.claimUrl },
     footerNote:
-      `Le délai de livraison de votre site est de ${deliveryPolicyConfig().label} à compter ` +
-      'de la réception de vos contenus.',
+      `Le délai de réalisation de votre site est de ${ctx.deliveryLabel ?? deliveryPolicyConfig().label} ` +
+      'à compter de la réception de vos contenus.',
   });
 }
 
@@ -577,12 +635,15 @@ export function refundProcessedEmail(
 }
 
 /**
- * Rappel de reconduction de la maintenance annuelle.
+ * Rappel de reconduction — contrats ANNUELS vendus avant le passage a la
+ * maintenance mensuelle, uniquement (le webhook Stripe filtre sur
+ * `billing_interval = 'year'`).
  *
  * Envoye entre trois mois et un mois avant l'echeance : pour un client non
  * professionnel, l'article L215-1 du Code de la consommation l'impose, faute
  * de quoi il peut resilier a tout moment apres la reconduction. Nous
- * l'envoyons a tous nos clients, par loyaute.
+ * l'envoyons a tous les clients concernes, par loyaute. La maintenance
+ * mensuelle, sans duree minimale, n'a pas de reconduction a annoncer.
  */
 export function renewalReminderEmail(
   ctx: BaseContext & { renewalDate: string; amount: string; cancelUrl: string },
@@ -596,8 +657,8 @@ export function renewalReminderEmail(
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Votre maintenance annuelle sera reconduite automatiquement le ${ctx.renewalDate}, ` +
-          `pour une nouvelle année, au prix de ${ctx.amount}.`,
+        `Votre contrat de maintenance sera reconduit automatiquement le ${ctx.renewalDate}, ` +
+          `pour une nouvelle période, au prix de ${ctx.amount}.`,
       ),
       paragraph(
         'Si vous ne souhaitez pas la reconduire, vous pouvez résilier en ligne en quelques ' +

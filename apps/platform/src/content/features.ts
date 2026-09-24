@@ -1,10 +1,13 @@
+import type { PlanSlug } from '@stax/types';
+
 /**
  * Pages de fonctionnalités.
  *
  * Une seule source de contenu, rendue par une page dynamique : ajouter une
  * fonctionnalité se fait ici, sans dupliquer une page entière. Chaque entrée
  * décrit ce que la fonctionnalité fait réellement — aucune promesse que le
- * produit ne tient pas.
+ * produit ne tient pas. Le site est conçu et développé par notre équipe ; ces
+ * pages décrivent ce que le client en fait APRÈS la livraison.
  */
 
 export interface FeatureSection {
@@ -34,7 +37,7 @@ export interface FeaturePage {
    * `tests/integration/plan-promises.test.ts` compare desormais ces valeurs
    * a la grille `plan_features`.
    */
-  requiredPlan: 'essentiel' | 'premium' | 'ultra-premium' | null;
+  requiredPlan: Exclude<PlanSlug, 'sur-mesure'> | null;
   related: readonly string[];
 }
 
@@ -42,49 +45,50 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
   {
     slug: 'editeur',
     name: 'Éditeur de contenu',
-    eyebrow: 'Édition',
-    title: 'Modifiez votre site vous-même, sans coder',
+    eyebrow: 'Après la livraison',
+    title: 'Modifiez le contenu de votre site, sans coder',
     subtitle:
-      'Vos textes, vos photos, vos horaires, vos tarifs. Vous voyez le résultat avant publication, et rien n’apparaît en ligne tant que vous ne l’avez pas décidé.',
+      'Nous créons votre site, vous le gérez ensuite. Une fois votre site livré, vous modifiez vos textes, vos photos, vos horaires et vos informations. Rien n’apparaît en ligne tant que vous n’avez pas publié.',
     visual: 'editor',
     requiredPlan: null,
     sections: [
       {
-        title: 'Des sections, pas du code',
-        body: 'Votre site est composé de sections : une bannière, une présentation, une galerie, des horaires, un formulaire. Vous les réorganisez par glisser-déposer, vous en masquez une le temps d’une saison, vous en ajoutez une nouvelle en deux clics.',
+        title: 'Vous cliquez, vous modifiez',
+        body: 'L’éditeur affiche votre vrai site. Cliquez sur un texte, une image ou un bouton : StaX présente simplement les champs que votre site permet de modifier — un titre, un texte, une image à remplacer, le texte et le lien d’un bouton. Ni HTML, ni code, ni fichiers.',
         points: [
-          'Réorganisation par glisser-déposer',
-          'Duplication et masquage d’une section',
-          'Aperçu ordinateur, tablette et mobile',
-          'Enregistrement automatique de votre travail',
+          'Aperçu de votre vrai site, sur ordinateur et sur mobile',
+          'Des champs simples : texte, image, lien, horaires, listes',
+          'Actualités, réalisations ou produits : ajoutez et retirez des éléments lorsque votre site le prévoit',
+          'Brouillon enregistré, repris là où vous l’avez laissé',
         ],
       },
       {
-        title: 'Brouillon et publication séparés',
-        body: 'Ce que vous modifiez reste un brouillon. Vos visiteurs continuent de voir la version en ligne jusqu’à ce que vous publiiez. Vous pouvez préparer tranquillement une nouvelle carte ou une page saisonnière sans rien casser.',
+        title: 'Brouillon, aperçu, publication',
+        body: 'Ce que vous modifiez reste un brouillon : vos visiteurs continuent de voir la version en ligne. Quand vous cliquez sur « Publier », vos modifications sont enregistrées dans le code de votre site puis déployées. StaX n’affiche « Publié » qu’une fois le déploiement confirmé ; si quelque chose échoue, la version précédente reste en ligne et l’erreur vous est indiquée.',
         points: [
           'Le brouillon n’affecte jamais la version publiée',
-          'Aperçu privé partageable avec votre équipe',
-          'Publication en un clic, prise en compte immédiate',
+          'L’aperçu montre votre vrai site, pas une imitation',
+          'Publication réellement déployée, confirmée avant d’être annoncée',
         ],
       },
       {
         title: 'Un historique, et un retour en arrière',
-        body: 'Chaque publication crée une version horodatée avec son auteur. Si une modification ne convient pas, vous restaurez la version précédente sans intervention de notre part.',
+        body: 'Chaque publication crée une version datée, avec son auteur et sa référence de déploiement. Si une modification ne convient pas, vous restaurez une version précédente : elle est republiée, réellement.',
         points: [
           'Historique complet des publications',
-          'Restauration d’une version antérieure',
-          'Auteur et date sur chaque version',
+          'Restauration et republication d’une version antérieure',
+          'Auteur, date et statut de déploiement sur chaque version',
         ],
       },
       {
-        title: 'Un vocabulaire qui vous parle',
-        body: 'Vous ne verrez jamais les mots « composant », « déploiement » ou « schéma » dans votre espace. Vous y trouvez des pages, du contenu, de l’apparence, un bouton Publier. Les détails techniques restent de notre côté.',
+        title: 'Votre site reste solide',
+        body: 'Le design, la mise en page, l’affichage sur mobile, le code et les intégrations restent entre nos mains : vous ne pouvez pas les casser par inadvertance. Les champs vérifient ce que vous saisissez — longueur d’un titre, format d’une adresse e-mail ou d’un lien, présence d’un texte alternatif sur une image.',
       },
     ],
     limits: [
-      'L’éditeur ne permet pas d’insérer du code arbitraire : c’est une protection contre les failles de sécurité, pas une limitation commerciale.',
-      'Une refonte complète de la structure du site passe par notre équipe, incluse dans la maintenance selon l’ampleur.',
+      'L’éditeur ne permet pas d’ajouter une page, de déplacer des sections ni de modifier le design : ce sont des changements de structure, que notre équipe réalise pour vous, sur devis lorsqu’ils dépassent la maintenance.',
+      'L’éditeur s’ouvre à la livraison de votre site. Pendant sa construction, votre espace sert à suivre le projet et à nous transmettre vos éléments.',
+      'Aucun code arbitraire ne peut être inséré : c’est une protection contre les failles de sécurité, pas une limitation commerciale.',
     ],
     related: ['gestion-contenu', 'domaines', 'seo'],
   },
@@ -94,31 +98,31 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     eyebrow: 'Adresse',
     title: 'Votre domaine, connecté et sécurisé',
     subtitle:
-      'Votre site répond sous votre propre nom, en HTTPS, avec un certificat renouvelé automatiquement. Que vous possédiez déjà un domaine ou non.',
+      'Votre site répond sous votre propre nom, en HTTPS, avec un certificat renouvelé automatiquement. Votre domaine pointe vers le déploiement de votre propre site, pas vers une plateforme partagée.',
     visual: 'domains',
     requiredPlan: null,
     sections: [
       {
         title: 'Vous avez déjà un nom de domaine',
-        body: 'Nous vous indiquons précisément les enregistrements DNS à ajouter chez votre registrar, avec des instructions adaptées aux principaux fournisseurs. Nous vérifions ensuite la propagation et activons le certificat.',
+        body: 'Nous vous indiquons précisément les enregistrements DNS à ajouter chez votre registrar, ou nous nous en chargeons si vous nous en confiez l’accès. Nous rattachons ensuite votre domaine au projet Cloudflare de votre site et vérifions la configuration avant la livraison.',
         points: [
-          'Instructions DNS détaillées et copiables',
-          'Vérification automatique de la configuration',
-          'Certificat HTTPS émis dès la propagation terminée',
+          'Instructions DNS détaillées',
+          'Vérification de la configuration avant la livraison',
+          'Certificat HTTPS émis et renouvelé automatiquement',
           'Aucun transfert de domaine imposé',
         ],
       },
       {
         title: 'Vous n’en avez pas encore',
-        body: 'Votre site démarre sur une adresse StaX du type nom-de-votre-entreprise.sites.stax.fr, immédiatement utilisable. Nous vous accompagnons ensuite pour choisir et connecter votre propre nom.',
+        body: 'Nous vous aidons à le choisir et pouvons l’acheter pour votre compte : il est alors enregistré à votre nom, et nous en assurons le renouvellement tant que la maintenance est en cours. Pendant son développement, votre site est vérifié sur une adresse technique ; il est livré sur votre domaine.',
       },
       {
         title: 'Une protection contre le détournement',
-        body: 'Un nom de domaine actif ne peut être rattaché qu’à un seul site, et seulement après vérification de propriété. Personne ne peut revendiquer votre adresse.',
+        body: 'Un nom de domaine actif ne peut être rattaché qu’à un seul site, et le domaine n’est activé qu’une fois sa configuration DNS vérifiée. Personne ne peut revendiquer votre adresse.',
         points: [
-          'Preuve de propriété exigée avant activation',
+          'Configuration vérifiée avant activation',
           'Un domaine actif, un seul site',
-          'Historique des rattachements conservé',
+          'Chaque rattachement est tracé',
         ],
       },
     ],
@@ -133,13 +137,13 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     eyebrow: 'Contact',
     title: 'Des formulaires qui qualifient vos demandes',
     subtitle:
-      'Un formulaire de contact générique vous fait perdre du temps. Les nôtres posent les bonnes questions selon votre métier.',
+      'Un formulaire de contact générique vous fait perdre du temps. Ceux que nous développons pour votre site posent les bonnes questions selon votre métier.',
     visual: 'dashboard',
     requiredPlan: null,
     sections: [
       {
         title: 'Adaptés à votre activité',
-        body: 'Un plombier reçoit la nature de la panne, l’urgence et le code postal. Un traiteur reçoit la date, le nombre de convives et le type d’événement. Vous rappelez en connaissant déjà le besoin.',
+        body: 'Un plombier reçoit la nature de la panne, l’urgence et le code postal. Un traiteur reçoit la date, le nombre de convives et le type d’événement. Vous rappelez en connaissant déjà le besoin. L’offre Essentiel comprend un formulaire de contact ; plusieurs formulaires et des champs avancés sont inclus dès l’offre Premium.',
       },
       {
         title: 'Protégés contre le spam',
@@ -199,7 +203,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     sections: [
       {
         title: 'Ce que vous voyez',
-        body: 'Le nombre de visiteurs et de pages vues, les pages les plus consultées, les sources de trafic, la répartition mobile/ordinateur, et le nombre de demandes reçues. De quoi décider, sans noyer l’essentiel.',
+        body: 'Le nombre de visiteurs et de pages vues, les pages les plus consultées et le nombre de demandes reçues. Dès l’offre Premium, s’y ajoutent les sources de trafic, la répartition mobile/ordinateur et les conversions. De quoi décider, sans noyer l’essentiel.',
       },
       {
         title: 'Ce que nous ne faisons pas',
@@ -233,11 +237,11 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     sections: [
       {
         title: 'Les fondations',
-        body: 'Titre et description uniques sur chaque page, URL lisibles, plan de site et robots.txt générés automatiquement, page 404 personnalisée, redirections administrables.',
+        body: 'Titre et description uniques sur chaque page, URL lisibles, plan du site et robots.txt, page 404 utile : nous les mettons en place en développant votre site, et vous gardez la main sur les titres et descriptions depuis l’éditeur.',
         points: [
-          'Balises titre et description par page',
-          'Plan de site XML tenu à jour automatiquement',
-          'Redirections 301 gérables depuis votre espace',
+          'Balises titre et description, modifiables par page',
+          'Plan du site XML mis à jour à chaque publication',
+          'Redirections mises en place lors d’une refonte',
           'Page 404 utile plutôt qu’un cul-de-sac',
         ],
       },
@@ -247,7 +251,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'La vitesse compte',
-        body: 'Vos pages sont rendues côté serveur et servies depuis le réseau mondial de Cloudflare, avec très peu de JavaScript. La vitesse d’affichage est un critère de classement, et surtout une raison de rester sur le site.',
+        body: 'Votre site est déployé sur le réseau mondial de Cloudflare, avec des pages légères et des images optimisées ; ses performances sont vérifiées avant la livraison. La vitesse d’affichage est un critère de classement, et surtout une raison de rester sur le site.',
       },
     ],
     limits: [
@@ -281,7 +285,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Ce que vous payez',
-        body: 'À StaX : la création du site, puis la maintenance annuelle. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
+        body: 'À StaX : la création du site, puis la maintenance mensuelle à partir de sa livraison. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
       },
     ],
     limits: [
@@ -316,7 +320,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Acompte possible',
-        body: 'Pour limiter les réservations non honorées, vous pouvez demander un acompte au moment de la réservation. Il est encaissé sur votre propre compte.',
+        body: 'Pour limiter les réservations non honorées, vous pouvez demander un acompte au moment de la réservation, avec l’offre Ultra Premium, qui comprend le paiement en ligne. Il est encaissé sur votre propre compte.',
       },
     ],
     limits: [
@@ -357,29 +361,36 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     slug: 'gestion-contenu',
     name: 'Gestion de contenu',
     eyebrow: 'Organisation',
-    title: 'Vos pages, vos versions, votre rythme',
+    title: 'Vos contenus, vos versions, votre rythme',
     subtitle:
-      'Ajouter une page, réorganiser le menu, préparer une publication : sans dépendre de personne, et sans risquer de casser quoi que ce soit.',
+      'Mettre à jour une carte, publier une actualité, préparer une publication : sans dépendre de personne, et sans risquer de casser quoi que ce soit.',
     visual: 'editor',
     requiredPlan: null,
     sections: [
       {
-        title: 'Pages et navigation',
-        body: 'Vous créez une page, choisissez son adresse, décidez si elle apparaît dans le menu et dans quel ordre. Le menu de votre site se met à jour immédiatement.',
+        title: 'Ce que votre site prévoit',
+        body: 'Chaque site est livré avec la liste de ce que vous pouvez modifier : informations de l’entreprise, horaires, textes et images des pages, liens et boutons, et, selon votre site, des listes que vous alimentez — actualités, réalisations, prestations, produits.',
       },
       {
         title: 'Médias organisés',
-        body: 'Vos photos et documents sont rangés dans une médiathèque avec des dossiers. Chaque image reçoit un texte alternatif, utile pour l’accessibilité comme pour le référencement.',
+        body: 'Vos photos et documents sont rangés dans une médiathèque, dans la limite d’espace de votre offre. Chaque image reçoit un texte alternatif, utile pour l’accessibilité comme pour le référencement.',
         points: [
-          'Redimensionnement et compression automatiques',
-          'Formats modernes servis quand le navigateur les accepte',
+          'Espace médias selon votre offre',
           'Texte alternatif sur chaque image',
+          'Une image remplacée est publiée avec la version suivante',
         ],
       },
       {
-        title: 'Un contenu qui vous appartient',
-        body: 'À tout moment, vous exportez l’intégralité de votre contenu dans un format ouvert. Vos textes et vos images sont à vous, sans condition.',
+        title: 'Publication programmée',
+        body: 'Dès l’offre Premium, préparez une version et choisissez sa date : elle est publiée automatiquement, puis déployée comme n’importe quelle publication.',
       },
+      {
+        title: 'Un contenu qui vous appartient',
+        body: 'À tout moment, vous exportez votre contenu dans un format ouvert. Vos textes et vos images sont à vous, sans condition.',
+      },
+    ],
+    limits: [
+      'Ajouter une page ou réorganiser la navigation du site modifie sa structure : notre équipe s’en charge, sur devis lorsque cela dépasse la maintenance.',
     ],
     related: ['editeur', 'seo'],
   },

@@ -13,11 +13,12 @@ import {
 /**
  * Banniere d accueil.
  *
- * Une affiche : un titre tres grand et court, une phrase, deux actions — puis
- * le produit lui-meme, pose sur une scene eclairee par le dessous, qui se
- * redresse au defilement. Les panneaux de verre (messages, paiement,
- * reservation, publication) sont de vrais ecrans de l espace client. Le tout
- * en HTML et SVG — rien a telecharger, rien a maintenir en capture d ecran.
+ * Une affiche : le principe du produit en deux phrases — nous creons le site,
+ * le client le gere ensuite —, deux actions, puis l'espace client lui-meme,
+ * pose sur une scene eclairee par le dessous, qui se redresse au defilement.
+ * Les panneaux de verre (messages, paiement, reservation, publication) sont
+ * de vrais ecrans de l espace client d'un site livre. Le tout en HTML et SVG —
+ * rien a telecharger, rien a maintenir en capture d ecran.
  */
 export function Hero({
   entryPrice,
@@ -48,7 +49,7 @@ export function Hero({
               className="glass-edge inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs text-[var(--foreground-muted)] glass-2 transition-colors hover:text-[var(--foreground)]"
             >
               <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--success)]" />
-              {businessCount} métiers configurés, du restaurant au plombier
+              Un questionnaire adapté à {businessCount} métiers, du restaurant au plombier
               <svg
                 aria-hidden="true"
                 viewBox="0 0 16 16"
@@ -64,16 +65,17 @@ export function Hero({
 
           <Reveal delay={60}>
             <h1 className="display mt-8 text-[2.75rem] sm:text-6xl lg:text-[4.75rem] xl:text-[5.75rem]">
-              <span className="text-gradient">Votre site professionnel.</span>
+              <span className="text-gradient">Nous créons votre site.</span>
               <br />
-              Construit pour votre métier.
+              Vous le gérez ensuite.
             </h1>
           </Reveal>
 
           <Reveal delay={120}>
             <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)] sm:text-xl">
-              Nous concevons, hébergeons et maintenons votre site. Contenus, messages, réservations
-              et paiements : vous gérez tout depuis un seul espace.
+              Notre équipe conçoit et développe votre site, le met en ligne sur votre domaine et
+              vous le livre. Ensuite, vous modifiez vos contenus depuis StaX et publiez quand vous
+              voulez. Pas de modèle à personnaliser : votre site est conçu pour votre entreprise.
             </p>
           </Reveal>
 
@@ -93,11 +95,12 @@ export function Hero({
                 size="pill-lg"
                 className="w-full sm:w-auto"
               >
-                Découvrir la plateforme
+                Comment ça marche
               </ButtonLink>
             </div>
             <p className="mt-5 text-xs text-[var(--muted)]">
-              {entryPrice ? `${entryPrice} · ` : ''}Maintenance annuelle résiliable en ligne
+              {entryPrice ? `${entryPrice} · ` : ''}La maintenance commence à la livraison, sans
+              durée minimale
             </p>
           </Reveal>
         </div>

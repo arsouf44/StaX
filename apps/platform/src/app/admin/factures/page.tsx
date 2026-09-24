@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { unwrapList } from '@stax/database';
-import { formatMoney } from '@stax/payments';
+import { formatMaintenance, formatMoney } from '@stax/payments';
 import { AdminTable } from '~/components/admin/admin-table';
 import { requireAdminRole } from '~/lib/admin';
 import { IssueInvoiceForm, type PlanChoice } from './issue-form';
@@ -19,10 +19,11 @@ export default async function AdminInvoicesPage({
     name: string;
     setup_price_cents: number;
     maintenance_price_cents: number;
+    billing_interval: string;
   }>(
     (await db
       .from('plans')
-      .select('id, name, setup_price_cents, maintenance_price_cents')
+      .select('id, name, setup_price_cents, maintenance_price_cents, billing_interval')
       .eq('is_active', true)
       .eq('is_quote_only', false)
       .order('sort_order', { ascending: true })) as never,
@@ -32,9 +33,11 @@ export default async function AdminInvoicesPage({
     id: plan.id,
     label: `${plan.name} — ${formatMoney(plan.setup_price_cents, 'EUR', {
       hideDecimalsWhenRound: true,
-    })} HT puis ${formatMoney(plan.maintenance_price_cents, 'EUR', {
-      hideDecimalsWhenRound: true,
-    })} HT / an`,
+    })} HT puis ${formatMaintenance(
+      plan.maintenance_price_cents,
+      'EUR',
+      plan.billing_interval === 'year' ? 'year' : 'month',
+    )} HT`,
   }));
 
   return (

@@ -14,11 +14,12 @@ interface BusinessVariant {
 }
 
 /**
- * Demonstration : le metier choisi change le site produit.
+ * Exemples de projets, metier par metier.
  *
- * Ce n est pas une illustration decorative — c est exactement ce que fait le
- * produit : le metier determine les modules actives, les pages proposees, le
- * vocabulaire de l espace client et les donnees structurees du site public.
+ * Le metier ne choisit PAS le site : aucun modele n'existe. Il nous aide a
+ * comprendre le besoin, adapte le questionnaire, oriente les fonctionnalites
+ * que nous suggerons et le vocabulaire de l'espace client. Les apercus sont
+ * des illustrations de projets, jamais des gabarits proposes au client.
  */
 
 const VARIANTS: [BusinessVariant, ...BusinessVariant[]] = [
@@ -58,7 +59,7 @@ export function BusinessSwitcher() {
     <Container size="wide">
       <div
         role="tablist"
-        aria-label="Aperçu par métier"
+        aria-label="Exemples de projets par métier"
         className="glass-edge mx-auto flex w-fit max-w-full gap-1 rounded-full p-1 glass-2 sm:p-1.5"
         onKeyDown={(event) => {
           if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
@@ -92,7 +93,7 @@ export function BusinessSwitcher() {
       </div>
 
       <div className="mt-12 grid gap-8 lg:mt-16 lg:grid-cols-[1fr_19rem] lg:items-center">
-        {/* La scene : le site du metier choisi, qui change au clic. */}
+        {/* La scene : un exemple de projet pour ce metier, qui change au clic. */}
         <div className="stage relative order-2 lg:order-1">
           <div
             key={current.id}
@@ -127,7 +128,7 @@ export function BusinessSwitcher() {
         <div className="order-1 lg:order-2">
           <p className="text-sm font-medium text-accent">{current.sector}</p>
           <p className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
-            Modules activés automatiquement
+            Fonctionnalités souvent utiles
           </p>
           <ul className="mt-5 divide-y divide-[var(--border)] border-y border-[var(--border)]">
             {current.modules.map((module) => (
@@ -145,8 +146,13 @@ export function BusinessSwitcher() {
             ))}
           </ul>
           <p className="mt-5 text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Un plombier ne voit jamais « Carte du restaurant ». L’interface s’adapte à votre métier,
-            pas l’inverse.
+            Nous vous les suggérons selon votre activité ; celles que vous retenez sont développées
+            dans votre site, selon votre offre. Votre espace StaX parle ensuite votre métier : un
+            plombier n’y voit jamais « Carte du restaurant ».
+          </p>
+          <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
+            Aperçus d’illustration : chaque site est conçu individuellement, il n’existe pas de
+            modèle à personnaliser.
           </p>
         </div>
       </div>

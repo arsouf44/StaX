@@ -15,6 +15,7 @@ import { emailSchema, optionalText, uuidSchema } from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import { startMaintenanceAtDelivery } from '~/lib/maintenance';
+import { sendDeliveryEmails } from '~/lib/delivery-email';
 import type { ActionState } from '~/lib/form-state';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 
@@ -378,6 +379,11 @@ export async function deliverSiteAction(payload: unknown): Promise<ActionState> 
   const maintenance = service
     ? await startMaintenanceAtDelivery(service, parsed.data.siteId)
     : ({ status: 'failed', message: 'clé de service absente' } as const);
+  if (service) {
+    await sendDeliveryEmails(service, parsed.data.siteId).catch((mailError: unknown) => {
+      console.error('[stax:delivery] e-mail de livraison', mailError);
+    });
+  }
 
   revalidatePath(`/admin/sites/${parsed.data.siteId}`);
   revalidatePath('/admin/sites');

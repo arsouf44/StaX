@@ -4,12 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { tryCreateServiceClient, unwrapList, unwrapMaybe, type Db } from '@stax/database';
 import { salesInvoiceIssuedEmail, sendEmail } from '@stax/emails';
 import { platformUrl } from '@stax/config';
-import { computeOrderPricing, formatMoney } from '@stax/payments';
+import { computeOrderPricing, formatMaintenance, formatMoney } from '@stax/payments';
 import { boundedText, emailSchema, optionalText, uuidSchema } from '@stax/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { requireAdminRole } from '~/lib/admin';
+import { deliveryWeeksLabel } from '~/lib/catalog';
 
 /**
  * Emission d'une facture de vente.
@@ -107,11 +108,13 @@ export async function issueSalesInvoiceAction(
     currency: string;
     is_quote_only: boolean;
     is_active: boolean;
+    delivery_weeks_min: number | null;
+    delivery_weeks_max: number | null;
   }>(
     (await service
       .from('plans')
       .select(
-        'id, slug, version, setup_price_cents, maintenance_price_cents, billing_interval, vat_rate_bps, prices_include_vat, currency, is_quote_only, is_active',
+        'id, slug, version, setup_price_cents, maintenance_price_cents, billing_interval, vat_rate_bps, prices_include_vat, currency, is_quote_only, is_active, delivery_weeks_min, delivery_weeks_max',
       )
       .eq('id', parsed.data.planId)
       .maybeSingle()) as never,
@@ -203,9 +206,18 @@ export async function issueSalesInvoiceAction(
       companyName: parsed.data.companyName,
       planName: plan.slug,
       setupAmount: money(pricing.setupCents),
-      maintenanceAmount: `${money(pricing.maintenanceCents)} / an`,
+      maintenanceAmount: formatMaintenance(
+        pricing.maintenanceCents,
+        'EUR',
+        plan.billing_interval === 'year' ? 'year' : 'month',
+      ),
       totalAmount: money(pricing.totalCents),
       dueLabel,
+      deliveryLabel: deliveryWeeksLabel(
+        plan.delivery_weeks_min !== null && plan.delivery_weeks_max !== null
+          ? { min: plan.delivery_weeks_min, max: plan.delivery_weeks_max }
+          : null,
+      ),
       claimUrl: `${platformUrl()}/facture?numero=${encodeURIComponent(number)}`,
     }),
     { db: service },

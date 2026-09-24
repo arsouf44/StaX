@@ -25,6 +25,7 @@ import {
 import { syncHostingDeployments } from '~/lib/external-sites/publisher';
 import { loadHosting, toHostingTarget } from '~/lib/external-sites/records';
 import { startMaintenanceAtDelivery } from '~/lib/maintenance';
+import { sendDeliveryEmails } from '~/lib/delivery-email';
 import type { ActionState } from '~/lib/form-state';
 
 /**
@@ -563,6 +564,9 @@ export async function deliverExternalSiteAction(payload: unknown): Promise<Actio
 
   // La maintenance mensuelle commence ICI, a la livraison.
   const maintenance = await startMaintenanceAtDelivery(access.service, parsed.data.siteId);
+  await sendDeliveryEmails(access.service, parsed.data.siteId).catch((mailError: unknown) => {
+    console.error('[stax:delivery] e-mail de livraison', mailError);
+  });
   refresh(parsed.data.siteId);
   revalidatePath('/admin/sites');
   const maintenanceText =

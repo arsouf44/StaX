@@ -6,7 +6,7 @@ import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/
 import { refundPolicyConfig, sitesDomain } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
-import { getPlans } from '~/lib/catalog';
+import { deliveryWeeksLabel, getPlans } from '~/lib/catalog';
 import { readOrderDraft } from '~/lib/order-draft';
 import { getSession } from '~/lib/session';
 import { TERMS_VERSION } from '~/content/legal';
@@ -32,12 +32,14 @@ const DOMAIN_LABELS: Record<string, string> = {
  * propre projet Cloudflare ; le client en prend la main a la livraison. Rien
  * ici ne promet un site disponible le jour meme.
  */
-const NEXT_STEPS = [
-  'Votre espace client s’ouvre dès le paiement : vous y suivez chaque étape de votre projet, envoyez vos informations et vos fichiers, et échangez avec l’équipe.',
-  'Nous concevons puis développons votre site pour votre entreprise — pas de modèle à personnaliser. Comptez quelques semaines selon l’offre.',
-  'Nous le mettons en ligne sur votre domaine, en HTTPS, et vérifions tout avant de vous le livrer.',
-  'À la livraison, vous gardez la main : vous modifiez vos textes, photos et informations depuis StaX. La maintenance mensuelle commence ce jour-là, pas avant.',
-];
+function nextSteps(deliveryLabel: string): string[] {
+  return [
+    'Votre espace client s’ouvre dès le paiement : vous y suivez chaque étape de votre projet, envoyez vos informations et vos fichiers, et échangez avec l’équipe.',
+    `Nous concevons puis développons votre site pour votre entreprise — pas de modèle à personnaliser. Comptez ${deliveryLabel} à partir de la réception de tous vos éléments.`,
+    'Nous le mettons en ligne sur votre domaine, en HTTPS, et vérifions tout avant de vous le livrer.',
+    'À la livraison, vous gardez la main : vous modifiez vos textes, photos et informations depuis StaX. La maintenance mensuelle commence ce jour-là, pas avant.',
+  ];
+}
 
 const INTERNAL_NEXT_STEPS = [
   'La commande est enregistrée sans paiement et l’espace client s’ouvre : il affiche le suivi du projet, comme pour un client.',
@@ -59,6 +61,7 @@ export default async function OrderSummaryPage() {
 
   const business = resolveBusiness(draft.businessTypeSlug);
   const refund = refundPolicyConfig();
+  const delivery = deliveryWeeksLabel(plan.deliveryWeeks);
 
   // Affichage seulement : c est `create_internal_order` qui verifie, en base,
   // que le compte est bien un compte interne exonere.
@@ -95,6 +98,11 @@ export default async function OrderSummaryPage() {
             <h2 className="text-sm font-medium">Votre projet</h2>
             <dl className="mt-4 divide-y divide-[var(--border)]">
               <Row label="Offre" value={plan.name} href="/commander" />
+              <Row
+                label="Délai de réalisation"
+                value={delivery}
+                hint="À compter de la réception de tous vos éléments"
+              />
               <Row label="Métier" value={business.name} href="/commander/metier" />
               <Row
                 label="Entreprise"
@@ -113,12 +121,33 @@ export default async function OrderSummaryPage() {
             </dl>
           </Panel>
 
+          {plan.inclusions.length > 0 ? (
+            <Panel level={1} padding="lg">
+              <h2 className="text-sm font-medium">Ce que comprend l’offre {plan.name}</h2>
+              <ul className="mt-4 grid gap-2 text-sm text-[var(--foreground-muted)] sm:grid-cols-2">
+                {plan.inclusions.map((inclusion) => (
+                  <li key={inclusion.label} className="flex gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
+                    />
+                    <span>{inclusion.label}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-[var(--muted)]">
+                Cette liste est enregistrée avec votre commande : elle fait foi, même si le
+                catalogue évolue ensuite.
+              </p>
+            </Panel>
+          ) : null}
+
           <Panel level={1} padding="lg">
             <h2 className="text-sm font-medium">
               {internal ? 'Ce qui se passe ensuite' : 'Ce qui se passe après le paiement'}
             </h2>
             <ol className="mt-4 space-y-3 text-sm text-[var(--foreground-muted)]">
-              {(internal ? INTERNAL_NEXT_STEPS : NEXT_STEPS).map((step, index) => (
+              {(internal ? INTERNAL_NEXT_STEPS : nextSteps(delivery)).map((step, index) => (
                 <li key={step}>
                   <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
                 </li>
@@ -240,7 +269,8 @@ function Row({
   label: string;
   value: string;
   hint?: string;
-  href: string;
+  /** Etape ou modifier la valeur ; absente pour une valeur qui en decoule. */
+  href?: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-4 py-3">
@@ -249,12 +279,14 @@ function Row({
         <dd className="mt-0.5 text-sm">{value}</dd>
         {hint ? <p className="mt-0.5 text-xs text-[var(--muted)]">{hint}</p> : null}
       </div>
-      <Link
-        href={href}
-        className="shrink-0 text-xs text-[var(--foreground-muted)] underline underline-offset-4 hover:text-[var(--foreground)]"
-      >
-        Modifier
-      </Link>
+      {href ? (
+        <Link
+          href={href}
+          className="shrink-0 text-xs text-[var(--foreground-muted)] underline underline-offset-4 hover:text-[var(--foreground)]"
+        >
+          Modifier
+        </Link>
+      ) : null}
     </div>
   );
 }

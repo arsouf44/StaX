@@ -24,6 +24,8 @@
       "@stax/business": ["./packages/business/src/index.ts"],
       "@stax/security": ["./packages/security/src/index.ts"],
       "@stax/site-engine": ["./packages/site-engine/src/index.ts"],
+      "@stax/site-contract": ["./packages/site-contract/src/index.ts"],
+      "@stax/infrastructure": ["./packages/infrastructure/src/index.ts"],
       "@stax/database": ["./packages/database/src/index.ts"],
       "@stax/analytics": ["./packages/analytics/src/index.ts"],
       "@stax/emails": ["./packages/emails/src/index.ts"],

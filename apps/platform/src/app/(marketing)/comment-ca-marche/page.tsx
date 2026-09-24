@@ -1,72 +1,47 @@
 import type { Metadata } from 'next';
 import { ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@stax/ui';
 import { CreationTimeline } from '~/components/marketing/diagrams';
-import { BrowserFrame, DashboardMock } from '~/components/marketing/product-visuals';
+import { BrowserFrame, EditorMock, ProjectMock } from '~/components/marketing/product-visuals';
+import { PROCESS_STEPS } from '~/content/process';
 
 export const metadata: Metadata = {
   title: 'Comment ça marche',
   description:
-    'De la commande à la mise en ligne : chaque étape du parcours StaX, ce que nous faisons, ' +
-    'ce que nous vous demandons et ce que vous validez.',
+    'Nous créons votre site, vous le gérez ensuite. Les six étapes d’un projet StaX : votre ' +
+    'projet, la conception, le développement, la mise en ligne, la livraison, puis votre autonomie.',
   alternates: { canonical: '/comment-ca-marche' },
 };
 
-const STEPS = [
-  {
-    title: 'Vous choisissez votre offre et votre métier',
-    description:
-      'Deux questions : votre secteur d’activité, puis votre métier précis. La sélection détermine les pages proposées et les fonctionnalités activées. Vous pouvez comparer les offres avant de décider.',
-    detail: 'Environ 2 minutes',
-  },
-  {
-    title: 'Vous payez et votre projet s’ouvre',
-    description:
-      'Le paiement se fait sur une page Stripe sécurisée. Aucun numéro de carte ne transite par nos serveurs. Dès la confirmation, votre espace client s’ouvre avec le suivi de votre projet.',
-    detail: 'Paiement initial + maintenance annuelle',
-  },
-  {
-    title: 'Vous complétez le questionnaire',
-    description:
-      'Vos coordonnées, votre activité, ce qui vous distingue, vos horaires, vos prestations. Les questions sont adaptées à votre métier. Vous pouvez enregistrer et revenir plus tard : rien n’est perdu.',
-    detail: 'Sauvegardé automatiquement',
-  },
-  {
-    title: 'Vous envoyez vos éléments',
-    description:
-      'Logo, photos, menu, documents : vous les déposez dans votre espace. Si vous n’en avez pas, nous vous guidons sur ce qui est réellement utile et comment l’obtenir simplement.',
-    detail: 'Stockage privé',
-  },
-  {
-    title: 'Notre équipe conçoit votre site',
-    description:
-      'Structure, design, rédaction, configuration des modules métier, référencement technique. Vous suivez l’avancement dans votre espace, étape par étape — chaque étape correspond à un état réel, pas à une barre de progression décorative.',
-  },
-  {
-    title: 'Vous relisez en aperçu privé',
-    description:
-      'Le site vous est présenté sur une adresse privée, non indexée. Vous relisez tout : textes, photos, horaires, coordonnées. Vous indiquez vos corrections directement depuis votre espace.',
-    detail: 'Autant d’allers-retours que nécessaire',
-  },
-  {
-    title: 'Mise en ligne',
-    description:
-      'Après votre validation, nous publions le site, connectons votre nom de domaine et activons le certificat HTTPS. La garantie commerciale démarre à cet instant précis.',
-  },
-  {
-    title: 'Vous prenez la main',
-    description:
-      'Vous modifiez vos contenus quand vous voulez, recevez vos messages et vos réservations, consultez vos statistiques. Nous assurons l’hébergement, la sécurité, les sauvegardes et le support.',
-  },
+const BEFORE_DELIVERY = [
+  'Suivre l’avancement réel de votre projet, étape par étape',
+  'Envoyer vos informations, vos textes, vos photos et vos fichiers',
+  'Répondre à nos demandes de validation',
+  'Échanger avec l’équipe par messages',
+  'Retrouver vos factures',
+];
+
+const AFTER_DELIVERY = [
+  'Modifier les contenus que votre site prévoit : textes, images, informations, horaires',
+  'Voir l’aperçu de votre vrai site avant de publier',
+  'Publier : vos modifications sont enregistrées dans le code de votre site puis déployées',
+  'Retrouver chaque version publiée, et la restaurer si besoin',
+  'Recevoir messages, réservations et commandes, selon votre offre',
+];
+
+const OUR_SIDE = [
+  'La structure et la mise en page de votre site',
+  'Le design et ses règles : typographies, couleurs, affichage mobile',
+  'Le code, la sécurité et les intégrations',
 ];
 
 const COMMITMENTS = [
   {
-    title: 'Vous validez avant la mise en ligne',
-    body: 'Rien n’est publié sans votre accord explicite. Vous voyez le site complet avant vos clients.',
+    title: 'Vous validez les étapes clés',
+    body: 'Nous vous soumettons les choix importants pendant le projet ; vous validez ou demandez des corrections depuis votre espace.',
   },
   {
     title: 'Vous gardez la main ensuite',
-    body: 'Chaque modification de contenu est à votre portée. Vous ne dépendez de personne pour changer un horaire.',
+    body: 'Après la livraison, vous modifiez les contenus prévus par votre site sans dépendre de personne pour changer un horaire.',
   },
   {
     title: 'Vos données vous appartiennent',
@@ -90,9 +65,9 @@ export default function HowItWorksPage() {
           <SectionHeading
             as="h1"
             align="center"
-            eyebrow="Le parcours"
-            title="De la commande à la mise en ligne"
-            description="Vous n’avez rien à construire, rien à installer et rien à configurer techniquement. Voici exactement comment cela se passe."
+            eyebrow="Comment ça marche"
+            title="Nous créons votre site. Vous le gérez ensuite."
+            description="Vous n’avez rien à construire, rien à installer et rien à configurer. Chaque site est un projet individuel, conçu et développé par notre équipe. Voici exactement comment cela se passe."
             className="mx-auto"
           />
         </Container>
@@ -102,15 +77,16 @@ export default function HowItWorksPage() {
         <Container size="wide">
           <div className="grid gap-16 lg:grid-cols-[1.1fr_1fr] lg:items-start">
             <Reveal>
-              <CreationTimeline steps={STEPS} />
+              <CreationTimeline steps={PROCESS_STEPS} />
             </Reveal>
             <div className="lg:sticky lg:top-28">
-              <BrowserFrame url="stax.fr/app/projet">
-                <DashboardMock />
+              <BrowserFrame url="stax.fr/app">
+                <ProjectMock />
               </BrowserFrame>
               <p className="mt-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Votre espace vous montre où en est votre projet, ce que nous attendons de vous et ce
-                que nous faisons. Chaque étape est adossée à un état réel du dossier.
+                Pendant la construction, votre espace vous montre où en est votre projet, ce que
+                nous attendons de vous et ce que nous faisons. Chaque étape correspond à un état
+                réel du dossier, pas à une barre de progression décorative.
               </p>
             </div>
           </div>
@@ -118,6 +94,84 @@ export default function HowItWorksPage() {
       </Section>
 
       <Section spacing="compact" className="border-y border-[var(--border)]">
+        <Container size="wide">
+          <SectionHeading
+            eyebrow="Votre espace StaX"
+            title="Avant la livraison, vous suivez. Après, vous gérez."
+            description="L’éditeur n’existe pas encore tant que votre site est en construction : il s’ouvre le jour de la livraison, sur un site déjà en ligne."
+          />
+          <div className="mt-10 grid gap-3 lg:grid-cols-2">
+            <Panel level={1} padding="lg" className="h-full">
+              <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
+                Pendant la construction
+              </p>
+              <ul className="mt-4 space-y-2.5">
+                {BEFORE_DELIVERY.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-sm">
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 size-1 shrink-0 rounded-full bg-[var(--muted-strong)]"
+                    />
+                    <span className="leading-relaxed text-[var(--foreground-muted)]">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+            <Panel level={1} padding="lg" className="h-full">
+              <p className="text-2xs font-medium tracking-[0.12em] text-[var(--accent-text)] uppercase">
+                Après la livraison
+              </p>
+              <ul className="mt-4 space-y-2.5">
+                {AFTER_DELIVERY.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-sm">
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
+                    />
+                    <span className="leading-relaxed text-[var(--foreground-muted)]">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          </div>
+
+          <div className="mt-12 grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:items-center">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-[-0.03em]">
+                Ce qui reste entre nos mains
+              </h2>
+              <p className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                Votre site est développé professionnellement. Vous modifiez son contenu et les
+                éléments prévus pour l’être ; vous ne pouvez pas, par inadvertance, casser :
+              </p>
+              <ul className="mt-5 space-y-2.5">
+                {OUR_SIDE.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-sm">
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
+                    />
+                    <span className="leading-relaxed text-[var(--foreground-muted)]">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                Une nouvelle page, une nouvelle fonctionnalité ou une refonte ? Écrivez-nous : nous
+                nous en chargeons, sur devis lorsque le changement dépasse la maintenance.
+              </p>
+            </div>
+            <Reveal delay={80}>
+              <div className="stage">
+                <BrowserFrame url="stax.fr/app/editeur">
+                  <EditorMock />
+                </BrowserFrame>
+              </div>
+            </Reveal>
+          </div>
+        </Container>
+      </Section>
+
+      <Section spacing="compact">
         <Container size="wide">
           <SectionHeading eyebrow="Nos engagements" title="Ce sur quoi vous pouvez compter" />
           <div className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -135,12 +189,12 @@ export default function HowItWorksPage() {
         </Container>
       </Section>
 
-      <Section spacing="compact">
+      <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="narrow" className="text-center">
           <h2 className="text-3xl font-medium tracking-[-0.03em]">Commençons</h2>
           <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
-            La première étape prend deux minutes, et vous pouvez vous arrêter à tout moment avant le
-            paiement.
+            Choisissez votre offre : vous pouvez vous arrêter à tout moment avant le paiement. La
+            maintenance, elle, ne commencera qu’à la livraison de votre site.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink variant="accent" href="/commander" size="pill-lg">

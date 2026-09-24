@@ -6,39 +6,40 @@ import { DomainRoutingDiagram, OperationalIndicators } from '~/components/market
 export const metadata: Metadata = {
   title: 'Infrastructure',
   description:
-    'Où tournent vos sites, avec quelles garanties : réseau mondial Cloudflare, base PostgreSQL ' +
-    'européenne chez Supabase, publication par versions figées et sauvegardes quotidiennes.',
+    'Où tournent vos sites : un dépôt GitHub et un projet Cloudflare par site, une base ' +
+    'PostgreSQL européenne chez Supabase pour votre espace, et chaque publication suivie ' +
+    'jusqu’à son déploiement.',
   alternates: { canonical: '/infrastructure' },
 };
 
 const LAYERS = [
   {
-    name: 'Périphérie du réseau',
+    name: 'Code source',
+    provider: 'GitHub',
+    role: 'Chaque site possède son propre dépôt de code, créé pour lui. Chaque publication y devient un commit identifiable : l’historique de votre site est celui de son code.',
+    facts: [
+      'Un dépôt par site, jamais partagé entre clients',
+      'Accès de StaX limité aux dépôts autorisés, avec des droits minimaux',
+      'Chaque version publiée correspond à un commit',
+    ],
+  },
+  {
+    name: 'Hébergement et diffusion',
     provider: 'Cloudflare',
-    role: 'Sert vos pages depuis le point de présence le plus proche de votre visiteur, filtre le trafic malveillant et termine le chiffrement TLS.',
+    role: 'Chaque site est déployé sur son propre projet Cloudflare et servi depuis le point de présence le plus proche du visiteur. Votre domaine pointe vers ce déploiement.',
     facts: [
       'Certificat HTTPS émis et renouvelé automatiquement',
       'Protection contre les attaques par déni de service',
-      'Cache invalidé à chaque publication, jamais partagé entre clients',
+      'Un déploiement par publication, suivi jusqu’à sa confirmation',
     ],
   },
   {
-    name: 'Application',
-    provider: 'Cloudflare Workers',
-    role: 'Exécute le rendu de votre site et de votre espace client au plus près du visiteur, sans serveur à maintenir ni mise à l’échelle à prévoir.',
-    facts: [
-      'Aucune fenêtre de maintenance liée à un serveur',
-      'Montée en charge automatique',
-      'Déploiements sans interruption de service',
-    ],
-  },
-  {
-    name: 'Données',
+    name: 'Espace client et données',
     provider: 'Supabase (PostgreSQL)',
-    role: 'Conserve vos contenus, vos messages, vos réservations et vos contacts dans une base relationnelle hébergée dans une région européenne.',
+    role: 'Conserve vos brouillons, vos médias, vos messages, vos réservations et vos contacts dans une base relationnelle hébergée dans une région européenne.',
     facts: [
       'Isolation entre clients imposée par la base elle-même',
-      'Sauvegardes quotidiennes avec restauration à un instant donné',
+      'Sauvegardes quotidiennes de la base',
       'Chiffrement au repos et en transit',
     ],
   },
@@ -67,7 +68,7 @@ export default function InfrastructurePage() {
             as="h1"
             eyebrow="Infrastructure"
             title="Où tournent vos sites"
-            description="Nous ne gérons pas de serveurs physiques et nous ne bricolons pas d’hébergement mutualisé. Chaque couche est confiée à un acteur dont c’est le métier, et nous documentons lequel."
+            description="Chaque site est un projet indépendant, avec son propre code et son propre déploiement. Nous ne gérons pas de serveurs physiques : chaque couche est confiée à un acteur dont c’est le métier, et nous documentons lequel."
           />
           <OperationalIndicators className="mt-12 lg:grid-cols-4" />
         </Container>
@@ -109,9 +110,9 @@ export default function InfrastructurePage() {
       <Section spacing="compact" className="border-y border-[var(--border)]">
         <Container size="wide">
           <SectionHeading
-            eyebrow="Multi-tenant"
-            title="Comment un nom de domaine trouve le bon site"
-            description="Tous les sites clients arrivent sur la même infrastructure. C’est le nom d’hôte de la requête — jamais un paramètre fourni par le navigateur — qui détermine quel site servir et quelles données charger."
+            eyebrow="Un site, un projet"
+            title="Votre domaine pointe vers votre site, pas vers une plateforme partagée"
+            description="Chaque site a son dépôt, son projet Cloudflare et son domaine. StaX n’est pas sur le chemin de vos visiteurs : il intervient quand vous publiez, pour enregistrer vos modifications dans le code de votre site et les déployer."
           />
           <Panel level={2} padding="lg" className="mt-10">
             <DomainRoutingDiagram />
@@ -123,19 +124,19 @@ export default function InfrastructurePage() {
         <Container size="wide">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Panel level={1} padding="lg">
-              <h2 className="text-base font-medium">Publication par versions figées</h2>
+              <h2 className="text-base font-medium">Publication suivie jusqu’au bout</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Publier crée un instantané complet et immuable de votre site. Ce que voient vos
-                visiteurs ne change pas tant que vous ne republiez pas, même si vous modifiez votre
-                brouillon entre-temps.
+                Publier crée un commit dans le dépôt de votre site, puis un déploiement Cloudflare.
+                Ce que voient vos visiteurs ne change qu’une fois ce déploiement confirmé ; en cas
+                d’échec, la version précédente reste en ligne.
               </p>
             </Panel>
             <Panel level={1} padding="lg">
               <h2 className="text-base font-medium">Sauvegardes et restauration</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                La base est sauvegardée quotidiennement, avec possibilité de restauration à un
-                instant donné. Chaque version publiée de votre site reste par ailleurs restaurable
-                depuis votre espace.
+                Le code de chaque site est versionné, et chaque version publiée reste restaurable
+                depuis votre espace : la restauration est un vrai redéploiement. La base de votre
+                espace est sauvegardée quotidiennement.
               </p>
             </Panel>
             <Panel level={1} padding="lg">
