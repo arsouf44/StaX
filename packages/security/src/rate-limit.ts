@@ -82,6 +82,13 @@ export const RATE_LIMITS = {
     max: 60,
     message: 'Trop de requêtes. Ralentissez le rythme.',
   },
+  /** Relecture a la demande de l'etat d'un deploiement (apercu, publication). */
+  providerSync: {
+    bucket: 'api.provider_sync',
+    windowSeconds: 60,
+    max: 15,
+    message: 'Actualisation trop fréquente : patientez quelques secondes.',
+  },
   mediaUpload: {
     bucket: 'media.upload',
     windowSeconds: 3600,

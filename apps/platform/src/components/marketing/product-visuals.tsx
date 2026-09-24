@@ -139,7 +139,7 @@ export function DashboardMock({ className }: { className?: string }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-[11px] font-medium">Restaurant Dupont</p>
-            <p className="truncate text-[9px] text-white/40">Offre Premium</p>
+            <p className="truncate text-[9px] text-white/40">Offre Ultra Premium</p>
           </div>
         </div>
         <nav className="space-y-0.5">
@@ -232,6 +232,84 @@ export function DashboardMock({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Suivi de projet, tel que le client le voit AVANT la livraison : pas
+ * d'editeur, seulement l'avancement reel, les elements demandes et les
+ * validations. Les etapes reprennent `PROJECT_TIMELINE`.
+ */
+export function ProjectMock({ className }: { className?: string }) {
+  const steps = [
+    { label: 'Commande validée', state: 'done' },
+    { label: 'Informations reçues', state: 'done' },
+    { label: 'Conception', state: 'done' },
+    { label: 'Développement', state: 'current' },
+    { label: 'Vérifications', state: 'todo' },
+    { label: 'Mise en ligne', state: 'todo' },
+    { label: 'Livraison', state: 'todo' },
+  ] as const;
+
+  return (
+    <div className={cn('flex h-full min-h-[24rem] bg-[#0a0e15] text-white/90', className)}>
+      <div className="min-w-0 flex-1 p-4 sm:p-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-medium">Votre projet — Restaurant Dupont</p>
+            <p className="mt-0.5 text-[11px] text-white/45">
+              Offre Premium · votre site est en cours de développement
+            </p>
+          </div>
+          <span className="shrink-0 rounded-md border border-white/10 px-2 py-1 text-[10px] text-white/50">
+            Étape 4 sur 7
+          </span>
+        </div>
+
+        <ol className="mt-4 space-y-1.5">
+          {steps.map((step) => (
+            <li
+              key={step.label}
+              className={cn(
+                'flex items-center gap-2.5 rounded-md border px-2.5 py-2 text-[11px]',
+                step.state === 'current'
+                  ? 'border-[#147CFF]/45 bg-[#147CFF]/10 text-white'
+                  : 'border-white/8 bg-white/[0.02]',
+                step.state === 'todo' ? 'text-white/40' : null,
+                step.state === 'done' ? 'text-white/70' : null,
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'size-2 shrink-0 rounded-full',
+                  step.state === 'done'
+                    ? 'bg-[#2FD29B]'
+                    : step.state === 'current'
+                      ? 'bg-[#52B5FF]'
+                      : 'border border-white/25',
+                )}
+              />
+              <span className="truncate">{step.label}</span>
+              {step.state === 'current' ? (
+                <span className="ml-auto text-[9px] text-[#52B5FF]">en cours</span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
+            <p className="text-[10px] text-white/45">Éléments demandés</p>
+            <p className="mt-1 text-[11px]">Photos de la salle · 2 fichiers attendus</p>
+          </div>
+          <div className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
+            <p className="text-[10px] text-white/45">Éditeur</p>
+            <p className="mt-1 text-[11px] text-white/60">S’ouvre à la livraison de votre site</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Courbe de frequentation. Forme fixe et deterministe : aucune donnee inventee. */
 function SparkChart({ className }: { className?: string }) {
   const points = [18, 24, 21, 32, 28, 41, 38, 46, 44, 52, 49, 58, 54, 63];
@@ -277,98 +355,80 @@ function SparkChart({ className }: { className?: string }) {
 /* -------------------------------------------------------------------------- */
 
 export function EditorMock({ className }: { className?: string }) {
+  // Reproduction de l'editeur reel : l'apercu est le VRAI site du client, et
+  // le panneau ne montre que les champs que son contrat d'edition declare
+  // modifiables. Pas de sections a deplacer, pas de couleurs a choisir : la
+  // mise en page et le design restent ceux que l'equipe a concus.
   return (
     <div className={cn('flex h-full min-h-[24rem] bg-[#0a0e15] text-white/90', className)}>
-      <aside className="hidden w-48 shrink-0 flex-col border-r border-white/8 p-3 md:flex">
+      <aside className="hidden w-44 shrink-0 flex-col border-r border-white/8 p-3 md:flex">
         <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
-          Sections de la page
+          Contenus modifiables
         </p>
         <ul className="space-y-1">
           {[
-            { label: 'Bannière', active: true },
-            { label: 'Présentation' },
-            { label: 'Notre carte' },
-            { label: 'Galerie photos' },
-            { label: 'Horaires' },
-            { label: 'Avis clients' },
+            { label: 'Accueil', active: true },
+            { label: 'La carte' },
+            { label: 'Réservation' },
             { label: 'Contact' },
-          ].map((block) => (
+          ].map((page) => (
             <li
-              key={block.label}
+              key={page.label}
               className={cn(
-                'flex items-center gap-2 rounded-md border px-2 py-1.5 text-[10px]',
-                block.active
+                'rounded-md border px-2 py-1.5 text-[10px]',
+                page.active
                   ? 'border-[#147CFF]/45 bg-[#147CFF]/10 text-white'
                   : 'border-white/8 bg-white/[0.02] text-white/55',
               )}
             >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 16 16"
-                className="size-3 text-white/25"
-                fill="currentColor"
-              >
-                <circle cx="6" cy="4" r="1" />
-                <circle cx="10" cy="4" r="1" />
-                <circle cx="6" cy="8" r="1" />
-                <circle cx="10" cy="8" r="1" />
-                <circle cx="6" cy="12" r="1" />
-                <circle cx="10" cy="12" r="1" />
-              </svg>
-              <span className="truncate">{block.label}</span>
+              {page.label}
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-hidden="true"
-          className="mt-2 w-full rounded-md border border-dashed border-white/12 py-1.5 text-[10px] text-white/40"
-        >
-          + Ajouter une section
-        </button>
+        <p className="mt-4 mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
+          Informations
+        </p>
+        <ul className="space-y-1">
+          {['Horaires', 'Coordonnées', 'Réseaux sociaux'].map((label) => (
+            <li
+              key={label}
+              className="rounded-md border border-white/8 bg-white/[0.02] px-2 py-1.5 text-[10px] text-white/55"
+            >
+              {label}
+            </li>
+          ))}
+        </ul>
       </aside>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 border-b border-white/8 px-3 py-2">
-          <div className="flex min-w-0 gap-0.5 overflow-hidden rounded-md border border-white/8 p-0.5">
-            {['Ordinateur', 'Tablette', 'Mobile'].map((device, index) => (
-              <span
-                key={device}
-                className={cn(
-                  'rounded px-2 py-0.5 text-[9px] whitespace-nowrap',
-                  index === 0 ? 'bg-white/[0.08] text-white' : 'text-white/40',
-                )}
-              >
-                {device}
-              </span>
-            ))}
-          </div>
           {/* Sous 400 px, l etat du brouillon s efface : l action de publier
               doit rester visible, l information peut attendre. */}
-          <span className="ml-auto hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-white/40 min-[400px]:flex">
+          <span className="hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-white/40 min-[400px]:flex">
             <span className="size-1.5 rounded-full bg-[#F5A524]" />
-            Brouillon — 3 modifications
+            Brouillon enregistré — 3 modifications
           </span>
-          <span className="ml-auto rounded-md bg-white px-2.5 py-1 text-[9px] font-medium whitespace-nowrap text-black min-[400px]:ml-0">
+          <span className="ml-auto rounded-md border border-white/15 px-2.5 py-1 text-[9px] whitespace-nowrap text-white/70">
+            Aperçu
+          </span>
+          <span className="rounded-md bg-white px-2.5 py-1 text-[9px] font-medium whitespace-nowrap text-black">
             Publier
           </span>
         </div>
 
         <div className="p-4">
-          <div className="rounded-lg border border-[#147CFF]/45 bg-[#147CFF]/[0.06] p-4">
-            <p className="text-[9px] text-[#52B5FF]">Bannière · sélectionnée</p>
-            <div className="mt-2.5 space-y-2">
-              <div className="h-2.5 w-2/3 rounded bg-white/18" />
-              <div className="h-2 w-1/2 rounded bg-white/10" />
-              <div className="mt-3 flex gap-2">
-                <span className="rounded bg-white/85 px-3 py-1 text-[9px] text-black">
-                  Réserver
-                </span>
-                <span className="rounded border border-white/20 px-3 py-1 text-[9px] text-white/70">
-                  Voir la carte
-                </span>
-              </div>
+          <p className="text-[9px] text-white/35">Aperçu de votre site — restaurant-dupont.fr</p>
+          <div className="mt-2 rounded-lg border border-white/8 p-4">
+            <div className="rounded-md outline-1 outline-offset-4 outline-[#147CFF] outline-dashed">
+              <p className="text-[9px] text-[#52B5FF]">Titre · modifiable</p>
+              <div className="mt-1.5 h-2.5 w-2/3 rounded bg-white/18" />
+            </div>
+            <div className="mt-2 h-2 w-1/2 rounded bg-white/10" />
+            <div className="mt-3 flex gap-2">
+              <span className="rounded bg-white/85 px-3 py-1 text-[9px] text-black">Réserver</span>
+              <span className="rounded border border-white/20 px-3 py-1 text-[9px] text-white/70">
+                Voir la carte
+              </span>
             </div>
           </div>
           <div className="mt-2 space-y-2 opacity-45">
@@ -386,34 +446,34 @@ export function EditorMock({ className }: { className?: string }) {
 
       <aside className="hidden w-48 shrink-0 border-l border-white/8 p-3 lg:block">
         <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
-          Contenu
+          Bannière
         </p>
         <div className="space-y-2.5">
           <div>
             <p className="text-[9px] text-white/40">Titre</p>
-            <div className="mt-1 rounded border border-white/10 bg-white/[0.03] px-2 py-1.5 text-[10px] text-white/75">
+            <div className="mt-1 rounded border border-[#147CFF]/45 bg-white/[0.03] px-2 py-1.5 text-[10px] text-white/80">
               Une cuisine qui vous ressemble
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-white/40">Sous-titre</p>
+            <p className="text-[9px] text-white/40">Texte</p>
             <div className="mt-1 h-10 rounded border border-white/10 bg-white/[0.03] px-2 py-1.5 text-[9px] leading-relaxed text-white/55">
               Découvrez notre carte et réservez votre table.
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-white/40">Fond</p>
-            <div className="mt-1 flex gap-1">
-              {['#0a0e15', '#1a1a20', '#C2703A', '#F7EFE7'].map((color, index) => (
-                <span
-                  key={color}
-                  className={cn(
-                    'size-5 rounded border',
-                    index === 2 ? 'border-white/60' : 'border-white/12',
-                  )}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+            <p className="text-[9px] text-white/40">Image</p>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="h-7 w-10 rounded bg-[linear-gradient(135deg,#C2703A,#2a1a12)]" />
+              <span className="rounded border border-white/12 px-2 py-1 text-[9px] text-white/60">
+                Remplacer
+              </span>
+            </div>
+          </div>
+          <div>
+            <p className="text-[9px] text-white/40">Bouton — texte et lien</p>
+            <div className="mt-1 rounded border border-white/10 bg-white/[0.03] px-2 py-1.5 text-[10px] text-white/60">
+              Réserver · /reservation
             </div>
           </div>
         </div>
@@ -672,9 +732,9 @@ export function DeployPanel({ className }: { className?: string }) {
       <ul className="mt-2 space-y-1.5 text-[10px]">
         {[
           { label: 'Contenu validé', done: true },
-          { label: 'Version figée', done: true },
-          { label: 'Cache invalidé', done: true },
-          { label: 'En ligne', done: true },
+          { label: 'Commit 47ab91c', done: true },
+          { label: 'Déploiement Cloudflare', done: true },
+          { label: 'En ligne, confirmé', done: true },
         ].map((step) => (
           <li key={step.label} className="flex items-center gap-2">
             <svg
@@ -690,7 +750,7 @@ export function DeployPanel({ className }: { className?: string }) {
         ))}
       </ul>
       <p className="mt-2.5 border-t border-[var(--border)] pt-2 text-[9px] text-[var(--muted)]">
-        version 14 · 1,2 s
+        version 14 · publiée par Marc
       </p>
     </div>
   );

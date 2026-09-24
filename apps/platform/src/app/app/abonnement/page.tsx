@@ -6,6 +6,7 @@ import { EmptyState, Icon, Panel, PermissionDenied } from '@stax/ui';
 import type { StatusTone } from '@stax/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
+import { MAINTENANCE_EXCLUDES, MAINTENANCE_INCLUDES } from '~/content/maintenance';
 import { SubscriptionPanel, type SubscriptionView } from './subscription-panel';
 
 export const metadata: Metadata = { title: 'Maintenance' };
@@ -22,8 +23,41 @@ const TONES: Record<string, StatusTone> = {
 
 const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 
+/** Aucun abonnement Stripe encore enregistre : ce que la situation reelle permet d'annoncer. */
+function emptyStateCopy(
+  delivered: boolean,
+  maintenanceStatus: string | null,
+): { title: string; description: string } {
+  if (!delivered) {
+    return {
+      title: 'Aucun abonnement actif',
+      description:
+        'Votre maintenance démarre à la livraison de votre site, une fois celui-ci en ligne. Rien n’est prélevé avant.',
+    };
+  }
+  switch (maintenanceStatus) {
+    case 'waived':
+      return {
+        title: 'Maintenance incluse',
+        description:
+          'Ce site est rattaché à un compte interne StaX : aucune maintenance n’est facturée.',
+      };
+    case 'not_applicable':
+      return {
+        title: 'Maintenance définie par votre devis',
+        description: 'Les conditions de maintenance de votre projet figurent dans votre devis.',
+      };
+    default:
+      return {
+        title: 'Maintenance en cours de mise en place',
+        description:
+          'Votre site est livré : l’équipe StaX finalise l’abonnement mensuel, qui démarre à la date de livraison. Vous recevrez une confirmation par e-mail.',
+      };
+  }
+}
+
 export default async function SubscriptionPage() {
-  const { workspace } = await getWorkspace();
+  const { workspace, db } = await getWorkspace();
 
   if (!workspace.capabilities.includes('billing.view')) {
     return (
@@ -33,13 +67,33 @@ export default async function SubscriptionPage() {
 
   const subscription = workspace.subscription;
   const refund = refundPolicyConfig();
+  const site = workspace.currentSite;
+  const order =
+    !subscription && site?.deliveredAt
+      ? await db
+          .from('orders')
+          .select('maintenance_status')
+          .eq('site_id', site.id)
+          .in('status', ['paid', 'partially_refunded', 'internal'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : null;
+  const empty = emptyStateCopy(
+    Boolean(site?.deliveredAt),
+    (order?.data as { maintenance_status: string } | null)?.maintenance_status ?? null,
+  );
 
   const view: SubscriptionView | null = subscription
     ? {
         id: subscription.id,
         statusLabel: SUBSCRIPTION_STATUS_LABELS[subscription.status] ?? subscription.status,
         statusTone: TONES[subscription.status] ?? 'neutral',
-        priceLabel: formatMaintenance(subscription.maintenance_price_cents, 'EUR'),
+        priceLabel: formatMaintenance(
+          subscription.maintenance_price_cents,
+          subscription.currency,
+          subscription.billing_interval,
+        ),
         periodEndLabel: subscription.current_period_end
           ? DATE.format(new Date(subscription.current_period_end))
           : null,
@@ -53,7 +107,7 @@ export default async function SubscriptionPage() {
     <>
       <PageHeader
         title="Maintenance"
-        description="Ce que couvre votre abonnement annuel de maintenance, et comment le gérer."
+        description="Ce que couvre votre maintenance mensuelle, et comment la gérer."
       />
 
       {view ? (
@@ -61,8 +115,8 @@ export default async function SubscriptionPage() {
       ) : (
         <EmptyState
           icon={<Icon name="shield-check" size={24} />}
-          title="Aucun abonnement actif"
-          description="Votre maintenance démarre automatiquement à la mise en ligne de votre site. Vous ne payez rien avant."
+          title={empty.title}
+          description={empty.description}
         />
       )}
 
@@ -70,17 +124,13 @@ export default async function SubscriptionPage() {
         <Panel level={1} padding="lg">
           <h2 className="text-sm font-medium">Ce que couvre la maintenance</h2>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-            <li>Hébergement, nom de domaine rattaché et certificat HTTPS renouvelé.</li>
-            <li>
-              Mises à jour techniques et correctifs de sécurité, sans intervention de votre part.
-            </li>
-            <li>Sauvegardes régulières et restauration en cas de problème.</li>
-            <li>Surveillance de la disponibilité de votre site.</li>
-            <li>Assistance par e-mail pour l’usage de votre espace.</li>
+            {MAINTENANCE_INCLUDES.map((item) => (
+              <li key={item}>{item}.</li>
+            ))}
           </ul>
           <p className="mt-4 text-xs leading-relaxed text-[var(--muted)]">
-            Les refontes, nouvelles pages sur mesure et développements spécifiques ne sont pas
-            inclus : ils font l’objet d’un devis distinct.
+            Ne sont pas inclus, et font l’objet d’un devis distinct :{' '}
+            {MAINTENANCE_EXCLUDES.map((item) => item.toLowerCase()).join(' ; ')}.
           </p>
         </Panel>
 
@@ -93,7 +143,7 @@ export default async function SubscriptionPage() {
 
           <h2 className="mt-6 text-sm font-medium">Garantie de remboursement</h2>
           <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Vous disposez de {refund.windowDays} jours après la mise en ligne de votre site pour
+            Vous disposez de {refund.windowDays} jours après la livraison de votre site pour
             demander un remboursement. Si un nom de domaine a réellement été acheté pour vous, son
             coût est déduit puisqu’il est déjà engagé ; sinon rien n’est retenu.
           </p>

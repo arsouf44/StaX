@@ -2,21 +2,25 @@ import { expect, test, type Page } from '@playwright/test';
 import {
   createCustomerWithPaidOrder,
   createStaffAccount,
-  fetchPublicPage,
-  fillLegalIdentity,
-  firstHeading,
   provisionInternalAccount,
   resetRateLimits,
   serviceClient,
   uniqueSuffix,
   userClient,
 } from './support/stack';
+import {
+  completeDeliveryChecklist,
+  connectSiteInfrastructure,
+  createSiteInfrastructure,
+  liveContent,
+} from './support/external-site';
 
 /**
  * Compte interne StaX : une commande Ultra Premium sans aucun paiement, qui
- * suit ensuite EXACTEMENT le parcours d'un client : StaX construit le site de
- * zero depuis l'administration, puis le confie a ce compte, qui n'y a acces
- * qu'a partir de ce moment. L'equipe garde la main.
+ * suit ensuite EXACTEMENT le parcours d'un client : StaX developpe le site hors
+ * de StaX (depot GitHub, projet Cloudflare), le rattache, puis le livre a ce
+ * compte, qui ne peut le modifier qu'a partir de ce moment. L'equipe garde la
+ * main.
  *
  * Le compte est cree par le VRAI script de provisionnement
  * (`pnpm internal:bootstrap`), avec un mot de passe jetable lu dans
@@ -28,8 +32,7 @@ test.describe.configure({ mode: 'serial' });
 
 const INTERNAL_EMAIL = process.env.STAX_E2E_INTERNAL_EMAIL ?? 'a.gomez@macrobot-ai.com';
 const suffix = uniqueSuffix();
-const SUBDOMAIN = `resto-${suffix}`;
-const HOSTNAME = `${SUBDOMAIN}.sites.stax.test`;
+const PROJECT_SLUG = `resto-${suffix}`;
 const TITLE = `La vraie cuisine lyonnaise ${suffix}`;
 
 let account: { email: string; password: string };
@@ -93,8 +96,10 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     await page.getByRole('button', { name: 'Continuer' }).click();
 
     await page.waitForURL(/\/commander\/adresse/);
+    // Domaine choisi plus tard : le site sera d'abord en ligne sur l'adresse
+    // technique de son projet Cloudflare, aucun sous-domaine StaX a saisir.
     await page.locator('label', { has: page.locator('input[value="subdomain_only"]') }).click();
-    await page.locator('[name="subdomain"]').fill(SUBDOMAIN);
+    await expect(page.locator('[name="subdomain"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Continuer' }).click();
     await page.waitForURL(/\/commander\/recapitulatif/);
   });
@@ -104,8 +109,9 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     await expect(main).toContainText('Compte interne StaX');
     await expect(main).toContainText('Aucun paiement');
     await expect(main).toContainText('0,00 €');
-    await expect(main).toContainText('construit le site de A à Z');
-    await expect(main).toContainText('que lorsque l’administration le lui confie');
+    await expect(main).toContainText('développe le site hors de StaX');
+    await expect(main).toContainText('Communiquée à la mise en ligne');
+    await expect(main).toContainText('que lorsque l’administration le lui livre');
     await expect(main).not.toContainText(/créé tout de suite|avant de régler|après le paiement/);
     await expect(page.getByRole('button', { name: /payer|paiement sécurisé/i })).toHaveCount(0);
   });
@@ -119,7 +125,9 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     await page.getByRole('button', { name: 'Enregistrer la commande' }).click();
     await page.waitForURL(/\/app\?commande=interne/, { timeout: 30_000 });
     await expect(page.locator('main')).toContainText('Commande interne enregistrée');
-    await expect(page.getByTestId('site-under-construction')).toBeVisible();
+    // Tableau de bord du PROJET : suivi des etapes, aucun ecran du site.
+    await expect(page.getByTestId('project-dashboard')).toBeVisible();
+    await expect(page.getByTestId('my-site')).toHaveCount(0);
     expect(stripeRequests).toEqual([]);
   });
 
@@ -163,7 +171,20 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
   const staffContext = await browser.newContext();
   const admin = await staffContext.newPage();
 
-  await test.step('StaX construit le site de zéro, depuis l’administration', async () => {
+  await test.step('StaX rattache le site développé hors de StaX', async () => {
+    const staffDb = await userClient(staff.email, staff.password);
+    const infra = await createSiteInfrastructure(serviceClient(), {
+      slug: PROJECT_SLUG,
+      siteName: `Chez Dupont ${suffix}`,
+      title: TITLE,
+    });
+    await connectSiteInfrastructure(staffDb, siteId, infra);
+    await completeDeliveryChecklist(staffDb, serviceClient(), siteId, infra);
+    const live = await liveContent(infra.project);
+    expect(JSON.stringify(live.content)).toContain(TITLE);
+  });
+
+  await test.step('StaX livre le site au compte interne, depuis l’administration', async () => {
     await resetRateLimits();
     await admin.goto('/connexion');
     await admin
@@ -180,56 +201,22 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
       .click();
     await admin.waitForURL(/\/(admin|app)/);
 
-    await admin.goto(`/admin/sites/${siteId}`);
-    await expect(admin.getByTestId('site-delivery')).toContainText('En construction chez StaX');
-    await admin.getByRole('button', { name: 'Construire le site' }).click();
-    await admin.waitForURL(/\/app\/editeur/, { timeout: 30_000 });
-
-    await admin.getByRole('button', { name: 'Partir d’une page vierge' }).click();
-    await expect(admin.getByTestId('visual-editor')).toBeVisible({ timeout: 30_000 });
-    await expect(admin.getByTestId('section-item')).toHaveCount(0);
-
-    await admin.getByTestId('open-section-library').click();
-    await admin.getByTestId('add-section-hero').first().click();
-    await expect(admin.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
-    const field = admin.locator('[data-field="title"] input, [data-field="title"] textarea');
-    await field.first().fill(TITLE);
-    await expect(admin.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
-
-    await fillLegalIdentity(admin, 'Chez Dupont');
-    await admin.goto('/app/editeur');
-    await admin.getByTestId('open-publish').click();
-    await expect(admin.getByTestId('publish-dialog')).toHaveAttribute('data-step', 'confirm', {
-      timeout: 30_000,
-    });
-    await admin.getByTestId('confirm-publish').click();
-    await expect(admin.getByTestId('publish-success')).toContainText('version 1', {
-      timeout: 60_000,
-    });
+    await admin.goto(`/admin/sites/${siteId}/livraison`);
+    const deliver = admin.getByRole('button', { name: 'Livrer le site au client' });
+    await expect(deliver).toBeEnabled();
+    await deliver.click();
+    await expect(
+      admin.getByText(/Site livré : le client en a désormais la main/).first(),
+    ).toBeVisible();
   });
 
-  await test.step('requête HTTP réelle : le site construit par StaX est en ligne', async () => {
-    const live = await fetchPublicPage(HOSTNAME);
-    expect(live.status).toBe(200);
-    expect(live.headers['x-stax-version']).toBe('1');
-    expect(firstHeading(live.body)).toBe(TITLE);
-  });
-
-  await test.step('StaX confie le site au compte interne', async () => {
-    await admin.goto(`/admin/sites/${siteId}`);
-    const delivery = admin.getByTestId('site-delivery');
-    await expect(delivery).toContainText(INTERNAL_EMAIL);
-    await delivery.getByRole('button', { name: 'Confier le site' }).click();
-    await expect(delivery).toContainText('Confié au client', { timeout: 30_000 });
-  });
-
-  await test.step('le client découvre son site et le modifie', async () => {
+  await test.step('le client découvre son site et peut le modifier', async () => {
     await page.goto('/app');
-    await expect(page.getByTestId('site-under-construction')).toHaveCount(0);
-    await expect(page.getByTestId('my-site')).toContainText(HOSTNAME);
-    await page.getByTestId('my-site').getByRole('link', { name: 'Modifier mon site' }).click();
-    await expect(page.getByTestId('visual-editor')).toBeVisible();
-    await expect(page.getByTestId('section-item')).toHaveCount(1);
+    await expect(page.getByTestId('project-dashboard')).toHaveCount(0);
+    await expect(page.getByTestId('managed-site-dashboard')).toBeVisible();
+    await page.goto('/app/editeur');
+    await expect(page.getByRole('navigation', { name: 'Zones modifiables' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Publier' }).first()).toBeVisible();
   });
 
   await staffContext.close();

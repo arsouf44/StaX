@@ -32,6 +32,7 @@ import {
 } from '~/components/marketing/product-visuals';
 import { entryPriceLabel, getPlans, listSectorsSafe } from '~/lib/catalog';
 import { HOMEPAGE_FAQ } from '~/content/faq';
+import { PRINCIPLE_POINTS, PROCESS_STEPS } from '~/content/process';
 
 /**
  * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
@@ -49,10 +50,10 @@ export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const entry = await entryPriceLabel();
   return {
-    title: 'Votre site professionnel, construit pour votre métier',
+    title: 'Nous créons votre site. Vous le gérez ensuite.',
     description:
-      'StaX conçoit, héberge et maintient le site de votre entreprise. Réservations, messages, ' +
-      'paiements et contenus : un seul espace, adapté à votre métier.' +
+      'StaX conçoit et développe le site de votre entreprise, le met en ligne sur votre domaine ' +
+      'et vous le livre. Vous modifiez ensuite vos contenus et publiez quand vous voulez.' +
       (entry ? ` ${entry}.` : ''),
     alternates: { canonical: '/' },
   };
@@ -70,11 +71,49 @@ export default async function HomePage() {
     <>
       <Hero entryPrice={entry} businessCount={listBusinesses().length} />
 
+      {/* --- Le principe --------------------------------------------------- */}
+      <Section>
+        <Container size="wide">
+          <div className="grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:items-start">
+            <div className="lg:sticky lg:top-28">
+              <SectionHeading
+                eyebrow="Le principe"
+                title="Nous créons votre site. Vous le gérez ensuite."
+                description="Vous ne construisez rien vous-même. Chaque site est un projet individuel, conçu et développé par notre équipe, puis livré en ligne. C’est seulement à ce moment-là que l’éditeur StaX s’ouvre."
+              />
+              <p className="mt-8 border-l-2 border-[var(--accent)] pl-5 text-lg font-semibold tracking-[-0.02em] text-balance">
+                Pas de modèle à personnaliser. Votre site est conçu pour votre entreprise.
+              </p>
+            </div>
+            <ol className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+              {PRINCIPLE_POINTS.map((point, index) => (
+                <Reveal
+                  key={point.title}
+                  as="li"
+                  delay={Math.min(index * 50, 300)}
+                  className="grid gap-2 py-5 sm:grid-cols-[3rem_1fr] sm:gap-4"
+                >
+                  <span className="pt-1 font-mono text-xs text-accent">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-[-0.02em]">{point.title}</h3>
+                    <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                      {point.description}
+                    </p>
+                  </div>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
+        </Container>
+      </Section>
+
       {/* --- Secteurs ---------------------------------------------------- */}
       <Section spacing="compact">
         <Container size="wide">
           <p className="text-center text-sm text-[var(--muted)]">
-            Des sites conçus métier par métier
+            Des sites conçus pour des entreprises de tous les secteurs
           </p>
           <ul className="mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-2">
             {(sectors.length > 0 ? sectors : FALLBACK_SECTORS).map((sector) => (
@@ -102,7 +141,7 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Un seul espace"
             title="Votre site. Vos contenus. Vos clients. Vos paiements."
-            description="Beaucoup d’entreprises jonglent avec un site chez un prestataire, un formulaire chez un autre, un outil de réservation ailleurs et un tableur pour les clients. StaX réunit tout au même endroit, et en assure la maintenance."
+            description="Beaucoup d’entreprises jonglent avec un site chez un prestataire, un formulaire chez un autre, un outil de réservation ailleurs et un tableur pour les clients. Avec StaX, votre site est conçu pour vous, et ce qu’il reçoit arrive dans un seul espace, que nous maintenons."
           />
 
           <div className="mt-16 grid gap-16 lg:grid-cols-[1fr_1fr] lg:items-start">
@@ -112,9 +151,9 @@ export default async function HomePage() {
                   Un site qui reste à jour, sans que vous y pensiez
                 </dt>
                 <dd className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
-                  Hébergement, certificat HTTPS, sauvegardes, mises à jour de sécurité et
-                  surveillance sont inclus dans la maintenance annuelle. Ni serveur à gérer, ni
-                  extension à mettre à jour, ni panne à surveiller.
+                  Hébergement sur Cloudflare, certificat HTTPS, versions conservées, surveillance et
+                  support sont inclus dans la maintenance mensuelle, qui démarre à la livraison. Ni
+                  serveur à gérer, ni extension à mettre à jour.
                   <OperationalIndicators className="mt-6" />
                 </dd>
               </Reveal>
@@ -123,8 +162,8 @@ export default async function HomePage() {
                   Vous gardez la main sur vos contenus
                 </dt>
                 <dd className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
-                  Changer un horaire, ajouter une photo, modifier un tarif : c’est vous, en quelques
-                  secondes, sans dépendre de personne.{' '}
+                  Une fois votre site livré, vous changez un horaire, une photo ou un tarif
+                  vous-même, puis vous publiez : la modification est réellement déployée.{' '}
                   <Link href="/fonctionnalites/editeur" className="font-medium text-accent">
                     Voir l’éditeur →
                   </Link>
@@ -183,8 +222,8 @@ export default async function HomePage() {
             <div className="lg:sticky lg:top-28">
               <SectionHeading
                 eyebrow="Le parcours"
-                title="De la commande à la mise en ligne, en quelques jours"
-                description="Vous n’avez rien à construire. Vous nous dites qui vous êtes et ce que vous faites ; nous nous occupons du reste, avec votre validation à chaque étape."
+                title="Six étapes, de votre projet à votre site en ligne"
+                description="Vous n’avez rien à construire. Vous nous présentez votre entreprise ; notre équipe conçoit et développe votre site, le met en ligne et vous le livre. Vous validez les étapes clés."
               />
               <ButtonLink
                 size="pill"
@@ -196,7 +235,7 @@ export default async function HomePage() {
               </ButtonLink>
             </div>
             <Reveal>
-              <CreationTimeline steps={CREATION_STEPS} />
+              <CreationTimeline steps={PROCESS_STEPS} />
             </Reveal>
           </div>
         </Container>
@@ -208,8 +247,8 @@ export default async function HomePage() {
           <SectionHeading
             align="center"
             eyebrow="Adapté à votre activité"
-            title="Choisissez votre métier. Le site et l’espace suivent."
-            description="Le métier que vous sélectionnez détermine les pages proposées, les fonctionnalités activées, le vocabulaire de votre espace et les informations transmises aux moteurs de recherche."
+            title="Votre métier oriente le projet. Il ne choisit pas votre site."
+            description="Votre métier nous aide à comprendre vos besoins : il adapte le questionnaire, nous permet de vous suggérer les fonctionnalités utiles et donne à votre espace le bon vocabulaire. Le site, lui, est conçu pour votre entreprise."
             className="mx-auto"
           />
         </Container>
@@ -224,9 +263,9 @@ export default async function HomePage() {
           <div className="grid gap-16 lg:grid-cols-[0.9fr_1.5fr] lg:items-center">
             <div>
               <SectionHeading
-                eyebrow="Édition"
-                title="Modifier votre site, sans jamais toucher à du code"
-                description="Vos sections se réorganisent par glisser-déposer. Vous voyez le résultat avant de publier, sur ordinateur, tablette et mobile. Rien n’apparaît en ligne tant que vous n’avez pas cliqué sur « Publier »."
+                eyebrow="Après la livraison"
+                title="Vous modifiez votre site, sans toucher à du code"
+                description="Cliquez sur un texte ou une image dans l’aperçu de votre vrai site : StaX affiche les champs que votre site permet de modifier. Enregistrez un brouillon, vérifiez l’aperçu, puis publiez. Rien n’apparaît en ligne avant « Publier »."
               />
               <ul className="mt-8 space-y-3">
                 {EDITOR_POINTS.map((point) => (
@@ -265,7 +304,7 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Modules"
             title="Ce dont votre métier a besoin, et rien de plus"
-            description="Chaque module ajoute une fonctionnalité à votre site et une section à votre espace. Ils s’activent automatiquement selon votre activité, et restent modifiables à tout moment."
+            description="Selon votre activité, nous vous suggérons les fonctionnalités utiles. Celles que votre offre comprend sont développées dans votre site, et vous les gérez ensuite depuis votre espace."
           />
           <ul className="mt-14 border-t border-[var(--border)]">
             {MODULE_TILES.map((module, index) => (
@@ -328,9 +367,9 @@ export default async function HomePage() {
               <div className="mt-10 border-l-2 border-[var(--accent)] pl-5">
                 <p className="text-sm font-medium">Ce que vous payez à StaX</p>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  La création de votre site, puis la maintenance annuelle. C’est tout. Les frais
-                  bancaires de vos encaissements sont ceux de Stripe, facturés directement par
-                  Stripe, en toute transparence.
+                  La création de votre site, puis la maintenance mensuelle à partir de sa livraison.
+                  C’est tout. Les frais bancaires de vos encaissements sont ceux de Stripe, facturés
+                  directement par Stripe, en toute transparence.
                 </p>
               </div>
             </div>
@@ -393,8 +432,8 @@ export default async function HomePage() {
           <SectionHeading
             align="center"
             eyebrow="Tarifs"
-            title="Un prix de création, puis une maintenance annuelle"
-            description="Pas de coût caché, pas de facturation à la page vue, pas de commission sur vos ventes. Vous voyez exactement ce que vous paierez."
+            title="Un prix de création, puis une maintenance mensuelle"
+            description="La maintenance ne commence qu’à la livraison de votre site, sans durée minimale. Pas de coût caché, pas de commission sur vos ventes : vous voyez exactement ce que vous paierez."
             className="mx-auto"
           />
           <PricingCards plans={plans} compact className="mt-14" />
@@ -557,11 +596,11 @@ export default async function HomePage() {
         <Beam className="absolute inset-x-0 top-0 opacity-40" />
         <Container size="default" className="text-center">
           <h2 className="display text-5xl sm:text-7xl lg:text-8xl">
-            Votre site professionnel vous attend.
+            Votre site, conçu pour votre entreprise.
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
-            Choisissez votre métier, répondez à quelques questions, et notre équipe construit votre
-            site. Vous validez avant la mise en ligne.
+            Choisissez votre offre et présentez-nous votre entreprise : notre équipe conçoit et
+            développe votre site, le met en ligne et vous le livre. Vous le gérez ensuite.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <ButtonLink
@@ -607,58 +646,24 @@ const VALUE_TILES = [
   {
     title: 'Vos réservations, gérées',
     description:
-      'Créneaux, capacités, confirmations et annulations. Vos clients réservent en ligne, vous validez d’un geste.',
+      'Dès l’offre Premium : créneaux, capacités, confirmations et annulations. Vos clients réservent en ligne, vous validez d’un geste.',
     icon: <path d="M2 4h12v10H2V4Zm3-2v3m6-3v3M2 7h12m-6 3.5 1.5 1.5 3-3" />,
   },
   {
     title: 'Des statistiques honnêtes',
     description:
-      'Visiteurs, pages consultées, sources de trafic. Sans cookie de pistage et sans conserver d’adresse IP.',
+      'Visiteurs et pages consultées, sans cookie de pistage ni adresse IP conservée. Sources de trafic et conversions dès l’offre Premium.',
     icon: <path d="M2 14V8m4 6V3m4 11V6m4 8V9" />,
   },
 ];
 
-const CREATION_STEPS = [
-  {
-    title: 'Vous choisissez votre offre et votre métier',
-    description:
-      'Deux questions suffisent : votre secteur, puis votre métier précis. Les fonctionnalités adaptées sont présélectionnées.',
-    detail: 'Environ 2 minutes',
-  },
-  {
-    title: 'Vous répondez au questionnaire',
-    description:
-      'Vos coordonnées, votre activité, ce qui vous distingue, vos photos et vos textes si vous en avez. Rien n’est obligatoire d’un coup : vous pouvez revenir le compléter.',
-    detail: 'Sauvegardé automatiquement',
-  },
-  {
-    title: 'Notre équipe conçoit votre site',
-    description:
-      'Design, rédaction, mise en page, configuration des modules métier et référencement technique. Vous suivez l’avancement dans votre espace.',
-  },
-  {
-    title: 'Vous relisez et demandez vos corrections',
-    description:
-      'Le site vous est présenté en aperçu privé. Vous indiquez ce qui doit changer, autant de fois que nécessaire, directement depuis votre espace.',
-  },
-  {
-    title: 'Mise en ligne sur votre domaine',
-    description:
-      'Nous publions le site, connectons votre nom de domaine et activons le certificat HTTPS. La garantie commerciale démarre à cet instant.',
-  },
-  {
-    title: 'Maintenance et autonomie',
-    description:
-      'Vous modifiez vos contenus quand vous voulez. Nous assurons l’hébergement, la sécurité, les sauvegardes et le support.',
-  },
-];
-
 const EDITOR_POINTS = [
-  'Aperçu avant publication, sur les trois formats d’écran',
-  'Enregistrement automatique de votre travail en cours',
-  'Historique des versions : revenez en arrière à tout moment',
-  'Vos modifications n’apparaissent en ligne qu’après publication',
-  'Aucun vocabulaire technique : des pages, du contenu, de l’apparence',
+  'L’aperçu est votre vrai site, pas une imitation',
+  'Un brouillon enregistré : rien n’est en ligne avant « Publier »',
+  'Chaque publication est une version datée, que vous pouvez restaurer',
+  '« Publié » ne s’affiche qu’une fois le déploiement confirmé',
+  'Le design, la mise en page et le code restent protégés',
+  'Un changement de structure ? Nous nous en chargeons, sur devis si nécessaire',
 ];
 
 const MODULE_TILES = [
@@ -671,7 +676,7 @@ const MODULE_TILES = [
   {
     title: 'Réservations',
     description:
-      'Créneaux paramétrables, capacité par service, délai minimum, fermetures exceptionnelles.',
+      'Créneaux paramétrables, capacité par service, délai minimum, fermetures exceptionnelles. Dès l’offre Premium.',
     who: 'Restaurants, coiffeurs, praticiens',
   },
   {
@@ -692,7 +697,8 @@ const MODULE_TILES = [
   },
   {
     title: 'Catalogue et commandes',
-    description: 'Produits, variantes, stock simplifié, panier, retrait ou livraison.',
+    description:
+      'Produits, variantes, stock simplifié, panier, retrait ou livraison. Dès l’offre Ultra Premium.',
     who: 'Commerces, producteurs, boutiques',
   },
   {
@@ -721,7 +727,7 @@ const DOMAIN_POINTS = [
   {
     title: 'Vous n’en avez pas encore',
     description:
-      'Votre site démarre sur une adresse StaX, et nous vous accompagnons pour choisir puis connecter votre propre nom.',
+      'Nous vous aidons à le choisir et pouvons nous en occuper pour vous. Les conditions de propriété et de transfert sont précisées dans nos conditions générales.',
   },
   {
     title: 'Un domaine, un site',
@@ -738,8 +744,8 @@ const TECHNICAL_PILLARS = [
     items: [
       'Balises titre et description sur chaque page',
       'Données structurées adaptées à votre métier',
-      'Plan de site et robots.txt générés automatiquement',
-      'URL lisibles et redirections administrables',
+      'Plan du site et robots.txt en place dès la mise en ligne',
+      'URL lisibles, redirections soignées lors d’une refonte',
       'Page 404 personnalisée',
     ],
     href: '/fonctionnalites/seo',
@@ -747,13 +753,13 @@ const TECHNICAL_PILLARS = [
   {
     title: 'Performance',
     description:
-      'Un site lent perd des visiteurs avant même d’avoir été lu. Le vôtre est servi depuis le réseau mondial de Cloudflare.',
+      'Un site lent perd des visiteurs avant même d’avoir été lu. Le vôtre est déployé sur le réseau mondial de Cloudflare.',
     items: [
-      'Rendu côté serveur, JavaScript minimal',
+      'Pages légères, JavaScript limité au nécessaire',
       'Images redimensionnées et servies en formats modernes',
       'Mise en cache à la périphérie du réseau',
-      'Invalidation automatique à chaque publication',
-      'Conçu pour les Core Web Vitals',
+      'Nouveau déploiement à chaque publication',
+      'Core Web Vitals vérifiés avant la livraison',
     ],
     href: '/infrastructure',
   },
@@ -763,7 +769,8 @@ const TECHNICAL_PILLARS = [
       'Votre site et les données de vos clients sont protégés par des mesures appliquées à tous les niveaux.',
     items: [
       'HTTPS obligatoire, certificat renouvelé automatiquement',
-      'Isolation stricte entre clients, garantie par la base de données',
+      'Un projet indépendant par site : dépôt et déploiement dédiés',
+      'Données de vos clients isolées au niveau de la base de données',
       'Protection anti-spam et limitation de débit',
       'Aucune donnée de carte bancaire stockée',
       'Journal d’activité consultable',

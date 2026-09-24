@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createUserClient, unwrapMaybe } from '@stax/database';
 import { uuidSchema } from '@stax/validation';
+import { storeMediaFile } from '~/lib/media-store';
 import { requireSession } from '~/lib/session';
+import { getWorkspace } from '~/lib/workspace';
 
 /**
  * Echanges autour d un projet.
@@ -63,4 +65,119 @@ export async function sendProjectMessageAction(
 
   revalidatePath('/app/projet');
   return { status: 'success', message: 'Message envoyé. Nous répondons sous un jour ouvré.' };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Validation demandee par l'equipe                                           */
+/* -------------------------------------------------------------------------- */
+
+const reviewSchema = z
+  .object({
+    projectId: uuidSchema,
+    approved: z.boolean(),
+    message: z.string().trim().max(5000).optional(),
+  })
+  .strict();
+
+const REVIEW_ERRORS: Record<string, string> = {
+  not_awaiting_review: 'Aucune validation n’est attendue pour le moment.',
+  message_required: 'Décrivez les corrections souhaitées.',
+};
+
+/** « Je valide » / « Je demande des corrections » : enregistre par la base. */
+export async function respondToReviewAction(
+  payload: unknown,
+): Promise<{ status: 'error' | 'success'; message: string }> {
+  const parsed = reviewSchema.safeParse(payload);
+  if (!parsed.success) return { status: 'error', message: 'Réponse illisible.' };
+  const session = await requireSession();
+  const db = createUserClient(session.user.accessToken);
+  const { data, error } = await db.rpc('respond_to_project_review', {
+    p_project: parsed.data.projectId,
+    p_approved: parsed.data.approved,
+    p_message: parsed.data.message ?? null,
+  });
+  if (error) {
+    return {
+      status: 'error',
+      message:
+        error.code === '42501'
+          ? 'Votre rôle ne permet pas de valider ce projet.'
+          : 'Votre réponse n’a pas pu être enregistrée.',
+    };
+  }
+  const result = (data ?? {}) as { ok?: boolean; code?: string };
+  if (!result.ok) {
+    return { status: 'error', message: REVIEW_ERRORS[result.code ?? ''] ?? 'Réponse refusée.' };
+  }
+  revalidatePath('/app/projet');
+  revalidatePath('/app');
+  return {
+    status: 'success',
+    message: parsed.data.approved
+      ? 'Merci ! Votre validation est enregistrée : nous passons à l’étape suivante.'
+      : 'Vos corrections sont transmises à l’équipe.',
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Fichiers envoyes pour le projet (logo, photos, textes)                     */
+/* -------------------------------------------------------------------------- */
+
+const FILE_KINDS = ['logo', 'photo', 'document', 'menu', 'brochure'] as const;
+
+export async function uploadProjectFileAction(
+  formData: FormData,
+): Promise<{ status: 'error' | 'success'; message: string }> {
+  const projectId = formData.get('projectId');
+  const kind = formData.get('kind');
+  if (typeof projectId !== 'string' || !uuidSchema.safeParse(projectId).success) {
+    return { status: 'error', message: 'Projet inconnu.' };
+  }
+  const fileKind = FILE_KINDS.includes(kind as (typeof FILE_KINDS)[number])
+    ? (kind as (typeof FILE_KINDS)[number])
+    : 'document';
+
+  const context = await getWorkspace();
+  const project = unwrapMaybe<{ id: string; organization_id: string }>(
+    (await context.db
+      .from('projects')
+      .select('id, organization_id')
+      .eq('id', projectId)
+      .eq('organization_id', context.workspace.organization.id)
+      .maybeSingle()) as never,
+  );
+  if (!project) return { status: 'error', message: 'Ce projet est introuvable.' };
+
+  // Meme chemin que la mediatheque : type verifie, chemin construit cote
+  // serveur, quota de l'offre applique. Les photos envoyees seront ensuite
+  // disponibles dans l'editeur, apres la livraison.
+  const stored = await storeMediaFile(context, formData.get('file'), '');
+  if (!stored.ok) return { status: 'error', message: stored.message };
+
+  const media = unwrapMaybe<{ storage_path: string; mime_type: string; size_bytes: number }>(
+    (await context.db
+      .from('media')
+      .select('storage_path, mime_type, size_bytes')
+      .eq('id', stored.media.id)
+      .maybeSingle()) as never,
+  );
+  if (!media) return { status: 'error', message: 'Le fichier n’a pas pu être enregistré.' };
+
+  const { error } = await context.db.from('project_files').insert({
+    project_id: project.id,
+    organization_id: project.organization_id,
+    media_id: stored.media.id,
+    storage_bucket: 'site-media',
+    storage_path: media.storage_path,
+    file_name: stored.media.fileName,
+    mime_type: media.mime_type,
+    size_bytes: media.size_bytes,
+    kind: fileKind,
+    direction: 'inbound',
+    uploaded_by: context.userId,
+  });
+  if (error) return { status: 'error', message: 'Le fichier n’a pas pu être joint au projet.' };
+  revalidatePath('/app/projet');
+  return { status: 'success', message: 'Fichier transmis à l’équipe StaX.' };
 }

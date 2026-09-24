@@ -75,12 +75,12 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
     to: ctx.to,
     template: 'welcome',
     subject: 'Bienvenue sur StaX',
-    preheader: 'Votre compte est cree. Voici la suite.',
+    preheader: 'Votre compte est créé. Voici la suite.',
     heading: 'Bienvenue sur StaX',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        'Votre compte est cree. Vous pouvez des maintenant commander votre site, ' +
+        'Votre compte est créé. Vous pouvez dès maintenant commander votre site, ' +
           'suivre son avancement et gérer votre entreprise depuis votre espace.',
       ),
       paragraph(
@@ -90,7 +90,7 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      'Votre compte StaX est cree. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
+      'Votre compte StaX est créé. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
     ],
     action: { label: 'Ouvrir mon espace', url: `${platformUrl()}/app` },
   });
@@ -121,17 +121,17 @@ export function passwordResetEmail(ctx: BaseContext & { resetUrl: string }): Ema
   return shell({
     to: ctx.to,
     template: 'password_reset',
-    subject: 'Reinitialiser votre mot de passe',
+    subject: 'Réinitialiser votre mot de passe',
     preheader: 'Lien valable une heure.',
-    heading: 'Reinitialiser votre mot de passe',
+    heading: 'Réinitialiser votre mot de passe',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
         'Vous avez demandé à réinitialiser votre mot de passe. Ce lien est valable une heure ' +
-          'et ne fonctionne qu une seule fois.',
+          'et ne fonctionne qu’une seule fois.',
       ),
     ].join(''),
-    bodyText: [hello(ctx.firstName), 'Reinitialisez votre mot de passe (lien valable une heure).'],
+    bodyText: [hello(ctx.firstName), 'Réinitialisez votre mot de passe (lien valable une heure).'],
     action: { label: 'Choisir un nouveau mot de passe', url: ctx.resetUrl },
     footerNote:
       'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : votre mot de passe reste inchangé.',
@@ -144,7 +144,7 @@ export function activationCodeEmail(
   return shell({
     to: ctx.to,
     template: 'activation_code',
-    subject: `Votre code d accès — ${ctx.businessName}`,
+    subject: `Votre code d’accès — ${ctx.businessName}`,
     preheader: 'Récupérez l’accès à votre espace client.',
     heading: 'Votre site vous attend',
     bodyHtml: [
@@ -160,7 +160,7 @@ export function activationCodeEmail(
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Votre code d accès : ${ctx.code}`,
+      `Votre code d’accès : ${ctx.code}`,
       `Code à usage unique, valable jusqu’au ${ctx.expiresAt}.`,
     ],
     action: { label: 'Activer mon espace', url: `${platformUrl()}/activation` },
@@ -202,8 +202,8 @@ export function orderConfirmedEmail(
     reference: string;
     planName: string;
     setupAmount: string;
+    /** Deja formate avec sa periodicite : « 12 € / mois ». */
     maintenanceAmount: string;
-    firstMaintenanceDate: string;
     orderUrl: string;
   },
 ): EmailMessage {
@@ -220,19 +220,22 @@ export function orderConfirmedEmail(
         ['Reference', ctx.reference],
         ['Offre', ctx.planName],
         ['Paiement initial', ctx.setupAmount],
-        ['Maintenance annuelle', ctx.maintenanceAmount],
-        ['Première échéance de maintenance', ctx.firstMaintenanceDate],
+        ['Maintenance', `${ctx.maintenanceAmount}, à partir de la livraison de votre site`],
       ]),
       paragraph(
+        'Rien n’est prélevé au titre de la maintenance avant la livraison : elle commence le ' +
+          'jour où nous vous remettons votre site, en ligne.',
+      ),
+      paragraph(
         'Prochaine étape : complétez le questionnaire de votre projet. Plus vos réponses ' +
-          'sont précises, plus votre site vous ressemblera.',
+          'sont précises, mieux nous concevrons votre site.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Commande ${ctx.reference} confirmée.`,
-      `Offre : ${ctx.planName} — ${ctx.setupAmount} puis ${ctx.maintenanceAmount} par an.`,
-      `Première échéance de maintenance : ${ctx.firstMaintenanceDate}.`,
+      `Offre : ${ctx.planName} — ${ctx.setupAmount}, puis ${ctx.maintenanceAmount} de maintenance.`,
+      'La maintenance commence à la livraison de votre site : rien n’est prélevé avant.',
     ],
     action: { label: 'Compléter mon questionnaire', url: ctx.orderUrl },
   });
@@ -299,20 +302,72 @@ export function sitePublishedEmail(
       strongLine('Votre site est désormais accessible publiquement.'),
       paragraph(
         'Vous pouvez modifier vos contenus à tout moment depuis votre espace : textes, photos, ' +
-          'horaires, tarifs. Les modifications ne sont visibles qu après publication.',
+          'horaires, tarifs. Les modifications ne sont visibles qu’après publication.',
       ),
       definitionList([
         ['Adresse de votre site', ctx.siteUrl],
-        ['Période de garantie commerciale', `jusqu au ${ctx.refundDeadline}`],
+        ['Période de garantie commerciale', `jusqu’au ${ctx.refundDeadline}`],
       ]),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Votre site est en ligne : ${ctx.siteUrl}`,
-      `Période de garantie commerciale jusqu au ${ctx.refundDeadline}.`,
+      `Période de garantie commerciale jusqu’au ${ctx.refundDeadline}.`,
     ],
     action: { label: 'Voir mon site', url: ctx.siteUrl },
     secondaryAction: { label: 'Gérer mon site', url: ctx.appUrl },
+  });
+}
+
+/**
+ * Livraison d'un site concu et developpe par l'equipe : il est en ligne,
+ * l'editeur s'ouvre, et la maintenance mensuelle commence ce jour-la.
+ */
+export function siteDeliveredEmail(
+  ctx: BaseContext & {
+    siteUrl: string | null;
+    appUrl: string;
+    /** Deja formate avec sa periodicite, ou `null` sans maintenance facturee. */
+    maintenanceAmount: string | null;
+    refundDeadline: string | null;
+  },
+): EmailMessage {
+  const rows: Array<[string, string]> = [];
+  if (ctx.siteUrl) rows.push(['Adresse de votre site', ctx.siteUrl]);
+  if (ctx.maintenanceAmount) {
+    rows.push(['Maintenance', `${ctx.maintenanceAmount}, à partir d’aujourd’hui`]);
+  }
+  if (ctx.refundDeadline) {
+    rows.push(['Garantie commerciale', `jusqu’au ${ctx.refundDeadline}`]);
+  }
+
+  return shell({
+    to: ctx.to,
+    template: 'site_delivered',
+    subject: 'Votre site vous est livré',
+    preheader: 'Il est en ligne : vous pouvez désormais le modifier depuis StaX.',
+    heading: 'Votre site vous est livré',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      strongLine('Votre site est en ligne, et il est désormais entre vos mains.'),
+      paragraph(
+        'Depuis votre espace, vous pouvez modifier son contenu, voir l’aperçu de votre vrai ' +
+          'site, enregistrer un brouillon puis publier : vos modifications sont réellement ' +
+          'déployées, et chaque version reste restaurable.',
+      ),
+      paragraph(
+        'Pour une nouvelle page, une nouvelle fonctionnalité ou un changement de design, ' +
+          'écrivez-nous depuis votre espace.',
+      ),
+      rows.length > 0 ? definitionList(rows) : '',
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      'Votre site vous est livré : il est en ligne et vous pouvez le modifier depuis StaX.',
+      ...rows.map(([label, value]) => `${label} : ${value}.`),
+    ],
+    action: { label: 'Ouvrir mon espace', url: ctx.appUrl },
+    ...(ctx.siteUrl ? { secondaryAction: { label: 'Voir mon site', url: ctx.siteUrl } } : {}),
   });
 }
 
@@ -394,20 +449,20 @@ export function paymentFailedEmail(
   return shell({
     to: ctx.to,
     template: 'payment_failed',
-    subject: 'Échec du prelevement de votre maintenance',
+    subject: 'Échec du prélèvement de votre maintenance',
     preheader: 'Mettez à jour votre moyen de paiement.',
-    heading: 'Nous n avons pas pu encaisser votre maintenance',
+    heading: 'Nous n’avons pas pu encaisser votre maintenance',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
         `Le prélèvement de ${ctx.amount} n’a pas abouti. Votre site reste en ligne : ` +
           `nous réessaierons automatiquement le ${ctx.retryDate}.`,
       ),
-      paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement des maintenant.'),
+      paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement dès maintenant.'),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Échec du prelevement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
+      `Échec du prélèvement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
     ],
     action: { label: 'Mettre à jour mon paiement', url: ctx.billingUrl },
   });
@@ -449,10 +504,13 @@ export function salesInvoiceIssuedEmail(
     companyName: string;
     planName: string;
     setupAmount: string;
+    /** Deja formate avec sa periodicite : « 12 € / mois ». */
     maintenanceAmount: string;
     totalAmount: string;
     dueLabel: string;
     claimUrl: string;
+    /** Delai de realisation de l'offre ; a defaut, la politique generale. */
+    deliveryLabel?: string;
   },
 ): EmailMessage {
   return shell({
@@ -471,7 +529,7 @@ export function salesInvoiceIssuedEmail(
         ['Numéro de facture', ctx.invoiceNumber],
         ['Offre', ctx.planName],
         ['Création du site', ctx.setupAmount],
-        ['Maintenance annuelle', ctx.maintenanceAmount],
+        ['Maintenance', `${ctx.maintenanceAmount}, à partir de la livraison`],
         ['Total à régler', ctx.totalAmount],
         ['Échéance', ctx.dueLabel],
       ]),
@@ -485,14 +543,14 @@ export function salesInvoiceIssuedEmail(
     bodyText: [
       hello(ctx.firstName),
       `Facture ${ctx.invoiceNumber} — ${ctx.planName}.`,
-      `Création du site : ${ctx.setupAmount}. Maintenance annuelle : ${ctx.maintenanceAmount}.`,
+      `Création du site : ${ctx.setupAmount}. Maintenance : ${ctx.maintenanceAmount}, à partir de la livraison.`,
       `Total à régler : ${ctx.totalAmount}, avant le ${ctx.dueLabel}.`,
       `Créez votre compte avec cette adresse e-mail, puis saisissez le numéro ${ctx.invoiceNumber}.`,
     ],
     action: { label: 'Rattacher ma facture', url: ctx.claimUrl },
     footerNote:
-      `Le délai de livraison de votre site est de ${deliveryPolicyConfig().label} à compter ` +
-      'de la réception de vos contenus.',
+      `Le délai de réalisation de votre site est de ${ctx.deliveryLabel ?? deliveryPolicyConfig().label} ` +
+      'à compter de la réception de vos contenus.',
   });
 }
 
@@ -503,7 +561,7 @@ export function subscriptionCancelledEmail(
     to: ctx.to,
     template: 'subscription_cancelled',
     subject: 'Résiliation de votre maintenance enregistrée',
-    preheader: `Votre site reste en ligne jusqu au ${ctx.endDate}.`,
+    preheader: `Votre site reste en ligne jusqu’au ${ctx.endDate}.`,
     heading: 'Votre résiliation est enregistrée',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
@@ -518,7 +576,7 @@ export function subscriptionCancelledEmail(
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Maintenance résiliée au ${ctx.endDate}. Période de continuite jusqu au ${ctx.gracePeriodEnd}.`,
+      `Maintenance résiliée au ${ctx.endDate}. Période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
     ],
     action: { label: 'Gérer mon abonnement', url: ctx.billingUrl },
   });
@@ -535,7 +593,7 @@ export function refundRequestedEmail(
     heading: 'Demande de remboursement reçue',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
-      paragraph('Nous avons bien reçu votre demande et nous l examinons.'),
+      paragraph('Nous avons bien reçu votre demande et nous l’examinons.'),
       definitionList([
         ['Commande', ctx.reference],
         ['Montant estimé du remboursement', ctx.amount],
@@ -577,12 +635,15 @@ export function refundProcessedEmail(
 }
 
 /**
- * Rappel de reconduction de la maintenance annuelle.
+ * Rappel de reconduction — contrats ANNUELS vendus avant le passage a la
+ * maintenance mensuelle, uniquement (le webhook Stripe filtre sur
+ * `billing_interval = 'year'`).
  *
  * Envoye entre trois mois et un mois avant l'echeance : pour un client non
  * professionnel, l'article L215-1 du Code de la consommation l'impose, faute
  * de quoi il peut resilier a tout moment apres la reconduction. Nous
- * l'envoyons a tous nos clients, par loyaute.
+ * l'envoyons a tous les clients concernes, par loyaute. La maintenance
+ * mensuelle, sans duree minimale, n'a pas de reconduction a annoncer.
  */
 export function renewalReminderEmail(
   ctx: BaseContext & { renewalDate: string; amount: string; cancelUrl: string },
@@ -596,8 +657,8 @@ export function renewalReminderEmail(
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Votre maintenance annuelle sera reconduite automatiquement le ${ctx.renewalDate}, ` +
-          `pour une nouvelle année, au prix de ${ctx.amount}.`,
+        `Votre contrat de maintenance sera reconduit automatiquement le ${ctx.renewalDate}, ` +
+          `pour une nouvelle période, au prix de ${ctx.amount}.`,
       ),
       paragraph(
         'Si vous ne souhaitez pas la reconduire, vous pouvez résilier en ligne en quelques ' +
@@ -757,6 +818,6 @@ export function internalLeadEmail(ctx: {
       paragraph(ctx.summary.slice(0, 1500)),
     ].join(''),
     bodyText: [`${ctx.name} <${ctx.email}>`, ctx.summary.slice(0, 1500)],
-    action: { label: 'Ouvrir dans l administration', url: ctx.adminUrl },
+    action: { label: 'Ouvrir dans l’administration', url: ctx.adminUrl },
   });
 }

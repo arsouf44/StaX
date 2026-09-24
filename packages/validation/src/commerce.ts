@@ -61,10 +61,10 @@ export const orderDomainSchema = z
   .refine(
     (data) =>
       data.handling === 'none' || data.handling === 'subdomain_only' || Boolean(data.hostname),
-    { message: 'Indiquez le nom de domaine souhaite.', path: ['hostname'] },
+    { message: 'Indiquez le nom de domaine souhaité.', path: ['hostname'] },
   )
   .refine((data) => data.handling !== 'subdomain_only' || Boolean(data.subdomain), {
-    message: 'Choisissez l adresse de votre site.',
+    message: 'Choisissez l’adresse de votre site.',
     path: ['subdomain'],
   });
 
@@ -73,7 +73,7 @@ export const checkoutSchema = z
     planSlug: slugSchema,
     sectorSlug: slugSchema,
     businessTypeSlug: slugSchema,
-    organizationName: boundedText(2, 120, 'Le nom de l entreprise'),
+    organizationName: boundedText(2, 120, 'Le nom de l’entreprise'),
     couponCode: z
       .string()
       .trim()

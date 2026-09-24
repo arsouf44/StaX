@@ -106,25 +106,26 @@ export function formatMoney(
 }
 
 /**
- * Maintenance : « 22 € / an ».
+ * Maintenance : « 12 € / mois ».
  *
- * SEUL endroit du code ou la periodicite d'un abonnement s'ecrit. Ce n'est pas
- * une coquetterie : afficher « / mois » sur un contrat annuel annonce un prix
- * douze fois trop eleve au moment ou la personne decide d'acheter. La
- * periodicite est lue sur le contrat, jamais supposee.
+ * SEUL endroit du code ou la periodicite d'un abonnement s'ecrit. La
+ * maintenance StaX est MENSUELLE ; les rares contrats annuels vendus avant ce
+ * passage gardent leur periodicite, lue sur le contrat (`billing_interval`),
+ * jamais supposee. Afficher « / an » pour un prix mensuel (ou l'inverse)
+ * annoncerait un prix faux au moment ou la personne decide d'acheter.
  */
 export function formatMaintenance(
   amountCents: Cents,
   currency: Currency = 'EUR',
-  interval: 'month' | 'year' = 'year',
+  interval: 'month' | 'year' = 'month',
 ): string {
   const amount = formatMoney(amountCents, currency, { hideDecimalsWhenRound: true });
-  return `${amount} / ${interval === 'month' ? 'mois' : 'an'}`;
+  return `${amount} / ${interval === 'year' ? 'an' : 'mois'}`;
 }
 
-/** « par an » / « par mois », pour une phrase qui porte deja le montant. */
-export function maintenancePeriodLabel(interval: 'month' | 'year' = 'year'): string {
-  return interval === 'month' ? 'par mois' : 'par an';
+/** « par mois » / « par an », pour une phrase qui porte deja le montant. */
+export function maintenancePeriodLabel(interval: 'month' | 'year' = 'month'): string {
+  return interval === 'year' ? 'par an' : 'par mois';
 }
 
 /** « 20 % » a partir de points de base. */

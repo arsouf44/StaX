@@ -30,13 +30,12 @@ const FEATURE_KEYS: FeatureKey[] = [
   'content_editor',
   'scheduled_publishing',
   'version_history',
-  'advanced_animations',
-  'custom_design',
   'bookings',
   'ecommerce',
   'online_payments',
   'customer_accounts',
   'blog',
+  'advanced_forms',
   'advanced_analytics',
   'multi_language',
   'team_collaboration',
@@ -44,13 +43,12 @@ const FEATURE_KEYS: FeatureKey[] = [
 ];
 
 const LIMIT_KEYS: LimitKey[] = [
-  'max_sites',
   'max_pages',
   'max_team_members',
   'max_products',
   'max_media_mb',
-  'max_monthly_submissions',
   'max_forms',
+  'max_locales',
 ];
 
 /**
@@ -129,29 +127,27 @@ export async function hasFeature(
 
 export const FEATURE_UPGRADE_MESSAGES: Record<FeatureKey, string> = {
   custom_domain: 'Le nom de domaine personnalisé est inclus dans toutes nos offres.',
-  seo_tools: 'Les outils de référencement sont inclus dans toutes nos offres.',
-  content_editor: 'L’éditeur de contenu est inclus dans toutes nos offres.',
+  seo_tools: 'Le référencement technique est inclus dans toutes nos offres.',
+  content_editor: 'L’éditeur StaX est inclus dans toutes nos offres, après la livraison du site.',
   scheduled_publishing: 'La publication programmée est incluse à partir de l’offre Premium.',
   version_history: 'L’historique des versions est inclus dans toutes nos offres.',
-  advanced_animations: 'Les animations avancées sont incluses dans l’offre Ultra Premium.',
-  custom_design: 'Le design sur mesure est inclus dans l’offre Ultra Premium.',
-  bookings: 'Les réservations en ligne sont incluses à partir de l’offre Premium.',
-  ecommerce: 'La boutique en ligne est incluse dans l’offre Ultra Premium.',
-  online_payments: 'L’encaissement en ligne est inclus dans l’offre Ultra Premium.',
-  customer_accounts: 'Les comptes clients sont inclus dans l’offre Ultra Premium.',
-  blog: 'Les actualités sont incluses à partir de l’offre Premium.',
-  advanced_analytics: 'Les statistiques détaillées sont incluses à partir de l’offre Premium.',
-  multi_language: 'Le multilingue est inclus dans l’offre Ultra Premium.',
+  bookings: 'La réservation en ligne est incluse à partir de l’offre Premium.',
+  ecommerce: 'La boutique en ligne est incluse à partir de l’offre Ultra Premium.',
+  online_payments: 'Le paiement en ligne est inclus à partir de l’offre Ultra Premium.',
+  customer_accounts: 'Les comptes clients sont inclus à partir de l’offre Ultra Premium.',
+  blog: 'Les actualités et collections sont incluses à partir de l’offre Premium.',
+  advanced_forms: 'Les formulaires avancés sont inclus à partir de l’offre Premium.',
+  advanced_analytics: 'Les statistiques avancées sont incluses à partir de l’offre Premium.',
+  multi_language: 'Le multilingue est inclus à partir de l’offre Ultra Premium.',
   team_collaboration: 'La collaboration est incluse dans toutes nos offres.',
-  priority_support: 'Le support prioritaire est inclus dans l’offre Ultra Premium.',
+  priority_support: 'Le support prioritaire est inclus à partir de l’offre Ultra Premium.',
 };
 
 export const LIMIT_LABELS: Record<LimitKey, { singular: string; plural: string }> = {
-  max_sites: { singular: 'site', plural: 'sites' },
   max_pages: { singular: 'page', plural: 'pages' },
   max_team_members: { singular: 'collaborateur', plural: 'collaborateurs' },
   max_products: { singular: 'produit', plural: 'produits' },
   max_media_mb: { singular: 'Mo', plural: 'Mo' },
-  max_monthly_submissions: { singular: 'message ce mois-ci', plural: 'messages ce mois-ci' },
   max_forms: { singular: 'formulaire', plural: 'formulaires' },
+  max_locales: { singular: 'langue', plural: 'langues' },
 };

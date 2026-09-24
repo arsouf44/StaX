@@ -23,7 +23,36 @@ export interface NavContext {
    * seuls le suivi du projet et les ecrans du compte sont proposes.
    */
   siteDelivered?: boolean;
+  /**
+   * Site independant (depot GitHub + projet Cloudflare) : son design et sa
+   * structure sont ceux developpes pour le client. Les ecrans de l'ancien
+   * moteur (pages, apparence, navigation, formulaires) n'ont pas lieu d'etre :
+   * le client modifie les zones prevues par le contrat d'edition, depuis
+   * l'editeur.
+   */
+  architecture?: 'external_repository' | 'legacy_engine';
 }
+
+/** Ecrans propres a l'ancien moteur de rendu : sans objet pour un site independant. */
+const LEGACY_ENGINE_ONLY: ReadonlySet<string> = new Set([
+  '/app/site/pages',
+  '/app/site/apparence',
+  '/app/site/navigation',
+  '/app/site/referencement',
+  '/app/forms',
+]);
+
+/** Ecrans propres aux sites independants. */
+const EXTERNAL_ENTRIES: readonly DashboardEntry[] = [
+  {
+    href: '/app/site/versions',
+    label: 'Versions publiées',
+    icon: 'history',
+    capability: 'content.view',
+    group: 'site',
+    sortOrder: 15,
+  },
+];
 
 /** Entrees qui ne portent pas sur le site : proposees meme pendant sa construction. */
 const ACCOUNT_GROUPS: ReadonlySet<DashboardGroup> = new Set(['pilotage', 'entreprise']);
@@ -198,8 +227,11 @@ export function buildDashboardNavigation(context: NavContext): NavGroup[] {
 
   const underConstruction = context.siteDelivered === false;
 
+  const external = context.architecture === 'external_repository';
+
   const accept = (entry: DashboardEntry) => {
     if (!context.can(entry.capability as OrgCapability)) return;
+    if (external && LEGACY_ENGINE_ONLY.has(entry.href)) return;
     if (
       underConstruction &&
       (!ACCOUNT_GROUPS.has(entry.group) || entry.href === '/app/statistiques')
@@ -213,6 +245,7 @@ export function buildDashboardNavigation(context: NavContext): NavGroup[] {
   };
 
   for (const entry of CORE_ENTRIES) accept(entry);
+  if (external) for (const entry of EXTERNAL_ENTRIES) accept(entry);
 
   for (const moduleId of context.enabledModules) {
     const mod = getModule(moduleId);

@@ -82,6 +82,32 @@ const serverSchema = z.object({
   CLOUDFLARE_SAAS_FALLBACK_ORIGIN: optionalSecret,
   TURNSTILE_SECRET_KEY: optionalSecret,
 
+  /**
+   * Sites livres (depot GitHub + projet Cloudflare propres a chaque site).
+   * Application GitHub : identifiant, cle privee (PEM) et secret de webhook.
+   * Jamais de jeton personnel (PAT).
+   */
+  GITHUB_APP_ID: z
+    .string()
+    .regex(/^[0-9]{1,12}$/)
+    .optional(),
+  GITHUB_APP_SLUG: z
+    .string()
+    .regex(/^[a-z0-9-]{1,100}$/)
+    .optional(),
+  GITHUB_APP_PRIVATE_KEY: optionalSecret,
+  GITHUB_APP_WEBHOOK_SECRET: z.string().min(16).optional(),
+  /** Jeton Cloudflare dedie aux projets des sites (a defaut CLOUDFLARE_API_TOKEN). */
+  CLOUDFLARE_SITES_API_TOKEN: optionalSecret,
+  CLOUDFLARE_SITES_ACCOUNT_ID: z
+    .string()
+    .regex(/^[0-9a-f]{32}$/)
+    .optional(),
+  /** Secret des notifications Cloudflare (en-tete `cf-webhook-auth`). */
+  CLOUDFLARE_WEBHOOK_SECRET: z.string().min(16).optional(),
+  /** Secret des taches de fond planifiees (`Authorization: Bearer ...`). */
+  CRON_SECRET: z.string().min(16).optional(),
+
   EMAIL_PROVIDER: z.enum(['console', 'resend', 'postmark']).default('console'),
   EMAIL_API_KEY: optionalSecret,
   EMAIL_FROM: z.string().default('StaX <bonjour@localhost>'),
@@ -247,7 +273,14 @@ export function resetEnvCache(): void {
 /* -------------------------------------------------------------------------- */
 
 export type CapabilityKey =
-  'stripe' | 'stripe_connect' | 'cloudflare_domains' | 'turnstile' | 'email';
+  | 'stripe'
+  | 'stripe_connect'
+  | 'cloudflare_domains'
+  | 'turnstile'
+  | 'email'
+  | 'github_app'
+  | 'cloudflare_sites'
+  | 'cron';
 
 export function hasCapability(key: CapabilityKey): boolean {
   switch (key) {
@@ -261,6 +294,16 @@ export function hasCapability(key: CapabilityKey): boolean {
       return Boolean(readEnv('TURNSTILE_SECRET_KEY'));
     case 'email':
       return readEnv('EMAIL_PROVIDER') !== 'console' ? Boolean(readEnv('EMAIL_API_KEY')) : true;
+    case 'github_app':
+      return Boolean(
+        readEnv('GITHUB_APP_ID') &&
+        readEnv('GITHUB_APP_PRIVATE_KEY') &&
+        readEnv('GITHUB_APP_WEBHOOK_SECRET'),
+      );
+    case 'cloudflare_sites':
+      return Boolean(readEnv('CLOUDFLARE_SITES_API_TOKEN') ?? readEnv('CLOUDFLARE_API_TOKEN'));
+    case 'cron':
+      return Boolean(readEnv('CRON_SECRET'));
     default:
       return false;
   }
@@ -274,6 +317,9 @@ export function missingCapabilities(): CapabilityKey[] {
     'cloudflare_domains',
     'turnstile',
     'email',
+    'github_app',
+    'cloudflare_sites',
+    'cron',
   ];
   return keys.filter((key) => !hasCapability(key));
 }

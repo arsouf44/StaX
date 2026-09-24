@@ -19,9 +19,15 @@ export default defineConfig({
       '@stax/business': r('./packages/business/src/index.ts'),
       '@stax/security': r('./packages/security/src/index.ts'),
       '@stax/site-engine': r('./packages/site-engine/src/index.ts'),
+      '@stax/site-contract': r('./packages/site-contract/src/index.ts'),
+      '@stax/infrastructure': r('./packages/infrastructure/src/index.ts'),
       '@stax/database': r('./packages/database/src/index.ts'),
       '@stax/analytics': r('./packages/analytics/src/index.ts'),
       '@stax/emails': r('./packages/emails/src/index.ts'),
+      // Modules serveur de la plateforme (routes de webhooks, publication),
+      // appeles tels quels par les tests de securite.
+      '~': r('./apps/platform/src'),
+      'server-only': r('./tests/fixtures/server-only.ts'),
     },
   },
   test: {

@@ -7,7 +7,8 @@ import {
   listSubprocessors,
 } from '@stax/database';
 import type { BusinessTypeView, PlanView, SectorView, SubprocessorView } from '@stax/database';
-import { formatMoney } from '@stax/payments';
+import { deliveryPolicyConfig } from '@stax/config';
+import { formatMoney, maintenancePeriodLabel } from '@stax/payments';
 
 /**
  * Acces au catalogue public.
@@ -65,7 +66,7 @@ export const getSubprocessors = cache(async (): Promise<SubprocessorView[] | nul
 });
 
 /**
- * « À partir de 300 € HT puis 22 € HT par an ».
+ * « À partir de 300 € HT, puis 12 € HT par mois de maintenance ».
  *
  * Ce libelle etait recopie a la main sur quatre pages. Un prix ecrit en dur
  * dans une page vitrine ne se met pas a jour tout seul : il devient faux le
@@ -89,7 +90,20 @@ export const entryPriceLabel = cache(async (): Promise<string | null> => {
   const maintenance = formatMoney(cheapest.maintenancePriceCents, cheapest.currency, {
     hideDecimalsWhenRound: true,
   });
-  const period = cheapest.billingInterval === 'month' ? 'par mois' : 'par an';
+  const period = maintenancePeriodLabel(cheapest.billingInterval);
 
-  return `À partir de ${setup} HT puis ${maintenance} HT ${period}`;
+  return `À partir de ${setup} HT, puis ${maintenance} HT ${period} de maintenance`;
 });
+
+/**
+ * « 1 à 3 semaines ».
+ *
+ * Le delai de chaque offre vit dans `plans` ; la politique generale de
+ * `deliveryPolicyConfig` ne sert que lorsqu'une offre n'en porte pas (offre
+ * sur devis : le delai est fixe au devis).
+ */
+export function deliveryWeeksLabel(weeks: { min: number; max: number } | null): string {
+  if (!weeks) return deliveryPolicyConfig().label;
+  if (weeks.min === weeks.max) return `${weeks.min} semaine${weeks.min > 1 ? 's' : ''}`;
+  return `${weeks.min} à ${weeks.max} semaines`;
+}

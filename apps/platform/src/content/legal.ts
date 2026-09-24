@@ -6,7 +6,7 @@ import {
   maintenancePolicyConfig,
   refundPolicyConfig,
 } from '@stax/config';
-import { formatMoney, maintenanceTrialDays } from '@stax/payments';
+import { formatMoney } from '@stax/payments';
 
 /**
  * LEGAL_REVIEW_REQUIRED
@@ -18,9 +18,10 @@ import { formatMoney, maintenanceTrialDays } from '@stax/payments';
  *
  * Deux règles de rédaction, tenues sans exception :
  *  1. chaque engagement écrit ici correspond à ce que la plateforme FAIT
- *     réellement (maintenance annuelle, compte Stripe au nom du client,
- *     export en libre-service…) — un texte qui promet autre chose que le
- *     produit est le premier motif de litige ;
+ *     réellement (site conçu dans un projet dédié, maintenance mensuelle qui
+ *     commence à la livraison, compte Stripe au nom du client, export en
+ *     libre-service…) — un texte qui promet autre chose que le produit est le
+ *     premier motif de litige ;
  *  2. aucune valeur d'identité (dénomination, SIREN, siège, capital,
  *     directeur de la publication, hébergeur) n'est écrite en dur : tout
  *     provient de la configuration, et un champ non renseigné affiche un
@@ -30,11 +31,13 @@ export const LEGAL_DOCUMENTS_REQUIRE_REVIEW = LEGAL_REVIEW_REQUIRED;
 
 /**
  * Versions réellement acceptées, conservées en base avec leur date.
- * 2026-09 : maintenance annuelle, offres réservées aux professionnels et aux
- * associations, accord de traitement des données, règlement sur les services
- * numériques.
+ * 2026-09 : offres réservées aux professionnels et aux associations, accord de
+ * traitement des données, règlement sur les services numériques.
+ * 2026-09-23 : sites conçus dans un projet dédié (dépôt et déploiement
+ * propres), livraison, maintenance MENSUELLE à compter de la livraison et sans
+ * durée minimale, offre Exceptionnel, réversibilité du code source.
  */
-export const TERMS_VERSION = '2026-09';
+export const TERMS_VERSION = '2026-09-23';
 export const PRIVACY_VERSION = '2026-09';
 export const TERMS_OF_USE_VERSION = '2026-09';
 export const DPA_VERSION = '2026-09';
@@ -237,22 +240,22 @@ export function buildTerms(): LegalDocument {
   const refund = refundPolicyConfig();
   const maintenance = maintenancePolicyConfig();
   const delivery = deliveryPolicyConfig();
-  const trialDays = maintenanceTrialDays();
   const company = legalValue('LEGAL_COMPANY_NAME');
 
   return {
     slug: 'cgv',
     title: 'Conditions générales de vente',
     description:
-      'Commande, prix, paiement, réalisation, maintenance annuelle, résiliation, réversibilité, ' +
-      'paiements sur votre site, responsabilité : les règles qui s’appliquent aux prestations ' +
-      'StaX.',
+      'Commande, prix, paiement, réalisation, livraison, maintenance mensuelle, résiliation, ' +
+      'réversibilité, paiements sur votre site, responsabilité : les règles qui s’appliquent aux ' +
+      'prestations StaX.',
     version: TERMS_VERSION,
     updatedAt: UPDATED_AT,
     intro:
-      'Les présentes conditions régissent la vente des prestations de création, d’hébergement ' +
-      'et de maintenance de sites internet proposées sous la marque StaX. Elles sont acceptées ' +
-      'lors de la commande ; la version acceptée est conservée avec sa date et son numéro.',
+      'Les présentes conditions régissent la vente des prestations de conception, de ' +
+      'développement, de mise en ligne, d’hébergement et de maintenance de sites internet ' +
+      'proposées sous la marque StaX. Elles sont acceptées lors de la commande ; la version ' +
+      'acceptée est conservée avec sa date et son numéro.',
     articles: [
       {
         id: 'objet',
@@ -299,34 +302,54 @@ export function buildTerms(): LegalDocument {
             {
               term: 'Site',
               description:
-                'Le site internet réalisé pour le Client, hébergé et maintenu par le Prestataire.',
+                'Le site internet conçu et développé individuellement pour le Client par le ' +
+                'Prestataire, dans un projet qui lui est propre (code source, dépôt et déploiement ' +
+                'dédiés), puis hébergé et maintenu par le Prestataire. Aucun modèle préexistant ' +
+                'n’est proposé au Client pour le constituer.',
             },
             {
               term: 'Espace client',
               description:
-                'L’interface en ligne mise à disposition du Client pour modifier son Site, suivre ' +
-                'son projet et gérer son abonnement, ses données et ses paiements.',
+                'L’interface en ligne mise à disposition du Client pour suivre son projet, ' +
+                'transmettre ses informations et ses fichiers, puis, après la Livraison, modifier ' +
+                'les Contenus modifiables de son Site, et gérer son abonnement, ses données et ses ' +
+                'paiements.',
             },
             {
               term: 'Création',
               description:
-                'La conception, la réalisation et la mise en ligne du Site, réglées par un ' +
-                'paiement unique à la commande.',
+                'La conception, le développement, la mise en ligne et la vérification du Site, ' +
+                'réglés par un paiement unique à la commande.',
+            },
+            {
+              term: 'Livraison',
+              description:
+                'La remise du Site au Client, une fois celui-ci en ligne et vérifié par le ' +
+                'Prestataire. La Livraison ouvre l’éditeur de l’Espace client et marque le début ' +
+                'de la Maintenance.',
             },
             {
               term: 'Maintenance',
               description:
-                'L’abonnement annuel couvrant l’hébergement, le certificat de sécurité, les ' +
-                'sauvegardes, les mises à jour de sécurité, la surveillance, le support et, le cas ' +
-                'échéant, le renouvellement du nom de domaine acheté par le Prestataire pour le ' +
-                'compte du Client.',
+                'L’abonnement mensuel, qui commence à la Livraison, couvrant les prestations ' +
+                'décrites à l’article 9 : hébergement, certificat de sécurité, infrastructure de ' +
+                'publication, conservation des versions, surveillance, mises à jour nécessaires, ' +
+                'support, accès à l’éditeur et, le cas échéant, renouvellement du nom de domaine ' +
+                'acheté par le Prestataire pour le compte du Client.',
+            },
+            {
+              term: 'Contenus modifiables',
+              description:
+                'Les éléments du Site que le Client peut modifier lui-même après la Livraison ' +
+                '(textes, images, informations, liens…), tels que prévus par le Site. La ' +
+                'structure, le design, le code et les intégrations n’en font pas partie.',
             },
             {
               term: 'Offre',
               description:
-                'La formule choisie par le Client (Essentiel, Premium, Ultra Premium ou devis ' +
-                'sur mesure), dont le contenu est décrit sur la page des tarifs au jour de la ' +
-                'commande.',
+                'La formule choisie par le Client (Essentiel, Premium, Ultra Premium, Exceptionnel ' +
+                'ou devis sur mesure), dont le contenu est décrit sur la page des tarifs au jour de ' +
+                'la commande et repris dans le récapitulatif de commande.',
             },
           ]),
         ],
@@ -338,7 +361,8 @@ export function buildTerms(): LegalDocument {
           p('Le contrat est formé des documents suivants, par ordre de priorité décroissant :'),
           list([
             'le devis signé, pour une prestation sur mesure ;',
-            'le récapitulatif de commande (offre, prix, options, adresse du Site) ;',
+            'le récapitulatif de commande (offre et ce qu’elle comprend, prix, délai de ' +
+              'réalisation, options) ;',
             'les présentes CGV ;',
             'l’accord de traitement des données personnelles (article 28 du RGPD), qui en fait ' +
               'partie intégrante ;',
@@ -355,8 +379,8 @@ export function buildTerms(): LegalDocument {
         title: 'Article 5 — Commande',
         blocks: [
           p(
-            'La commande est passée en ligne. Le Client choisit une Offre et son métier, renseigne ' +
-              'les informations relatives à son activité, vérifie le récapitulatif (prix hors taxes, ' +
+            'La commande est passée en ligne. Le Client choisit une Offre, indique son activité, ' +
+              'renseigne les informations utiles à son projet, vérifie le récapitulatif (prix hors taxes, ' +
               'TVA et total toutes taxes comprises), accepte les présentes CGV et l’accord de ' +
               'traitement des données, puis procède au paiement.',
           ),
@@ -385,8 +409,13 @@ export function buildTerms(): LegalDocument {
           p('Le prix comprend deux composantes distinctes, présentées séparément :'),
           list([
             'un paiement unique de Création, dû à la commande ;',
-            'un abonnement annuel de Maintenance, dont le montant est indiqué par an.',
+            'un abonnement mensuel de Maintenance, dont le montant est indiqué par mois, dû ' +
+              'seulement à compter de la Livraison du Site.',
           ]),
+          p(
+            'Pour une prestation sur mesure, le prix de la Création et celui de la Maintenance ' +
+              'sont fixés par le devis.',
+          ),
           p(
             'Le prix de la Maintenance est celui en vigueur au jour de la commande. Une évolution ' +
               'ultérieure du tarif public ne s’applique pas aux contrats en cours : le tarif du ' +
@@ -405,10 +434,11 @@ export function buildTerms(): LegalDocument {
               'virement, selon les modalités indiquées sur la facture.',
           ),
           p(
-            'La Création est payée à la commande. La Maintenance est payée d’avance, pour chaque ' +
-              `période annuelle. La première période commence à la mise en ligne du Site, et au ` +
-              `plus tard ${trialDays} jours après la commande ; les périodes suivantes sont ` +
-              'prélevées à leur date anniversaire sur le moyen de paiement enregistré.',
+            'La Création est payée à la commande. La Maintenance est mensuelle et payée d’avance ' +
+              'pour chaque mois. Elle commence le jour de la livraison du Site (sa remise au Client ' +
+              'une fois en ligne et vérifié) : aucune somme n’est prélevée au titre de la ' +
+              'Maintenance avant cette date. Les mois suivants sont prélevés à la même date sur le ' +
+              'moyen de paiement enregistré auprès de Stripe lors de la commande.',
           ),
           p(
             'Une facture conforme à la réglementation est émise pour chaque paiement et reste ' +
@@ -430,67 +460,89 @@ export function buildTerms(): LegalDocument {
       },
       {
         id: 'realisation',
-        title: 'Article 8 — Réalisation, validation et mise en ligne',
+        title: 'Article 8 — Réalisation, validation et livraison',
         blocks: [
           p(
-            'Le Prestataire réalise le Site à partir des informations et des éléments fournis par ' +
-              'le Client. Le Client dispose d’un aperçu privé lui permettant de relire l’ensemble du ' +
-              'Site avant sa mise en ligne, et demande ses corrections depuis son Espace client.',
+            'Le Prestataire conçoit et développe le Site à partir des informations et des éléments ' +
+              'fournis par le Client, dans un projet indépendant propre à ce Site. Pendant la ' +
+              'réalisation, le Client suit l’avancement depuis son Espace client, y transmet ses ' +
+              'éléments et répond aux demandes de validation du Prestataire. Il ne modifie pas le ' +
+              'Site lui-même avant la Livraison.',
           ),
           p(
-            `Le Prestataire livre une première version du Site dans un délai de ${delivery.label} ` +
-              'à compter de la réception de l’ensemble des éléments nécessaires à sa réalisation ' +
-              '(contenus, photographies, identité visuelle, accès éventuels). Ce point de départ est ' +
-              'notifié au Client dans son Espace client.',
+            'Le Prestataire livre le Site dans le délai de réalisation indiqué pour l’Offre ' +
+              'choisie sur la page des tarifs et rappelé dans le récapitulatif de commande (à ' +
+              `défaut, ${delivery.label}), à compter de la réception de l’ensemble des éléments ` +
+              'nécessaires à sa réalisation (contenus, photographies, identité visuelle, accès ' +
+              'éventuels). Ce point de départ est notifié au Client dans son Espace client.',
           ),
           p(
-            'La mise en ligne intervient après la validation explicite du Client, qui vaut ' +
-              'réception de la Création. Le Client peut ensuite modifier lui-même ses contenus à ' +
-              'tout moment depuis son Espace client.',
+            'Avant la Livraison, le Prestataire met le Site en ligne, connecte son nom de domaine ' +
+              'et vérifie notamment son affichage sur les différents écrans, ses formulaires et ses ' +
+              'réglages de référencement. La Livraison est notifiée au Client ; elle vaut ' +
+              'réception de la Création, sous réserve de la garantie commerciale de l’article 16.',
+          ),
+          p(
+            'Après la Livraison, le Client modifie lui-même les Contenus modifiables depuis son ' +
+              'Espace client. Chaque publication qu’il décide est enregistrée dans le code source ' +
+              'du Site puis déployée ; elle n’est présentée comme publiée qu’une fois le ' +
+              'déploiement confirmé. Une publication qui échoue laisse en ligne la version ' +
+              'précédente.',
+          ),
+          p(
+            'Les modifications de structure, de design, de code ou d’intégrations, l’ajout de ' +
+              'pages ou de fonctionnalités et les refontes sont réalisés par le Prestataire, sur ' +
+              'devis lorsqu’ils excèdent le support inclus dans la Maintenance.',
           ),
           note(
             'Le délai ne court pas tant que les éléments demandés n’ont pas été transmis, et les ' +
-              'allers-retours de correction demandés après la première version décalent la mise ' +
-              'en ligne d’autant. En cas de retard imputable au seul Prestataire, le Client peut, ' +
-              'après une mise en demeure restée sans effet pendant quinze jours, résoudre la ' +
-              'commande et obtenir le remboursement de la Création.',
+              'allers-retours de correction demandés pendant la conception décalent la Livraison ' +
+              'd’autant. En cas de retard imputable au seul Prestataire, le Client peut, après une ' +
+              'mise en demeure restée sans effet pendant quinze jours, résoudre la commande et ' +
+              'obtenir le remboursement de la Création.',
           ),
         ],
       },
       {
         id: 'maintenance',
-        title: 'Article 9 — Maintenance annuelle : durée et reconduction',
+        title: 'Article 9 — Maintenance mensuelle : début, durée et contenu',
         blocks: [
           p(
-            'La Maintenance est conclue pour une durée d’un an à compter du début de la première ' +
-              'période. Elle se reconduit tacitement par périodes successives d’un an, sauf ' +
-              'résiliation dans les conditions de l’article 10.',
-          ),
-          p(
-            'Le Prestataire rappelle au Client, par e-mail, au plus tôt trois mois et au plus tard ' +
-              'un mois avant le terme de chaque période, la date de reconduction et la faculté de ' +
-              'ne pas reconduire le contrat.',
+            'La Maintenance commence le jour de la Livraison du Site : aucune somme n’est due à ce ' +
+              'titre pendant la conception et le développement. Elle est conclue pour une durée ' +
+              'indéterminée, sans durée minimale d’engagement, et facturée par périodes mensuelles ' +
+              'successives, payables d’avance, jusqu’à sa résiliation dans les conditions de ' +
+              'l’article 10.',
           ),
           p('La Maintenance comprend :'),
           list([
-            'l’hébergement du Site et la mise à disposition de l’Espace client ;',
-            'le certificat de sécurité (HTTPS) et son renouvellement automatique ;',
-            'les sauvegardes régulières et la surveillance du service ;',
-            'les mises à jour de sécurité de la plateforme ;',
-            'le support relatif à l’utilisation du Site et de l’Espace client ;',
+            'l’hébergement du Site sur l’infrastructure retenue par le Prestataire (à ce jour, ' +
+              'Cloudflare) et la mise à disposition de l’Espace client ;',
+            'la connexion du nom de domaine et le certificat de sécurité (HTTPS), renouvelé ' +
+              'automatiquement ;',
+            'l’infrastructure de publication : l’enregistrement de chaque publication dans le ' +
+              'dépôt de code du Site, son déploiement et le suivi de ce déploiement ;',
+            'la conservation des versions publiées et la possibilité de restaurer une version ' +
+              'antérieure ;',
+            'la surveillance de la disponibilité du Site et les sauvegardes des données de ' +
+              'l’Espace client ;',
+            'les mises à jour nécessaires au bon fonctionnement du Site et de la plateforme, ' +
+              'notamment de sécurité ;',
+            'l’accès à l’éditeur de l’Espace client, dans les limites de l’Offre ;',
+            'le support relatif à l’utilisation du Site et de l’Espace client, par messages ' +
+              'depuis l’Espace client ;',
             'le renouvellement du nom de domaine acheté par le Prestataire pour le compte du ' +
               'Client, le cas échéant.',
           ]),
           p(
-            'Elle ne comprend pas les évolutions fonctionnelles majeures, les refontes graphiques ' +
-              'complètes ni la production de contenus rédactionnels ou photographiques, qui font ' +
-              'l’objet d’un devis distinct.',
+            'Elle ne comprend pas de travaux de développement illimités : les nouvelles pages ou ' +
+              'fonctionnalités, les modifications de structure ou de design, les refontes et la ' +
+              'production de contenus rédactionnels ou photographiques font l’objet d’un devis ' +
+              'distinct.',
           ),
           note(
-            'Le Client non professionnel qui n’aurait pas reçu ce rappel peut mettre fin au contrat ' +
-              'gratuitement, à tout moment à compter de la date de reconduction, et obtenir le ' +
-              'remboursement des sommes versées pour la période postérieure à la résiliation ' +
-              '(articles L.215-1 et L.215-3 du Code de la consommation).',
+            'Le Client non professionnel conserve en toute hypothèse les droits que lui ' +
+              'reconnaissent les articles L.215-1 et suivants du Code de la consommation.',
           ),
         ],
       },
@@ -500,11 +552,15 @@ export function buildTerms(): LegalDocument {
         blocks: [
           p(
             'Le Client peut résilier sa Maintenance à tout moment, en ligne, depuis son Espace ' +
-              'client (« Résilier votre contrat »), sans avoir à se justifier. La résiliation prend ' +
-              'effet au terme de la période annuelle en cours ; les sommes déjà réglées pour cette ' +
-              'période restent acquises, sous réserve de la garantie commerciale de l’article 16. ' +
-              'Le Client reçoit par e-mail une confirmation indiquant la date à laquelle le contrat ' +
-              'prend fin et ses effets.',
+              'client (« Résilier votre contrat »), sans avoir à se justifier et sans frais. La ' +
+              'résiliation prend effet au terme de la période mensuelle en cours : le mois entamé ' +
+              'reste dû et aucun prélèvement n’intervient ensuite, sous réserve de la garantie ' +
+              'commerciale de l’article 16. Le Client reçoit par e-mail une confirmation indiquant ' +
+              'la date à laquelle le contrat prend fin et ses effets.',
+          ),
+          p(
+            'Tant que le Site n’est pas livré, aucune Maintenance n’est en cours : la commande de ' +
+              'Création suit les règles des articles 8 et 16.',
           ),
           p(
             'Le Prestataire peut résilier le contrat en cas de défaut de paiement persistant, ou ' +
@@ -514,11 +570,14 @@ export function buildTerms(): LegalDocument {
           ),
           p(
             `À l’issue de la dernière période payée, le Site demeure accessible pendant une ` +
-              `période de continuité de ${maintenance.gracePeriodDays} jours. Il est ensuite ` +
-              `suspendu : il n’est plus accessible au public, mais les données du Client ne sont ni ` +
-              `supprimées ni altérées pendant ${maintenance.suspensionRetentionDays} jours, puis ` +
-              `sont archivées ${maintenance.archiveRetentionDays} jours, période pendant laquelle ` +
-              'le Client peut les exporter ou réactiver son abonnement.',
+              `période de continuité de ${maintenance.gracePeriodDays} jours. Il peut ensuite être ` +
+              'suspendu : son accès public, son éditeur et ses fonctions interactives ' +
+              '(formulaires, réservations, paiements) sont interrompus, mais ni son code source ni ' +
+              `les données du Client ne sont supprimés ou altérés pendant ` +
+              `${maintenance.suspensionRetentionDays} jours ; ils sont ensuite archivés ` +
+              `${maintenance.archiveRetentionDays} jours, période pendant laquelle le Client peut ` +
+              'exporter ses données, demander la copie du code source prévue à l’article 11 ou ' +
+              'réactiver son abonnement.',
           ),
         ],
       },
@@ -536,8 +595,14 @@ export function buildTerms(): LegalDocument {
             'conserver son compte de paiement Stripe, ouvert à son nom, indépendamment de StaX.',
           ]),
           p(
-            'La plateforme logicielle, ses modèles et ses composants restent la propriété du ' +
-              'Prestataire : leur usage prend fin avec le contrat.',
+            'À la fin du contrat, le Client peut en outre obtenir, sur demande, une copie du code ' +
+              'source de son Site dans l’état de sa dernière version publiée, dans les conditions ' +
+              'de l’article 15.',
+          ),
+          p(
+            'L’usage de la plateforme StaX (Espace client, éditeur, formulaires, réservations, ' +
+              'paiements, statistiques) prend fin avec le contrat : les fonctions du Site qui en ' +
+              'dépendent cessent alors de fonctionner.',
           ),
         ],
       },
@@ -596,14 +661,13 @@ export function buildTerms(): LegalDocument {
               'appartient notamment :',
           ),
           list([
-            'de renseigner les informations permettant d’établir les mentions légales de son Site ' +
-              '(identité, immatriculation, directeur de la publication), que la plateforme met en ' +
-              'forme automatiquement ;',
+            'de fournir et de tenir à jour les informations permettant d’établir les mentions ' +
+              'légales de son Site (identité, immatriculation, directeur de la publication), que ' +
+              'le Prestataire intègre au Site ;',
             'de s’assurer que les contenus publiés sont licites et qu’il dispose des droits ' +
               'nécessaires ;',
-            'lorsqu’il vend en ligne, de publier ses propres conditions générales de vente, dont ' +
-              'la plateforme propose un modèle à adapter, et de respecter les règles applicables ' +
-              'à ses clients ;',
+            'lorsqu’il vend en ligne, de publier ses propres conditions générales de vente et de ' +
+              'respecter les règles applicables à ses clients ;',
             'de respecter la réglementation relative aux données personnelles de ses visiteurs, ' +
               'dont il est responsable du traitement, avec l’aide des outils fournis.',
           ]),
@@ -626,9 +690,16 @@ export function buildTerms(): LegalDocument {
               'reproduction, de représentation et d’adaptation, sur tout support.',
           ),
           p(
-            'La plateforme, ses logiciels, ses modèles de pages et ses composants génériques ' +
-              'restent la propriété du Prestataire. Le contrat confère au Client un droit d’usage ' +
-              'personnel et non exclusif, pour sa durée.',
+            'Le code source du Site est développé spécifiquement pour le Client et conservé dans ' +
+              'un dépôt qui lui est propre. La copie remise au Client en application de ' +
+              'l’article 11 s’accompagne d’un droit d’usage non exclusif et perpétuel sur les ' +
+              'composants génériques du Prestataire qu’elle contient, pour les seuls besoins de ce ' +
+              'Site ; les bibliothèques de tiers restent soumises à leurs propres licences.',
+          ),
+          p(
+            'La plateforme StaX (Espace client, éditeur, outils de publication et interfaces) ' +
+              'reste la propriété du Prestataire. Le contrat confère au Client un droit d’usage ' +
+              'personnel et non exclusif de la plateforme, pour sa durée.',
           ),
         ],
       },
@@ -638,7 +709,7 @@ export function buildTerms(): LegalDocument {
         blocks: [
           p(
             `Le Prestataire accorde une garantie commerciale de ${refund.windowDays} jours à ` +
-              'compter de la mise en ligne initiale du Site. Pendant cette période, le Client ' +
+              'compter de la Livraison du Site. Pendant cette période, le Client ' +
               'insatisfait peut demander, sans justification, le remboursement de la Création et de ' +
               'la Maintenance déjà prélevée, selon la politique de remboursement.',
           ),
@@ -999,8 +1070,8 @@ export function buildDataProcessingAgreement(): LegalDocument {
             'Le sous-traitant tient le registre des activités de traitement prévu à l’article 30.2 ' +
               'du RGPD et met à la disposition du Client les informations nécessaires pour démontrer ' +
               'le respect du présent accord. Le Client peut faire réaliser un audit, à ses frais, au ' +
-              'plus une fois par an, par un auditeur indépendant tenu au secret, moyennant un ' +
-              'préavis de trente jours et sans accès aux données des autres clients.',
+              'plus une fois tous les douze mois, par un auditeur indépendant tenu au secret, ' +
+              'moyennant un préavis de trente jours et sans accès aux données des autres clients.',
           ),
         ],
       },
@@ -1305,8 +1376,8 @@ export function buildPrivacyPolicy(): LegalDocument {
             'Mesure d’audience agrégée et sans cookie — intérêt légitime (article 6.1.f).',
             'Réponse aux demandes de contact et aux devis — mesures précontractuelles ' +
               '(article 6.1.b).',
-            'Rappels liés à votre abonnement (échéance, reconduction) — exécution du contrat et ' +
-              'obligation légale.',
+            'Informations liées à votre abonnement (livraison, début de la maintenance, ' +
+              'prélèvements, résiliation) — exécution du contrat et obligation légale.',
             'Communications commerciales adressées à des personnes n’étant pas encore clientes — ' +
               'consentement (article 6.1.a), révocable à tout moment.',
           ]),
@@ -1607,7 +1678,7 @@ export function buildRefundPolicy(): LegalDocument {
     slug: 'remboursements',
     title: 'Politique de remboursement',
     description:
-      `Garantie commerciale de ${refund.windowDays} jours après la mise en ligne : conditions, ` +
+      `Garantie commerciale de ${refund.windowDays} jours après la livraison : conditions, ` +
       'procédure, délais et déduction éventuelle du nom de domaine.',
     updatedAt: UPDATED_AT,
     intro:
@@ -1620,8 +1691,8 @@ export function buildRefundPolicy(): LegalDocument {
         title: `Article 1 — Garantie de ${refund.windowDays} jours`,
         blocks: [
           p(
-            `Vous disposez de ${refund.windowDays} jours calendaires à compter de la première ` +
-              'mise en ligne de votre site pour demander le remboursement.',
+            `Vous disposez de ${refund.windowDays} jours calendaires à compter de la livraison ` +
+              'de votre site — sa remise, une fois en ligne — pour demander le remboursement.',
           ),
           p(
             'Aucune justification n’est exigée. Nous vous demandons simplement, si vous le ' +
@@ -1635,7 +1706,7 @@ export function buildRefundPolicy(): LegalDocument {
         blocks: [
           list([
             'le paiement de création effectivement réglé ;',
-            'la maintenance annuelle déjà prélevée, en totalité ;',
+            'les mensualités de maintenance déjà prélevées, en totalité ;',
           ]),
           p(
             'Le remboursement est effectué sur le moyen de paiement utilisé lors de la commande. ' +
@@ -1675,7 +1746,7 @@ export function buildRefundPolicy(): LegalDocument {
             'depuis votre espace client, ouvrez « Facturation » puis « Demander un ' +
               'remboursement » ;',
             'la demande est enregistrée avec sa date, et son éligibilité est calculée ' +
-              'automatiquement à partir de la date réelle de mise en ligne ;',
+              'automatiquement à partir de la date réelle de livraison ;',
             'nous accusons réception et examinons la demande ;',
             'en cas d’acceptation, le remboursement est déclenché auprès du prestataire de ' +
               'paiement ;',
@@ -1694,7 +1765,7 @@ export function buildRefundPolicy(): LegalDocument {
         blocks: [
           p('Une demande peut être refusée, avec un motif écrit, notamment lorsque :'),
           list([
-            `le délai de ${refund.windowDays} jours après la mise en ligne est dépassé ;`,
+            `le délai de ${refund.windowDays} jours après la livraison est dépassé ;`,
             'la demande porte sur une prestation sur mesure déjà livrée et acceptée, régie par ' +
               'son propre devis ;',
             'un usage manifestement frauduleux est caractérisé.',

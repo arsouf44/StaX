@@ -84,6 +84,7 @@ const nextConfig: NextConfig = {
     '@stax/business',
     '@stax/security',
     '@stax/site-engine',
+    '@stax/site-contract',
     '@stax/database',
     '@stax/auth',
     '@stax/emails',

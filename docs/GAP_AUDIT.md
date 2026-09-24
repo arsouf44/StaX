@@ -7,6 +7,10 @@ complet est compté **non terminé**, comme demandé.
 Date : 2026-09-21 · Branche : `claude/saas-web-builder-platform-lsbygs`
 Mise à jour : 2026-09-22 (éditeur visuel, comptes internes, parcours réels —
 § 2 et § 11) · Branche : `claude/busy-turing-xwqbpn`
+Mise à jour : 2026-09-24 (**sites développés hors de StaX**, contrat
+d’édition, publication GitHub + Cloudflare, cinq offres mensuelles — § 12, qui
+remplace § 1 et § 2 là où ils se contredisent) · Branche :
+`claude/clever-maxwell-syg8wd`
 
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
@@ -34,6 +38,10 @@ désormais le FormData réel du framework.
 
 ## 1. Tarifs et règles commerciales
 
+> **Remplacé par § 12.** La maintenance est désormais **mensuelle** et
+> commence à la livraison ; la grille compte cinq offres. Le tableau ci-dessous
+> décrit l’état du 2026-09-22 (maintenance annuelle), conservé pour mémoire.
+
 | Exigence | État réel | Manque | Fichiers | Correction |
 |---|---|---|---|---|
 | Source canonique unique | **CORRIGÉ TARDIVEMENT** — la table `plans` faisait bien foi pour les **grilles** tarifaires, mais « À partir de 300 € HT puis 22 € HT par an » était **recopié à la main** dans la bannière d'accueil, deux descriptions de page et une réponse en données structurées. Un prix écrit en dur sur une page vitrine devient faux le jour où le catalogue change — sur la page qui sert à vendre | — | `lib/catalog.ts`, `components/marketing/hero.tsx`, `(marketing)/page.tsx`, `tarifs`, `metiers/[secteur]/[metier]` | `entryPriceLabel()` calcule le libellé depuis l'offre la moins chère, et renvoie `null` si le catalogue est injoignable : mieux vaut ne rien annoncer qu'annoncer un prix périmé. Les trois pages porteuses d'un prix revalident toutes les heures au lieu d'être figées au build |
@@ -47,6 +55,10 @@ désormais le FormData réel du framework.
 ---
 
 ## 2. Éditeur client — **OK** (réécrit, vérifié dans un vrai navigateur)
+
+> **Ne concerne plus que les sites de l’ancien moteur** (`legacy_engine`).
+> Les nouveaux sites sont développés hors de StaX et édités par leur contrat
+> d’édition : voir § 12.
 
 L’éditeur est un **éditeur visuel en trois zones** (`apps/platform/src/app/app/editeur`) :
 structure de la page à gauche, **vrai rendu** au centre (le moteur public, sur
@@ -353,21 +365,85 @@ Parcours automatisés (`pnpm test:e2e:stack`, 6 parcours) :
 
 ---
 
+## 12. Sites développés hors de StaX — état au 2026-09-24
+
+StaX ne fabrique pas de sites. Chaque site est développé dans son propre dépôt
+GitHub, déployé par son propre projet Cloudflare, rattaché à StaX, vérifié,
+puis livré ; le client le gère ensuite. Détails :
+[site-delivery.md](./site-delivery.md).
+
+| Exigence | État | Où | Preuve |
+|---|---|---|---|
+| Aucun modèle de site, nulle part | **OK** — `site_templates`, `provision_site` et `p_template` retirés ; ni l’offre, ni le métier, ni le questionnaire ne produisent de structure | `0045_no_templates.sql` | `tests/unit/product-promises.test.ts`, SQL « aucun modèle » |
+| Parcours commande → paiement → compte → questionnaire | **OK** | `(commande)/commander`, `bienvenue` | parcours E2E, `tests/integration/journeys.test.ts` |
+| Aucune édition avant la livraison, imposé techniquement | **OK** — `app.site_content_access` refuse le client tant que `delivered_at` est vide | `0044`, `0051` | SQL, intégration, E2E « avant la livraison » |
+| Suivi de projet client en 7 étapes, validations enregistrées | **OK** | `0042`, `0050`, `/app` | E2E, intégration |
+| Admin *Projet → Infrastructure & livraison* avec checklist | **OK** — dépôt, projet Cloudflare, domaine, contrat, contenu initial, contrôles automatiques et attestés, livraison | `admin/sites/[id]/livraison` | E2E « l’équipe rattache… puis livre » |
+| Contrat `stax.manifest.json` | **OK** — 17 types de champs, collections, formulaires, modules, limites, contrôle de l’offre | `packages/site-contract` | `tests/unit/site-contract.test.ts` |
+| Brouillon → Publier → commit `stax: publication client 0000N` → déploiement Cloudflare suivi | **OK** — avance rapide, idempotent (`Stax-Release`) | `lib/external-sites/publisher.ts` | E2E « le client publie », sécurité |
+| Jamais « Publié » avant confirmation | **OK** — `published` posé uniquement par `record_site_deployment` sur le commit exact ; délai 45 min, confirmation tardive | `0044`, `0049` | SQL, intégration, E2E |
+| Un échec garde la version précédente | **OK** — `production_release_id` inchangé | `0044` | E2E « déploiement en échec » |
+| Historique : version, SHA, déploiement, auteur, date, état ; Voir / Restaurer / Republier | **OK** — restaurer crée une version et la redéploie réellement | `/app/site/versions` | E2E « restaurer la version 1 » |
+| Offres : 300 + 12, 550 + 14, 1 099 + 16, 1 790 + 18 € HT/mois ; Sur mesure sur devis | **OK** | `0043_monthly_offers.sql` | `tests/unit/pricing.test.ts`, SQL |
+| Maintenance mensuelle partout, qui démarre à la livraison | **OK** — abonnement créé à la livraison, refusé en base avant | `lib/maintenance.ts`, `0043` | SQL `site_not_delivered`, intégration |
+| Droits d’offre = promesses | **OK** — quotas appliqués en base, contrat comparé à l’offre, API des sites vérifiée à chaque opération | `0046`, `0047`, `0049` | `tests/integration/plan-promises.test.ts`, SQL |
+| Marketing : « Nous créons votre site. Vous le gérez ensuite. », 7 points, 6 étapes, aucun vocabulaire de générateur | **OK** | `(marketing)`, `content/process.ts` | `tests/unit/product-promises.test.ts`, E2E marketing |
+| CGV, FAQ, e-mails cohérents (mensuel, début à la livraison, résiliation, suspension, export, réversibilité) | **OK** — rédaction prudente, **relecture juridique recommandée** | `content/legal.ts`, `content/faq.ts`, `packages/emails` | `tests/unit/billing-wording.test.ts` |
+| Secrets GitHub/Cloudflare côté serveur ; application GitHub ; permissions minimales | **OK** | `packages/infrastructure` | `tests/security/external-sites.test.ts` |
+| Webhooks authentifiés (GitHub, Cloudflare, Stripe, tâche de fond) | **OK** — 401/400 avant lecture, idempotence | `api/webhooks/*`, `api/cron/sites` | sécurité |
+| Rattachement arbitraire d’un site d’une autre organisation impossible | **OK** — équipe seule, propriétaire vérifié, un dépôt = un site | `0044` | SQL, intégration, E2E |
+| Actions de connexion, import, livraison, publication, restauration auditées | **OK** | `app.write_audit` | SQL |
+| Site suspendu : ni édition ni publication | **OK** — trou trouvé par le test d’intégration n° 16 et corrigé | `0051_suspended_sites.sql` | SQL « Site suspendu » |
+
+**Défaut trouvé pendant ce chantier** : un site au **statut** `suspended`
+(posé par les parcours historiques) restait modifiable et publiable, car
+`request_site_release` ne regardait que `suspended_at`. Corrigé par 0051, sans
+modifier les migrations précédentes.
+
+**Défauts trouvés à la revue des écrans (finitions du 2026-09-24)** :
+
+| Défaut | Conséquence | Correction |
+|---|---|---|
+| L’éditeur encadrait le **domaine du client**, que la CSP de l’éditeur n’autorise pas | En production, aperçu bloqué (« This content is blocked ») pour tout site doté de son domaine | L’éditeur encadre l’adresse du projet Cloudflare (`*.pages.dev`, `*.workers.dev`), même déploiement ; test unitaire + assertion E2E |
+| Après la livraison, le tableau de bord et la page Maintenance annonçaient encore « démarre à la livraison » | Message faux pour un site livré | Libellé tiré de l’état réel (`orders.maintenance_status`) : active, en cours de mise en place, incluse (compte interne), au devis |
+| Le tunnel de commande proposait une adresse provisoire `xxx.sites.stax.fr` | Promesse d’une adresse que le nouveau modèle ne sert pas | « Je choisirai plus tard » : adresse technique du projet Cloudflare, communiquée à la mise en ligne |
+| `public.write_audit` ouvert à toute personne connectée, pour toute organisation | Lignes d’audit injectables dans le journal d’une autre société | 0052 : restreint à sa propre organisation (8 assertions SQL) |
+| `public.compute_order_pricing` exécutable sans compte | Codes promotionnels testables sans limite | 0052 : fermé à `anon` |
+| Carte Exceptionnel : surtitre et badge superposés ; étape du projet affichée en valeur technique (`ordered`) dans l’administration ; apostrophes et accents manquants dans des e-mails et messages | Finition | Corrigés |
+
+**Ce qui dépend encore de vrais identifiants** : l’application GitHub
+(`GITHUB_APP_*`), le jeton et le webhook Cloudflare
+(`CLOUDFLARE_SITES_API_TOKEN`, `CLOUDFLARE_WEBHOOK_SECRET`), `CRON_SECRET`,
+Stripe. Le code est complet et testé contre des émulateurs qui parlent les
+mêmes API (`tests/e2e/stack/providers.mjs`) ; aucun appel réel à GitHub ou
+Cloudflare n’a pu être fait depuis cet environnement.
+
+---
+
 ## Ce qui reste non terminé, sans détour
 
-0. **Migrations `0029` à `0036` à appliquer sur le projet Supabase réel**, puis
-   `pnpm internal:bootstrap` avec le mot de passe du compte interne fourni dans
-   l’environnement. Tant que ce n’est pas fait, la production n’a ni l’éditeur
-   réversible, ni les comptes internes, ni la correction des offres payées.
+0. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
+   2026-09-24** : les migrations 0042 à 0052 sont appliquées sur le projet
+   « StaX » (52 au total), chacune tracée dans `app.schema_migrations` avec
+   l’empreinte de son fichier. Le schéma réel a été comparé à une base locale
+   construite depuis le dépôt : tables, politiques RLS, contraintes, index,
+   fonctions et droits d’exécution identiques. Reste `pnpm internal:bootstrap`
+   avec le mot de passe du compte interne, si ce compte doit être recréé.
+
+0 bis. **Application GitHub, jeton Cloudflare, webhooks, tâche de fond** : à
+   créer et à renseigner ([github-integration.md](./github-integration.md),
+   [cloudflare.md](./cloudflare.md), [deployment.md](./deployment.md) § 7 à 9).
+   Sans eux, *Infrastructure & livraison* le dit et refuse de rattacher.
 
 1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
-   est prouvée par 309 assertions SQL, 27 tests d'intégration et les parcours
+   est prouvée par 458 assertions SQL, les tests d'intégration et les parcours
    de § 11 (qui opèrent chacun sur leur propre client), mais pas encore par
    deux sessions réelles ouvertes en parallèle sur le même écran.
 
 1 bis. **Les parcours de § 11 ne tournent pas encore en CI** : ils montent la
    pile locale (binaires GoTrue et PostgREST téléchargés par
-   `tests/e2e/stack/stack.sh`). La CI exécute les 309 assertions SQL, qui
+   `tests/e2e/stack/stack.sh`, avec les faux GitHub et Cloudflare). La CI
+   exécute les 458 assertions SQL, qui
    couvrent les mêmes règles côté base ; brancher les parcours est l'étape
    suivante.
 

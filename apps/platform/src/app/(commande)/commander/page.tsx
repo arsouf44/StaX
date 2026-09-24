@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { formatMaintenance, formatMoney } from '@stax/payments';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
-import { getPlans } from '~/lib/catalog';
+import { deliveryWeeksLabel, getPlans } from '~/lib/catalog';
 import { readOrderDraft } from '~/lib/order-draft';
 import { PlanChoice } from './plan-choice';
 
@@ -26,8 +26,9 @@ export default async function OrderPlanPage() {
         Choisissez votre offre
       </h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-        Chaque offre comprend la conception du site, sa mise en ligne, l’hébergement et un espace
-        pour modifier vos contenus. Vous pourrez changer d’offre plus tard.
+        Chaque offre comprend la conception et le développement de votre site par notre équipe et sa
+        mise en ligne sur votre domaine. Vous ne payez maintenant que la création : la maintenance
+        mensuelle commence à la livraison, et vous modifiez ensuite vos contenus depuis StaX.
       </p>
 
       {purchasable.length === 0 ? (
@@ -46,6 +47,8 @@ export default async function OrderPlanPage() {
             name: plan.name,
             tagline: plan.tagline,
             badge: plan.badge,
+            signature: plan.highlight === 'signature',
+            deliveryLabel: deliveryWeeksLabel(plan.deliveryWeeks),
             setupPrice: formatMoney(plan.setupPriceCents, plan.currency, {
               hideDecimalsWhenRound: true,
             }),
@@ -57,10 +60,12 @@ export default async function OrderPlanPage() {
               plan.currency,
               plan.billingInterval,
             ),
-            features: plan.features
-              .filter((feature) => feature.enabled && feature.kind === 'boolean')
+            // Ce que l'offre comprend, lu dans `plan_inclusions` : la base
+            // refuse une inclusion adossee a un droit que l'offre n'accorde pas.
+            features: plan.inclusions
+              .filter((inclusion) => inclusion.highlight)
               .slice(0, 6)
-              .map((feature) => feature.label),
+              .map((inclusion) => inclusion.label),
           }))}
           selected={draft.planSlug ?? null}
         />

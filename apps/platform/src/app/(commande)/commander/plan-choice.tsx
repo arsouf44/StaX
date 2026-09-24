@@ -11,8 +11,12 @@ export interface PlanOption {
   name: string;
   tagline: string | null;
   badge: string | null;
+  /** Categorie superieure (Exceptionnel) : lue dans le catalogue. */
+  signature: boolean;
+  /** « 2 à 4 semaines ». */
+  deliveryLabel: string;
   setupPrice: string;
-  /** Deja formate avec sa periodicite : « 32 € / an ». */
+  /** Deja formate avec sa periodicite : « 12 € / mois ». */
   maintenancePrice: string;
   features: string[];
 }
@@ -40,7 +44,7 @@ export function PlanChoice({ plans, selected }: { plans: PlanOption[]; selected:
 
       <fieldset>
         <legend className="sr-only">Offres disponibles</legend>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => {
             const active = choice === plan.slug;
             return (
@@ -50,7 +54,9 @@ export function PlanChoice({ plans, selected }: { plans: PlanOption[]; selected:
                   'relative flex cursor-pointer flex-col rounded-[var(--radius-lg)] border p-6 transition-colors',
                   active
                     ? 'border-[var(--accent)] bg-[var(--surface-elevated)]'
-                    : 'border-[var(--border)] hover:border-[var(--border-strong)]',
+                    : plan.signature
+                      ? 'border-[var(--glacier)]/40 bg-[linear-gradient(180deg,rgb(157_219_255/0.07),transparent_40%)] hover:border-[var(--glacier)]/70'
+                      : 'border-[var(--border)] hover:border-[var(--border-strong)]',
                 )}
               >
                 <input
@@ -64,6 +70,11 @@ export function PlanChoice({ plans, selected }: { plans: PlanOption[]; selected:
 
                 <div className="flex items-start justify-between gap-3">
                   <div>
+                    {plan.signature ? (
+                      <p className="mb-1 text-2xs font-medium tracking-[0.18em] text-[var(--accent-text)] uppercase">
+                        Catégorie signature
+                      </p>
+                    ) : null}
                     <h2 className="text-base font-medium">{plan.name}</h2>
                     {plan.tagline ? (
                       <p className="mt-1 text-sm text-[var(--foreground-muted)]">{plan.tagline}</p>
@@ -82,9 +93,15 @@ export function PlanChoice({ plans, selected }: { plans: PlanOption[]; selected:
                   </span>
                 </div>
 
-                <p className="mt-5 text-2xl font-medium tracking-[-0.02em]">{plan.setupPrice}</p>
+                <p className="mt-5 text-2xl font-medium tracking-[-0.02em]">
+                  {plan.setupPrice}{' '}
+                  <span className="text-sm font-normal text-[var(--muted)]">HT</span>
+                </p>
                 <p className="text-sm text-[var(--foreground-muted)]">
-                  puis {plan.maintenancePrice} de maintenance
+                  puis {plan.maintenancePrice} HT de maintenance, dès la livraison
+                </p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  Réalisation en {plan.deliveryLabel} après réception de vos éléments
                 </p>
 
                 <ul className="mt-5 space-y-2 text-sm text-[var(--foreground-muted)]">

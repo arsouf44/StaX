@@ -47,7 +47,7 @@ const SHOWCASES = [
     plan: 'Essentiel',
     host: 'martin-plomberie.fr',
     tone: 'dark' as const,
-    features: ['Prestations', 'Zones d’intervention', 'Réalisations', 'Demande de devis'],
+    features: ['Prestations', 'Zones d’intervention', 'Galerie de chantiers', 'Demande de devis'],
     note: 'Formulaire de devis qualifiant la demande : nature de la panne, urgence, code postal.',
   },
 ];
@@ -65,12 +65,12 @@ export default function ShowcasePage() {
             as="h1"
             eyebrow="Réalisations"
             title="À quoi ressemble un site StaX"
-            description="Chaque site est construit pour son métier : la structure, les fonctionnalités et le vocabulaire changent. Voici trois exemples complets."
+            description="Chaque site est conçu et développé individuellement, pour une entreprise : sa structure, son design et ses fonctionnalités lui sont propres. Voici trois exemples de projets."
           />
           <Alert tone="warning" title="Ces exemples sont des démonstrations" className="mt-10">
-            Les entreprises présentées ci-dessous sont fictives. Elles servent à montrer la
-            structure et les fonctionnalités réelles de la plateforme. Nous n’afficherons de vrais
-            clients qu’avec leur accord explicite, et ils seront identifiés comme tels.
+            Les entreprises présentées ci-dessous sont fictives. Elles illustrent le type de projets
+            que nous réalisons : ce ne sont pas des modèles à personnaliser. Nous n’afficherons de
+            vrais clients qu’avec leur accord explicite, et ils seront identifiés comme tels.
           </Alert>
         </Container>
       </Section>

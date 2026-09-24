@@ -10,6 +10,7 @@ import {
   supabaseServiceCredentials,
 } from '@stax/config';
 import type { OrgCapability } from '@stax/types';
+import { frameableProjectUrl } from '~/lib/frame-url';
 
 /**
  * StaX construit le site, puis le confie au client.
@@ -39,12 +40,16 @@ const ALL: OrgCapability[] = [
   'support.manage',
 ];
 
-function hrefs(siteDelivered: boolean): string[] {
+function hrefs(
+  siteDelivered: boolean,
+  architecture?: 'external_repository' | 'legacy_engine',
+): string[] {
   return buildDashboardNavigation({
     enabledModules: ['menu', 'bookings'],
     hasFeature: () => true,
     can: (capability) => ALL.includes(capability),
     siteDelivered,
+    architecture,
   }).flatMap((group) => group.items.map((item) => item.href));
 }
 
@@ -66,6 +71,52 @@ describe('espace client pendant la construction du site', () => {
     expect(entries).toContain('/app/editeur');
     expect(entries).toContain('/app/site/pages');
     expect(entries).toContain('/app/statistiques');
+  });
+});
+
+describe('site indépendant (dépôt GitHub + projet Cloudflare)', () => {
+  it('avant la livraison : ni éditeur, ni versions, seulement le suivi du projet', () => {
+    const entries = hrefs(false, 'external_repository');
+    expect(entries).toContain('/app/projet');
+    expect(entries).not.toContain('/app/editeur');
+    expect(entries).not.toContain('/app/site/versions');
+  });
+
+  it('après la livraison : l’éditeur du contrat et l’historique des versions', () => {
+    const entries = hrefs(true, 'external_repository');
+    expect(entries).toContain('/app/editeur');
+    expect(entries).toContain('/app/site/versions');
+  });
+
+  it('jamais les écrans de l’ancien moteur : pages, apparence, navigation, formulaires', () => {
+    const entries = hrefs(true, 'external_repository');
+    for (const legacy of [
+      '/app/site/pages',
+      '/app/site/apparence',
+      '/app/site/navigation',
+      '/app/site/referencement',
+      '/app/forms',
+    ]) {
+      expect(entries).not.toContain(legacy);
+    }
+  });
+});
+
+describe('aperçu dans l’éditeur', () => {
+  it('encadre le projet Cloudflare du site, jamais une origine quelconque', () => {
+    expect(frameableProjectUrl('https://boulangerie.pages.dev')).toBe(
+      'https://boulangerie.pages.dev/',
+    );
+    expect(frameableProjectUrl('https://site.compte.workers.dev/accueil')).toBe(
+      'https://site.compte.workers.dev/',
+    );
+    // Le domaine du client sert le meme deploiement, mais la CSP de l'editeur
+    // ne l'autorise pas : l'editeur ne doit pas tenter de l'encadrer.
+    expect(frameableProjectUrl('https://www.boulangerie.fr/')).toBeNull();
+    expect(frameableProjectUrl('http://boulangerie.pages.dev')).toBeNull();
+    expect(frameableProjectUrl('https://pages.dev.attaquant.fr')).toBeNull();
+    expect(frameableProjectUrl(null)).toBeNull();
+    expect(frameableProjectUrl('pas une adresse')).toBeNull();
   });
 });
 

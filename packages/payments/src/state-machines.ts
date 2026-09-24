@@ -76,16 +76,21 @@ export const maintenanceStateMachine = transition<MaintenanceState>({
 });
 
 export const projectStatusMachine = transition<ProjectStatus>({
-  ordered: ['questionnaire_pending', 'cancelled'],
-  questionnaire_pending: ['assets_pending', 'in_progress', 'cancelled'],
-  assets_pending: ['in_progress', 'cancelled'],
-  in_progress: ['internal_review', 'assets_pending', 'cancelled'],
-  internal_review: ['in_progress', 'client_review', 'cancelled'],
-  client_review: ['changes_requested', 'approved', 'cancelled'],
-  changes_requested: ['in_progress', 'cancelled'],
-  approved: ['ready_to_publish', 'changes_requested'],
-  ready_to_publish: ['published', 'changes_requested'],
-  published: ['maintenance', 'changes_requested'],
+  ordered: ['questionnaire_pending', 'assets_pending', 'design', 'cancelled'],
+  questionnaire_pending: ['assets_pending', 'design', 'in_progress', 'cancelled'],
+  assets_pending: ['design', 'in_progress', 'cancelled'],
+  design: ['client_review', 'development', 'assets_pending', 'cancelled'],
+  development: ['verification', 'client_review', 'cancelled'],
+  verification: ['deploying', 'development', 'client_review', 'cancelled'],
+  deploying: ['delivered', 'verification', 'cancelled'],
+  delivered: ['maintenance', 'archived'],
+  in_progress: ['internal_review', 'assets_pending', 'development', 'cancelled'],
+  internal_review: ['in_progress', 'client_review', 'verification', 'cancelled'],
+  client_review: ['changes_requested', 'approved', 'development', 'verification', 'cancelled'],
+  changes_requested: ['in_progress', 'design', 'development', 'cancelled'],
+  approved: ['ready_to_publish', 'changes_requested', 'deploying'],
+  ready_to_publish: ['published', 'changes_requested', 'deploying'],
+  published: ['maintenance', 'changes_requested', 'delivered'],
   maintenance: ['changes_requested', 'archived'],
   cancelled: ['archived'],
   archived: [],
@@ -101,7 +106,17 @@ export const quoteStatusMachine = transition<QuoteStatus>({
   paid: [],
 });
 
-/** Etapes visibles par le client, chacune adossee a un etat backend reel. */
+/**
+ * Etapes visibles par le client, chacune adossee a un etat backend reel :
+ *
+ *   Commande validee -> Informations recues -> Conception -> Developpement
+ *     -> Verifications -> Mise en ligne -> Livraison
+ *
+ * Le site est concu et developpe individuellement (son propre depot), mis en
+ * ligne sur son propre projet Cloudflare avec son domaine, verifie, puis
+ * livre. Les etats anterieurs (`in_progress`, `approved`…) sont ranges dans
+ * l'etape qui leur correspond.
+ */
 export const PROJECT_TIMELINE: ReadonlyArray<{
   key: string;
   label: string;
@@ -110,52 +125,66 @@ export const PROJECT_TIMELINE: ReadonlyArray<{
 }> = [
   {
     key: 'ordered',
-    label: 'Commande reçue',
-    description: 'Votre paiement est confirme et votre projet est ouvert.',
+    label: 'Commande validée',
+    description: 'Votre commande est confirmée et votre projet est ouvert.',
     statuses: ['ordered'],
   },
   {
     key: 'briefing',
     label: 'Informations reçues',
-    description: 'Nous rassemblons votre questionnaire, vos textes et vos visuels.',
+    description: 'Vous nous transmettez vos informations, vos textes, vos photos et votre logo.',
     statuses: ['questionnaire_pending', 'assets_pending'],
   },
   {
-    key: 'creation',
-    label: 'Création',
-    description: 'Notre équipe concoit et developpe votre site.',
-    statuses: ['in_progress', 'internal_review'],
+    key: 'design',
+    label: 'Conception',
+    description:
+      'Nous concevons votre site pour votre entreprise — structure, contenus, design — et vous le présentons.',
+    statuses: ['design', 'client_review', 'changes_requested'],
   },
   {
-    key: 'review',
-    label: 'Votre validation',
-    description: 'Vous relisez le site et demandez vos corrections.',
-    statuses: ['client_review', 'changes_requested'],
+    key: 'development',
+    label: 'Développement',
+    description:
+      'Votre site est développé dans son propre projet, à partir de la conception validée.',
+    statuses: ['development', 'in_progress'],
   },
   {
-    key: 'publish',
+    key: 'verification',
+    label: 'Vérifications',
+    description: 'Affichage mobile, formulaires, performances, référencement : nous testons tout.',
+    statuses: ['verification', 'internal_review', 'approved', 'ready_to_publish'],
+  },
+  {
+    key: 'deploying',
     label: 'Mise en ligne',
-    description: 'Le site est publié sur votre domaine, en HTTPS.',
-    statuses: ['approved', 'ready_to_publish', 'published'],
+    description: 'Le site est déployé sur son infrastructure et relié à votre domaine, en HTTPS.',
+    statuses: ['deploying', 'published'],
   },
   {
-    key: 'maintenance',
-    label: 'Maintenance',
-    description: 'Nous assurons les mises a jour, la sécurité et le support.',
-    statuses: ['maintenance'],
+    key: 'delivered',
+    label: 'Livraison',
+    description:
+      'Nous vous confions votre site : vous le gérez depuis StaX, la maintenance mensuelle commence.',
+    statuses: ['delivered', 'maintenance'],
   },
 ];
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  ordered: 'Commande reçue',
-  questionnaire_pending: 'Questionnaire à compléter',
-  assets_pending: 'En attente de vos éléments',
+  ordered: 'Commande validée',
+  questionnaire_pending: 'Informations attendues',
+  assets_pending: 'Éléments attendus',
+  design: 'Conception en cours',
+  development: 'Développement en cours',
+  verification: 'Vérifications en cours',
+  deploying: 'Mise en ligne en cours',
+  delivered: 'Site livré',
   in_progress: 'Création en cours',
   internal_review: 'Relecture interne',
-  client_review: 'En attente de votre validation',
-  changes_requested: 'Corrections demandées',
+  client_review: 'Votre validation est attendue',
+  changes_requested: 'Corrections en cours',
   approved: 'Validé',
-  ready_to_publish: 'Prêt à publier',
+  ready_to_publish: 'Prêt à mettre en ligne',
   published: 'En ligne',
   maintenance: 'En maintenance',
   cancelled: 'Annulé',

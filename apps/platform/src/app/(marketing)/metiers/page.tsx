@@ -15,7 +15,7 @@ const BUSINESS_COUNT = listSectors().reduce(
 export const metadata: Metadata = {
   title: 'Métiers',
   description:
-    `StaX couvre ${BUSINESS_COUNT} métiers répartis en ${SECTOR_COUNT} secteurs : restauration, ` +
+    `Des sites conçus pour les entreprises de ${BUSINESS_COUNT} métiers, répartis en ${SECTOR_COUNT} secteurs : restauration, ` +
     'beauté, artisanat, commerce, immobilier, santé, hébergement, sport, éducation et plus encore.',
   alternates: { canonical: '/metiers' },
 };
@@ -36,7 +36,7 @@ export default function SectorsPage() {
             as="h1"
             eyebrow="Métiers"
             title="Votre métier a ses propres besoins"
-            description={`Un restaurant a besoin d’une carte et de réservations. Un plombier a besoin de zones d’intervention et de devis. Une agence immobilière a besoin d’annonces. ${total} métiers sont configurés, et nous en ajoutons sur demande.`}
+            description={`Un restaurant a besoin d’une carte et de réservations. Un plombier a besoin de zones d’intervention et de devis. Une agence immobilière a besoin d’annonces. Notre questionnaire connaît déjà ${total} métiers, et nous en ajoutons sur demande.`}
           />
         </Container>
       </Section>
@@ -51,7 +51,7 @@ export default function SectorsPage() {
           <SectionHeading
             eyebrow={`${SECTOR_COUNT} secteurs`}
             title="Trouvez le vôtre"
-            description="Chaque secteur regroupe des métiers configurés avec leurs pages, leurs fonctionnalités et leur vocabulaire."
+            description="Pour chaque métier, nous savons quelles pages et quelles fonctionnalités sont utiles, et votre espace en parle le vocabulaire. Le site, lui, est conçu pour votre entreprise."
           />
           <ul className="mt-14 border-t border-[var(--border)]">
             {sectors.map((sector, index) => {
@@ -105,9 +105,9 @@ export default function SectorsPage() {
             Votre métier n’apparaît pas ?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[var(--foreground-muted)]">
-            Nous ajoutons régulièrement de nouveaux métiers. Dites-nous lequel, et nous étudions la
-            configuration adaptée — sans supplément si elle reste dans le cadre d’une offre
-            existante.
+            Chaque site est conçu individuellement : votre métier n’a pas besoin d’être dans la
+            liste. Dites-nous lequel, et nous adaptons le questionnaire — sans supplément si votre
+            projet reste dans le cadre d’une offre existante.
           </p>
           <ButtonLink href="/contact" variant="accent" size="pill-lg" className="mt-8">
             Nous en parler

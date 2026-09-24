@@ -87,6 +87,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     published_version_id: string | null;
     organization_id: string;
     delivered_at: string | null;
+    architecture: string;
     organizations: { name: string; slug: string } | null;
   }>(
     (await db
@@ -94,7 +95,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       .select(
         'id, name, slug, status, plan_slug, business_type_slug, is_demo, timezone, created_at, ' +
           'first_published_at, last_published_at, suspended_at, archived_at, ' +
-          'published_version_id, organization_id, delivered_at, organizations ( name, slug )',
+          'published_version_id, organization_id, delivered_at, architecture, organizations ( name, slug )',
       )
       .eq('id', id)
       .maybeSingle()) as never,
@@ -312,14 +313,44 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         />
       </div>
 
-      <SiteDelivery
-        siteId={site.id}
-        siteName={site.name}
-        deliveredLabel={site.delivered_at ? DATE.format(new Date(site.delivered_at)) : null}
-        clients={clients}
-        isMember={isMember}
-        canDeliver={canAct}
-      />
+      {site.architecture === 'external_repository' ? (
+        <Panel level={2} padding="lg" data-testid="site-infrastructure-link">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-sm font-medium">Projet · Infrastructure & livraison</h2>
+              <p className="mt-2 max-w-2xl text-sm text-[var(--foreground-muted)]">
+                Ce site est développé dans son propre dépôt GitHub et déployé par son propre projet
+                Cloudflare. Rattachement, contrat d’édition, domaine, checklist et livraison au
+                client : tout se fait sur la page dédiée.
+              </p>
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                {site.delivered_at ? (
+                  <StatusPill tone="success">
+                    Livré le {DATE.format(new Date(site.delivered_at))}
+                  </StatusPill>
+                ) : (
+                  <StatusPill tone="accent">En préparation</StatusPill>
+                )}
+              </p>
+            </div>
+            <Link
+              href={`/admin/sites/${site.id}/livraison`}
+              className="inline-flex h-10 items-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] hover:opacity-90"
+            >
+              Ouvrir Infrastructure & livraison
+            </Link>
+          </div>
+        </Panel>
+      ) : (
+        <SiteDelivery
+          siteId={site.id}
+          siteName={site.name}
+          deliveredLabel={site.delivered_at ? DATE.format(new Date(site.delivered_at)) : null}
+          clients={clients}
+          isMember={isMember}
+          canDeliver={canAct}
+        />
+      )}
 
       {site.delivered_at ? (
         <InterveneForm organizationId={site.organization_id} siteId={site.id} />

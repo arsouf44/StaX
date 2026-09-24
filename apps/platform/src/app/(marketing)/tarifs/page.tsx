@@ -6,6 +6,7 @@ import { Alert, Container, Panel, Section, SectionHeading, ButtonLink } from '@s
 import { PlanComparisonTable, PricingCards } from '~/components/marketing/pricing-cards';
 import { entryPriceLabel, getPlans } from '~/lib/catalog';
 import { FAQ_ITEMS } from '~/content/faq';
+import { MAINTENANCE_EXCLUDES, MAINTENANCE_INCLUDES } from '~/content/maintenance';
 
 /**
  * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Tarifs',
     description:
-      'Un prix de création, puis une maintenance annuelle.' +
+      'Un prix de création, puis une maintenance mensuelle qui commence à la livraison.' +
       (entry ? ` ${entry}.` : '') +
       ' Pas de commission sur vos ventes, pas de coût caché.',
     alternates: { canonical: '/tarifs' },
@@ -45,7 +46,7 @@ export default async function PricingPage() {
             align="center"
             eyebrow="Tarifs"
             title="Un prix clair, sans surprise"
-            description="Vous payez la création de votre site, puis une maintenance annuelle qui couvre l’hébergement, la sécurité, les sauvegardes et le support. Rien d’autre."
+            description="Vous payez la création de votre site à la commande. La maintenance mensuelle — hébergement, publication, surveillance, support et accès à l’éditeur — ne commence qu’à la livraison. Rien d’autre."
             className="mx-auto"
           />
         </Container>
@@ -55,7 +56,9 @@ export default async function PricingPage() {
         <Container size="wide">
           <PricingCards plans={plans} />
           <p className="mt-6 text-center text-xs text-[var(--muted)]">
-            Tous les prix sont indiqués hors taxes. TVA française de 20 % applicable.
+            Tous les prix sont indiqués hors taxes. TVA française de 20 % applicable. Chaque offre
+            correspond à une quantité de travail — pages, design, fonctionnalités, accompagnement —,
+            jamais à un modèle plus ou moins personnalisé.
           </p>
         </Container>
       </Section>
@@ -69,6 +72,48 @@ export default async function PricingPage() {
           />
           <div className="mt-10">
             <PlanComparisonTable plans={plans} />
+          </div>
+        </Container>
+      </Section>
+
+      <Section spacing="compact">
+        <Container size="wide">
+          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.4fr] lg:items-start">
+            <SectionHeading
+              eyebrow="Maintenance mensuelle"
+              title="Ce que comprend la maintenance"
+              description="Elle commence à la livraison de votre site, jamais avant, et se résilie en ligne à tout moment. Elle ne comprend pas de développement illimité : les évolutions importantes font l’objet d’un devis."
+            />
+            <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+              <Panel level={1} padding="lg">
+                <h3 className="text-sm font-medium">Inclus chaque mois</h3>
+                <ul className="mt-4 space-y-2.5">
+                  {MAINTENANCE_INCLUDES.map((item) => (
+                    <li key={item} className="flex gap-2.5 text-sm">
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
+                      />
+                      <span className="leading-relaxed text-[var(--foreground-muted)]">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+              <Panel level={1} padding="lg">
+                <h3 className="text-sm font-medium">Sur devis</h3>
+                <ul className="mt-4 space-y-2.5">
+                  {MAINTENANCE_EXCLUDES.map((item) => (
+                    <li key={item} className="flex gap-2.5 text-sm">
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 size-1 shrink-0 rounded-full bg-[var(--muted)]"
+                      />
+                      <span className="leading-relaxed text-[var(--foreground-muted)]">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            </div>
           </div>
         </Container>
       </Section>
@@ -92,11 +137,12 @@ export default async function PricingPage() {
               </p>
             </Panel>
             <Panel level={1} padding="lg">
-              <h2 className="text-base font-medium">Résiliable en ligne, en quelques clics</h2>
+              <h2 className="text-base font-medium">Mensuelle, sans durée minimale</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                La maintenance est annuelle et se reconduit chaque année. Vous résiliez depuis votre
-                espace quand vous voulez : elle prend fin à l’échéance en cours, et nous vous
-                rappelons la date de reconduction à l’avance. Vos données restent exportables.
+                La maintenance est facturée chaque mois, à partir de la livraison de votre site —
+                rien n’est prélevé pendant sa conception. Vous la résiliez depuis votre espace quand
+                vous voulez : elle prend fin au terme du mois en cours. Vos données restent
+                exportables.
               </p>
             </Panel>
           </div>

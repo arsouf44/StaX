@@ -118,17 +118,9 @@ const domainSchema = z
   })
   .strict()
   .superRefine((data, context) => {
-    if (data.domainHandling === 'subdomain_only') {
-      const parsed = slugSchema.safeParse(data.subdomain ?? '');
-      if (!parsed.success) {
-        context.addIssue({
-          code: 'custom',
-          path: ['subdomain'],
-          message: 'Choisissez l’adresse de votre site (lettres, chiffres et tirets).',
-        });
-      }
-      return;
-    }
+    // Domaine choisi plus tard : le site est d abord servi sur l adresse
+    // technique de son propre projet Cloudflare, communiquee a la mise en ligne.
+    if (data.domainHandling === 'subdomain_only') return;
     const parsed = hostnameSchema.safeParse(data.domainHostname ?? '');
     if (!parsed.success) {
       context.addIssue({
@@ -152,10 +144,11 @@ export async function saveDomainAction(
     };
   }
 
+  const later = parsed.data.domainHandling === 'subdomain_only';
   await writeOrderDraft({
     domainHandling: parsed.data.domainHandling,
-    domainHostname: parsed.data.domainHostname || undefined,
-    subdomain: parsed.data.subdomain || undefined,
+    domainHostname: later ? undefined : parsed.data.domainHostname || undefined,
+    subdomain: undefined,
   });
   redirect('/commander/recapitulatif');
 }

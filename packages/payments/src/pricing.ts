@@ -18,7 +18,7 @@ export interface PricingPlanInput {
   slug: string;
   setupPriceCents: Cents;
   maintenancePriceCents: Cents;
-  /** Periodicite de la maintenance. Annuelle pour toutes les offres StaX. */
+  /** Periodicite de la maintenance : mensuelle pour les offres en vigueur. */
   billingInterval: BillingInterval;
   vatRateBps: number;
   pricesIncludeVat: boolean;
@@ -126,8 +126,8 @@ export function computeOrderPricing(
 }
 
 /**
- * Cout total de la premiere annee : creation + les echeances de maintenance
- * dues sur douze mois.
+ * Cout total de la premiere annee d'utilisation : creation + les douze
+ * premieres echeances de maintenance (qui commencent a la livraison).
  *
  * Affiche sur la page tarifs pour qu'aucun cout ne soit cache. Le nombre
  * d'echeances vient de la periodicite de l'offre, jamais d'une constante : une

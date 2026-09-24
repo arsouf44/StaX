@@ -96,6 +96,64 @@ test.describe('Site public', () => {
     expect(capital).toBeTruthy();
   });
 
+  test('l’accueil dit le vrai produit : nous créons le site, le client le gère ensuite', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const heading = page.getByRole('heading', { level: 1 });
+    await expect(heading).toContainText('Nous créons votre site.');
+    await expect(heading).toContainText('Vous le gérez ensuite.');
+    const body = (await page.locator('body').textContent()) ?? '';
+    expect(body).toContain('Pas de modèle à personnaliser');
+    expect(body).toContain('Vous publiez, et c’est réellement en ligne');
+  });
+
+  test('« Comment ça marche » suit six étapes, de votre projet à votre autonomie', async ({
+    page,
+  }) => {
+    await page.goto('/comment-ca-marche');
+    const steps = await page.locator('ol h3').allTextContents();
+    expect(steps.slice(0, 6)).toEqual([
+      'Votre projet',
+      'Conception',
+      'Développement',
+      'Mise en ligne',
+      'Livraison',
+      'Vous gardez la main',
+    ]);
+  });
+
+  test('aucune page n’annonce un générateur, un modèle ou un glisser-déposer', async ({ page }) => {
+    for (const path of [
+      '/',
+      '/tarifs',
+      '/comment-ca-marche',
+      '/fonctionnalites',
+      '/fonctionnalites/editeur',
+      '/metiers',
+      '/realisations',
+      '/faq',
+    ]) {
+      await page.goto(path);
+      // Le texte visible seulement : les scripts de la page ne sont pas lus.
+      const body = await page.locator('main').innerText();
+      expect(body, path).not.toMatch(
+        /glisser-déposer|drag and drop|template|activés automatiquement/i,
+      );
+    }
+  });
+
+  test('les CGV décrivent une maintenance mensuelle qui commence à la livraison', async ({
+    page,
+  }) => {
+    await page.goto('/cgv');
+    const body = (await page.locator('body').textContent()) ?? '';
+    expect(body).toContain('Maintenance mensuelle');
+    expect(body).toContain('commence le jour de la Livraison');
+    expect(body).toContain('Exceptionnel');
+    expect(body).not.toMatch(/maintenance annuelle/i);
+  });
+
   test('robots.txt existe et reste coherent', async ({ request }) => {
     const response = await request.get('/robots.txt');
     expect(response.ok()).toBe(true);

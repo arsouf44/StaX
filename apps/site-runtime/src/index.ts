@@ -22,6 +22,7 @@ import {
 } from './api/customer-account';
 import { handleCollect } from './api/collect';
 import { handleDonation } from './api/donations';
+import { handleSitesApi, isSitesApiPath } from './sites-api';
 import type { WorkerEnv } from './env';
 
 /**
@@ -162,6 +163,11 @@ async function handlePage(request: Request, site: ResolvedSite, path: string): P
 
 async function route(request: Request): Promise<Response> {
   const url = new URL(request.url);
+
+  // API des sites independants : le site est designe par sa cle publique, et
+  // chaque ecriture exige une origine qui lui appartient (voir sites-api.ts).
+  if (isSitesApiPath(url.pathname)) return handleSitesApi(request);
+
   const path = normalizePath(url.pathname);
 
   const outcome = await resolveSite(request.headers.get('host'));

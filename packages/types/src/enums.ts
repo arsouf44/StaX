@@ -87,6 +87,13 @@ export const PROJECT_STATUSES = [
   'ordered',
   'questionnaire_pending',
   'assets_pending',
+  // Parcours d'un site concu et developpe individuellement (0042).
+  'design',
+  'development',
+  'verification',
+  'deploying',
+  'delivered',
+  // Etats anterieurs, toujours valides pour les projets existants.
   'in_progress',
   'internal_review',
   'client_review',
@@ -208,13 +215,12 @@ export const FEATURE_KEYS = [
   'content_editor',
   'scheduled_publishing',
   'version_history',
-  'advanced_animations',
-  'custom_design',
   'bookings',
   'ecommerce',
   'online_payments',
   'customer_accounts',
   'blog',
+  'advanced_forms',
   'advanced_analytics',
   'multi_language',
   'team_collaboration',
@@ -222,15 +228,15 @@ export const FEATURE_KEYS = [
 ] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
+/** Quotas REELLEMENT appliques par la base (declencheurs de 0046). */
 export const LIMIT_KEYS = [
-  'max_sites',
   'max_pages',
   'max_team_members',
   'max_products',
   'max_media_mb',
-  'max_monthly_submissions',
   'max_forms',
+  'max_locales',
 ] as const;
 export type LimitKey = (typeof LIMIT_KEYS)[number];
 
-export type PlanSlug = 'essentiel' | 'premium' | 'ultra-premium' | 'sur-mesure';
+export type PlanSlug = 'essentiel' | 'premium' | 'ultra-premium' | 'exceptionnel' | 'sur-mesure';

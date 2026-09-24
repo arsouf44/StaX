@@ -159,7 +159,7 @@ export function translateDatabaseError(error: PostgrestLikeError): DatabaseError
       );
     case '23514':
       return new DatabaseError(
-        error.hint ?? 'Cette opération n est pas autorisée dans l état actuel.',
+        error.hint ?? 'Cette opération n’est pas autorisée dans l’état actuel.',
         code,
         error.details,
       );

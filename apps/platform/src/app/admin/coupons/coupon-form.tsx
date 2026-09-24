@@ -153,7 +153,7 @@ export function CouponActions({ active }: { active: ActiveCoupon[] }) {
           <Field label="Porte sur">
             <Select name="appliesTo" defaultValue="setup">
               <option value="setup">La création du site</option>
-              <option value="maintenance">La maintenance annuelle</option>
+              <option value="maintenance">La maintenance mensuelle</option>
               <option value="both">Les deux</option>
             </Select>
           </Field>

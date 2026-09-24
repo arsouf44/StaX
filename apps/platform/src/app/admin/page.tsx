@@ -142,7 +142,7 @@ export default async function AdminHomePage() {
           <Stat
             label="Revenu récurrent annuel"
             value={formatMoney(overview.arrCents, 'EUR', { hideDecimalsWhenRound: true })}
-            hint={`${overview.activeSubscriptions} abonnement(s) actif(s) · maintenance facturée à l’année`}
+            hint={`${overview.activeSubscriptions} abonnement(s) actif(s) · mensualités ramenées à l’année`}
           />
           <Stat
             label="Encaissé sur 30 jours"

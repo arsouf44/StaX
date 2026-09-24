@@ -11,7 +11,7 @@ const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
 
 const SCOPES: Record<string, string> = {
   setup: 'création du site',
-  maintenance: 'maintenance annuelle',
+  maintenance: 'maintenance mensuelle',
   both: 'création et maintenance',
 };
 

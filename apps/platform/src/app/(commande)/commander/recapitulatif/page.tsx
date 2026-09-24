@@ -2,17 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { resolveBusiness } from '@stax/business';
-import {
-  formatMaintenance,
-  formatMoney,
-  grossFromNet,
-  maintenanceTrialDays,
-  vatFromNet,
-} from '@stax/payments';
-import { refundPolicyConfig, sitesDomain } from '@stax/config';
+import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
+import { refundPolicyConfig } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
-import { getPlans } from '~/lib/catalog';
+import { deliveryWeeksLabel, getPlans } from '~/lib/catalog';
 import { readOrderDraft } from '~/lib/order-draft';
 import { getSession } from '~/lib/session';
 import { TERMS_VERSION } from '~/content/legal';
@@ -28,29 +22,29 @@ export const metadata: Metadata = {
 const DOMAIN_LABELS: Record<string, string> = {
   customer_owned: 'Vous connectez votre nom de domaine actuel',
   stax_purchase: 'Nous achetons le nom de domaine pour vous',
-  subdomain_only: 'Adresse temporaire, domaine choisi plus tard',
+  subdomain_only: 'Domaine choisi plus tard : adresse technique de l’hébergement en attendant',
   none: 'À définir ensemble',
 };
 
 /**
- * Ce qui se passe apres la commande. StaX concoit et construit le site, de
- * zero, sur plusieurs semaines ; le client le decouvre quand il lui est
- * confie. Rien ici ne promet un site disponible le jour meme.
+ * Ce qui se passe apres la commande. StaX concoit et developpe le site
+ * individuellement, dans son propre depot, puis le met en ligne sur son
+ * propre projet Cloudflare ; le client en prend la main a la livraison. Rien
+ * ici ne promet un site disponible le jour meme.
  */
-function nextSteps(trialDays: number): string[] {
+function nextSteps(deliveryLabel: string): string[] {
   return [
-    'Votre espace client s’ouvre dès le paiement : vous y suivez l’avancement de votre projet et échangez avec l’équipe.',
-    'L’équipe StaX conçoit et construit votre site de A à Z, à partir de vos informations. Comptez quelques semaines.',
-    'Quand il est prêt, nous vous le confions : il apparaît dans votre espace, vous le relisez et demandez vos corrections.',
-    'Nous le mettons en ligne avec votre accord. Votre première année de maintenance commence ' +
-      `à la mise en ligne, et au plus tard ${trialDays} jours après la commande.`,
+    'Votre espace client s’ouvre dès le paiement : vous y suivez chaque étape de votre projet, envoyez vos informations et vos fichiers, et échangez avec l’équipe.',
+    `Nous concevons puis développons votre site pour votre entreprise — pas de modèle à personnaliser. Comptez ${deliveryLabel} à partir de la réception de tous vos éléments.`,
+    'Nous le mettons en ligne sur votre domaine, en HTTPS, et vérifions tout avant de vous le livrer.',
+    'À la livraison, vous gardez la main : vous modifiez vos textes, photos et informations depuis StaX. La maintenance mensuelle commence ce jour-là, pas avant.',
   ];
 }
 
 const INTERNAL_NEXT_STEPS = [
   'La commande est enregistrée sans paiement et l’espace client s’ouvre : il affiche le suivi du projet, comme pour un client.',
-  'L’équipe StaX conçoit et construit le site de A à Z depuis l’administration.',
-  'Le site n’apparaît dans l’espace client que lorsque l’administration le lui confie.',
+  'L’équipe StaX conçoit et développe le site hors de StaX, dans son propre dépôt GitHub et son propre projet Cloudflare, puis le rattache.',
+  'Le site n’est modifiable depuis l’espace client que lorsque l’administration le lui livre.',
   'L’équipe StaX garde la main sur le site en permanence, avant comme après.',
 ];
 
@@ -67,6 +61,7 @@ export default async function OrderSummaryPage() {
 
   const business = resolveBusiness(draft.businessTypeSlug);
   const refund = refundPolicyConfig();
+  const delivery = deliveryWeeksLabel(plan.deliveryWeeks);
 
   // Affichage seulement : c est `create_internal_order` qui verifie, en base,
   // que le compte est bien un compte interne exonere.
@@ -83,7 +78,7 @@ export default async function OrderSummaryPage() {
 
   const address =
     draft.domainHandling === 'subdomain_only'
-      ? `${draft.subdomain}.${sitesDomain()}`
+      ? 'Communiquée à la mise en ligne'
       : (draft.domainHostname ?? '—');
 
   return (
@@ -103,6 +98,11 @@ export default async function OrderSummaryPage() {
             <h2 className="text-sm font-medium">Votre projet</h2>
             <dl className="mt-4 divide-y divide-[var(--border)]">
               <Row label="Offre" value={plan.name} href="/commander" />
+              <Row
+                label="Délai de réalisation"
+                value={delivery}
+                hint="À compter de la réception de tous vos éléments"
+              />
               <Row label="Métier" value={business.name} href="/commander/metier" />
               <Row
                 label="Entreprise"
@@ -121,18 +121,37 @@ export default async function OrderSummaryPage() {
             </dl>
           </Panel>
 
+          {plan.inclusions.length > 0 ? (
+            <Panel level={1} padding="lg">
+              <h2 className="text-sm font-medium">Ce que comprend l’offre {plan.name}</h2>
+              <ul className="mt-4 grid gap-2 text-sm text-[var(--foreground-muted)] sm:grid-cols-2">
+                {plan.inclusions.map((inclusion) => (
+                  <li key={inclusion.label} className="flex gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
+                    />
+                    <span>{inclusion.label}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-[var(--muted)]">
+                Cette liste est enregistrée avec votre commande : elle fait foi, même si le
+                catalogue évolue ensuite.
+              </p>
+            </Panel>
+          ) : null}
+
           <Panel level={1} padding="lg">
             <h2 className="text-sm font-medium">
               {internal ? 'Ce qui se passe ensuite' : 'Ce qui se passe après le paiement'}
             </h2>
             <ol className="mt-4 space-y-3 text-sm text-[var(--foreground-muted)]">
-              {(internal ? INTERNAL_NEXT_STEPS : nextSteps(maintenanceTrialDays())).map(
-                (step, index) => (
-                  <li key={step}>
-                    <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
-                  </li>
-                ),
-              )}
+              {(internal ? INTERNAL_NEXT_STEPS : nextSteps(delivery)).map((step, index) => (
+                <li key={step}>
+                  <strong className="text-[var(--foreground)]">{index + 1}.</strong> {step}
+                </li>
+              ))}
             </ol>
           </Panel>
         </div>
@@ -191,8 +210,9 @@ export default async function OrderSummaryPage() {
                 <strong className="text-[var(--foreground)]">
                   {formatMaintenance(maintenanceGross, plan.currency, plan.billingInterval)}
                 </strong>{' '}
-                de maintenance, prélevée à partir de la mise en ligne de votre site. Résiliable à
-                tout moment depuis votre espace.
+                de maintenance, prélevée chaque mois à partir de la <strong>livraison</strong> de
+                votre site — rien avant. Votre carte est enregistrée par Stripe pour ce prélèvement.
+                Résiliable depuis votre espace, dans les conditions des CGV.
               </p>
 
               <div className="mt-6">
@@ -249,7 +269,8 @@ function Row({
   label: string;
   value: string;
   hint?: string;
-  href: string;
+  /** Etape ou modifier la valeur ; absente pour une valeur qui en decoule. */
+  href?: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-4 py-3">
@@ -258,12 +279,14 @@ function Row({
         <dd className="mt-0.5 text-sm">{value}</dd>
         {hint ? <p className="mt-0.5 text-xs text-[var(--muted)]">{hint}</p> : null}
       </div>
-      <Link
-        href={href}
-        className="shrink-0 text-xs text-[var(--foreground-muted)] underline underline-offset-4 hover:text-[var(--foreground)]"
-      >
-        Modifier
-      </Link>
+      {href ? (
+        <Link
+          href={href}
+          className="shrink-0 text-xs text-[var(--foreground-muted)] underline underline-offset-4 hover:text-[var(--foreground)]"
+        >
+          Modifier
+        </Link>
+      ) : null}
     </div>
   );
 }

@@ -116,7 +116,6 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
         icon: 'zap',
         minimum: 'platform_admin',
       },
-      { href: '/admin/templates', label: 'Modèles', icon: 'layout-grid', minimum: 'designer' },
       { href: '/admin/metiers', label: 'Métiers', icon: 'briefcase', minimum: 'support' },
       { href: '/admin/taches', label: 'Tâches de fond', icon: 'clock', minimum: 'developer' },
     ],

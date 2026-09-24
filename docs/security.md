@@ -10,7 +10,11 @@ intention.
 
 | Adversaire | Ce qu’il cherche | Défense principale |
 | --- | --- | --- |
-| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 175 assertions |
+| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 458 assertions SQL |
+| Client pressé | Modifier son site avant la livraison, ou après une suspension | `app.site_content_access` en base |
+| Client malveillant | Rattacher le dépôt ou le site d’une autre organisation | rattachement réservé à l’équipe, un dépôt = un site, propriétaire vérifié |
+| Tiers qui forge un webhook | Faire passer une version pour publiée, altérer un dépôt connu | signature HMAC / secret, idempotence, relecture auprès de l’API du fournisseur |
+| Fuite d’un jeton de fournisseur | Écrire dans tous les dépôts, piloter le compte Cloudflare | application GitHub (jetons d’une heure, un dépôt, `contents`), jeton Cloudflare minimal, serveur uniquement |
 | Visiteur d’un site client | Obtenir un service gratuitement, fausser un prix | Prix et capacités calculés en base |
 | Robot | Envoyer du pourriel, tester des codes | Limitation de débit, champ piège, Turnstile |
 | Attaquant avec un mot de passe volé | Prendre un compte | Double facteur, obligatoire pour l’administration |
@@ -63,7 +67,98 @@ L’accès au back-office exige trois conditions cumulatives :
 
 ---
 
-## 3. Intégrité financière
+## 3. Sites livrés : dépôts, déploiements, publication
+
+Chaque site a son dépôt GitHub et son projet Cloudflare ; StaX y écrit et les
+observe. Les règles :
+
+**Secrets côté serveur uniquement.** La clé privée de l’application GitHub,
+les jetons d’installation, le jeton Cloudflare, les secrets de webhook et
+`CRON_SECRET` ne sont lus que par du code serveur (`import 'server-only'`,
+`readEnv`), jamais préfixés `NEXT_PUBLIC_`, jamais écrits en base, jamais
+renvoyés au navigateur. Un test parcourt tous les composants client et
+échoue s’il y trouve l’un de ces noms (`tests/security/external-sites.test.ts`).
+
+**Application GitHub plutôt qu’un jeton personnel.** Permissions *Contents*
+(lecture/écriture) et *Metadata* (lecture), rien d’autre. Chaque opération
+demande un jeton d’installation **restreint au seul dépôt du site**
+(`repository_ids`) et au niveau utile (`contents: read` pour importer,
+`write` pour publier). Les jetons expirent en une heure et ne sont gardés
+qu’en mémoire. Les commits avancent la branche **sans `force`**.
+
+**Jeton Cloudflare minimal.** Limité au compte des sites : *Pages: Edit*,
+*Workers Scripts: Read*, *Workers Builds Configuration: Edit*. Aucune
+permission DNS, facturation ou membres.
+
+**Webhooks authentifiés, puis vérifiés.**
+
+| Point d’entrée | Authentification | Sinon |
+| --- | --- | --- |
+| `/api/webhooks/github` | `X-Hub-Signature-256` (HMAC SHA-256 du corps brut, temps constant) | 401 avant lecture |
+| `/api/webhooks/cloudflare` | `cf-webhook-auth` (secret de destination, temps constant) | 401 avant lecture |
+| `/api/webhooks/stripe`, `stripe-connect` | signature Stripe | 400 |
+| `/api/cron/sites` | `Authorization: Bearer <CRON_SECRET>` | 401 |
+
+Un secret absent ou trop court (moins de 16 caractères) refuse tout. Chaque
+livraison GitHub est enregistrée sous contrainte d’unicité
+(`X-GitHub-Delivery`) : un rejeu n’est pas retraité. Et un webhook n’est
+qu’un **signal** : l’état qui compte (commit, déploiement) est relu auprès de
+l’API du fournisseur. Une notification forgée ne peut pas publier une
+version.
+
+**Aucun rattachement arbitraire.** Seule l’équipe rattache un dépôt ou un
+projet (`app.connect_site_repository`, `app.connect_site_hosting` refusent un
+client). La base vérifie que l’installation est connue et active, que le
+dépôt appartient au compte de l’installation, qu’il ne sert pas déjà un autre
+site (index unique), et que le site n’est pas de l’ancien moteur. Le domaine
+d’un site livré n’est modifié que par l’équipe (`app.guard_external_domain`).
+Un client ne peut donc jamais rattacher le site, le dépôt ou le domaine
+d’une autre organisation.
+
+**Pas d’édition avant la livraison.** `app.site_content_access` réserve le
+brouillon, l’aperçu et la publication aux membres de l’organisation **après**
+`delivered_at` ; seul le personnel de la plateforme y accède avant. Le client
+ne peut écrire ni `delivered_at`, ni son offre, ni la version en production
+(`app.guard_site_commercials`).
+
+**Site suspendu.** `app.site_is_available` (0051) : un site archivé ou
+suspendu (par statut ou par date) perd l’édition, l’aperçu et la publication ;
+une publication déjà en file échoue à sa prise en charge au lieu d’être
+déployée. L’historique reste lisible et l’export possible.
+
+**Contenu revalidé à chaque étape.** Le contenu écrit dans le dépôt est
+revalidé contre le contrat au moment du commit, quelle que soit la façon dont
+il a été enregistré. Le texte riche est rendu en HTML échappé par StaX ; les
+images sont des fichiers téléversés dans la médiathèque (type vérifié), copiés
+sous un nom dérivé de leur identifiant. Les chemins du manifeste sont
+relatifs et sans `..`.
+
+**Pont d’aperçu.** Le script du pont n’accepte que les messages de l’origine
+de l’éditeur StaX, n’exécute jamais de code reçu et ne fait que remplacer du
+texte ou des attributs d’image et de lien. L’aperçu est servi par le projet
+Cloudflare du site, donc sur une **autre origine** que l’éditeur, dans un
+`iframe` à attribut `sandbox`.
+
+**API des sites.** La clé publique d’un site n’ouvre aucun droit seule :
+toute écriture exige une origine appartenant au site, est limitée en débit,
+et la base vérifie à chaque opération que l’offre comprend le module.
+
+**Tout est audité.** Installation, rattachement et détachement (dépôt,
+projet, domaine), import de manifeste, contenu initial, contrôles attestés de la
+checklist, livraison, publication, restauration, échec de déploiement,
+relance : chaque action écrit une ligne dans le journal d’audit, avec son
+auteur (personne ou système). Le journal lui-même est protégé : hors serveur et
+équipe StaX, `public.write_audit` n’écrit que dans le journal de sa propre
+organisation, pour un site de cette organisation (0052).
+
+**Aperçu dans l’éditeur.** La CSP de `/app/editeur` n’autorise dans un iframe
+que `*.pages.dev` et `*.workers.dev` : l’éditeur encadre donc l’adresse du
+projet Cloudflare du site (même déploiement que le domaine du client), jamais
+une origine arbitraire.
+
+---
+
+## 4. Intégrité financière
 
 - **Aucun montant ne vient du navigateur.** `app.create_order` lit le prix dans
   le catalogue ; le webhook crédite le montant figé dans la commande.
@@ -85,7 +180,7 @@ L’accès au back-office exige trois conditions cumulatives :
 
 ---
 
-## 4. Données de paiement
+## 5. Données de paiement
 
 **Aucune donnée de carte n’est collectée, transmise ou stockée.** Le paiement se
 fait sur les pages hébergées de Stripe. Nous ne conservons que des identifiants
@@ -98,7 +193,7 @@ StaX n’est pas dans ce circuit financier et la commission est fixée à zéro.
 
 ---
 
-## 5. En-têtes et politique de sécurité du contenu
+## 6. En-têtes et politique de sécurité du contenu
 
 Deux profils, appliqués à **toutes** les réponses :
 
@@ -116,7 +211,7 @@ l’utilisateur — ils sont produits à partir de valeurs validées par un sch�
 
 ---
 
-## 6. Contenus intégrés
+## 7. Contenus intégrés
 
 Un client ne peut pas coller une `iframe` arbitraire. Le bloc « contenu
 intégré » accepte un **fournisseur choisi dans une liste fermée** et un
@@ -126,7 +221,7 @@ tiers sur le domaine du client, donc sur ses propres cookies.
 
 ---
 
-## 7. Formulaires publics
+## 8. Formulaires publics
 
 Quatre protections, dans cet ordre :
 
@@ -148,7 +243,7 @@ interne. Testé.
 
 ---
 
-## 8. Secrets et empreintes
+## 9. Secrets et empreintes
 
 | Donnée | Stockage |
 | --- | --- |
@@ -167,7 +262,7 @@ sécurité en base, en plus de la discipline applicative.
 
 ---
 
-## 9. Mot de passe initial de l’administrateur
+## 10. Mot de passe initial de l’administrateur
 
 Il n’apparaît **nulle part** : ni dans le dépôt, ni dans le JavaScript, ni dans
 Git, ni dans une migration, ni dans `.env.example`.
@@ -179,7 +274,7 @@ service et impose l’enrôlement du second facteur.
 
 ---
 
-## 10. Prise en main d’un compte client par le support
+## 11. Prise en main d’un compte client par le support
 
 Encadrée strictement :
 
@@ -192,7 +287,7 @@ Encadrée strictement :
 
 ---
 
-## 11. Ce que nous ne prétendons pas
+## 12. Ce que nous ne prétendons pas
 
 - **Aucun chiffre de disponibilité n’est publié** tant qu’il n’est pas mesuré et
   vérifiable. La page d’état affiche « non mesuré » quand une sonde n’a jamais

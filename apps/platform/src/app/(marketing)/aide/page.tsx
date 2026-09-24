@@ -68,7 +68,7 @@ const TOPICS = [
     articles: [
       'Télécharger mes factures',
       'Changer de moyen de paiement',
-      'Comprendre ma maintenance annuelle',
+      'Comprendre ma maintenance mensuelle',
       'Résilier ma maintenance',
     ],
   },

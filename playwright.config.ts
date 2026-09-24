@@ -25,6 +25,9 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
 
   use: {
+    // Navigateur deja installe sur la machine (meme variable que
+    // playwright.stack.config.ts) ; a defaut, celui de Playwright.
+    launchOptions: { executablePath: process.env.STAX_E2E_CHROMIUM || undefined },
     baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100',
     locale: 'fr-FR',
     timezoneId: 'Europe/Paris',

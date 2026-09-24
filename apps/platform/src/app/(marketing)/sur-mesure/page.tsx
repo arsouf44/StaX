@@ -21,7 +21,7 @@ const CASES = [
   },
   {
     title: 'Catalogue important',
-    body: 'Plusieurs milliers de références, tarification par volume ou par client, disponibilités complexes : nous adaptons le modèle de données.',
+    body: 'Plusieurs milliers de références, tarification par volume ou par client, disponibilités complexes : nous concevons la structure de données adaptée.',
   },
   {
     title: 'Plusieurs établissements',
@@ -52,7 +52,7 @@ const PROCESS = [
   {
     title: 'Nous établissons un devis détaillé',
     description:
-      'Chaque ligne est chiffrée séparément : vous voyez ce que coûte chaque fonctionnalité et vous pouvez en retirer. Le devis précise aussi la maintenance annuelle associée.',
+      'Chaque ligne est chiffrée séparément : vous voyez ce que coûte chaque fonctionnalité et vous pouvez en retirer. Le devis précise aussi la maintenance mensuelle associée, qui commence à la livraison.',
     detail: 'Valable 30 jours',
   },
   {

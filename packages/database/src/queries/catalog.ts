@@ -1,4 +1,11 @@
-import type { BillingInterval, Cents, Currency, FeatureRow, PlanRow } from '@stax/types';
+import type {
+  BillingInterval,
+  Cents,
+  Currency,
+  FeatureRow,
+  PlanHighlight,
+  PlanRow,
+} from '@stax/types';
 import { type Db, unwrapList } from '../client';
 
 /**
@@ -27,9 +34,13 @@ export interface PlanView {
   tagline: string | null;
   description: string | null;
   badge: string | null;
+  /** `signature` distingue une categorie superieure (Exceptionnel). */
+  highlight: PlanHighlight;
+  /** Delai annonce, en semaines ; `null` pour une offre sur devis. */
+  deliveryWeeks: { min: number; max: number } | null;
   setupPriceCents: Cents;
   maintenancePriceCents: Cents;
-  /** Periodicite de la maintenance. Annuelle pour toutes les offres StaX. */
+  /** Periodicite de la maintenance : mensuelle pour les offres en vigueur. */
   billingInterval: BillingInterval;
   currency: Currency;
   vatRateBps: number;
@@ -37,6 +48,20 @@ export interface PlanView {
   isQuoteOnly: boolean;
   sortOrder: number;
   features: PlanFeatureView[];
+  /**
+   * Ce que l'offre comprend, en clair : engagements de conception et
+   * d'accompagnement, et droits logiciels REELLEMENT accordes (la base
+   * refuse une inclusion adossee a un droit que l'offre n'accorde pas).
+   */
+  inclusions: PlanInclusionView[];
+}
+
+export interface PlanInclusionView {
+  category: 'conception' | 'site' | 'gestion' | 'accompagnement';
+  label: string;
+  detail: string | null;
+  featureKey: string | null;
+  highlight: boolean;
 }
 
 interface PlanRowWithFeatures extends PlanRow {
@@ -44,6 +69,14 @@ interface PlanRowWithFeatures extends PlanRow {
     enabled: boolean;
     limit_value: number | null;
     features: FeatureRow | null;
+  }> | null;
+  plan_inclusions: Array<{
+    category: PlanInclusionView['category'];
+    label: string;
+    detail: string | null;
+    feature_key: string | null;
+    highlight: boolean;
+    sort_order: number;
   }> | null;
 }
 
@@ -61,6 +94,24 @@ function toPlanView(row: PlanRowWithFeatures): PlanView {
       limitValue: pf.limit_value,
     }));
 
+  // `{limit}` prend la limite de l'offre pour ce droit : le chiffre affiche
+  // est celui que la plateforme applique, jamais une recopie.
+  const limitOf = (key: string | null) =>
+    key ? (features.find((feature) => feature.key === key)?.limitValue ?? null) : null;
+  const inclusions: PlanInclusionView[] = [...(row.plan_inclusions ?? [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .filter(
+      (inclusion) =>
+        !inclusion.label.includes('{limit}') || limitOf(inclusion.feature_key) !== null,
+    )
+    .map((inclusion) => ({
+      category: inclusion.category,
+      label: inclusion.label.replace('{limit}', String(limitOf(inclusion.feature_key) ?? '')),
+      detail: inclusion.detail,
+      featureKey: inclusion.feature_key,
+      highlight: inclusion.highlight,
+    }));
+
   return {
     id: row.id,
     slug: row.slug,
@@ -69,20 +120,28 @@ function toPlanView(row: PlanRowWithFeatures): PlanView {
     tagline: row.tagline,
     description: row.description,
     badge: row.badge,
+    highlight:
+      row.highlight === 'popular' || row.highlight === 'signature' ? row.highlight : 'none',
+    deliveryWeeks:
+      row.delivery_weeks_min !== null && row.delivery_weeks_max !== null
+        ? { min: row.delivery_weeks_min, max: row.delivery_weeks_max }
+        : null,
     setupPriceCents: row.setup_price_cents,
     maintenancePriceCents: row.maintenance_price_cents,
-    billingInterval: row.billing_interval === 'month' ? 'month' : 'year',
+    billingInterval: row.billing_interval === 'year' ? 'year' : 'month',
     currency: row.currency,
     vatRateBps: row.vat_rate_bps,
     pricesIncludeVat: row.prices_include_vat,
     isQuoteOnly: row.is_quote_only,
     sortOrder: row.sort_order,
     features,
+    inclusions,
   };
 }
 
 const PLAN_SELECT = `
-  id, slug, version, name, tagline, description, badge,
+  id, slug, version, name, tagline, description, badge, highlight,
+  delivery_weeks_min, delivery_weeks_max,
   setup_price_cents, maintenance_price_cents, billing_interval, currency, vat_rate_bps,
   prices_include_vat,
   is_quote_only, is_active, is_public, sort_order,
@@ -91,7 +150,8 @@ const PLAN_SELECT = `
   plan_features (
     enabled, limit_value,
     features ( key, label, description, category, kind, unit )
-  )
+  ),
+  plan_inclusions ( category, label, detail, feature_key, highlight, sort_order )
 `;
 
 export async function listPublicPlans(db: Db): Promise<PlanView[]> {
