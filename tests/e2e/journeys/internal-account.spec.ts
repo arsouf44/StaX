@@ -32,7 +32,7 @@ test.describe.configure({ mode: 'serial' });
 
 const INTERNAL_EMAIL = process.env.STAX_E2E_INTERNAL_EMAIL ?? 'a.gomez@macrobot-ai.com';
 const suffix = uniqueSuffix();
-const SUBDOMAIN = `resto-${suffix}`;
+const PROJECT_SLUG = `resto-${suffix}`;
 const TITLE = `La vraie cuisine lyonnaise ${suffix}`;
 
 let account: { email: string; password: string };
@@ -96,8 +96,10 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     await page.getByRole('button', { name: 'Continuer' }).click();
 
     await page.waitForURL(/\/commander\/adresse/);
+    // Domaine choisi plus tard : le site sera d'abord en ligne sur l'adresse
+    // technique de son projet Cloudflare, aucun sous-domaine StaX a saisir.
     await page.locator('label', { has: page.locator('input[value="subdomain_only"]') }).click();
-    await page.locator('[name="subdomain"]').fill(SUBDOMAIN);
+    await expect(page.locator('[name="subdomain"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Continuer' }).click();
     await page.waitForURL(/\/commander\/recapitulatif/);
   });
@@ -108,6 +110,7 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     await expect(main).toContainText('Aucun paiement');
     await expect(main).toContainText('0,00 €');
     await expect(main).toContainText('développe le site hors de StaX');
+    await expect(main).toContainText('Communiquée à la mise en ligne');
     await expect(main).toContainText('que lorsque l’administration le lui livre');
     await expect(main).not.toContainText(/créé tout de suite|avant de régler|après le paiement/);
     await expect(page.getByRole('button', { name: /payer|paiement sécurisé/i })).toHaveCount(0);
@@ -171,7 +174,7 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
   await test.step('StaX rattache le site développé hors de StaX', async () => {
     const staffDb = await userClient(staff.email, staff.password);
     const infra = await createSiteInfrastructure(serviceClient(), {
-      slug: SUBDOMAIN,
+      slug: PROJECT_SLUG,
       siteName: `Chez Dupont ${suffix}`,
       title: TITLE,
     });

@@ -25,7 +25,7 @@ const CHOICES: Array<{ value: Handling; title: string; description: string }> = 
     value: 'subdomain_only',
     title: 'Je choisirai plus tard',
     description:
-      'Votre site démarre sur une adresse temporaire. Vous pourrez connecter votre propre domaine à tout moment, sans frais supplémentaires.',
+      'Votre site est d’abord mis en ligne sur l’adresse technique de son hébergement. Vous pourrez relier votre propre nom de domaine à tout moment, sans frais supplémentaires : nous faisons les réglages.',
   },
 ];
 
@@ -38,15 +38,7 @@ function SubmitButton() {
   );
 }
 
-export function DomainForm({
-  sitesDomain,
-  suggestion,
-  draft,
-}: {
-  sitesDomain: string;
-  suggestion: string;
-  draft: { handling: string | null; hostname: string; subdomain: string };
-}) {
+export function DomainForm({ draft }: { draft: { handling: string | null; hostname: string } }) {
   const [handling, setHandling] = useState<Handling>(
     (draft.handling as Handling) ?? 'customer_owned',
   );
@@ -93,22 +85,11 @@ export function DomainForm({
       </fieldset>
 
       {handling === 'subdomain_only' ? (
-        <Field
-          label="Adresse temporaire"
-          error={state.errors?.subdomain}
-          hint={`Votre site sera accessible sur cette adresse en attendant votre domaine.`}
-          required
-        >
-          <div className="flex items-center gap-2">
-            <Input
-              name="subdomain"
-              defaultValue={draft.subdomain || suggestion}
-              spellCheck={false}
-              required
-            />
-            <span className="shrink-0 text-sm text-[var(--muted)]">.{sitesDomain}</span>
-          </div>
-        </Field>
+        <p className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
+          À la mise en ligne, nous vous communiquons l’adresse technique de votre site (par exemple
+          « votre-entreprise.pages.dev »). Vous nous indiquerez votre nom de domaine quand vous
+          l’aurez choisi, depuis votre espace client.
+        </p>
       ) : (
         <Field
           label={

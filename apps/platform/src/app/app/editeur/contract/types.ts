@@ -53,6 +53,12 @@ export interface ContractEditorData {
   draftUpdatedBy: string | null;
   /** Adresse du site en ligne (domaine principal, sinon adresse Cloudflare). */
   liveUrl: string | null;
+  /**
+   * Adresse du projet Cloudflare du site (`*.pages.dev`, `*.workers.dev`) :
+   * c'est elle que l'editeur encadre, la politique de securite de l'editeur
+   * n'autorisant que ces origines. `null` si le projet n'en expose pas.
+   */
+  frameUrl: string | null;
   /** Dernier apercu construit (build Cloudflare du brouillon). */
   preview: PreviewView | null;
   production: ReleaseView | null;

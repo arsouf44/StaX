@@ -863,6 +863,23 @@ async function ProjectDashboard({
 /*  Apres la livraison : la gestion d'un site independant                      */
 /* -------------------------------------------------------------------------- */
 
+/** Maintenance sans abonnement Stripe (encore) enregistre : ce que le client doit lire. */
+function maintenanceWithoutSubscription(delivered: boolean, status: string | null): string {
+  if (!delivered) return 'Démarre à la livraison';
+  switch (status) {
+    case 'waived':
+      return 'Incluse (compte interne StaX)';
+    case 'failed':
+    case 'pending_delivery':
+    case 'started':
+      return 'Mise en place en cours par l’équipe StaX';
+    case 'not_applicable':
+      return 'Définie par votre devis';
+    default:
+      return 'Détail sur la page Maintenance';
+  }
+}
+
 async function ManagedSiteDashboard({
   firstName,
   site,
@@ -876,40 +893,59 @@ async function ManagedSiteDashboard({
   canEdit: boolean;
   subscription: Awaited<ReturnType<typeof getWorkspace>>['workspace']['subscription'];
 }) {
-  const [overviewResult, releases, health, draft, messages, bookings, orders, metrics] =
-    await Promise.all([
-      db.rpc('site_management_overview', { p_site: site.id }),
-      loadReleaseViews(db, site.id, 5),
-      db
-        .from('site_health_checks')
-        .select('ok, status_code, response_ms, checked_at')
-        .eq('site_id', site.id)
-        .order('checked_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      db.from('site_content_drafts').select('updated_at').eq('site_id', site.id).maybeSingle(),
-      db
-        .from('form_submissions')
-        .select('id', { count: 'exact', head: true })
-        .eq('site_id', site.id)
-        .eq('status', 'unread'),
-      db
-        .from('bookings')
-        .select('id', { count: 'exact', head: true })
-        .eq('site_id', site.id)
-        .eq('status', 'pending'),
-      db
-        .from('shop_orders')
-        .select('id', { count: 'exact', head: true })
-        .eq('site_id', site.id)
-        .eq('status', 'paid'),
-      db
-        .from('daily_site_metrics')
-        .select('day, pageviews, visitors')
-        .eq('site_id', site.id)
-        .order('day', { ascending: false })
-        .limit(7),
-    ]);
+  const [
+    overviewResult,
+    releases,
+    health,
+    draft,
+    messages,
+    bookings,
+    orders,
+    metrics,
+    platformOrder,
+  ] = await Promise.all([
+    db.rpc('site_management_overview', { p_site: site.id }),
+    loadReleaseViews(db, site.id, 5),
+    db
+      .from('site_health_checks')
+      .select('ok, status_code, response_ms, checked_at')
+      .eq('site_id', site.id)
+      .order('checked_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    db.from('site_content_drafts').select('updated_at').eq('site_id', site.id).maybeSingle(),
+    db
+      .from('form_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('site_id', site.id)
+      .eq('status', 'unread'),
+    db
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('site_id', site.id)
+      .eq('status', 'pending'),
+    db
+      .from('shop_orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('site_id', site.id)
+      .eq('status', 'paid'),
+    db
+      .from('daily_site_metrics')
+      .select('day, pageviews, visitors')
+      .eq('site_id', site.id)
+      .order('day', { ascending: false })
+      .limit(7),
+    // Etat de la maintenance porte par la commande (lisible par qui voit la
+    // facturation ; a defaut, la carte renvoie vers la page Maintenance).
+    db
+      .from('orders')
+      .select('maintenance_status')
+      .eq('site_id', site.id)
+      .in('status', ['paid', 'partially_refunded', 'internal'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const overview = (overviewResult.data ?? {}) as {
     productionUrl?: string | null;
@@ -934,6 +970,8 @@ async function ManagedSiteDashboard({
     draftUpdated && production?.publishedAt && draftUpdated > production.publishedAt,
   );
   const days = unwrapList<{ day: string; pageviews: number; visitors: number }>(metrics as never);
+  const maintenanceStatus =
+    (platformOrder.data as { maintenance_status: string } | null)?.maintenance_status ?? null;
 
   return (
     <div className="space-y-8" data-testid="managed-site-dashboard">
@@ -1031,7 +1069,7 @@ async function ManagedSiteDashboard({
                       ? ` — ${formatMaintenance(subscription.maintenance_price_cents, 'EUR', subscription.billing_interval)}`
                       : ''
                   }`
-                : 'Démarre à la livraison'}
+                : maintenanceWithoutSubscription(Boolean(site.deliveredAt), maintenanceStatus)}
             </p>
           </div>
         </div>

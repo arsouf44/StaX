@@ -10,7 +10,7 @@ import {
   githubAppInstallUrl,
 } from '@stax/infrastructure';
 import { CONTRACT_VERSION, MANIFEST_SCHEMA_URL } from '@stax/site-contract';
-import { formatMoney } from '@stax/payments';
+import { PROJECT_STATUS_LABELS, formatMoney } from '@stax/payments';
 import { Alert, Badge, DescriptionList, Panel, StatusPill, type StatusTone } from '@stax/ui';
 import { requireAdminRole } from '~/lib/admin';
 import {
@@ -437,8 +437,14 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
         <Panel level={1} padding="lg">
           <h2 className="text-sm font-medium">Étape du projet</h2>
           <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-            Étape actuelle : <strong>{project?.status ?? 'aucun projet'}</strong>. Le client suit
-            cette étape dans son espace.
+            Étape actuelle :{' '}
+            <strong>
+              {project
+                ? (PROJECT_STATUS_LABELS[project.status as keyof typeof PROJECT_STATUS_LABELS] ??
+                  project.status)
+                : 'aucun projet'}
+            </strong>
+            . Le client suit cette étape dans son espace.
           </p>
           <div className="mt-4">
             <PhaseForm siteId={site.id} current={project?.status ?? null} />

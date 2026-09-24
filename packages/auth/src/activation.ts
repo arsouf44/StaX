@@ -92,12 +92,12 @@ export interface ActivationSuccess {
  * pas apprendre lesquels ont existe.
  */
 export const ACTIVATION_MESSAGES: Record<ActivationFailureReason, string> = {
-  invalid: 'Ce code n est pas validé. Vérifiez la saisie ou contactez-nous.',
-  expired: 'Ce code n est plus validé. Contactez-nous pour en recevoir un nouveau.',
-  revoked: 'Ce code n est plus validé. Contactez-nous pour en recevoir un nouveau.',
-  already_used: 'Ce code a déjà ete utilise. Connectez-vous avec votre compte existant.',
+  invalid: 'Ce code n’est pas valide. Vérifiez la saisie ou contactez-nous.',
+  expired: 'Ce code n’est plus valide. Contactez-nous pour en recevoir un nouveau.',
+  revoked: 'Ce code n’est plus valide. Contactez-nous pour en recevoir un nouveau.',
+  already_used: 'Ce code a déjà été utilisé. Connectez-vous avec votre compte existant.',
   email_mismatch:
-    'Ce code est réservé a une autre adresse e-mail. Utilisez celle a laquelle il vous a ete envoyé.',
+    'Ce code est réservé à une autre adresse e-mail. Utilisez celle à laquelle il vous a été envoyé.',
   too_many_attempts:
     'Trop de tentatives sur ce code. Patientez ou contactez-nous pour en recevoir un nouveau.',
 };

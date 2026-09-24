@@ -3134,6 +3134,54 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Durcissements 0052 : journal d'audit et calcul du prix
+-- -----------------------------------------------------------------------------
+\echo '--- Journal d''audit et calcul du prix (0052) ---'
+do $$
+declare
+  alice   uuid := (select v from t.fixtures where k='alice');
+  staff   uuid := (select v from t.fixtures where k='staff');
+  v_org_a uuid := (select v from t.fixtures where k='org_a');
+  v_org_b uuid := (select v from t.fixtures where k='org_b');
+  v_site_a uuid := (select v from t.fixtures where k='site_a');
+  v_site_b uuid := (select v from t.fixtures where k='site_b');
+  v_before int;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  v_before := (select count(*) from public.audit_logs where organization_id = v_org_b);
+  perform t.assert(t.denied_as(alice, format(
+    'select public.write_audit(''site.delivered'', %L::uuid, %L::uuid, ''site'', ''x'', ''{}''::jsonb)',
+    v_org_b, v_site_b)),
+    'Un client ne peut pas ecrire dans le journal d''audit d''une autre organisation');
+  perform t.assert(t.denied_as(alice, format(
+    'select public.write_audit(''site.cache_purged'', %L::uuid, %L::uuid, ''site'', ''x'', ''{}''::jsonb)',
+    v_org_a, v_site_b)),
+    'Un client ne peut pas rattacher une ligne d''audit au site d''une autre organisation');
+  perform t.assert(t.denied_as(alice,
+    'select public.write_audit(''system.anything'', null, null, null, null, ''{}''::jsonb)'),
+    'Un client ne peut pas ecrire une ligne d''audit sans organisation');
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((select count(*) from public.audit_logs where organization_id = v_org_b) = v_before,
+    'Le journal de l''autre organisation est intact');
+
+  perform t.assert(not t.denied_as(alice, format(
+    'select public.write_audit(''site.cache_purged'', %L::uuid, %L::uuid, ''site'', ''x'', ''{}''::jsonb)',
+    v_org_a, v_site_a)),
+    'Un client ecrit dans le journal de sa propre organisation');
+  perform t.assert(not t.denied_as(staff, format(
+    'select public.write_audit(''site.domain_attached'', %L::uuid, %L::uuid, ''site'', ''x'', ''{}''::jsonb)',
+    v_org_b, v_site_b)),
+    'L''equipe StaX ecrit dans le journal de toute organisation');
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert(not has_function_privilege('anon', 'public.compute_order_pricing(uuid, text)', 'execute'),
+    'anon ne peut PAS calculer un prix ni tester un code promotionnel');
+  perform t.assert(has_function_privilege('authenticated', 'public.compute_order_pricing(uuid, text)', 'execute'),
+    'Une personne connectee peut calculer le prix de sa commande');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

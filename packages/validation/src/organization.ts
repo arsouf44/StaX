@@ -21,7 +21,7 @@ import {
 
 export const organizationProfileSchema = z
   .object({
-    name: boundedText(2, 120, 'Le nom de l entreprise'),
+    name: boundedText(2, 120, 'Le nom de l’entreprise'),
     legalName: optionalText(150),
     siret: z
       .string()
@@ -51,7 +51,7 @@ export type OrganizationProfileInput = z.infer<typeof organizationProfileSchema>
 
 export const createOrganizationSchema = z
   .object({
-    name: boundedText(2, 120, 'Le nom de l entreprise'),
+    name: boundedText(2, 120, 'Le nom de l’entreprise'),
     slug: slugSchema.optional(),
     sectorSlug: slugSchema,
     businessTypeSlug: slugSchema,

@@ -75,12 +75,12 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
     to: ctx.to,
     template: 'welcome',
     subject: 'Bienvenue sur StaX',
-    preheader: 'Votre compte est cree. Voici la suite.',
+    preheader: 'Votre compte est créé. Voici la suite.',
     heading: 'Bienvenue sur StaX',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        'Votre compte est cree. Vous pouvez des maintenant commander votre site, ' +
+        'Votre compte est créé. Vous pouvez dès maintenant commander votre site, ' +
           'suivre son avancement et gérer votre entreprise depuis votre espace.',
       ),
       paragraph(
@@ -90,7 +90,7 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      'Votre compte StaX est cree. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
+      'Votre compte StaX est créé. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
     ],
     action: { label: 'Ouvrir mon espace', url: `${platformUrl()}/app` },
   });
@@ -121,17 +121,17 @@ export function passwordResetEmail(ctx: BaseContext & { resetUrl: string }): Ema
   return shell({
     to: ctx.to,
     template: 'password_reset',
-    subject: 'Reinitialiser votre mot de passe',
+    subject: 'Réinitialiser votre mot de passe',
     preheader: 'Lien valable une heure.',
-    heading: 'Reinitialiser votre mot de passe',
+    heading: 'Réinitialiser votre mot de passe',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
         'Vous avez demandé à réinitialiser votre mot de passe. Ce lien est valable une heure ' +
-          'et ne fonctionne qu une seule fois.',
+          'et ne fonctionne qu’une seule fois.',
       ),
     ].join(''),
-    bodyText: [hello(ctx.firstName), 'Reinitialisez votre mot de passe (lien valable une heure).'],
+    bodyText: [hello(ctx.firstName), 'Réinitialisez votre mot de passe (lien valable une heure).'],
     action: { label: 'Choisir un nouveau mot de passe', url: ctx.resetUrl },
     footerNote:
       'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : votre mot de passe reste inchangé.',
@@ -144,7 +144,7 @@ export function activationCodeEmail(
   return shell({
     to: ctx.to,
     template: 'activation_code',
-    subject: `Votre code d accès — ${ctx.businessName}`,
+    subject: `Votre code d’accès — ${ctx.businessName}`,
     preheader: 'Récupérez l’accès à votre espace client.',
     heading: 'Votre site vous attend',
     bodyHtml: [
@@ -160,7 +160,7 @@ export function activationCodeEmail(
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Votre code d accès : ${ctx.code}`,
+      `Votre code d’accès : ${ctx.code}`,
       `Code à usage unique, valable jusqu’au ${ctx.expiresAt}.`,
     ],
     action: { label: 'Activer mon espace', url: `${platformUrl()}/activation` },
@@ -302,17 +302,17 @@ export function sitePublishedEmail(
       strongLine('Votre site est désormais accessible publiquement.'),
       paragraph(
         'Vous pouvez modifier vos contenus à tout moment depuis votre espace : textes, photos, ' +
-          'horaires, tarifs. Les modifications ne sont visibles qu après publication.',
+          'horaires, tarifs. Les modifications ne sont visibles qu’après publication.',
       ),
       definitionList([
         ['Adresse de votre site', ctx.siteUrl],
-        ['Période de garantie commerciale', `jusqu au ${ctx.refundDeadline}`],
+        ['Période de garantie commerciale', `jusqu’au ${ctx.refundDeadline}`],
       ]),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Votre site est en ligne : ${ctx.siteUrl}`,
-      `Période de garantie commerciale jusqu au ${ctx.refundDeadline}.`,
+      `Période de garantie commerciale jusqu’au ${ctx.refundDeadline}.`,
     ],
     action: { label: 'Voir mon site', url: ctx.siteUrl },
     secondaryAction: { label: 'Gérer mon site', url: ctx.appUrl },
@@ -449,20 +449,20 @@ export function paymentFailedEmail(
   return shell({
     to: ctx.to,
     template: 'payment_failed',
-    subject: 'Échec du prelevement de votre maintenance',
+    subject: 'Échec du prélèvement de votre maintenance',
     preheader: 'Mettez à jour votre moyen de paiement.',
-    heading: 'Nous n avons pas pu encaisser votre maintenance',
+    heading: 'Nous n’avons pas pu encaisser votre maintenance',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
         `Le prélèvement de ${ctx.amount} n’a pas abouti. Votre site reste en ligne : ` +
           `nous réessaierons automatiquement le ${ctx.retryDate}.`,
       ),
-      paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement des maintenant.'),
+      paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement dès maintenant.'),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Échec du prelevement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
+      `Échec du prélèvement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
     ],
     action: { label: 'Mettre à jour mon paiement', url: ctx.billingUrl },
   });
@@ -561,7 +561,7 @@ export function subscriptionCancelledEmail(
     to: ctx.to,
     template: 'subscription_cancelled',
     subject: 'Résiliation de votre maintenance enregistrée',
-    preheader: `Votre site reste en ligne jusqu au ${ctx.endDate}.`,
+    preheader: `Votre site reste en ligne jusqu’au ${ctx.endDate}.`,
     heading: 'Votre résiliation est enregistrée',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
@@ -576,7 +576,7 @@ export function subscriptionCancelledEmail(
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Maintenance résiliée au ${ctx.endDate}. Période de continuite jusqu au ${ctx.gracePeriodEnd}.`,
+      `Maintenance résiliée au ${ctx.endDate}. Période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
     ],
     action: { label: 'Gérer mon abonnement', url: ctx.billingUrl },
   });
@@ -593,7 +593,7 @@ export function refundRequestedEmail(
     heading: 'Demande de remboursement reçue',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
-      paragraph('Nous avons bien reçu votre demande et nous l examinons.'),
+      paragraph('Nous avons bien reçu votre demande et nous l’examinons.'),
       definitionList([
         ['Commande', ctx.reference],
         ['Montant estimé du remboursement', ctx.amount],
@@ -818,6 +818,6 @@ export function internalLeadEmail(ctx: {
       paragraph(ctx.summary.slice(0, 1500)),
     ].join(''),
     bodyText: [`${ctx.name} <${ctx.email}>`, ctx.summary.slice(0, 1500)],
-    action: { label: 'Ouvrir dans l administration', url: ctx.adminUrl },
+    action: { label: 'Ouvrir dans l’administration', url: ctx.adminUrl },
   });
 }

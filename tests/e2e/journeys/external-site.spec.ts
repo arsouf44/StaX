@@ -167,6 +167,13 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
   const page = await login(browser, customer.email, customer.password);
   await page.goto('/app/editeur');
 
+  await test.step('l’aperçu encadre le projet Cloudflare, pas le domaine du client', async () => {
+    await expect(page.getByTitle('Aperçu de votre site')).toHaveAttribute(
+      'src',
+      /^https:\/\/[a-z0-9-]+\.pages\.dev\//,
+    );
+  });
+
   await test.step('le brouillon ne change rien en ligne', async () => {
     await page
       .getByRole('navigation', { name: 'Zones modifiables' })

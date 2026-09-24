@@ -1,13 +1,21 @@
 # Base de données
 
-PostgreSQL 15+ via Supabase. 51 migrations versionnées, 95 tables, 177
-politiques RLS, 450 assertions SQL exécutées à chaque modification
+PostgreSQL 15+ via Supabase. 52 migrations versionnées, 95 tables, 177
+politiques RLS, 458 assertions SQL exécutées à chaque modification
 (`tests/sql/rls.test.sql`).
 
-Les migrations 0042 à 0051 portent le modèle actuel : sites développés dans
+Les migrations 0042 à 0052 portent le modèle actuel : sites développés dans
 leur propre dépôt, contrat d’édition, publication confirmée par Cloudflare,
 offres mensuelles, maintenance à la livraison. Elles **s’ajoutent** aux
-précédentes : aucune migration existante n’a été réécrite.
+précédentes : aucune migration existante n’a été réécrite. 0052 applique les
+durcissements relevés par les conseillers Supabase sur la base réelle (journal
+d’audit réservé à sa propre organisation, calcul du prix fermé aux visiteurs
+anonymes, index des clés étrangères du modèle actuel).
+
+**Projet Supabase de production** : les 52 migrations y sont appliquées et
+tracées dans `app.schema_migrations` avec l’empreinte de chaque fichier ; le
+schéma a été comparé à une base locale construite depuis le dépôt (tables,
+politiques, contraintes, index, fonctions, droits d’exécution : identiques).
 
 ---
 
@@ -152,7 +160,7 @@ son trafic. L’unicité est partielle : un domaine détaché redevient disponib
 pnpm db:migrate            # applique ce qui manque
 pnpm db:migrate --status   # liste sans rien appliquer
 pnpm db:types              # régénère les types TypeScript
-scripts/db-test.sh         # base jetable + migrations + 450 assertions
+scripts/db-test.sh         # base jetable + migrations + 458 assertions
 ```
 
 **Une migration appliquée ne se modifie jamais.** `db-migrate` enregistre

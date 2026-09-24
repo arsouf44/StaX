@@ -7,6 +7,7 @@ import {
   validateContent,
 } from '@stax/site-contract';
 import type { WorkspaceSite } from '@stax/database';
+import { frameableProjectUrl } from '~/lib/frame-url';
 import type { ContractEditorData, PreviewView, ReleaseState, ReleaseView } from './types';
 
 /**
@@ -186,6 +187,10 @@ export async function loadContractEditor(
   const liveUrl = overviewData.primaryDomain
     ? `https://${overviewData.primaryDomain}/`
     : (overviewData.productionUrl ?? null);
+  // L'apercu encadre le build servi par le projet Cloudflare lui-meme : meme
+  // deploiement que le domaine du client, sur une origine que la CSP de
+  // l'editeur autorise (voir `src/proxy.ts`).
+  const frameUrl = frameableProjectUrl(overviewData.productionUrl ?? null);
 
   const production = releases.find((release) => release.status === 'published') ?? null;
   const inFlight =
@@ -228,6 +233,7 @@ export async function loadContractEditor(
     draftUpdatedAt: draft.updated_at,
     draftUpdatedBy: draft.updated_by_kind,
     liveUrl,
+    frameUrl,
     preview: previewView,
     production,
     inFlight,

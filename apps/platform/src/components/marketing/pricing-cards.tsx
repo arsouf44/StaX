@@ -196,15 +196,13 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
         />
       ) : null}
 
-      {plan.badge ? (
+      {plan.badge && !signature ? (
         <span
           className={cn(
             'absolute top-5 right-6 rounded-full px-3 py-1 text-2xs font-medium',
-            signature
-              ? 'border border-[var(--ice)]/30 bg-[rgb(157_219_255/0.08)] text-[var(--ice)]'
-              : featured
-                ? 'bg-[var(--accent)] text-white shadow-[0_8px_24px_-10px_var(--accent-glow)]'
-                : 'border border-[var(--border-strong)] text-[var(--foreground-muted)]',
+            featured
+              ? 'bg-[var(--accent)] text-white shadow-[0_8px_24px_-10px_var(--accent-glow)]'
+              : 'border border-[var(--border-strong)] text-[var(--foreground-muted)]',
           )}
         >
           {plan.badge}
@@ -213,15 +211,24 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
 
       <div className="relative">
         {signature ? (
-          <p className="text-2xs font-medium tracking-[0.2em] text-[var(--ice)] uppercase">
-            Catégorie signature
-          </p>
+          // Surtitre et badge sur la meme ligne : le badge n'est pas pose en
+          // absolu ici, il chevaucherait le surtitre.
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-2xs font-medium tracking-[0.2em] text-[var(--ice)] uppercase">
+              Catégorie signature
+            </p>
+            {plan.badge ? (
+              <span className="rounded-full border border-[var(--ice)]/30 bg-[rgb(157_219_255/0.08)] px-3 py-1 text-2xs font-medium text-[var(--ice)]">
+                {plan.badge}
+              </span>
+            ) : null}
+          </div>
         ) : null}
         <h3
           className={cn(
             'font-semibold tracking-[-0.025em]',
             signature ? 'mt-2 text-2xl' : 'text-xl',
-            plan.badge ? 'pr-24' : null,
+            plan.badge && !signature ? 'pr-24' : null,
           )}
         >
           {plan.name}

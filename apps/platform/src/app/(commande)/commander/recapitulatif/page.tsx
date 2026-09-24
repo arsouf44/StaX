@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { resolveBusiness } from '@stax/business';
 import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
-import { refundPolicyConfig, sitesDomain } from '@stax/config';
+import { refundPolicyConfig } from '@stax/config';
 import { Alert, ButtonLink, Panel } from '@stax/ui';
 import { OrderSteps } from '~/components/order/order-steps';
 import { deliveryWeeksLabel, getPlans } from '~/lib/catalog';
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 const DOMAIN_LABELS: Record<string, string> = {
   customer_owned: 'Vous connectez votre nom de domaine actuel',
   stax_purchase: 'Nous achetons le nom de domaine pour vous',
-  subdomain_only: 'Adresse temporaire, domaine choisi plus tard',
+  subdomain_only: 'Domaine choisi plus tard : adresse technique de l’hébergement en attendant',
   none: 'À définir ensemble',
 };
 
@@ -78,7 +78,7 @@ export default async function OrderSummaryPage() {
 
   const address =
     draft.domainHandling === 'subdomain_only'
-      ? `${draft.subdomain}.${sitesDomain()}`
+      ? 'Communiquée à la mise en ligne'
       : (draft.domainHostname ?? '—');
 
   return (

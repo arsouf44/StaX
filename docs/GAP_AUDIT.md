@@ -400,6 +400,17 @@ puis livré ; le client le gère ensuite. Détails :
 `request_site_release` ne regardait que `suspended_at`. Corrigé par 0051, sans
 modifier les migrations précédentes.
 
+**Défauts trouvés à la revue des écrans (finitions du 2026-09-24)** :
+
+| Défaut | Conséquence | Correction |
+|---|---|---|
+| L’éditeur encadrait le **domaine du client**, que la CSP de l’éditeur n’autorise pas | En production, aperçu bloqué (« This content is blocked ») pour tout site doté de son domaine | L’éditeur encadre l’adresse du projet Cloudflare (`*.pages.dev`, `*.workers.dev`), même déploiement ; test unitaire + assertion E2E |
+| Après la livraison, le tableau de bord et la page Maintenance annonçaient encore « démarre à la livraison » | Message faux pour un site livré | Libellé tiré de l’état réel (`orders.maintenance_status`) : active, en cours de mise en place, incluse (compte interne), au devis |
+| Le tunnel de commande proposait une adresse provisoire `xxx.sites.stax.fr` | Promesse d’une adresse que le nouveau modèle ne sert pas | « Je choisirai plus tard » : adresse technique du projet Cloudflare, communiquée à la mise en ligne |
+| `public.write_audit` ouvert à toute personne connectée, pour toute organisation | Lignes d’audit injectables dans le journal d’une autre société | 0052 : restreint à sa propre organisation (8 assertions SQL) |
+| `public.compute_order_pricing` exécutable sans compte | Codes promotionnels testables sans limite | 0052 : fermé à `anon` |
+| Carte Exceptionnel : surtitre et badge superposés ; étape du projet affichée en valeur technique (`ordered`) dans l’administration ; apostrophes et accents manquants dans des e-mails et messages | Finition | Corrigés |
+
 **Ce qui dépend encore de vrais identifiants** : l’application GitHub
 (`GITHUB_APP_*`), le jeton et le webhook Cloudflare
 (`CLOUDFLARE_SITES_API_TOKEN`, `CLOUDFLARE_WEBHOOK_SECRET`), `CRON_SECRET`,
@@ -411,10 +422,13 @@ Cloudflare n’a pu être fait depuis cet environnement.
 
 ## Ce qui reste non terminé, sans détour
 
-0. **Migrations `0029` à `0051` à appliquer sur le projet Supabase réel**, puis
-   `pnpm internal:bootstrap` avec le mot de passe du compte interne fourni dans
-   l’environnement. Tant que ce n’est pas fait, la production n’a ni les
-   offres mensuelles, ni la livraison, ni la publication GitHub + Cloudflare.
+0. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
+   2026-09-24** : les migrations 0042 à 0052 sont appliquées sur le projet
+   « StaX » (52 au total), chacune tracée dans `app.schema_migrations` avec
+   l’empreinte de son fichier. Le schéma réel a été comparé à une base locale
+   construite depuis le dépôt : tables, politiques RLS, contraintes, index,
+   fonctions et droits d’exécution identiques. Reste `pnpm internal:bootstrap`
+   avec le mot de passe du compte interne, si ce compte doit être recréé.
 
 0 bis. **Application GitHub, jeton Cloudflare, webhooks, tâche de fond** : à
    créer et à renseigner ([github-integration.md](./github-integration.md),
@@ -422,14 +436,14 @@ Cloudflare n’a pu être fait depuis cet environnement.
    Sans eux, *Infrastructure & livraison* le dit et refuse de rattacher.
 
 1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
-   est prouvée par 450 assertions SQL, les tests d'intégration et les parcours
+   est prouvée par 458 assertions SQL, les tests d'intégration et les parcours
    de § 11 (qui opèrent chacun sur leur propre client), mais pas encore par
    deux sessions réelles ouvertes en parallèle sur le même écran.
 
 1 bis. **Les parcours de § 11 ne tournent pas encore en CI** : ils montent la
    pile locale (binaires GoTrue et PostgREST téléchargés par
    `tests/e2e/stack/stack.sh`, avec les faux GitHub et Cloudflare). La CI
-   exécute les 450 assertions SQL, qui
+   exécute les 458 assertions SQL, qui
    couvrent les mêmes règles côté base ; brancher les parcours est l'étape
    suivante.
 

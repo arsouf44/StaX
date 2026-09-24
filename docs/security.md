@@ -10,7 +10,7 @@ intention.
 
 | Adversaire | Ce qu’il cherche | Défense principale |
 | --- | --- | --- |
-| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 450 assertions SQL |
+| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 458 assertions SQL |
 | Client pressé | Modifier son site avant la livraison, ou après une suspension | `app.site_content_access` en base |
 | Client malveillant | Rattacher le dépôt ou le site d’une autre organisation | rattachement réservé à l’équipe, un dépôt = un site, propriétaire vérifié |
 | Tiers qui forge un webhook | Faire passer une version pour publiée, altérer un dépôt connu | signature HMAC / secret, idempotence, relecture auprès de l’API du fournisseur |
@@ -147,7 +147,14 @@ et la base vérifie à chaque opération que l’offre comprend le module.
 projet, domaine), import de manifeste, contenu initial, contrôles attestés de la
 checklist, livraison, publication, restauration, échec de déploiement,
 relance : chaque action écrit une ligne dans le journal d’audit, avec son
-auteur (personne ou système).
+auteur (personne ou système). Le journal lui-même est protégé : hors serveur et
+équipe StaX, `public.write_audit` n’écrit que dans le journal de sa propre
+organisation, pour un site de cette organisation (0052).
+
+**Aperçu dans l’éditeur.** La CSP de `/app/editeur` n’autorise dans un iframe
+que `*.pages.dev` et `*.workers.dev` : l’éditeur encadre donc l’adresse du
+projet Cloudflare du site (même déploiement que le domaine du client), jamais
+une origine arbitraire.
 
 ---
 

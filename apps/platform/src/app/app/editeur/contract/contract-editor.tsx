@@ -148,7 +148,7 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
   const [editing, setEditing] = useState(true);
 
   const previewReady = preview?.status === 'success' && Boolean(preview.url);
-  const baseUrl = showDraftPreview && previewReady ? (preview?.url ?? null) : data.liveUrl;
+  const baseUrl = showDraftPreview && previewReady ? (preview?.url ?? null) : data.frameUrl;
   const siteOrigin = useMemo(() => {
     try {
       return baseUrl ? new URL(baseUrl).origin : null;
@@ -647,7 +647,23 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
             />
           ) : (
             <p className="p-6 text-sm text-[var(--muted)]">
-              L’adresse de votre site n’est pas encore disponible.
+              {data.liveUrl ? (
+                <>
+                  L’aperçu intégré n’est pas disponible pour ce site. Vos modifications restent
+                  enregistrées ici ;{' '}
+                  <a
+                    href={data.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2"
+                  >
+                    ouvrez votre site dans un nouvel onglet
+                  </a>{' '}
+                  pour le voir en ligne.
+                </>
+              ) : (
+                'L’adresse de votre site n’est pas encore disponible.'
+              )}
             </p>
           )}
           {frameSrc && !bridgeReady ? (

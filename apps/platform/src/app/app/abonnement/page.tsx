@@ -23,8 +23,41 @@ const TONES: Record<string, StatusTone> = {
 
 const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
 
+/** Aucun abonnement Stripe encore enregistre : ce que la situation reelle permet d'annoncer. */
+function emptyStateCopy(
+  delivered: boolean,
+  maintenanceStatus: string | null,
+): { title: string; description: string } {
+  if (!delivered) {
+    return {
+      title: 'Aucun abonnement actif',
+      description:
+        'Votre maintenance démarre à la livraison de votre site, une fois celui-ci en ligne. Rien n’est prélevé avant.',
+    };
+  }
+  switch (maintenanceStatus) {
+    case 'waived':
+      return {
+        title: 'Maintenance incluse',
+        description:
+          'Ce site est rattaché à un compte interne StaX : aucune maintenance n’est facturée.',
+      };
+    case 'not_applicable':
+      return {
+        title: 'Maintenance définie par votre devis',
+        description: 'Les conditions de maintenance de votre projet figurent dans votre devis.',
+      };
+    default:
+      return {
+        title: 'Maintenance en cours de mise en place',
+        description:
+          'Votre site est livré : l’équipe StaX finalise l’abonnement mensuel, qui démarre à la date de livraison. Vous recevrez une confirmation par e-mail.',
+      };
+  }
+}
+
 export default async function SubscriptionPage() {
-  const { workspace } = await getWorkspace();
+  const { workspace, db } = await getWorkspace();
 
   if (!workspace.capabilities.includes('billing.view')) {
     return (
@@ -34,6 +67,22 @@ export default async function SubscriptionPage() {
 
   const subscription = workspace.subscription;
   const refund = refundPolicyConfig();
+  const site = workspace.currentSite;
+  const order =
+    !subscription && site?.deliveredAt
+      ? await db
+          .from('orders')
+          .select('maintenance_status')
+          .eq('site_id', site.id)
+          .in('status', ['paid', 'partially_refunded', 'internal'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : null;
+  const empty = emptyStateCopy(
+    Boolean(site?.deliveredAt),
+    (order?.data as { maintenance_status: string } | null)?.maintenance_status ?? null,
+  );
 
   const view: SubscriptionView | null = subscription
     ? {
@@ -66,8 +115,8 @@ export default async function SubscriptionPage() {
       ) : (
         <EmptyState
           icon={<Icon name="shield-check" size={24} />}
-          title="Aucun abonnement actif"
-          description="Votre maintenance démarre à la livraison de votre site, une fois celui-ci en ligne. Rien n’est prélevé avant."
+          title={empty.title}
+          description={empty.description}
         />
       )}
 

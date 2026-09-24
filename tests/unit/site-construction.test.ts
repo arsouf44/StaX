@@ -10,6 +10,7 @@ import {
   supabaseServiceCredentials,
 } from '@stax/config';
 import type { OrgCapability } from '@stax/types';
+import { frameableProjectUrl } from '~/lib/frame-url';
 
 /**
  * StaX construit le site, puis le confie au client.
@@ -98,6 +99,24 @@ describe('site indépendant (dépôt GitHub + projet Cloudflare)', () => {
     ]) {
       expect(entries).not.toContain(legacy);
     }
+  });
+});
+
+describe('aperçu dans l’éditeur', () => {
+  it('encadre le projet Cloudflare du site, jamais une origine quelconque', () => {
+    expect(frameableProjectUrl('https://boulangerie.pages.dev')).toBe(
+      'https://boulangerie.pages.dev/',
+    );
+    expect(frameableProjectUrl('https://site.compte.workers.dev/accueil')).toBe(
+      'https://site.compte.workers.dev/',
+    );
+    // Le domaine du client sert le meme deploiement, mais la CSP de l'editeur
+    // ne l'autorise pas : l'editeur ne doit pas tenter de l'encadrer.
+    expect(frameableProjectUrl('https://www.boulangerie.fr/')).toBeNull();
+    expect(frameableProjectUrl('http://boulangerie.pages.dev')).toBeNull();
+    expect(frameableProjectUrl('https://pages.dev.attaquant.fr')).toBeNull();
+    expect(frameableProjectUrl(null)).toBeNull();
+    expect(frameableProjectUrl('pas une adresse')).toBeNull();
   });
 });
 
