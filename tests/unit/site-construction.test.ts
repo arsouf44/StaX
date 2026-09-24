@@ -39,12 +39,16 @@ const ALL: OrgCapability[] = [
   'support.manage',
 ];
 
-function hrefs(siteDelivered: boolean): string[] {
+function hrefs(
+  siteDelivered: boolean,
+  architecture?: 'external_repository' | 'legacy_engine',
+): string[] {
   return buildDashboardNavigation({
     enabledModules: ['menu', 'bookings'],
     hasFeature: () => true,
     can: (capability) => ALL.includes(capability),
     siteDelivered,
+    architecture,
   }).flatMap((group) => group.items.map((item) => item.href));
 }
 
@@ -66,6 +70,34 @@ describe('espace client pendant la construction du site', () => {
     expect(entries).toContain('/app/editeur');
     expect(entries).toContain('/app/site/pages');
     expect(entries).toContain('/app/statistiques');
+  });
+});
+
+describe('site indépendant (dépôt GitHub + projet Cloudflare)', () => {
+  it('avant la livraison : ni éditeur, ni versions, seulement le suivi du projet', () => {
+    const entries = hrefs(false, 'external_repository');
+    expect(entries).toContain('/app/projet');
+    expect(entries).not.toContain('/app/editeur');
+    expect(entries).not.toContain('/app/site/versions');
+  });
+
+  it('après la livraison : l’éditeur du contrat et l’historique des versions', () => {
+    const entries = hrefs(true, 'external_repository');
+    expect(entries).toContain('/app/editeur');
+    expect(entries).toContain('/app/site/versions');
+  });
+
+  it('jamais les écrans de l’ancien moteur : pages, apparence, navigation, formulaires', () => {
+    const entries = hrefs(true, 'external_repository');
+    for (const legacy of [
+      '/app/site/pages',
+      '/app/site/apparence',
+      '/app/site/navigation',
+      '/app/site/referencement',
+      '/app/forms',
+    ]) {
+      expect(entries).not.toContain(legacy);
+    }
   });
 });
 

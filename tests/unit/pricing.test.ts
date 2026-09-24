@@ -9,17 +9,18 @@ import {
 } from '@stax/payments';
 
 /**
- * Les trois offres du catalogue, en centimes HORS TAXES.
+ * Les quatre offres chiffrees du catalogue, en centimes HORS TAXES.
  *
  * Ces montants doivent rester identiques a ceux de la migration de donnees de
- * reference : le test d'integration `pricing-parity` verifie que le calcul SQL
- * et le calcul TypeScript donnent le meme centime pour chacun.
+ * reference (0043) : le test d'integration `pricing-parity` verifie que le
+ * calcul SQL et le calcul TypeScript donnent le meme centime pour chacun. La
+ * maintenance est MENSUELLE et ne commence qu'a la livraison.
  */
 const ESSENTIEL: PricingPlanInput = {
   slug: 'essentiel',
   setupPriceCents: 30_000,
-  maintenancePriceCents: 2_200,
-  billingInterval: 'year',
+  maintenancePriceCents: 1_200,
+  billingInterval: 'month',
   vatRateBps: 2000,
   pricesIncludeVat: false,
   currency: 'EUR',
@@ -30,55 +31,73 @@ const PREMIUM: PricingPlanInput = {
   ...ESSENTIEL,
   slug: 'premium',
   setupPriceCents: 55_000,
-  maintenancePriceCents: 3_200,
+  maintenancePriceCents: 1_400,
 };
 
 const ULTRA: PricingPlanInput = {
   ...ESSENTIEL,
   slug: 'ultra-premium',
   setupPriceCents: 109_900,
-  maintenancePriceCents: 8_200,
+  maintenancePriceCents: 1_600,
+};
+
+const EXCEPTIONNEL: PricingPlanInput = {
+  ...ESSENTIEL,
+  slug: 'exceptionnel',
+  setupPriceCents: 179_000,
+  maintenancePriceCents: 1_800,
 };
 
 describe('tarification des offres', () => {
-  it('chiffre l’offre Essentiel conformement au catalogue', () => {
+  it('chiffre l’offre Essentiel : 300 € HT, puis 12 € HT par mois', () => {
     const p = computeOrderPricing(ESSENTIEL);
     expect(p.setupCents).toBe(30_000);
     expect(p.vatCents).toBe(6_000);
     expect(p.totalCents).toBe(36_000);
-    expect(p.maintenanceCents).toBe(2_200);
-    expect(p.maintenanceTotalCents).toBe(2_640);
+    expect(p.maintenanceCents).toBe(1_200);
+    expect(p.maintenanceTotalCents).toBe(1_440);
   });
 
-  it('chiffre l’offre Premium', () => {
+  it('chiffre l’offre Premium : 550 € HT, puis 14 € HT par mois', () => {
     const p = computeOrderPricing(PREMIUM);
     expect(p.totalCents).toBe(66_000);
-    expect(p.maintenanceTotalCents).toBe(3_840);
+    expect(p.maintenanceTotalCents).toBe(1_680);
   });
 
-  it('chiffre l’offre Ultra Premium', () => {
+  it('chiffre l’offre Ultra Premium : 1 099 € HT, puis 16 € HT par mois', () => {
     const p = computeOrderPricing(ULTRA);
     expect(p.totalCents).toBe(131_880);
-    expect(p.maintenanceTotalCents).toBe(9_840);
+    expect(p.maintenanceTotalCents).toBe(1_920);
+  });
+
+  it('chiffre l’offre Exceptionnel : 1 790 € HT, puis 18 € HT par mois', () => {
+    const p = computeOrderPricing(EXCEPTIONNEL);
+    expect(p.setupCents).toBe(179_000);
+    expect(p.totalCents).toBe(214_800);
+    expect(p.maintenanceTotalCents).toBe(2_160);
   });
 
   it('refuse de chiffrer une offre sur devis', () => {
     expect(() => computeOrderPricing({ ...ESSENTIEL, isQuoteOnly: true })).toThrow();
   });
 
-  it('affiche le cout reel de la premiere annee, sans cout cache', () => {
-    // Maintenance ANNUELLE : une seule echeance la premiere annee.
-    // 360,00 € + 26,40 € = 386,40 €
-    expect(firstYearTotal(ESSENTIEL)).toBe(36_000 + 2_640);
-    expect(firstYearTotal(PREMIUM)).toBe(66_000 + 3_840);
-    expect(firstYearTotal(ULTRA)).toBe(131_880 + 9_840);
+  it('affiche le cout reel : creation + douze premiers mois de maintenance', () => {
+    // 360,00 € + 12 x 14,40 € = 532,80 €
+    expect(firstYearTotal(ESSENTIEL)).toBe(36_000 + 1_440 * 12);
+    expect(firstYearTotal(PREMIUM)).toBe(66_000 + 1_680 * 12);
+    expect(firstYearTotal(ULTRA)).toBe(131_880 + 1_920 * 12);
+    expect(firstYearTotal(EXCEPTIONNEL)).toBe(214_800 + 2_160 * 12);
   });
 
-  it('compte douze echeances si une offre passait au mois', () => {
-    // La periodicite vient de l'offre, jamais d'une constante : une bascule au
-    // mois doit recalculer juste, sans toucher au code d'affichage.
-    const mensuel: PricingPlanInput = { ...ESSENTIEL, billingInterval: 'month' };
-    expect(firstYearTotal(mensuel)).toBe(36_000 + 2_640 * 12);
+  it('compte une seule echeance pour un ancien contrat annuel', () => {
+    // La periodicite vient du contrat, jamais d'une constante : les contrats
+    // annuels vendus avant la maintenance mensuelle restent justes.
+    const annuel: PricingPlanInput = {
+      ...ESSENTIEL,
+      maintenancePriceCents: 2_200,
+      billingInterval: 'year',
+    };
+    expect(firstYearTotal(annuel)).toBe(36_000 + 2_640);
   });
 });
 

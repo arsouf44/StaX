@@ -12,7 +12,8 @@ import {
  *
  * Une page qui plante affiche « Cette page n’a pas pu s’afficher » : ce test
  * les ouvre toutes, une a une, pour l'equipe StaX, pour un client dont le site
- * est confie et pour un client dont le site est encore en construction. Il
+ * (developpe hors de StaX, rattache puis livre) est confie et pour un client
+ * dont le site est encore en construction. Il
  * suffit d'une requete mal formee (colonne renommee, jointure ambigue) pour
  * qu'un ecran entier tombe ; c'est ici qu'on le voit, pas en production.
  */
@@ -120,6 +121,7 @@ const CLIENT_PAGES = [
   '/app/site/navigation',
   '/app/site/pages',
   '/app/site/referencement',
+  '/app/site/versions',
   '/app/statistiques',
   '/app/support',
   '/app/zones',
@@ -155,7 +157,17 @@ async function login(browser: Browser, email: string, password: string): Promise
 async function crawl(page: Page, paths: string[]): Promise<string[]> {
   const failures: string[] = [];
   for (const path of paths) {
-    const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
+    // Une page peut rediriger cote client apres son chargement (« Bienvenue »
+    // renvoie vers le tableau de bord) : la navigation suivante est alors
+    // interrompue. On laisse la redirection aboutir, puis on recommence.
+    const visit = () => page.goto(path, { waitUntil: 'domcontentloaded' });
+    const response = await visit().catch(async (error: unknown) => {
+      if (!(error instanceof Error) || !/interrupted by another navigation/.test(error.message)) {
+        throw error;
+      }
+      await page.waitForLoadState('domcontentloaded');
+      return visit();
+    });
     const status = response?.status() ?? 0;
     const crashed = await page.getByText(ERROR_TEXT).count();
     if (status >= 500 || crashed > 0) {
@@ -202,7 +214,9 @@ test('administration, avec le rôle le plus large', async ({ browser }) => {
   const failures = await crawl(page, [
     ...ADMIN_PAGES,
     `/admin/sites/${delivered.siteId}`,
+    `/admin/sites/${delivered.siteId}/livraison`,
     `/admin/sites/${underConstruction.siteId}`,
+    `/admin/sites/${underConstruction.siteId}/livraison`,
   ]);
   expect(failures).toEqual([]);
   await page.context().close();

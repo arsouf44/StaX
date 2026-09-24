@@ -29,7 +29,9 @@
       "@stax/database": ["./packages/database/src/index.ts"],
       "@stax/analytics": ["./packages/analytics/src/index.ts"],
       "@stax/emails": ["./packages/emails/src/index.ts"],
-      "@stax/ui": ["./packages/ui/src/index.ts"]
+      "@stax/ui": ["./packages/ui/src/index.ts"],
+      "~/*": ["./apps/platform/src/*"],
+      "server-only": ["./tests/fixtures/server-only.ts"]
     }
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "playwright.config.ts"],

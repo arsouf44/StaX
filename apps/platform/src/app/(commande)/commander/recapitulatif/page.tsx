@@ -43,8 +43,8 @@ function nextSteps(deliveryLabel: string): string[] {
 
 const INTERNAL_NEXT_STEPS = [
   'La commande est enregistrée sans paiement et l’espace client s’ouvre : il affiche le suivi du projet, comme pour un client.',
-  'L’équipe StaX conçoit et construit le site de A à Z depuis l’administration.',
-  'Le site n’apparaît dans l’espace client que lorsque l’administration le lui confie.',
+  'L’équipe StaX conçoit et développe le site hors de StaX, dans son propre dépôt GitHub et son propre projet Cloudflare, puis le rattache.',
+  'Le site n’est modifiable depuis l’espace client que lorsque l’administration le lui livre.',
   'L’équipe StaX garde la main sur le site en permanence, avant comme après.',
 ];
 

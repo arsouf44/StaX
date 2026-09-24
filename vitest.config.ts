@@ -24,6 +24,10 @@ export default defineConfig({
       '@stax/database': r('./packages/database/src/index.ts'),
       '@stax/analytics': r('./packages/analytics/src/index.ts'),
       '@stax/emails': r('./packages/emails/src/index.ts'),
+      // Modules serveur de la plateforme (routes de webhooks, publication),
+      // appeles tels quels par les tests de securite.
+      '~': r('./apps/platform/src'),
+      'server-only': r('./tests/fixtures/server-only.ts'),
     },
   },
   test: {

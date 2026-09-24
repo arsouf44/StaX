@@ -6,22 +6,23 @@ import { deflateSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-// Le modele du metier, tel que l'equipe StaX l'applique depuis l'editeur.
 import {
-  buildTemplateForBusiness,
-  modulesForPlan,
-  templatePayload,
-} from '../../../../packages/site-engine/src/index';
+  completeDeliveryChecklist,
+  connectSiteInfrastructure,
+  createSiteInfrastructure,
+  type SiteInfrastructure,
+} from './external-site';
 
 /**
  * Acces a la pile locale (tests/e2e/stack) pour les parcours de bout en bout.
  *
  * Rien ici ne contourne le produit : les donnees de depart passent par les
  * MEMES fonctions que la production (creation de commande par le client,
- * webhook de paiement signe, script de provisionnement du compte interne).
- * Seul Stripe est remplace : le test signe lui-meme l evenement « paiement
- * reussi » avec le secret jetable de la pile, exactement comme Stripe le
- * ferait.
+ * webhook de paiement signe, script de provisionnement du compte interne,
+ * rattachement du depot et du projet Cloudflare par l'equipe, livraison).
+ * Seuls les fournisseurs externes sont remplaces : Stripe (le test signe
+ * lui-meme l'evenement « paiement reussi »), GitHub et Cloudflare (faux
+ * fournisseurs de la pile, memes API).
  */
 
 const ROOT = resolve(__dirname, '../../../..');
@@ -100,7 +101,10 @@ export interface CustomerSite {
   organizationId: string;
   orderId: string;
   siteId: string;
+  /** Domaine du site (projet Cloudflare) ; vide tant qu'il n'est pas livre. */
   hostname: string;
+  /** Depot et projet du site chez les faux fournisseurs ; `null` avant la livraison. */
+  infrastructure: SiteInfrastructure | null;
 }
 
 async function signedWebhook(event: Record<string, unknown>): Promise<Response> {
@@ -248,10 +252,10 @@ export async function createCustomerWithPaidOrder(options: {
     throw new Error(`Commande non payee apres le webhook : ${JSON.stringify(paid.data)}`);
   }
 
-  // L'equipe StaX construit le site, puis le confie au client. Le parcours
-  // complet (administration, editeur, « Confier le site ») est couvert par
-  // internal-account.spec.ts ; ici, le modele du metier tient lieu de
-  // construction, pour les parcours qui commencent une fois le site confie.
+  // L'equipe StaX developpe le site HORS de StaX (depot + projet Cloudflare),
+  // le rattache, verifie la checklist, puis le livre. Le parcours complet par
+  // l'interface d'administration est couvert par external-site.spec.ts ; ici,
+  // les memes fonctions sont appelees directement.
   if (options.delivered === false) {
     return {
       email,
@@ -261,21 +265,14 @@ export async function createCustomerWithPaidOrder(options: {
       orderId,
       siteId: paid.data.site_id as string,
       hostname: '',
+      infrastructure: null,
     };
   }
-  await buildAndDeliverSite(paid.data.site_id as string, {
+  const delivered = await buildAndDeliverSite(paid.data.site_id as string, {
     businessName: options.businessName,
-    businessType: options.businessType ?? 'boulangerie',
-    hostname: `${options.subdomain}.${SITES_DOMAIN}`,
+    slug: options.subdomain,
     email,
   });
-  const domain = await admin
-    .from('site_domains')
-    .select('hostname')
-    .eq('site_id', paid.data.site_id)
-    .eq('kind', 'platform_subdomain')
-    .single();
-  if (domain.error) throw new Error(`Adresse du site : ${domain.error.message}`);
 
   if (options.withLegalIdentity !== false) {
     // Saisi par le client lui-meme, avec son jeton : la RLS s applique.
@@ -293,7 +290,8 @@ export async function createCustomerWithPaidOrder(options: {
     organizationId: org.data.id,
     orderId,
     siteId: paid.data.site_id as string,
-    hostname: domain.data.hostname as string,
+    hostname: delivered.hostname,
+    infrastructure: delivered.infrastructure,
   };
 }
 
@@ -316,46 +314,53 @@ export async function createStaffAccount(
 }
 
 /**
- * Construction du site par StaX puis attribution au client, en raccourci
- * (cle de service) : modele du metier limite aux fonctionnalites de l'offre,
- * adresse temporaire, puis `delivered_at`.
+ * Le site developpe par l'equipe est rattache a StaX puis livre :
+ *   depot GitHub + projet Cloudflare (faux fournisseurs) -> rattachement par
+ *   une personne de l'equipe -> contrat d'edition et version 1 -> domaine ->
+ *   checklist -> `deliver_site`.
  */
 export async function buildAndDeliverSite(
   siteId: string,
-  options: { businessName: string; businessType: string; hostname: string; email: string },
-): Promise<void> {
+  options: { businessName: string; slug: string; email: string },
+): Promise<{ hostname: string; infrastructure: SiteInfrastructure }> {
   const admin = serviceClient();
-  const features = new Map<string, boolean>();
-  for (const feature of [
-    'bookings',
-    'ecommerce',
-    'online_payments',
-    'customer_accounts',
-    'blog',
-    'multi_language',
-  ]) {
-    const { data } = await admin.rpc('site_has_feature', { p_site: siteId, p_feature: feature });
-    features.set(feature, data === true);
-  }
-  const modules = modulesForPlan(options.businessType, (feature) => features.get(feature) === true);
-  const template = buildTemplateForBusiness(options.businessType, {
-    enabledModules: modules,
-    businessName: options.businessName,
-    city: 'Lyon',
-  });
-  const built = await admin.rpc('provision_site', {
-    p_site: siteId,
-    p_template: templatePayload(template),
-    p_hostname: options.hostname,
-    p_details: { businessName: options.businessName, email: options.email, city: 'Lyon' },
-  });
-  if (built.error) throw new Error(`Construction du site : ${built.error.message}`);
+  const staffAccount = await createStaffAccount('platform_admin');
+  const staff = await userClient(staffAccount.email, staffAccount.password);
 
-  const delivered = await admin
-    .from('sites')
-    .update({ delivered_at: new Date().toISOString() })
-    .eq('id', siteId);
-  if (delivered.error) throw new Error(`Attribution du site : ${delivered.error.message}`);
+  const infrastructure = await createSiteInfrastructure(admin, {
+    slug: options.slug,
+    siteName: options.businessName,
+    title: `${options.businessName}, bienvenue`,
+  });
+  await connectSiteInfrastructure(staff, siteId, infrastructure);
+
+  // Domaine du client, rattache au projet Cloudflare du site.
+  const site = await admin.from('sites').select('organization_id').eq('id', siteId).single();
+  if (site.error) throw new Error(`Site : ${site.error.message}`);
+  const hostname = `www.${options.slug}.example.test`;
+  const domain = await admin.from('site_domains').insert({
+    site_id: siteId,
+    organization_id: site.data.organization_id,
+    hostname,
+    kind: 'custom',
+    status: 'active',
+    is_primary: true,
+    served_by: 'cloudflare_project',
+    dns_target: new URL(infrastructure.productionUrl).hostname,
+    verification_method: 'cloudflare',
+    verified_at: new Date().toISOString(),
+  });
+  if (domain.error) throw new Error(`Domaine : ${domain.error.message}`);
+
+  await completeDeliveryChecklist(staff, admin, siteId, infrastructure);
+  const delivered = await staff.rpc('deliver_site', { p_site: siteId, p_email: options.email });
+  const result = (delivered.data ?? {}) as { ok?: boolean; code?: string; missing?: string[] };
+  if (delivered.error || !result.ok) {
+    throw new Error(
+      `Livraison : ${delivered.error?.message ?? result.code ?? ''} ${JSON.stringify(result.missing ?? [])}`,
+    );
+  }
+  return { hostname, infrastructure };
 }
 
 /* -------------------------------------------------------------------------- */

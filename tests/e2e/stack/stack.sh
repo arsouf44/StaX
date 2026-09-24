@@ -8,6 +8,8 @@
 #   GoTrue          le vrai service d'authentification de Supabase
 #   PostgREST       la vraie API de donnees de Supabase
 #   passerelle      une seule origine (/auth/v1, /rest/v1, /storage/v1)
+#   fournisseurs    faux GitHub et faux Cloudflare (providers.mjs) : memes API,
+#                   sans le reseau — depots, commits, deploiements Pages
 #
 # Rien n'est simule cote base ni cote authentification : une connexion est une
 # vraie connexion, un jeton est un vrai jeton signe, une policy RLS est la vraie
@@ -31,7 +33,10 @@ PG_PORT="${STAX_E2E_PG_PORT:-55440}"
 REST_PORT=54330
 AUTH_PORT=54340
 GATEWAY_PORT=54321
+PROVIDERS_PORT=54350
 DB_NAME=stax_e2e
+# Compte Cloudflare fictif (32 caracteres hexadecimaux, non secret).
+CLOUDFLARE_ACCOUNT=0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e
 
 POSTGREST_VERSION=v12.2.12
 GOTRUE_VERSION=v2.178.0
@@ -66,7 +71,7 @@ download() {
 }
 
 stop_all() {
-  for name in gateway postgrest gotrue; do
+  for name in gateway postgrest gotrue providers; do
     if [ -f "$STACK_DIR/$name.pid" ]; then
       kill "$(cat "$STACK_DIR/$name.pid")" 2>/dev/null || true
       rm -f "$STACK_DIR/$name.pid"
@@ -166,9 +171,13 @@ start_all() {
     nohup node "$HERE/gateway.mjs" serve > "$STACK_DIR/gateway.log" 2>&1 &
   echo $! > "$STACK_DIR/gateway.pid"
 
+  PROVIDERS_PORT=$PROVIDERS_PORT nohup node "$HERE/providers.mjs" serve > "$STACK_DIR/providers.log" 2>&1 &
+  echo $! > "$STACK_DIR/providers.pid"
+
   wait_http "http://127.0.0.1:$AUTH_PORT/health" gotrue
   wait_http "http://127.0.0.1:$REST_PORT/" postgrest
   wait_http "http://127.0.0.1:$GATEWAY_PORT/health" gateway
+  wait_http "http://127.0.0.1:$PROVIDERS_PORT/health" providers
 
   # --- Variables pour la plateforme, le moteur des sites et les tests ----------
   local keys anon service
@@ -184,6 +193,17 @@ SUPABASE_ANON_KEY=$anon
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$anon
 SUPABASE_SERVICE_ROLE_KEY=$service
 SUPABASE_JWT_SECRET=$secret
+STAX_E2E_PROVIDERS_URL=http://127.0.0.1:$PROVIDERS_PORT
+GITHUB_API_BASE_URL=http://127.0.0.1:$PROVIDERS_PORT/github
+GITHUB_APP_ID=424242
+GITHUB_APP_SLUG=stax-sites-e2e
+$(node "$HERE/providers.mjs" keys)
+GITHUB_APP_WEBHOOK_SECRET=$(head -c 24 /dev/urandom | base64 | tr -d '\n=/+')
+CLOUDFLARE_API_BASE_URL=http://127.0.0.1:$PROVIDERS_PORT/cloudflare/client/v4
+CLOUDFLARE_API_TOKEN=cf-e2e-$(head -c 12 /dev/urandom | base64 | tr -d '\n=/+')
+CLOUDFLARE_SITES_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT
+CLOUDFLARE_WEBHOOK_SECRET=$(head -c 24 /dev/urandom | base64 | tr -d '\n=/+')
+CRON_SECRET=$(head -c 24 /dev/urandom | base64 | tr -d '\n=/+')
 EOF
   echo "✓ Pile prete. Variables : $STACK_DIR/env"
 }

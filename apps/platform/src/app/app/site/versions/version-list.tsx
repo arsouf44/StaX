@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Alert,
@@ -12,7 +12,11 @@ import {
   useToast,
   type StatusTone,
 } from '@stax/ui';
-import { cancelScheduledReleaseAction, restoreReleaseAction } from '../../editeur/contract/actions';
+import {
+  cancelScheduledReleaseAction,
+  releaseStatusAction,
+  restoreReleaseAction,
+} from '../../editeur/contract/actions';
 import type { ReleaseView } from '../../editeur/contract/types';
 
 const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
@@ -31,6 +35,9 @@ const STATUS: Record<string, { tone: StatusTone; label: string }> = {
   failed: { tone: 'danger', label: 'Non publiée' },
   cancelled: { tone: 'neutral', label: 'Annulée' },
 };
+
+/** Etats d'une version en cours de mise en ligne. */
+const IN_FLIGHT = new Set(['queued', 'committing', 'deploying']);
 
 const DEPLOYMENT: Record<string, string> = {
   success: 'Déploiement Cloudflare réussi',
@@ -67,9 +74,25 @@ export function VersionList({
     release: ReleaseView;
     mode: 'restore' | 'republish';
   } | null>(null);
-  const busy = releases.some((release) =>
-    ['queued', 'committing', 'deploying'].includes(release.status),
-  );
+  const busy = releases.some((release) => IN_FLIGHT.has(release.status));
+
+  // Une restauration en cours est suivie jusqu'a la confirmation de Cloudflare :
+  // « En ligne » ne s'affiche qu'une fois le deploiement reellement termine.
+  const inFlightId = releases.find((release) => IN_FLIGHT.has(release.status))?.id ?? null;
+  useEffect(() => {
+    if (!inFlightId) return;
+    let stopped = false;
+    const timer = window.setInterval(() => {
+      void releaseStatusAction({ releaseId: inFlightId }).then((result) => {
+        if (stopped || result.status !== 'success') return;
+        if (!IN_FLIGHT.has(result.release.status)) router.refresh();
+      });
+    }, 4000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+  }, [inFlightId, router]);
 
   return (
     <div className="space-y-4">

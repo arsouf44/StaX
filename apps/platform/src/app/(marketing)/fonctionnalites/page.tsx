@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { PlanSlug } from '@stax/types';
 import Link from 'next/link';
 import { Container, Reveal, Section, SectionHeading, ButtonLink, Badge } from '@stax/ui';
 import { FEATURE_PAGES } from '~/content/features';
@@ -11,10 +12,11 @@ export const metadata: Metadata = {
   alternates: { canonical: '/fonctionnalites' },
 };
 
-const PLAN_LABELS: Record<string, string> = {
+const PLAN_LABELS: Record<Exclude<PlanSlug, 'sur-mesure'>, string> = {
+  essentiel: 'Essentiel',
   premium: 'Premium',
   'ultra-premium': 'Ultra Premium',
-  essentiel: 'Essentiel',
+  exceptionnel: 'Exceptionnel',
 };
 
 export default function FeaturesIndexPage() {
@@ -53,7 +55,7 @@ export default function FeaturesIndexPage() {
                   <span className="flex items-center gap-4 md:justify-self-end">
                     {feature.requiredPlan ? (
                       <Badge tone="accent" size="sm">
-                        {PLAN_LABELS[feature.requiredPlan] ?? feature.requiredPlan}
+                        {PLAN_LABELS[feature.requiredPlan]}
                       </Badge>
                     ) : (
                       <Badge tone="neutral" size="sm">

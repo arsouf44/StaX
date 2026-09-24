@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { PlanSlug } from '@stax/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -41,10 +42,13 @@ export async function generateMetadata({
   };
 }
 
-const PLAN_LABELS: Record<string, string> = {
-  premium: 'Inclus à partir de Premium',
-  'ultra-premium': 'Inclus avec Ultra Premium',
+// Exhaustif par construction : une offre ajoutee au catalogue sans libelle
+// ne compile pas.
+const PLAN_LABELS: Record<Exclude<PlanSlug, 'sur-mesure'>, string> = {
   essentiel: 'Inclus dès l’offre Essentiel',
+  premium: 'Inclus à partir de Premium',
+  'ultra-premium': 'Inclus à partir d’Ultra Premium',
+  exceptionnel: 'Inclus dans l’offre Exceptionnel',
 };
 
 export default async function FeatureDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -71,7 +75,7 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
           <div className="max-w-3xl">
             {page.requiredPlan ? (
               <Badge tone="accent" className="mb-5">
-                {PLAN_LABELS[page.requiredPlan] ?? page.requiredPlan}
+                {PLAN_LABELS[page.requiredPlan]}
               </Badge>
             ) : (
               <Badge tone="success" className="mb-5">

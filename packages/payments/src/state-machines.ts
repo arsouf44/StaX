@@ -126,7 +126,7 @@ export const PROJECT_TIMELINE: ReadonlyArray<{
   {
     key: 'ordered',
     label: 'Commande validée',
-    description: 'Votre paiement est confirmé et votre projet est ouvert.',
+    description: 'Votre commande est confirmée et votre projet est ouvert.',
     statuses: ['ordered'],
   },
   {

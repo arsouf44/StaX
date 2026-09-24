@@ -3083,6 +3083,57 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Site suspendu : ni edition, ni publication, rien d'efface
+-- -----------------------------------------------------------------------------
+\echo '--- Site suspendu ---'
+do $$
+declare
+  claire   uuid := (select v from t.fixtures where k='claire');
+  v_site_x uuid := (select v from t.fixtures where k='site_x');
+  v_rev     int;
+  v_pending uuid;
+  v_online  uuid;
+  v_result  jsonb;
+  v_status  text;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
+  v_result := t.json_as(claire, format('public.request_site_release(%L::uuid, %L, null, %s)',
+    v_site_x, 'publish', v_rev));
+  v_pending := (v_result ->> 'releaseId')::uuid;
+  perform t.assert(v_pending is not null, 'Une publication est demandee avant la suspension');
+  v_online := (select production_release_id from public.sites where id = v_site_x);
+  v_status := (select status::text from public.sites where id = v_site_x);
+
+  -- Suspension par le statut (parcours historique), sans date.
+  perform set_config('request.jwt.claims', null, true);
+  update public.sites set status = 'suspended' where id = v_site_x;
+
+  v_result := public.claim_site_release(v_pending);
+  perform t.assert(v_result ->> 'code' = 'site_unavailable'
+                   and (select status from public.site_releases where id = v_pending) = 'failed'
+                   and (select production_release_id from public.sites where id = v_site_x) = v_online,
+    'Une publication en attente n''est jamais deployee sur un site suspendu');
+  perform t.assert(t.denied_as(claire, format(
+    'select public.save_site_draft(%L, ''{}''::jsonb, null)', v_site_x)),
+    'Un site suspendu ne se modifie plus');
+  perform t.assert(t.denied_as(claire, format(
+    'select public.request_site_release(%L, ''publish'', null, null)', v_site_x)),
+    'Un site suspendu ne se publie plus');
+  perform t.assert(t.denied_as(claire, format('select public.begin_site_preview(%L)', v_site_x)),
+    'Un site suspendu ne produit plus d''apercu');
+  perform t.assert(t.count_as(claire, format('select 1 from site_releases where site_id = %L', v_site_x)) > 0,
+    'Le client relit toujours l''historique de ses versions');
+
+  perform set_config('request.jwt.claims', null, true);
+  update public.sites set status = v_status::app.site_status where id = v_site_x;
+  perform t.assert(not t.denied_as(claire, format(
+    'select public.save_site_draft(%L, ''{"pages":{}}''::jsonb, null)', v_site_x)),
+    'Leve la suspension, le client retrouve l''edition');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'
