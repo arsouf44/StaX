@@ -18,7 +18,10 @@
 | Install Command | laisser vide |
 | Node.js | 22.x |
 
-`apps/platform/vercel.json` ne fixe que la région (`cdg1`, Paris). **Il ne
+`apps/platform/vercel.json` fixe la région (`cdg1`, Paris) et une tâche
+planifiée **quotidienne** (`/api/cron/sites`, 4 h UTC) : le plan Hobby refuse
+toute cadence plus fréquente. La cadence de 5 minutes est assurée par Supabase
+(`pg_cron` + `pg_net`, voir [deployment.md](./deployment.md) § 9). **Il ne
 redéfinit aucun chemin, et c'est volontaire :** avec un Root Directory, Vercel
 résout `outputDirectory` *à partir de ce répertoire*. Un `vercel.json` à la
 racine du dépôt qui annonce `apps/platform/.next` produit donc :
