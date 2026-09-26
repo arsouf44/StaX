@@ -47,6 +47,17 @@ utiles et à donner le bon vocabulaire à l’espace client. **Il ne sélectionn
 jamais de modèle** : il n’en existe plus (migration 0045, aucune table ni
 fonction de provisionnement ; vérifié par la suite SQL).
 
+### Variante : le site proposé après un appel
+
+Le site peut aussi être construit **avant** la commande, pour une entreprise
+contactée par téléphone : l’équipe crée le site (*Sites → Créer un site*), le
+rattache et le vérifie (sections 3 à 5 ci-dessous, domaine facultatif), puis
+envoie une **proposition** (`app.create_site_proposal`). Le prospect récupère le
+site avec son code, le voit sans pouvoir le modifier, et paie : la commande
+porte ce site (`app.create_proposal_order`) et le paiement confirmé le **livre
+automatiquement** (`app.complete_paid_proposal`, section 6). Détail :
+[vente-par-telephone.md](./vente-par-telephone.md).
+
 ## 2. Pendant la construction : le client suit, il ne modifie rien
 
 L’espace client affiche le **tableau de bord du projet** :

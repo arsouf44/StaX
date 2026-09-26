@@ -37,12 +37,12 @@ export const LEGAL_DOCUMENTS_REQUIRE_REVIEW = LEGAL_REVIEW_REQUIRED;
  * propres), livraison, maintenance MENSUELLE à compter de la livraison et sans
  * durée minimale, offre Exceptionnel, réversibilité du code source.
  */
-export const TERMS_VERSION = '2026-09-23';
+export const TERMS_VERSION = '2026-09-26';
 export const PRIVACY_VERSION = '2026-09';
 export const TERMS_OF_USE_VERSION = '2026-09';
 export const DPA_VERSION = '2026-09';
 
-const UPDATED_AT = '2026-09-23';
+const UPDATED_AT = '2026-09-26';
 
 export interface LegalBlock {
   kind: 'paragraph' | 'list' | 'note' | 'definitions';
@@ -385,6 +385,15 @@ export function buildTerms(): LegalDocument {
               'traitement des données, puis procède au paiement.',
           ),
           p(
+            'Une commande peut aussi faire suite à un échange téléphonique. Le Prestataire adresse ' +
+              'alors au Client, par e-mail, une proposition personnelle : le Site déjà réalisé et ' +
+              'consultable en ligne, l’Offre retenue et son prix, et un code personnel valable ' +
+              'quatorze jours, qui ne fonctionne qu’avec l’adresse e-mail destinataire. Le Client ' +
+              'crée son Espace client, y consulte le Site et la proposition, peut demander des ' +
+              'précisions, puis accepte les présentes CGV et procède au paiement. Ni l’appel ni la ' +
+              'proposition n’engagent le Client tant qu’il n’a pas payé.',
+          ),
+          p(
             'Le contrat est formé à la confirmation du paiement par le prestataire de paiement. ' +
               'Le Client reçoit alors une confirmation par e-mail reprenant les éléments ' +
               'essentiels de sa commande. L’acceptation des CGV est horodatée et conservée avec le ' +
@@ -481,6 +490,14 @@ export function buildTerms(): LegalDocument {
               'et vérifie notamment son affichage sur les différents écrans, ses formulaires et ses ' +
               'réglages de référencement. La Livraison est notifiée au Client ; elle vaut ' +
               'réception de la Création, sous réserve de la garantie commerciale de l’article 16.',
+          ),
+          p(
+            'Lorsque la commande porte sur un Site déjà réalisé et présenté au Client avant son ' +
+              'paiement (proposition faisant suite à un échange téléphonique), la Livraison ' +
+              'intervient dès la confirmation du paiement et la vérification du Site en ligne, en ' +
+              'général dans l’heure et au plus tard le jour ouvré suivant. Le Site est livré à ' +
+              'l’adresse de son hébergement ; le nom de domaine du Client est connecté ensuite, à ' +
+              'sa demande.',
           ),
           p(
             'Après la Livraison, le Client modifie lui-même les Contenus modifiables depuis son ' +
@@ -1334,6 +1351,13 @@ export function buildPrivacyPolicy(): LegalDocument {
                 'professionnelles, horaires, prestations, textes et photographies fournis.',
             },
             {
+              term: 'Propositions commerciales',
+              description:
+                'Pour une entreprise contactée par téléphone et intéressée : nom de l’entreprise, ' +
+                'nom, adresse e-mail et téléphone professionnels du contact, offre et prix ' +
+                'proposés, dates d’envoi, de consultation et de paiement de la proposition.',
+            },
+            {
               term: 'Demandes et signalements',
               description:
                 'Messages envoyés par les formulaires de contact et de devis, et signalements de ' +
@@ -1376,6 +1400,9 @@ export function buildPrivacyPolicy(): LegalDocument {
             'Mesure d’audience agrégée et sans cookie — intérêt légitime (article 6.1.f).',
             'Réponse aux demandes de contact et aux devis — mesures précontractuelles ' +
               '(article 6.1.b).',
+            'Envoi et suivi d’une proposition de site à une entreprise qui l’a acceptée lors d’un ' +
+              'échange téléphonique — mesures précontractuelles prises à sa demande (article ' +
+              '6.1.b).',
             'Informations liées à votre abonnement (livraison, début de la maintenance, ' +
               'prélèvements, résiliation) — exécution du contrat et obligation légale.',
             'Communications commerciales adressées à des personnes n’étant pas encore clientes — ' +
@@ -1402,6 +1429,8 @@ export function buildPrivacyPolicy(): LegalDocument {
             'Signalements de contenus : un an après la clôture de leur traitement.',
             'Demandes de contact et de devis restées sans suite : trois ans à compter du dernier ' +
               'échange.',
+            'Propositions de site non conclues (expirées ou retirées) : trois ans à compter du ' +
+              'dernier échange ; conclues : comme les données de compte et de facturation.',
           ]),
           p(
             'À l’expiration de ces durées, les données sont supprimées ou anonymisées de manière ' +

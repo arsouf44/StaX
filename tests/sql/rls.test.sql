@@ -3470,6 +3470,20 @@ begin
   perform t.assert(v_result ->> 'code' in ('not_found', 'withdrawn'),
     'Une proposition retiree ne se paie plus');
 
+  -- Conservation : trois ans après le dernier échange, le prospect est anonymisé.
+  perform set_config('request.jwt.claims', null, true);
+  update public.site_proposals
+     set last_sent_at = now() - interval '4 years', expires_at = now() - interval '4 years',
+         claimed_at = now() - interval '4 years', withdrawn_at = now() - interval '4 years',
+         sent_at = now() - interval '4 years'
+   where id = v_prop;
+  perform app.apply_retention();
+  perform t.assert(
+    (select prospect_email like 'efface-%@anonymise.invalid' and prospect_name is null
+            and prospect_phone is null and internal_notes is null
+       from public.site_proposals where id = v_prop),
+    'Proposition non conclue : le prospect est anonymise apres trois ans');
+
   perform t.assert(not has_function_privilege('authenticated', 'public.complete_paid_proposal(uuid)', 'execute')
                    and not has_function_privilege('anon', 'public.claim_site_proposal(text)', 'execute')
                    and not has_function_privilege('authenticated', 'public.proposals_awaiting_delivery(int)', 'execute'),

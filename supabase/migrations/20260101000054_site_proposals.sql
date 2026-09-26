@@ -1142,3 +1142,90 @@ end;
 $$;
 
 revoke all on sequence public.site_proposal_reference_seq from anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+--  11. Conservation : coordonnées des prospects d'une proposition non conclue
+--
+--  `app.apply_retention` (0048) est reprise à l'identique, avec un bloc de
+--  plus. Voir docs/REGISTRE_TRAITEMENTS.md, A8.
+-- -----------------------------------------------------------------------------
+create or replace function app.apply_retention()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, app, pg_catalog
+as $$
+declare
+  v_result jsonb := '{}'::jsonb;
+  v_count  integer;
+begin
+  perform set_config('stax.retention_purge', 'on', true);
+
+  delete from public.analytics_events where created_at < now() - interval '30 days';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('analytics_events', v_count);
+
+  delete from public.daily_site_metrics where day < (current_date - interval '25 months');
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('daily_site_metrics', v_count);
+
+  delete from public.security_events where created_at < now() - interval '12 months';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('security_events', v_count);
+
+  delete from public.email_log where created_at < now() - interval '12 months';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('email_log', v_count);
+
+  delete from public.webhook_events where received_at < now() - interval '12 months';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('webhook_events', v_count);
+
+  delete from public.rate_limit_counters where window_start < now() - interval '1 day';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('rate_limit_counters', v_count);
+
+  delete from public.audit_logs where created_at < now() - interval '3 years';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('audit_logs', v_count);
+
+  delete from public.content_reports
+   where status in ('actioned', 'rejected')
+     and decided_at < now() - interval '1 year';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('content_reports', v_count);
+
+  -- Surveillance : 90 jours d'historique suffisent a documenter un incident.
+  delete from public.site_health_checks where checked_at < now() - interval '90 days';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('site_health_checks', v_count);
+
+  -- Apercus : un build d'apercu n'a plus d'interet apres 90 jours. Les
+  -- deploiements de PRODUCTION sont conserves : ils documentent les versions.
+  delete from public.site_deployments
+   where environment = 'preview'
+     and created_at < now() - interval '90 days'
+     and status not in ('queued', 'building', 'deploying');
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('preview_deployments', v_count);
+
+  -- Propositions non conclues (0054) : trois ans après le dernier échange, les
+  -- coordonnées du contact sont effacées. La ligne reste, anonyme : elle ne
+  -- documente plus qu'un envoi, une offre et une issue.
+  update public.site_proposals
+     set prospect_email = 'efface-' || id || '@anonymise.invalid',
+         prospect_name = null,
+         prospect_phone = null,
+         message = null,
+         internal_notes = null
+   where status in ('sent', 'claimed', 'withdrawn')
+     and greatest(last_sent_at, expires_at, coalesce(claimed_at, last_sent_at),
+                  coalesce(withdrawn_at, last_sent_at)) < now() - interval '3 years'
+     and prospect_email not like 'efface-%@anonymise.invalid';
+  get diagnostics v_count = row_count;
+  v_result := v_result || jsonb_build_object('site_proposals_anonymized', v_count);
+
+  perform set_config('stax.retention_purge', 'off', true);
+  return v_result;
+end;
+$$;

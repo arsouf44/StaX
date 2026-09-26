@@ -87,8 +87,13 @@ sous-traitant : voir la section B.
 | **Finalité** | Répondre aux demandes, diagnostiquer les incidents |
 | **Base légale** | Contrat (art. 6.1.b) et intérêt légitime (art. 6.1.f) |
 | **Données** | Échanges de support, sessions d'assistance avec motif obligatoire |
-| **Tables** | `support_tickets`, `support_messages`, `impersonation_sessions`, `audit_logs` |
+| **Tables** | `support_tickets`, `support_messages`, `project_messages`, `impersonation_sessions`, `audit_logs` |
 | **Conservation** | 3 ans à compter de la clôture |
+
+La discussion « Écrire à l'équipe » (`project_messages`) est lue par l'équipe
+depuis `/admin/messages` ; le côté de l'auteur (client ou StaX) est imposé par
+la base (0055). Une copie de chaque réponse de l'équipe part par e-mail au
+responsable du compte client.
 
 Une session d'assistance n'emprunte jamais l'identité du client : elle est
 nominative, motivée, plafonnée en durée, signalée par une bannière visible dans
@@ -140,6 +145,23 @@ et cette propriété doit être préservée à chaque évolution.
 L'identité de l'auteur n'est pas communiquée à l'éditeur du site, sauf
 obligation légale. Seule l'équipe StaX lit les signalements (RLS), et seule
 l'administration de la plateforme peut décider.
+
+### A8 — Propositions de site (vente par téléphone)
+
+| | |
+| --- | --- |
+| **Finalité** | Adresser à une entreprise, après un échange téléphonique où elle l'a accepté, le site préparé pour elle, son prix et un code pour le récupérer ; suivre la proposition |
+| **Base légale** | Mesures précontractuelles prises à la demande de la personne (art. 6.1.b) |
+| **Personnes** | Contacts professionnels des entreprises prospectées |
+| **Données** | Nom de l'entreprise, nom, e-mail et téléphone professionnels du contact, offre et prix proposés, notes internes de l'équipe, dates d'envoi, de récupération et de paiement, nombre de saisies du code |
+| **Tables** | `site_proposals`, `audit_logs`, `email_log` (empreinte du destinataire) |
+| **Conservation** | Non conclue (expirée ou retirée) : coordonnées **anonymisées 3 ans** après le dernier échange (`app.apply_retention()`, 0054). Conclue : comme A1 et A2 |
+
+Le code personnel n'est stocké que sous forme d'empreinte HMAC ; il ne vaut
+qu'avec l'adresse e-mail destinataire. Le prospect ne lit jamais la table
+(notes internes) : il ne voit que sa proposition, par une fonction dédiée. Le
+démarchage téléphonique d'entreprises n'est pas soumis à Bloctel ; l'e-mail de
+proposition n'est envoyé qu'après un appel concluant, jamais en masse.
 
 Toutes les durées de conservation de ce registre sont **appliquées** par
 `app.apply_retention()` (migration 0039), planifiée chaque jour : voir
