@@ -3182,6 +3182,22 @@ begin
 end;
 $$;
 
+-- -----------------------------------------------------------------------------
+--  Tache de fond planifiee par la base (0053)
+-- -----------------------------------------------------------------------------
+\echo '--- Tache de fond des sites (0053) ---'
+do $$
+begin
+  perform t.assert(to_regprocedure('app.trigger_site_operations()') is not null,
+    'La base sait declencher la tache de fond des sites');
+  perform t.assert(not has_function_privilege('anon', 'app.trigger_site_operations()', 'execute')
+                   and not has_function_privilege('authenticated', 'app.trigger_site_operations()', 'execute'),
+    'Ni un visiteur ni un client ne peuvent declencher la tache de fond');
+  perform t.assert(app.trigger_site_operations() is null,
+    'Sans adresse ni secret dans Vault, le declencheur ne fait rien');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

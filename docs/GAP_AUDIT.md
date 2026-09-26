@@ -423,8 +423,8 @@ Cloudflare n’a pu être fait depuis cet environnement.
 ## Ce qui reste non terminé, sans détour
 
 0. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
-   2026-09-24** : les migrations 0042 à 0052 sont appliquées sur le projet
-   « StaX » (52 au total), chacune tracée dans `app.schema_migrations` avec
+   2026-09-24** : les migrations 0042 à 0053 sont appliquées sur le projet
+   « StaX » (53 au total), chacune tracée dans `app.schema_migrations` avec
    l’empreinte de son fichier. Le schéma réel a été comparé à une base locale
    construite depuis le dépôt : tables, politiques RLS, contraintes, index,
    fonctions et droits d’exécution identiques. Reste `pnpm internal:bootstrap`
@@ -436,14 +436,14 @@ Cloudflare n’a pu être fait depuis cet environnement.
    Sans eux, *Infrastructure & livraison* le dit et refuse de rattacher.
 
 1. **E2E « deux navigateurs connectés »** pour l'isolation inter-tenant. Elle
-   est prouvée par 458 assertions SQL, les tests d'intégration et les parcours
+   est prouvée par 461 assertions SQL, les tests d'intégration et les parcours
    de § 11 (qui opèrent chacun sur leur propre client), mais pas encore par
    deux sessions réelles ouvertes en parallèle sur le même écran.
 
 1 bis. **Les parcours de § 11 ne tournent pas encore en CI** : ils montent la
    pile locale (binaires GoTrue et PostgREST téléchargés par
    `tests/e2e/stack/stack.sh`, avec les faux GitHub et Cloudflare). La CI
-   exécute les 458 assertions SQL, qui
+   exécute les 461 assertions SQL, qui
    couvrent les mêmes règles côté base ; brancher les parcours est l'étape
    suivante.
 
