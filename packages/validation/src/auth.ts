@@ -65,6 +65,8 @@ export const signUpSchema = z
     marketingOptIn: checkboxSchema,
     website: honeypotSchema,
     turnstileToken: z.string().max(4096).optional(),
+    /** Page ou revenir apres la confirmation de l'adresse (chemin interne). */
+    redirectTo: z.string().max(2048).optional(),
   })
   .strict();
 

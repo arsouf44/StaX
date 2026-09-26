@@ -341,7 +341,29 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </Link>
           </div>
         </Panel>
-      ) : (
+      ) : null}
+
+      {site.architecture === 'external_repository' && !site.delivered_at ? (
+        <Panel level={1} padding="lg" data-testid="site-proposal-link">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-sm font-medium">Vente par téléphone</h2>
+              <p className="mt-2 max-w-2xl text-sm text-[var(--foreground-muted)]">
+                Site préparé pour un prospect ? Envoyez-lui une proposition : il reçoit le lien et
+                un code, crée son compte, paie, et le site lui est livré automatiquement.
+              </p>
+            </div>
+            <Link
+              href={`/admin/propositions?site=${site.id}`}
+              className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--border-strong)] px-4 text-sm font-medium hover:bg-[var(--surface-hover)]"
+            >
+              Proposer ce site à un prospect
+            </Link>
+          </div>
+        </Panel>
+      ) : null}
+
+      {site.architecture === 'external_repository' ? null : (
         <SiteDelivery
           siteId={site.id}
           siteName={site.name}

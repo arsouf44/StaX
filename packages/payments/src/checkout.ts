@@ -43,6 +43,17 @@ export interface CreateCheckoutInput {
   discountCents?: Cents;
   couponCode?: string | null;
   locale?: 'fr' | 'en';
+  /**
+   * Page de retour si le client abandonne le paiement (chemin interne). Par
+   * defaut : le recapitulatif de commande, ou il peut reprendre.
+   */
+  cancelPath?: string;
+  /**
+   * Numero de tentative pour la MEME commande. Une session expiree ne peut pas
+   * etre rouverte ; en ouvrir une nouvelle avec la meme cle d'idempotence
+   * renverrait l'ancienne. Chaque nouvelle tentative a donc sa propre cle.
+   */
+  attempt?: number;
 }
 
 /**
@@ -151,7 +162,9 @@ export async function createCheckoutSession(
     client_reference_id: input.orderId,
     metadata,
     success_url: `${base}/app/commande/${input.orderId}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}/commander/paiement?order=${input.orderId}&annule=1`,
+    // L'ancienne adresse de retour (`/commander/paiement`) n'existait pas : un
+    // client qui renoncait au paiement tombait sur une page introuvable.
+    cancel_url: `${base}${input.cancelPath ?? '/commander/recapitulatif?paiement=annule'}`,
     automatic_tax: { enabled: false },
     billing_address_collection: 'required',
     invoice_creation: {
@@ -188,13 +201,28 @@ export async function createCheckoutSession(
   }
 
   const session = await stripe.checkout.sessions.create(params, {
-    idempotencyKey: idempotencyKey('checkout-payment', input.orderId),
+    idempotencyKey: input.attempt
+      ? idempotencyKey('checkout-payment', input.orderId, input.attempt)
+      : idempotencyKey('checkout-payment', input.orderId),
   });
 
   if (!session.url) {
     throw new Error('Stripe n’a pas renvoyé d’URL de paiement.');
   }
   return { sessionId: session.id, url: session.url };
+}
+
+/**
+ * Etat d'une session de paiement deja ouverte : une session encore ouverte
+ * est reprise telle quelle plutot que d'en creer une seconde.
+ */
+export async function retrieveCheckoutSession(
+  sessionId: string,
+): Promise<{ status: 'open' | 'complete' | 'expired' | null; url: string | null }> {
+  const session = await getStripe().checkout.sessions.retrieve(sessionId);
+  const raw: string | null = session.status ?? null;
+  const status = raw === 'open' || raw === 'complete' || raw === 'expired' ? raw : null;
+  return { status, url: session.url ?? null };
 }
 
 /**

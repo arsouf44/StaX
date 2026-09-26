@@ -137,7 +137,20 @@ passe, retirer `ADMIN_BOOTSTRAP_PASSWORD` de l’environnement.
 
 Le second doit être créé en mode **Connect**. L’abonnement mensuel de
 maintenance n’est pas créé au paiement de la commande mais **à la livraison**
-du site ([stripe.md](./stripe.md)).
+du site ([stripe.md](./stripe.md)). Pour un site **proposé après un appel**, le
+webhook livre le site aussitôt le paiement confirmé : l’abonnement démarre donc
+le même jour ([vente-par-telephone.md](./vente-par-telephone.md)).
+
+### 6 bis. E-mails et authentification
+
+- `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` : e-mails de StaX
+  (propositions, livraison, réponses de l’équipe, alertes) ;
+- `SUPPORT_EMAIL` : reçoit aussi **toutes les alertes de l’équipe** (à défaut
+  `ADMIN_EMAIL`) ;
+- Supabase → Authentication : SMTP personnalisé, *Site URL* et *Redirect URLs*
+  = `https://<domaine>/auth/confirmation` ([supabase.md](./supabase.md)).
+
+Pas à pas complet : [LANCEMENT.md](./LANCEMENT.md).
 
 ### 7. Application GitHub
 

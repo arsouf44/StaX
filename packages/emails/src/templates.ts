@@ -7,6 +7,7 @@ import {
   strongLine,
   toPlainText,
 } from './layout';
+import { escapeHtml } from './escape';
 import type { EmailMessage } from './provider';
 
 /**
@@ -387,7 +388,7 @@ export function newMessageEmail(
     bodyHtml: [
       paragraph(`${ctx.senderName} vous a écrit depuis votre site :`),
       `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E4E4E7;
-        color:#3F3F46;font-style:italic;">${ctx.excerpt.slice(0, 500)}</blockquote>`,
+        color:#3F3F46;font-style:italic;">${escapeHtml(ctx.excerpt.slice(0, 500))}</blockquote>`,
     ].join(''),
     bodyText: [`${ctx.senderName} vous a écrit :`, ctx.excerpt.slice(0, 500)],
     action: { label: 'Lire le message', url: ctx.inboxUrl },
@@ -819,5 +820,179 @@ export function internalLeadEmail(ctx: {
     ].join(''),
     bodyText: [`${ctx.name} <${ctx.email}>`, ctx.summary.slice(0, 1500)],
     action: { label: 'Ouvrir dans l’administration', url: ctx.adminUrl },
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Proposition de site (vente par telephone)                                  */
+/* -------------------------------------------------------------------------- */
+
+function quote(text: string): string {
+  return `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E4E4E7;
+    color:#3F3F46;">${escapeHtml(text)}</blockquote>`;
+}
+
+/**
+ * « Votre site est prêt » : envoyé après un appel concluant.
+ *
+ * Le prospect n'a rien d'autre en main que ce message : il doit comprendre en
+ * trois lignes ce qu'il voit (son site, déjà en ligne), ce qu'il paie (le prix
+ * de l'offre, la maintenance mensuelle) et quoi faire (un seul bouton). Le code
+ * est rappelé en clair au cas où le lien ne s'ouvrirait pas.
+ */
+export function siteProposalEmail(ctx: {
+  to: string;
+  firstName?: string | null;
+  companyName: string;
+  siteUrl: string | null;
+  claimUrl: string;
+  code: string;
+  planName: string;
+  /** Prix de création, déjà formaté (TTC). */
+  priceLabel: string;
+  /** Maintenance, déjà formatée avec sa périodicité, ou `null`. */
+  maintenanceLabel: string | null;
+  expiresLabel: string;
+  message: string | null;
+  reminder?: boolean;
+}): EmailMessage {
+  const rows: Array<[string, string]> = [
+    ['Offre', ctx.planName],
+    ['Création du site', ctx.priceLabel],
+  ];
+  if (ctx.maintenanceLabel) rows.push(['Maintenance', `${ctx.maintenanceLabel}, sans engagement`]);
+  rows.push(['Proposition valable jusqu’au', ctx.expiresLabel]);
+
+  const subject = ctx.reminder
+    ? `Rappel : le site de ${ctx.companyName} vous attend`
+    : `Le site de ${ctx.companyName} est prêt`;
+
+  return shell({
+    to: ctx.to,
+    template: ctx.reminder ? 'site_proposal_reminder' : 'site_proposal',
+    subject,
+    preheader: 'Découvrez-le en ligne, puis récupérez-le en quelques minutes.',
+    heading: `Le site de ${ctx.companyName} est prêt`,
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(
+        'Comme convenu lors de notre appel, nous avons préparé votre site. Il est déjà en ' +
+          'ligne : vous pouvez le découvrir dès maintenant.',
+      ),
+      ctx.message ? quote(ctx.message) : '',
+      strongLine('Pour le récupérer, trois étapes :'),
+      paragraph('1. Cliquez sur « Récupérer mon site » ci-dessous.'),
+      paragraph('2. Créez votre compte StaX avec cette adresse e-mail.'),
+      paragraph(
+        '3. Vérifiez votre site et réglez-le en ligne : il est à vous aussitôt, et vous ' +
+          'pouvez le modifier vous-même.',
+      ),
+      definitionList(rows),
+      paragraph('Votre code personnel, si l’on vous le demande :'),
+      codeBlock(ctx.code),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Comme convenu, le site de ${ctx.companyName} est prêt et déjà en ligne.`,
+      ctx.siteUrl ? `Voir le site : ${ctx.siteUrl}` : '',
+      ctx.message ?? '',
+      'Pour le récupérer : cliquez sur le lien ci-dessous, créez votre compte StaX avec cette adresse e-mail, puis réglez en ligne.',
+      ...rows.map(([label, value]) => `${label} : ${value}`),
+      `Votre code personnel : ${ctx.code}`,
+    ],
+    action: { label: 'Récupérer mon site', url: ctx.claimUrl },
+    ...(ctx.siteUrl ? { secondaryAction: { label: 'Voir mon site', url: ctx.siteUrl } } : {}),
+    footerNote:
+      'Ce code est personnel et ne fonctionne qu’avec votre adresse e-mail. StaX ne vous le ' +
+      'demandera jamais par téléphone.',
+  });
+}
+
+/** Rappel à un prospect qui a déjà récupéré son site mais n'a pas encore réglé. */
+export function proposalPaymentReminderEmail(ctx: {
+  to: string;
+  firstName?: string | null;
+  companyName: string;
+  appUrl: string;
+  priceLabel: string;
+  expiresLabel: string;
+}): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'site_proposal_payment_reminder',
+    subject: `Votre site ${ctx.companyName} vous attend`,
+    preheader: 'Une dernière étape pour qu’il soit à vous.',
+    heading: 'Une dernière étape',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(
+        `Votre site est prêt dans votre espace StaX. Il ne reste qu’à le régler ` +
+          `(${ctx.priceLabel}) pour qu’il soit à vous et que vous puissiez le modifier.`,
+      ),
+      paragraph(`Cette proposition est valable jusqu’au ${ctx.expiresLabel}.`),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Votre site est prêt dans votre espace StaX. Réglez-le (${ctx.priceLabel}) avant le ${ctx.expiresLabel}.`,
+    ],
+    action: { label: 'Finaliser', url: ctx.appUrl },
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Discussion avec l'equipe                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** L'équipe StaX a répondu au client. */
+export function teamReplyEmail(ctx: {
+  to: string;
+  firstName?: string | null;
+  excerpt: string;
+  conversationUrl: string;
+}): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'team_reply',
+    subject: 'L’équipe StaX vous a répondu',
+    preheader: ctx.excerpt.slice(0, 120),
+    heading: 'Vous avez une réponse',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph('L’équipe StaX vous a répondu :'),
+      quote(ctx.excerpt.slice(0, 800)),
+    ].join(''),
+    bodyText: [hello(ctx.firstName), 'L’équipe StaX vous a répondu :', ctx.excerpt.slice(0, 800)],
+    action: { label: 'Lire et répondre', url: ctx.conversationUrl },
+  });
+}
+
+/**
+ * Alerte interne à l'équipe StaX (nouveau message d'un client, site récupéré,
+ * paiement reçu, livraison bloquée). Jamais envoyée à un client.
+ */
+export function staffAlertEmail(ctx: {
+  to: string;
+  subject: string;
+  heading: string;
+  lines: ReadonlyArray<[string, string]>;
+  excerpt?: string | null;
+  actionUrl: string;
+  actionLabel?: string;
+}): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'staff_alert',
+    subject: ctx.subject,
+    preheader: ctx.excerpt?.slice(0, 120) ?? ctx.heading,
+    heading: ctx.heading,
+    bodyHtml: [
+      definitionList(ctx.lines),
+      ctx.excerpt ? quote(ctx.excerpt.slice(0, 1500)) : '',
+    ].join(''),
+    bodyText: [
+      ...ctx.lines.map(([label, value]) => `${label} : ${value}`),
+      ctx.excerpt ? ctx.excerpt.slice(0, 1500) : '',
+    ],
+    action: { label: ctx.actionLabel ?? 'Ouvrir dans l’administration', url: ctx.actionUrl },
   });
 }

@@ -11,6 +11,8 @@ Mise à jour : 2026-09-24 (**sites développés hors de StaX**, contrat
 d’édition, publication GitHub + Cloudflare, cinq offres mensuelles — § 12, qui
 remplace § 1 et § 2 là où ils se contredisent) · Branche :
 `claude/clever-maxwell-syg8wd`
+Mise à jour : 2026-09-26 (**vente par téléphone**, messagerie de l’équipe,
+pannes de lancement — § 13) · Branche : `claude/upbeat-goldberg-rfm9uz`
 
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
@@ -420,9 +422,75 @@ Cloudflare n’a pu être fait depuis cet environnement.
 
 ---
 
+## 13. Prêt à commercialiser — état au 2026-09-26
+
+### 13.1 Vente par téléphone (nouveau parcours)
+
+Voir [vente-par-telephone.md](./vente-par-telephone.md).
+
+| Exigence | État | Où | Preuve |
+|---|---|---|---|
+| Site construit et vérifié avant l’envoi ; proposition refusée sinon (domaine et compte client dispensés) | **OK** | `app.create_site_proposal` (0054) | SQL « Propositions de site » |
+| Prix = offre du catalogue, sans remise, figé à l’envoi ; une offre sur devis refusée | **OK** | `compute_order_pricing(plan, null)` | SQL |
+| E-mail « Votre site est prêt » : lien, code, prix HT/TTC, maintenance, date limite | **OK** | `siteProposalEmail` | `tests/unit/proposals.test.ts` |
+| Code de 12 caractères, empreinte HMAC seule, valable avec l’adresse du prospect uniquement, 14 jours | **OK** | `app.claim_site_proposal` | SQL, E2E « un autre compte ne peut pas utiliser le code » |
+| Compte → code prérempli → le prospect voit son site et le prix, ne modifie rien | **OK** | `/recuperer`, `ProposalDashboard`, `site_content_access` | E2E `cold-call.spec.ts` |
+| Messages du prospect à l’équipe, réponse de l’équipe par e-mail | **OK** | `/app` (discussion), `/admin/messages` | E2E |
+| Paiement : commande sur le site EXISTANT (jamais un second), montants de la proposition | **OK** | `app.create_proposal_order` | SQL « Le paiement ne crée ni second site ni second projet » |
+| Livraison automatique au paiement confirmé (webhook signé), reprise par la tâche de fond | **OK** | `completePaidProposal`, `app.complete_paid_proposal` | SQL, E2E |
+| Expiration sans effacement ; relance (nouveau code) ; retrait (accès retiré, rien d’effacé) | **OK** | `renew/withdraw_site_proposal` | SQL « expiration, relance, retrait » |
+| Suivi des prospects dans l’administration | **OK** | `/admin/propositions` | E2E « l’administration voit la vente conclue » |
+| Données des prospects : registre, confidentialité, anonymisation à 3 ans | **OK** | A8, `apply_retention` | SQL |
+
+### 13.2 Pannes trouvées pendant l’audit de lancement, et corrigées
+
+Aucune de ces pannes ne levait d’exception ni ne faisait échouer un test.
+
+| # | Panne | Conséquence réelle | Correction |
+|---|---|---|---|
+| 1 | Le correctif 0053 (tâche de fond compatible Vercel Hobby) était appliqué en base mais **jamais fusionné** | La branche principale gardait une tâche planifiée toutes les 5 min, refusée par Vercel Hobby : **déploiement en échec** | Fusionné |
+| 2 | Aucun écran d’administration ne lisait les messages clients (`project_messages`) ni les tickets | Un client qui écrivait n’avait **jamais de réponse** | `/admin/messages`, fiche ticket, réponse avec e-mail |
+| 3 | Les policies d’insertion des messages ne vérifiaient pas le côté de l’auteur | Un client pouvait, par l’API, écrire un message affiché « Équipe StaX » | 0055 : côté imposé par la base (SQL) |
+| 4 | Aucune route de retour des liens d’e-mail (échange du code PKCE) | **Mot de passe oublié impossible à terminer** ; la confirmation d’inscription ne connectait pas | `/auth/confirmation` |
+| 5 | Les invitations de collaborateurs menaient à `/invitation`, page inexistante, et aucune fonction ne permettait de les accepter | Invitations **impossibles à accepter** | `/invitation`, `app.accept_organization_invitation` |
+| 6 | Retour d’annulation Stripe vers `/commander/paiement` | Page **404** pour qui renonçait au paiement | Retour au récapitulatif (ou à l’espace), message « rien n’a été débité » |
+| 7 | La session Stripe était inscrite sur la commande par une écriture que la policy refuse en silence | Commande jamais « paiement en cours », session introuvable pour la reprendre | `app.attach_checkout_session` |
+| 8 | `stripe_customer_id` écrit avec le jeton du client, refusé par un déclencheur | Écriture perdue (le webhook la rattrapait) | Écrit avec la clé de service |
+| 9 | Le modèle d’alerte « nouveau contact / devis » existait mais n’était jamais envoyé ; aucune alerte non plus pour les messages et tickets | L’équipe ne savait pas qu’on lui écrivait | Alertes e-mail (`lib/team-alerts.ts`) |
+| 10 | La surveillance enregistrait les pannes des sites sans prévenir personne | Un site en panne passait inaperçu | Alerte au passage en panne |
+| 11 | Navigation de l’administration masquée sur téléphone | Back-office inutilisable sur mobile | Menu repliable |
+
+### 13.3 Espace client simplifié
+
+Menu recentré (« Accueil », « Écrire à l’équipe », « Modifier mon site »…),
+réglages rarement utiles sous « Plus d’options » (rien n’est retiré), carte
+« Vos premiers pas », mode d’emploi de l’éditeur en trois lignes, surveillance
+en mots simples, pastille des réponses non lues.
+
+### 13.4 Preuves
+
+| Contrôle | Résultat |
+|---|---|
+| Assertions SQL (`scripts/db-test.sh`) | toutes passées |
+| Tests unitaires, intégration, sécurité (`pnpm test`) | tous passés |
+| Tests navigateur (`pnpm test:e2e`, ordinateur + téléphone) | 62 passés |
+| Parcours contre une vraie pile (`pnpm test:e2e:stack`) | 19 passés, dont `cold-call.spec.ts` |
+| Build de production | OK |
+
+---
+
 ## Ce qui reste non terminé, sans détour
 
-0. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
+0. ~~Migrations 0054 et 0055 à appliquer sur le projet Supabase réel~~ —
+   **fait le 2026-09-26**, tracées dans `app.schema_migrations` avec
+   l'empreinte de leur fichier ; production comparée au dépôt (fonctions,
+   colonnes, contraintes, index, policies identiques). L'analyseur Supabase
+   ne signale rien de nouveau hors du modèle voulu (fonctions `security
+   definer` appelables par une personne connectée, qui vérifient elles-mêmes
+   le rôle ; aucune ouverte à `anon`). Reste à activer la protection contre les
+   mots de passe compromis (point 3).
+
+0 ter. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
    2026-09-24** : les migrations 0042 à 0053 sont appliquées sur le projet
    « StaX » (53 au total), chacune tracée dans `app.schema_migrations` avec
    l’empreinte de son fichier. Le schéma réel a été comparé à une base locale

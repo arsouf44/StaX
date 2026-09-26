@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { readEnv } from '@stax/config';
+import { Alert } from '@stax/ui';
 import { AuthCard } from '~/components/auth/auth-card';
 import { ResetRequestForm } from './reset-request-form';
 
@@ -11,7 +12,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   return (
     <AuthCard
       title="Mot de passe oublié"
@@ -22,6 +28,12 @@ export default function ForgotPasswordPage() {
         </Link>
       }
     >
+      {params.lien === 'expire' ? (
+        <Alert tone="warning" live="status" className="mb-5">
+          Ce lien a expiré ou a déjà servi. Demandez-en un nouveau ci-dessous : il est valable une
+          heure.
+        </Alert>
+      ) : null}
       <ResetRequestForm turnstileSiteKey={readEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY') ?? null} />
     </AuthCard>
   );

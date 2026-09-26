@@ -48,7 +48,12 @@ const INTERNAL_NEXT_STEPS = [
   'L’équipe StaX garde la main sur le site en permanence, avant comme après.',
 ];
 
-export default async function OrderSummaryPage() {
+export default async function OrderSummaryPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   const draft = await readOrderDraft();
   if (!draft.planSlug) redirect('/commander');
   if (!draft.businessTypeSlug) redirect('/commander/metier');
@@ -84,6 +89,13 @@ export default async function OrderSummaryPage() {
   return (
     <>
       <OrderSteps current="/commander/recapitulatif" />
+
+      {params.paiement === 'annule' ? (
+        <Alert tone="info" live="status" className="mb-6" title="Paiement interrompu">
+          Rien n’a été débité. Votre commande est enregistrée : vous pouvez reprendre le paiement
+          ci-dessous quand vous le souhaitez.
+        </Alert>
+      ) : null}
 
       <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Récapitulatif</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">

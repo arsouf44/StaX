@@ -36,7 +36,9 @@ export default async function SignInPage({
         ? 'Votre compte est activé. Connectez-vous pour accéder à votre espace.'
         : params.deconnecte === '1'
           ? 'Vous êtes déconnecté.'
-          : undefined;
+          : params.confirme === '1'
+            ? 'Votre adresse e-mail est confirmée. Connectez-vous pour continuer.'
+            : undefined;
 
   return (
     <AuthCard
@@ -46,7 +48,11 @@ export default async function SignInPage({
         <>
           Pas encore de compte ?{' '}
           <Link
-            href="/inscription"
+            href={
+              typeof params.suivant === 'string'
+                ? `/inscription?suivant=${encodeURIComponent(redirectTo)}`
+                : '/inscription'
+            }
             className="text-[var(--foreground)] underline underline-offset-4"
           >
             Créer un compte

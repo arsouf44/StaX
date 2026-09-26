@@ -46,11 +46,12 @@ const LEGACY_ENGINE_ONLY: ReadonlySet<string> = new Set([
 const EXTERNAL_ENTRIES: readonly DashboardEntry[] = [
   {
     href: '/app/site/versions',
-    label: 'Versions publiées',
+    label: 'Historique des versions',
     icon: 'history',
     capability: 'content.view',
     group: 'site',
     sortOrder: 15,
+    secondary: true,
   },
 ];
 
@@ -64,10 +65,10 @@ export interface NavGroup {
 }
 
 const GROUP_LABELS: Record<DashboardGroup, string> = {
-  pilotage: 'Pilotage',
+  pilotage: 'Mon espace',
   site: 'Mon site',
   activite: 'Mon activité',
-  entreprise: 'Mon entreprise',
+  entreprise: 'Mon compte',
 };
 
 const GROUP_ORDER: DashboardGroup[] = ['pilotage', 'site', 'activite', 'entreprise'];
@@ -76,11 +77,19 @@ const GROUP_ORDER: DashboardGroup[] = ['pilotage', 'site', 'activite', 'entrepri
 const CORE_ENTRIES: readonly DashboardEntry[] = [
   {
     href: '/app',
-    label: 'Tableau de bord',
+    label: 'Accueil',
     icon: 'layout-dashboard',
     capability: 'org.view',
     group: 'pilotage',
     sortOrder: 10,
+  },
+  {
+    href: '/app/discussion',
+    label: 'Écrire à l’équipe',
+    icon: 'message-circle',
+    capability: 'org.view',
+    group: 'pilotage',
+    sortOrder: 15,
   },
   {
     href: '/app/projet',
@@ -171,6 +180,7 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
     capability: 'members.manage',
     group: 'entreprise',
     sortOrder: 20,
+    secondary: true,
   },
   {
     href: '/app/facturation',
@@ -190,19 +200,21 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
   },
   {
     href: '/app/securite',
-    label: 'Sécurité',
+    label: 'Mot de passe et sécurité',
     icon: 'lock',
     capability: 'org.view',
     group: 'entreprise',
     sortOrder: 50,
+    secondary: true,
   },
   {
     href: '/app/donnees',
-    label: 'Mes données',
+    label: 'Exporter mes données',
     icon: 'database',
     capability: 'data.export',
     group: 'entreprise',
     sortOrder: 60,
+    secondary: true,
   },
   {
     href: '/app/activite',
@@ -211,6 +223,7 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
     capability: 'org.manage',
     group: 'entreprise',
     sortOrder: 70,
+    secondary: true,
   },
   {
     href: '/app/support',
@@ -241,6 +254,12 @@ export function buildDashboardNavigation(context: NavContext): NavGroup[] {
     // Une entree deja presente garde le rang le plus faible (la plus haute).
     const existing = entries.get(entry.href);
     if (existing && existing.sortOrder <= entry.sortOrder) return;
+    // Une fois le site livre, le suivi de sa creation est de l'histoire
+    // ancienne : il reste accessible, sous « Plus d'options ».
+    if (entry.href === '/app/projet' && context.siteDelivered === true) {
+      entries.set(entry.href, { ...entry, label: 'Suivi de la création', secondary: true });
+      return;
+    }
     entries.set(entry.href, entry);
   };
 

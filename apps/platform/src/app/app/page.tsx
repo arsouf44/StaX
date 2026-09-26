@@ -18,8 +18,10 @@ import {
 import { publicSiteUrl } from '@stax/config';
 import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
 import { loadReleaseViews } from './editeur/contract/data';
+import { loadClientProposal, ProposalDashboard } from './proposition/proposal-dashboard';
+import { FirstSteps } from '~/components/app/first-steps';
 
-export const metadata: Metadata = { title: 'Tableau de bord' };
+export const metadata: Metadata = { title: 'Accueil' };
 
 /**
  * Accueil de l espace client.
@@ -40,6 +42,24 @@ export default async function DashboardPage({
   const params = await searchParams;
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
+
+  // Site proposé après un appel, récupéré avec un code, pas encore livré :
+  // le client voit son site, le prix, et peut payer ou nous écrire.
+  if (site && !site.deliveredAt) {
+    const proposal = await loadClientProposal(db, site.id);
+    if (proposal && (proposal.status === 'claimed' || proposal.status === 'paid')) {
+      return (
+        <ProposalDashboard
+          db={db}
+          siteId={site.id}
+          firstName={workspace.profile.first_name ?? ''}
+          proposal={proposal}
+          paymentCancelled={params.paiement === 'annule'}
+          justClaimed={params.bienvenue === '1'}
+        />
+      );
+    }
+  }
 
   if (site && isSiteUnderConstruction(workspace)) {
     return (
@@ -1051,7 +1071,9 @@ async function ManagedSiteDashboard({
             <p className="text-xs text-[var(--muted)]">Surveillance</p>
             <p className="mt-1 text-sm">
               {check
-                ? `${check.ok ? 'Répond' : 'Ne répond pas'}${check.response_ms !== null ? ` en ${check.response_ms} ms` : ''}`
+                ? check.ok
+                  ? 'Votre site répond normalement'
+                  : 'Votre site ne répondait pas : nous sommes prévenus'
                 : 'Première vérification à venir'}
             </p>
             {check ? (
@@ -1101,6 +1123,10 @@ async function ManagedSiteDashboard({
         <Alert tone="info" title="Site en préparation">
           Ce site n’est pas encore livré : son éditeur s’ouvrira à la livraison.
         </Alert>
+      ) : null}
+
+      {site.deliveredAt && canEdit ? (
+        <FirstSteps siteUrl={liveUrl} storageKey={`stax.first-steps.${site.id}`} />
       ) : null}
 
       <section aria-labelledby="a-traiter">

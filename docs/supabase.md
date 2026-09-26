@@ -25,7 +25,9 @@ La clé de service n’est **jamais** préfixée `NEXT_PUBLIC_`, et
 | Durée du jeton d’accès | 1 h | Compromis entre confort et exposition |
 | Rotation du jeton de rafraîchissement | activée | Un jeton volé devient vite inutilisable |
 | Double facteur TOTP | activé | Obligatoire pour les comptes d’administration |
-| URL de redirection | liste fermée | Empêche une redirection ouverte |
+| URL de redirection | liste fermée : `https://<domaine>/auth/confirmation` | Empêche une redirection ouverte ; cette route ouvre la session des liens d’e-mail (confirmation, mot de passe oublié) |
+| Site URL | `https://<domaine>` | Base des liens envoyés par Supabase |
+| SMTP | personnalisé (Resend, Postmark…) | Le SMTP par défaut de Supabase n’envoie que quelques e-mails par heure |
 
 ## Stockage
 

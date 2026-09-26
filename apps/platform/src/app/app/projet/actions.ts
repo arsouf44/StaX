@@ -6,6 +6,7 @@ import { createUserClient, unwrapMaybe } from '@stax/database';
 import { uuidSchema } from '@stax/validation';
 import { storeMediaFile } from '~/lib/media-store';
 import { requireSession } from '~/lib/session';
+import { alertTeam } from '~/lib/team-alerts';
 import { getWorkspace } from '~/lib/workspace';
 
 /**
@@ -41,12 +42,30 @@ export async function sendProjectMessageAction(
 
   // Le projet doit exister ET etre visible par cette personne. La RLS le
   // garantit : une lecture vide signifie « pas le vôtre ».
-  const project = unwrapMaybe<{ id: string }>(
-    (await db.from('projects').select('id').eq('id', parsed.data.projectId).maybeSingle()) as never,
+  const project = unwrapMaybe<{
+    id: string;
+    organization_id: string;
+    site_id: string | null;
+    organizations: { name: string } | null;
+  }>(
+    (await db
+      .from('projects')
+      .select('id, organization_id, site_id, organizations ( name )')
+      .eq('id', parsed.data.projectId)
+      .maybeSingle()) as never,
   );
   if (!project) {
     return { status: 'error', message: 'Ce projet est introuvable.' };
   }
+
+  // Un client qui attend deja une reponse ne declenche pas une alerte par
+  // message : une seule, tant que l'equipe n'a pas lu le fil.
+  const waiting = await db
+    .from('project_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', project.id)
+    .eq('author_side', 'client')
+    .is('read_by_staff_at', null);
 
   const { error } = await db.from('project_messages').insert({
     project_id: project.id,
@@ -63,7 +82,26 @@ export async function sendProjectMessageAction(
     };
   }
 
+  if ((waiting.count ?? 0) === 0) {
+    await alertTeam(
+      {
+        subject: `Nouveau message — ${project.organizations?.name ?? 'client'}`,
+        heading: 'Un client vous a écrit',
+        lines: [
+          ['Entreprise', project.organizations?.name ?? '—'],
+          ['De', session.profile.email],
+        ],
+        excerpt: parsed.data.body,
+        path: `/admin/messages/${project.id}`,
+        actionLabel: 'Lire et répondre',
+      },
+      { db, organizationId: project.organization_id, siteId: project.site_id ?? undefined },
+    );
+  }
+
   revalidatePath('/app/projet');
+  revalidatePath('/app/discussion');
+  revalidatePath('/app');
   return { status: 'success', message: 'Message envoyé. Nous répondons sous un jour ouvré.' };
 }
 

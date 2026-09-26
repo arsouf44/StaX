@@ -7,6 +7,7 @@ import { AppShell } from '~/components/app/app-shell';
 import { SiteUnderConstruction } from '~/components/app/site-under-construction';
 import { SupportBanner } from '~/components/app/support-banner';
 import { activeSupportSession } from '~/app/admin/assistance/actions';
+import { loadClientProposal } from '~/app/app/proposition/proposal-dashboard';
 import { getWorkspace, isAccountPath, isSiteUnderConstruction } from '~/lib/workspace';
 
 /**
@@ -40,6 +41,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const underConstruction = isSiteUnderConstruction(workspace);
   const pathname = (await headers()).get('x-stax-pathname') ?? '/app';
   const hideContent = underConstruction && !isAccountPath(pathname);
+  // Site proposé et récupéré, en attente de règlement : il est prêt, le
+  // message ne doit pas dire « en création ».
+  const proposal =
+    hideContent && workspace.currentSite
+      ? await loadClientProposal(db, workspace.currentSite.id)
+      : null;
+
+  // Réponses de l'équipe pas encore lues : pastille sur « Écrire à l'équipe ».
+  const { count: unreadReplies } = await db
+    .from('project_messages')
+    .select('id, projects!inner ( organization_id )', { count: 'exact', head: true })
+    .eq('author_side', 'stax')
+    .is('read_by_client_at', null)
+    .eq('projects.organization_id', workspace.organization.id);
 
   const groups = buildDashboardNavigation({
     enabledModules: workspace.currentSite?.enabledModules ?? [],
@@ -60,9 +75,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           )}
         />
       ) : null}
-      <AppShell groups={groups} header={<AppHeader workspace={workspace} />}>
+      <AppShell
+        groups={groups}
+        header={<AppHeader workspace={workspace} />}
+        badges={{ '/app/discussion': unreadReplies ?? 0 }}
+      >
         {hideContent && workspace.currentSite ? (
-          <SiteUnderConstruction siteName={workspace.currentSite.name} />
+          <SiteUnderConstruction
+            siteName={workspace.currentSite.name}
+            awaitingPayment={proposal?.status === 'claimed'}
+          />
         ) : (
           children
         )}

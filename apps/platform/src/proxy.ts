@@ -35,11 +35,13 @@ export default function proxy(request: NextRequest) {
     // Photos des clients (bibliotheque, editeur) servies par le stockage.
     imgSrc: [readEnv('NEXT_PUBLIC_SUPABASE_URL') ?? ''].filter(Boolean),
     // L'apercu d'un site livre est son VRAI build Cloudflare (Pages ou
-    // Worker), affiche dans l'editeur : seules ces origines peuvent etre
-    // encadrees, et seulement dans l'editeur.
-    frameSrc: request.nextUrl.pathname.startsWith('/app/editeur')
-      ? ['https://*.pages.dev', 'https://*.workers.dev']
-      : [],
+    // Worker), affiche dans l'editeur — et sur le tableau de bord d'un
+    // prospect qui decouvre le site qu'on lui propose : seules ces origines
+    // peuvent etre encadrees, et seulement sur ces deux ecrans.
+    frameSrc:
+      request.nextUrl.pathname.startsWith('/app/editeur') || request.nextUrl.pathname === '/app'
+        ? ['https://*.pages.dev', 'https://*.workers.dev']
+        : [],
     // En developpement, `upgrade-insecure-requests` casserait http://localhost.
     allowInsecure: !isProduction(),
   });
@@ -73,6 +75,9 @@ export const config = {
     '/inscription',
     '/activation',
     '/facture',
+    '/recuperer',
+    '/invitation',
+    '/auth/:path*',
     '/commander/:path*',
     '/compte/:path*',
     '/mfa/:path*',

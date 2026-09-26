@@ -39,8 +39,20 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
     ],
   },
   {
-    label: 'Clients',
+    label: 'Ventes et clients',
     items: [
+      {
+        href: '/admin/messages',
+        label: 'Messages clients',
+        icon: 'message-circle',
+        minimum: 'support',
+      },
+      {
+        href: '/admin/propositions',
+        label: 'Propositions',
+        icon: 'send',
+        minimum: 'platform_admin',
+      },
       {
         href: '/admin/organisations',
         label: 'Organisations',
@@ -122,47 +134,109 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
   },
 ];
 
-export function AdminNav({ role }: { role: PlatformRole }) {
+export function AdminNav({
+  role,
+  badges = {},
+}: {
+  role: PlatformRole;
+  /** Pastilles par entrée (messages clients en attente…). */
+  badges?: Record<string, number>;
+}) {
   const pathname = usePathname();
   const level = HIERARCHY[role] ?? 0;
+  const pending = Object.values(badges).reduce((sum, count) => sum + count, 0);
 
   return (
-    <nav aria-label="Navigation de l’administration" className="hidden w-56 shrink-0 py-8 lg:block">
-      {GROUPS.map((group) => {
-        const items = group.items.filter((item) => level >= HIERARCHY[item.minimum]);
-        if (items.length === 0) return null;
+    <>
+      {/* Téléphone : la même navigation, repliée dans un menu. */}
+      <details className="group mt-4 w-full lg:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-sm">
+          <Icon name="menu" />
+          Menu
+          {pending > 0 ? (
+            <span className="rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+              {pending}
+            </span>
+          ) : null}
+        </summary>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          {GROUPS.map((group) => {
+            const items = group.items.filter((item) => level >= HIERARCHY[item.minimum]);
+            if (items.length === 0) return null;
+            return (
+              <div key={group.label}>
+                <p className="mb-1 px-3 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
+                  {group.label}
+                </p>
+                <ul>
+                  {items.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]"
+                      >
+                        <Icon name={item.icon} />
+                        {item.label}
+                        {badges[item.href] ? (
+                          <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+                            {badges[item.href]}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </details>
 
-        return (
-          <div key={group.label} className="mb-7">
-            <p className="mb-2 px-3 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              {group.label}
-            </p>
-            <ul className="space-y-0.5">
-              {items.map((item) => {
-                const active =
-                  item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors',
-                        active
-                          ? 'bg-[var(--surface-elevated)] font-medium text-[var(--foreground)]'
-                          : 'text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
-                      )}
-                    >
-                      <Icon name={item.icon} />
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
-    </nav>
+      <nav
+        aria-label="Navigation de l’administration"
+        className="hidden w-56 shrink-0 py-8 lg:block"
+      >
+        {GROUPS.map((group) => {
+          const items = group.items.filter((item) => level >= HIERARCHY[item.minimum]);
+          if (items.length === 0) return null;
+
+          return (
+            <div key={group.label} className="mb-7">
+              <p className="mb-2 px-3 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
+                {group.label}
+              </p>
+              <ul className="space-y-0.5">
+                {items.map((item) => {
+                  const active =
+                    item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          'flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors',
+                          active
+                            ? 'bg-[var(--surface-elevated)] font-medium text-[var(--foreground)]'
+                            : 'text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+                        )}
+                      >
+                        <Icon name={item.icon} />
+                        {item.label}
+                        {badges[item.href] ? (
+                          <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+                            {badges[item.href]}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+      </nav>
+    </>
   );
 }

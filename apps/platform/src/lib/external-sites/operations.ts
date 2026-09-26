@@ -1,5 +1,5 @@
 import 'server-only';
-import { unwrapList, type Db } from '@stax/database';
+import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
 import {
   checkSiteHealth,
   cloudflareSitesConfigured,
@@ -12,6 +12,7 @@ import {
   syncHostingDeployments,
   type StepOutcome,
 } from './publisher';
+import { alertTeam } from '../team-alerts';
 
 /**
  * Tache de fond des sites livres (`/api/cron/sites`, toutes les 5 minutes) :
@@ -130,7 +131,31 @@ export async function runSiteOperations(
     for (const site of due) {
       if (!withinBudget() || !site.url) continue;
       const health = await checkSiteHealth(site.url);
-      if (!health.ok) failures += 1;
+      if (!health.ok) {
+        failures += 1;
+        // Alerte à l'équipe au PASSAGE en panne, pas à chaque vérification.
+        const previous = unwrapMaybe<{ ok: boolean }>(
+          (await db
+            .from('site_health_checks')
+            .select('ok')
+            .eq('site_id', site.site_id)
+            .order('checked_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()) as never,
+        );
+        if (!previous || previous.ok) {
+          await alertTeam({
+            subject: `Site injoignable — ${site.url}`,
+            heading: 'Un site livré ne répond plus',
+            lines: [
+              ['Adresse', site.url],
+              ['Réponse', health.status ? `HTTP ${health.status}` : (health.error ?? 'aucune')],
+            ],
+            path: `/admin/sites/${site.site_id}`,
+            actionLabel: 'Ouvrir la fiche du site',
+          });
+        }
+      }
       await db.rpc('record_site_health', {
         p_site: site.site_id,
         p_url: site.url,

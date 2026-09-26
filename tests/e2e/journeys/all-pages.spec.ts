@@ -53,6 +53,10 @@ const PUBLIC_PAGES = [
   '/connexion',
   '/inscription',
   '/mot-de-passe-oublie',
+  '/mot-de-passe-oublie?lien=expire',
+  '/recuperer',
+  '/recuperer?code=AAAA-BBBB-CCCC&email=prospect%40exemple.test',
+  '/invitation?jeton=inconnu',
 ];
 
 const ADMIN_PAGES = [
@@ -68,9 +72,12 @@ const ADMIN_PAGES = [
   '/admin/domaines',
   '/admin/factures',
   '/admin/feature-flags',
+  '/admin/messages',
   '/admin/metiers',
   '/admin/organisations',
   '/admin/projets',
+  '/admin/propositions',
+  '/admin/propositions?filtre=toutes',
   '/admin/remboursements',
   '/admin/sante',
   '/admin/securite',
@@ -97,6 +104,7 @@ const CLIENT_PAGES = [
   '/app/compte',
   '/app/comptes-clients',
   '/app/contacts',
+  '/app/discussion',
   '/app/disponibilites',
   '/app/donnees',
   '/app/editeur',

@@ -9,6 +9,7 @@ import {
   WebhookVerificationError,
   type Stripe,
 } from '@stax/payments';
+import { completePaidProposal } from '~/lib/proposals';
 
 /**
  * Webhook Stripe de la plateforme.
@@ -37,6 +38,9 @@ import {
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// La livraison automatique d'un site propose refait ses controles (Cloudflare,
+// HTTPS) : plus que les 10 secondes accordees par defaut.
+export const maxDuration = 60;
 
 const PROVIDER = 'stripe';
 
@@ -192,6 +196,7 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
   // Aucun site modele n est prepare au paiement : l equipe StaX concoit et
   // developpe le site individuellement, puis le livre au client depuis
   // l administration (`app.deliver_site`). Le client suit son projet d ici la.
+  // Exception : un site PROPOSE apres un appel, deja pret (voir plus bas).
 
   // La carte utilisee devient le moyen de paiement par defaut : c est elle qui
   // reglera la maintenance mensuelle, creee a la LIVRAISON du site (jamais ici).
@@ -208,6 +213,19 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
         rememberError instanceof Error ? rememberError.message : rememberError,
       );
     }
+  }
+
+  // Site propose apres un appel : il est deja construit et verifie. Le
+  // paiement confirme le livre automatiquement (contrôles refaits, maintenance
+  // demarree, e-mails). Un echec ne remet pas en cause le paiement, deja
+  // applique : la tache de fond reprend la livraison, l equipe est alertee.
+  try {
+    await completePaidProposal(db, orderId);
+  } catch (deliveryError) {
+    console.error(
+      '[stax:webhook] livraison automatique differee',
+      deliveryError instanceof Error ? deliveryError.message : deliveryError,
+    );
   }
 
   // Parcours anterieur (session en mode abonnement, creee avant le passage a

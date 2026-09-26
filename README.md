@@ -20,6 +20,16 @@ COMMANDE → DÉVELOPPEMENT HORS DE STAX → GITHUB → CLOUDFLARE → VÉRIFICA
 → COMMIT GITHUB → DÉPLOIEMENT CLOUDFLARE → EN LIGNE
 ```
 
+Deuxième façon de vendre, **par téléphone** : après un appel concluant, le
+site est construit et vérifié, puis proposé au prospect par e-mail avec un code
+personnel (14 jours). Il crée son compte, voit son site, écrit à l’équipe s’il
+le souhaite, paie — et le site lui est livré automatiquement. Voir
+[vente-par-telephone.md](./docs/vente-par-telephone.md).
+
+> **Avant le premier client :** [docs/LANCEMENT.md](./docs/LANCEMENT.md) liste,
+> dans l’ordre, ce qu’il reste à configurer (base, identité légale, e-mails,
+> Stripe, GitHub, Cloudflare) et la répétition générale à faire.
+
 ---
 
 ## Ce que le produit fait réellement
@@ -43,6 +53,9 @@ COMMANDE → DÉVELOPPEMENT HORS DE STAX → GITHUB → CLOUDFLARE → VÉRIFICA
 | Espace client (messages, réservations, factures, abonnement)        | ✅   | `apps/platform/src/app/app`                                      |
 | Encaissements sur les sites clients                                 | ✅   | Stripe Connect, commission à zéro                                |
 | Projets sur mesure sur devis                                        | ✅   | `/devis` → `quotes`                                              |
+| **Vente par téléphone** : site prêt, e-mail + code, paiement, livré | ✅   | `site_proposals`, `/admin/propositions`, `/recuperer`            |
+| Discussion client ↔ équipe, réponses par e-mail, alertes à l’équipe | ✅   | `/app/discussion`, `/admin/messages`, `lib/team-alerts.ts`       |
+| Invitations de collaborateurs, mot de passe oublié                  | ✅   | `/invitation`, `/auth/confirmation`                              |
 | Sites de l’ancien moteur : toujours servis, rien d’effacé           | ✅   | `apps/site-runtime`, `packages/site-engine`                      |
 | Comptes internes StaX : sites sans paiement                         | ✅   | `app.create_internal_order`, `pnpm internal:bootstrap`           |
 | Intervention de l’équipe StaX, tracée et visible du client          | ✅   | sessions d’assistance, `app.org_can`                             |
@@ -150,26 +163,28 @@ tests/                 unitaires, intégration, sécurité, SQL, E2E
 
 Documentation détaillée dans [`docs/`](./docs) :
 
-| Document                                                      | Contenu                                                         |
-| ------------------------------------------------------------- | --------------------------------------------------------------- |
-| [architecture.md](./docs/architecture.md)                     | Choix structurants et leurs raisons                             |
-| [site-delivery.md](./docs/site-delivery.md)                   | **Le cycle complet** : commande → livraison → publication       |
-| [github-integration.md](./docs/github-integration.md)         | Application GitHub : permissions, jetons, commits, webhook      |
-| [editable-site-contract.md](./docs/editable-site-contract.md) | Contrat `stax.manifest.json` et fichier de contenu              |
-| [database.md](./docs/database.md)                             | Schéma, RLS, fonctions, invariants                              |
-| [security.md](./docs/security.md)                             | Modèle de menace et défenses                                    |
-| [vercel.md](./docs/vercel.md)                                 | **Plateforme sur Vercel** — variables, symptômes, vérifications |
-| [deployment.md](./docs/deployment.md)                         | Mise en production, étape par étape                             |
-| [cloudflare.md](./docs/cloudflare.md)                         | Projets Cloudflare des sites, jeton, webhook ; Workers de StaX  |
-| [supabase.md](./docs/supabase.md)                             | Projet, rôles, sauvegardes                                      |
-| [stripe.md](./docs/stripe.md)                                 | Offres, paiement, maintenance mensuelle à la livraison          |
-| [stripe-connect.md](./docs/stripe-connect.md)                 | Encaissements des clients                                       |
-| [domains.md](./docs/domains.md)                               | Connexion d’un domaine client                                   |
-| [admin-bootstrap.md](./docs/admin-bootstrap.md)               | Création du compte propriétaire                                 |
-| [backup-recovery.md](./docs/backup-recovery.md)               | Sauvegardes et restauration                                     |
-| [incident-response.md](./docs/incident-response.md)           | Conduite en cas d’incident                                      |
-| [legal-configuration.md](./docs/legal-configuration.md)       | Mentions légales obligatoires                                   |
-| [GAP_AUDIT.md](./docs/GAP_AUDIT.md)                           | Écart exigences / code réel, et ce qui reste à faire            |
+| Document                                                      | Contenu                                                            |
+| ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [LANCEMENT.md](./docs/LANCEMENT.md)                           | **Lancement commercial** : ce qui est prêt, ce qu’il reste à faire |
+| [vente-par-telephone.md](./docs/vente-par-telephone.md)       | **Vente par téléphone** : mode d’emploi de l’équipe                |
+| [architecture.md](./docs/architecture.md)                     | Choix structurants et leurs raisons                                |
+| [site-delivery.md](./docs/site-delivery.md)                   | **Le cycle complet** : commande → livraison → publication          |
+| [github-integration.md](./docs/github-integration.md)         | Application GitHub : permissions, jetons, commits, webhook         |
+| [editable-site-contract.md](./docs/editable-site-contract.md) | Contrat `stax.manifest.json` et fichier de contenu                 |
+| [database.md](./docs/database.md)                             | Schéma, RLS, fonctions, invariants                                 |
+| [security.md](./docs/security.md)                             | Modèle de menace et défenses                                       |
+| [vercel.md](./docs/vercel.md)                                 | **Plateforme sur Vercel** — variables, symptômes, vérifications    |
+| [deployment.md](./docs/deployment.md)                         | Mise en production, étape par étape                                |
+| [cloudflare.md](./docs/cloudflare.md)                         | Projets Cloudflare des sites, jeton, webhook ; Workers de StaX     |
+| [supabase.md](./docs/supabase.md)                             | Projet, rôles, sauvegardes                                         |
+| [stripe.md](./docs/stripe.md)                                 | Offres, paiement, maintenance mensuelle à la livraison             |
+| [stripe-connect.md](./docs/stripe-connect.md)                 | Encaissements des clients                                          |
+| [domains.md](./docs/domains.md)                               | Connexion d’un domaine client                                      |
+| [admin-bootstrap.md](./docs/admin-bootstrap.md)               | Création du compte propriétaire                                    |
+| [backup-recovery.md](./docs/backup-recovery.md)               | Sauvegardes et restauration                                        |
+| [incident-response.md](./docs/incident-response.md)           | Conduite en cas d’incident                                         |
+| [legal-configuration.md](./docs/legal-configuration.md)       | Mentions légales obligatoires                                      |
+| [GAP_AUDIT.md](./docs/GAP_AUDIT.md)                           | Écart exigences / code réel, et ce qui reste à faire               |
 
 ---
 
@@ -265,7 +280,12 @@ Les parcours (`tests/e2e/journeys`) :
 - **toutes les pages** (`all-pages.spec.ts`) : pages publiques, administration,
   espace client d’un site livré et d’un site en construction : aucune ne
   répond une erreur ;
-- **signalement d’un contenu** hébergé (`content-report.spec.ts`).
+- **signalement d’un contenu** hébergé (`content-report.spec.ts`) ;
+- **vente par téléphone** (`cold-call.spec.ts`) : l’équipe envoie la
+  proposition depuis l’administration ; un autre compte ne peut pas utiliser le
+  code ; le prospect se connecte, retrouve son code prérempli, voit son site et
+  son prix, ne peut rien modifier, écrit à l’équipe qui lui répond ; le
+  paiement (webhook signé) livre le site automatiquement et ouvre l’éditeur.
 
 Le paiement Stripe y est remplacé par un webhook **signé** avec un secret
 jetable : c’est le vrai chemin « paiement reçu → site préparé », sans réseau.
