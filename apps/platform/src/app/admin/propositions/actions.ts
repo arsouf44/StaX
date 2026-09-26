@@ -10,6 +10,7 @@ import { requireAdminRole } from '~/lib/admin';
 import { runDeliveryChecks } from '~/lib/external-sites/admin-flows';
 import type { ActionState } from '~/lib/form-state';
 import {
+  automaticChecksStale,
   generateProposalCode,
   hashProposalCode,
   PROPOSAL_VALID_DAYS,
@@ -124,7 +125,7 @@ export async function createProposalAction(
   // Les contrôles automatiques ne valent que 24 heures : on les refait avant
   // d'envoyer, pour ne pas refuser un site en bon état sur une preuve périmée.
   const service = tryCreateServiceClient();
-  if (service && cloudflareSitesConfigured()) {
+  if (service && cloudflareSitesConfigured() && (await automaticChecksStale(db, site.id))) {
     await runDeliveryChecks(db, service, { id: site.id, organizationId: site.organization_id });
   }
 

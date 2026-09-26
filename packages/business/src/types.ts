@@ -53,6 +53,11 @@ export interface DashboardEntry {
   capability: string;
   group: DashboardGroup;
   sortOrder: number;
+  /**
+   * Entrée rarement utile au quotidien : rangée sous « Plus d'options » pour
+   * que le menu reste court. Elle n'est ni masquée ni retirée.
+   */
+  secondary?: boolean;
 }
 
 export type DashboardGroup = 'pilotage' | 'site' | 'activite' | 'entreprise';

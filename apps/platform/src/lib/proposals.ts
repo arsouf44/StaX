@@ -188,6 +188,24 @@ const CHECK_LABELS: Record<string, string> = {
   plan: 'offre',
 };
 
+const AUTOMATIC_CHECKS = ['deployed', 'https', 'seo'] as const;
+const FRESH_FOR_MS = 20 * 60 * 60 * 1000;
+
+/** Contrôles automatiques absents, en échec, ou proches de leur échéance de 24 h. */
+export async function automaticChecksStale(service: Db, siteId: string): Promise<boolean> {
+  const { data } = await service
+    .from('site_delivery_checks')
+    .select('check_key, status, checked_at')
+    .eq('site_id', siteId)
+    .in('check_key', [...AUTOMATIC_CHECKS]);
+  const rows = (data ?? []) as Array<{ check_key: string; status: string; checked_at: string }>;
+  const limit = new Date().getTime() - FRESH_FOR_MS;
+  return AUTOMATIC_CHECKS.some((key) => {
+    const row = rows.find((candidate) => candidate.check_key === key);
+    return !row || row.status !== 'passed' || new Date(row.checked_at).getTime() < limit;
+  });
+}
+
 export interface PaidProposalOutcome {
   /** `false` : la commande n'est pas celle d'une proposition. */
   handled: boolean;
@@ -235,12 +253,17 @@ export async function completePaidProposal(
     return { handled: true, delivered: true, siteId: proposal.site_id };
   }
 
-  await runDeliveryChecks(service, service, {
-    id: proposal.site_id,
-    organizationId: proposal.organization_id,
-  }).catch((error: unknown) => {
-    console.error('[stax:proposal] controles', error instanceof Error ? error.message : error);
-  });
+  // Les contrôles automatiques valent 24 heures : ils ne sont refaits que
+  // s'ils approchent de l'échéance (Cloudflare et le site sont alors
+  // réinterrogés), pas à chaque passage.
+  if (await automaticChecksStale(service, proposal.site_id)) {
+    await runDeliveryChecks(service, service, {
+      id: proposal.site_id,
+      organizationId: proposal.organization_id,
+    }).catch((error: unknown) => {
+      console.error('[stax:proposal] controles', error instanceof Error ? error.message : error);
+    });
+  }
 
   const { data, error } = await service.rpc('complete_paid_proposal', { p_order: orderId });
   if (error) throw new Error(error.message);

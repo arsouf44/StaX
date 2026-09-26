@@ -19,8 +19,9 @@ import { publicSiteUrl } from '@stax/config';
 import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
 import { loadReleaseViews } from './editeur/contract/data';
 import { loadClientProposal, ProposalDashboard } from './proposition/proposal-dashboard';
+import { FirstSteps } from '~/components/app/first-steps';
 
-export const metadata: Metadata = { title: 'Tableau de bord' };
+export const metadata: Metadata = { title: 'Accueil' };
 
 /**
  * Accueil de l espace client.
@@ -1070,7 +1071,9 @@ async function ManagedSiteDashboard({
             <p className="text-xs text-[var(--muted)]">Surveillance</p>
             <p className="mt-1 text-sm">
               {check
-                ? `${check.ok ? 'Répond' : 'Ne répond pas'}${check.response_ms !== null ? ` en ${check.response_ms} ms` : ''}`
+                ? check.ok
+                  ? 'Votre site répond normalement'
+                  : 'Votre site ne répondait pas : nous sommes prévenus'
                 : 'Première vérification à venir'}
             </p>
             {check ? (
@@ -1120,6 +1123,10 @@ async function ManagedSiteDashboard({
         <Alert tone="info" title="Site en préparation">
           Ce site n’est pas encore livré : son éditeur s’ouvrira à la livraison.
         </Alert>
+      ) : null}
+
+      {site.deliveredAt && canEdit ? (
+        <FirstSteps siteUrl={liveUrl} storageKey={`stax.first-steps.${site.id}`} />
       ) : null}
 
       <section aria-labelledby="a-traiter">

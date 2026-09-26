@@ -107,7 +107,7 @@ export interface CustomerSite {
   infrastructure: SiteInfrastructure | null;
 }
 
-async function signedWebhook(event: Record<string, unknown>): Promise<Response> {
+export async function signedWebhook(event: Record<string, unknown>): Promise<Response> {
   const body = JSON.stringify(event);
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = createHmac('sha256', webhookSecret())

@@ -17,6 +17,7 @@ import {
   cn,
   useToast,
 } from '@stax/ui';
+import { EditorGuide } from '~/components/app/editor-guide';
 import {
   PAGE_SEO_FIELD,
   collectionItemPath,
@@ -528,6 +529,7 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
         </Alert>
       ) : null}
       {release ? <ReleaseBanner release={release} /> : null}
+      <EditorGuide />
 
       <div className="grid flex-1 gap-0 lg:grid-cols-[16rem_1fr_24rem]">
         {/* Zones modifiables */}
