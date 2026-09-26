@@ -10,7 +10,7 @@ intention.
 
 | Adversaire | Ce qu’il cherche | Défense principale |
 | --- | --- | --- |
-| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 458 assertions SQL |
+| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 461 assertions SQL |
 | Client pressé | Modifier son site avant la livraison, ou après une suspension | `app.site_content_access` en base |
 | Client malveillant | Rattacher le dépôt ou le site d’une autre organisation | rattachement réservé à l’équipe, un dépôt = un site, propriétaire vérifié |
 | Tiers qui forge un webhook | Faire passer une version pour publiée, altérer un dépôt connu | signature HMAC / secret, idempotence, relecture auprès de l’API du fournisseur |
