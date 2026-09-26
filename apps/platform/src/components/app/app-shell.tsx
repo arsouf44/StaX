@@ -20,9 +20,12 @@ export interface AppShellProps {
   groups: NavGroup[];
   header: ReactNode;
   children: ReactNode;
+  /** Pastilles de nombre par entrée (messages non lus…), lues côté serveur. */
+  badges?: Record<string, number>;
 }
 
-export function AppShell({ groups, header, children }: AppShellProps) {
+export function AppShell({ groups, header, children, badges = {} }: AppShellProps) {
+  const totalBadges = Object.values(badges).reduce((sum, count) => sum + count, 0);
   const pathname = usePathname();
   const drawerId = useId();
   // L etat du tiroir est deliberement per-appareil : un telephone et un
@@ -48,6 +51,11 @@ export function AppShell({ groups, header, children }: AppShellProps) {
         >
           <Icon name="menu" />
           Menu
+          {totalBadges > 0 ? (
+            <span className="rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+              {totalBadges}
+            </span>
+          ) : null}
         </button>
 
         <nav
@@ -78,6 +86,14 @@ export function AppShell({ groups, header, children }: AppShellProps) {
                     >
                       <Icon name={item.icon} />
                       <span className="truncate">{item.label}</span>
+                      {badges[item.href] ? (
+                        <span
+                          className="ml-auto rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]"
+                          aria-label={`${badges[item.href]} non lu(s)`}
+                        >
+                          {badges[item.href]}
+                        </span>
+                      ) : null}
                     </Link>
                   </li>
                 ))}

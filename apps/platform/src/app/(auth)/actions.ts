@@ -210,7 +210,14 @@ export async function signUpAction(
         email: parsed.data.email,
         password: parsed.data.password,
         options: {
-          emailRedirectTo: absolutePlatformUrl('/app'),
+          // Le lien de confirmation ouvre la session (route de retour) puis
+          // ramene la personne ou elle allait : sa page « Recuperer mon site »,
+          // une invitation, ou son espace.
+          emailRedirectTo: absolutePlatformUrl(
+            `/auth/confirmation?suivant=${encodeURIComponent(
+              safeRedirectTarget(parsed.data.redirectTo),
+            )}`,
+          ),
           data: {
             first_name: parsed.data.firstName,
             last_name: parsed.data.lastName,
@@ -282,7 +289,7 @@ export async function requestPasswordResetAction(
   try {
     await withAuthTimeout(
       client.auth.resetPasswordForEmail(parsed.data.email, {
-        redirectTo: absolutePlatformUrl('/nouveau-mot-de-passe'),
+        redirectTo: absolutePlatformUrl('/auth/confirmation?suivant=%2Fnouveau-mot-de-passe'),
       }),
     );
   } catch {

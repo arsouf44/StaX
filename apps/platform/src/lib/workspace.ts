@@ -135,6 +135,7 @@ export function isSiteUnderConstruction(workspace: Workspace): boolean {
 /** Ecrans de l espace client qui ne portent pas sur le site lui-meme. */
 const ACCOUNT_PATHS = [
   '/app/projet',
+  '/app/discussion',
   '/app/entreprise',
   '/app/equipe-stax',
   '/app/facturation',

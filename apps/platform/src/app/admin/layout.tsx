@@ -24,7 +24,9 @@ const ROLE_LABELS: Record<string, string> = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Le controle est ici, dans la mise en page : aucune page enfant ne peut
   // s afficher sans qu il ait eu lieu.
-  const { session, role } = await getAdminContext();
+  const { session, role, db } = await getAdminContext();
+  // Discussions où un client attend une réponse : visibles depuis tout écran.
+  const { data: waiting } = await db.rpc('staff_unread_conversations');
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -55,8 +57,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[110rem] flex-1 gap-0 px-4 sm:px-6 lg:gap-8">
-        <AdminNav role={role} />
+      <div className="mx-auto flex w-full max-w-[110rem] flex-1 flex-col gap-0 px-4 sm:px-6 lg:flex-row lg:gap-8">
+        <AdminNav
+          role={role}
+          badges={{ '/admin/messages': typeof waiting === 'number' ? waiting : 0 }}
+        />
         <main id="contenu-principal" className="min-w-0 flex-1 py-6 lg:py-8">
           {children}
         </main>

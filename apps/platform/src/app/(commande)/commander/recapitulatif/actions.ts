@@ -3,7 +3,12 @@
 import type { ActionState } from '~/lib/form-state';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createUserClient, listMemberships, unwrapMaybe } from '@stax/database';
+import {
+  createUserClient,
+  listMemberships,
+  tryCreateServiceClient,
+  unwrapMaybe,
+} from '@stax/database';
 import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@stax/payments';
 import { getBusiness } from '@stax/business';
 import { clearOrderDraft, readOrderDraft } from '~/lib/order-draft';
@@ -234,10 +239,14 @@ export async function startCheckoutAction(
     });
 
     if (!existing?.stripe_customer_id) {
-      await db
-        .from('organizations')
+      // Colonne reservee au serveur par un declencheur : une ecriture avec le
+      // jeton du client etait refusee. La cle de service l'inscrit ; a
+      // defaut, le webhook de paiement le fera.
+      await tryCreateServiceClient()
+        ?.from('organizations')
         .update({ stripe_customer_id: customerId })
-        .eq('id', organizationId);
+        .eq('id', organizationId)
+        .is('stripe_customer_id', null);
     }
 
     const checkout = await createCheckoutSession({
@@ -262,10 +271,12 @@ export async function startCheckoutAction(
     });
     checkoutUrl = checkout.url;
 
-    await db
-      .from('orders')
-      .update({ status: 'checkout_pending', stripe_checkout_session_id: checkout.sessionId })
-      .eq('id', order.id);
+    // La policy de `orders` reserve la mise a jour a l'administration : la
+    // session est inscrite par une fonction qui ne permet que cela.
+    await db.rpc('attach_checkout_session', {
+      p_order: order.id,
+      p_session: checkout.sessionId,
+    });
   } catch (error) {
     console.error('[stax:checkout]', error);
     return {

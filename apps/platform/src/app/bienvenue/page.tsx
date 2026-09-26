@@ -53,10 +53,23 @@ export default async function WelcomePage() {
           <div className="max-w-xl">
             <h1 className="text-3xl font-medium tracking-[-0.03em]">Votre compte est prêt</h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
-              Il ne lui manque qu’un site. Trois possibilités, selon votre situation.
+              Il ne lui manque qu’un site. Choisissez votre situation.
             </p>
 
             <div className="mt-8 space-y-4">
+              {internal ? null : (
+                <Panel level={2} padding="lg">
+                  <h2 className="text-base font-medium">Nous avons préparé mon site</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                    Après notre appel, vous avez reçu un e-mail « Votre site est prêt » avec un code
+                    à 12 caractères. Saisissez-le pour retrouver votre site.
+                  </p>
+                  <ButtonLink href="/recuperer" className="mt-4">
+                    Récupérer mon site
+                  </ButtonLink>
+                </Panel>
+              )}
+
               <Panel level={2} padding="lg">
                 <h2 className="text-base font-medium">
                   {internal ? 'Passer une commande interne' : 'Je veux commander un site'}

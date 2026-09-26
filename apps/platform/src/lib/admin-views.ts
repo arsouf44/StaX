@@ -517,6 +517,7 @@ export const ADMIN_VIEWS = {
   support: {
     id: 'support',
     route: '/admin/support',
+    detailRoute: '/admin/support',
     table: 'support_tickets',
     title: 'Tickets',
     description: 'Les demandes d’assistance des clients.',

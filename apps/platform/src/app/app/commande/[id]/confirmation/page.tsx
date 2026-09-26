@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation';
 import { unwrapMaybe } from '@stax/database';
 import { formatMaintenance, formatMoney } from '@stax/payments';
 import { Alert, ButtonLink, Panel, StatusPill } from '@stax/ui';
+import { AutoRefresh } from '~/components/app/auto-refresh';
 import { getWorkspace } from '~/lib/workspace';
+import { loadClientProposal } from '../../../proposition/proposal-dashboard';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,9 +64,41 @@ export default async function OrderConfirmationPage({
   const paid = order.status === 'paid';
   const pending = order.status === 'checkout_pending' || order.status === 'draft';
 
+  // Site propose apres un appel : il est deja pret, le paiement le livre.
+  const proposal = order.site_id ? await loadClientProposal(db, order.site_id) : null;
+  const fromProposal = proposal?.orderId === order.id;
+  const delivered = fromProposal && proposal?.status === 'delivered';
+
   return (
     <div className="mx-auto max-w-2xl">
-      {paid ? (
+      {pending || (fromProposal && paid && !delivered) ? <AutoRefresh /> : null}
+      {paid && fromProposal ? (
+        delivered ? (
+          <>
+            <StatusPill tone="success">Paiement confirmé</StatusPill>
+            <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
+              Merci ! Votre site est à vous
+            </h1>
+            <p className="mt-3 text-[var(--foreground-muted)]">
+              Il est en ligne et vous est confié dès maintenant. Vous pouvez changer vous-même vos
+              textes, vos photos et vos horaires : chaque modification est d’abord un brouillon, que
+              vous publiez quand vous êtes prêt.
+            </p>
+          </>
+        ) : (
+          <>
+            <StatusPill tone="success">Paiement confirmé</StatusPill>
+            <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
+              Merci ! Nous vous remettons votre site
+            </h1>
+            <p className="mt-3 text-[var(--foreground-muted)]">
+              Votre règlement est bien arrivé. Une dernière vérification de votre site en ligne, et
+              il vous est confié : en général quelques minutes, au plus un jour ouvré. Vous recevrez
+              un e-mail. Cette page se met à jour toute seule.
+            </p>
+          </>
+        )
+      ) : paid ? (
         <>
           <StatusPill tone="success">Paiement confirmé</StatusPill>
           <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
@@ -127,14 +161,23 @@ export default async function OrderConfirmationPage({
                   order.currency as 'EUR',
                   order.billing_interval === 'month' ? 'month' : 'year',
                 )}
-                , à partir de la mise en ligne
+                {fromProposal
+                  ? ', à partir de la remise du site'
+                  : ', à partir de la mise en ligne'}
               </dd>
             </div>
           ) : null}
         </dl>
       </Panel>
 
-      {paid ? (
+      {paid && fromProposal ? (
+        <div className="mt-8 flex flex-wrap gap-3">
+          {delivered ? <ButtonLink href="/app/editeur">Modifier mon site</ButtonLink> : null}
+          <ButtonLink href="/app" variant={delivered ? 'secondary' : 'primary'}>
+            Aller à mon espace
+          </ButtonLink>
+        </div>
+      ) : paid ? (
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/app/projet">Suivre mon projet</ButtonLink>
           <ButtonLink href="/app" variant="secondary">

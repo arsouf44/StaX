@@ -18,13 +18,23 @@ function SubmitButton() {
   );
 }
 
-export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function SignUpForm({
+  turnstileSiteKey,
+  redirectTo,
+  defaultEmail = '',
+}: {
+  turnstileSiteKey: string | null;
+  /** Page ou revenir apres la confirmation de l'adresse. */
+  redirectTo?: string;
+  /** Adresse a laquelle une proposition ou une invitation a ete envoyee. */
+  defaultEmail?: string;
+}) {
   const [state, action] = useActionState<AuthFormState, FormData>(signUpAction, IDLE_STATE);
 
   if (state.status === 'success') {
     return (
-      <Alert tone="success" live="status" title="Vérifiez votre boîte de réception">
-        {state.message}
+      <Alert tone="success" live="status" title="Dernière étape : ouvrez votre boîte e-mail">
+        {state.message} Le lien vous ramènera directement ici, connecté.
       </Alert>
     );
   }
@@ -53,8 +63,23 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
         </Field>
       </div>
 
-      <Field label="Adresse e-mail" error={state.errors?.email} required>
-        <Input name="email" type="email" autoComplete="email" required />
+      {redirectTo ? <input type="hidden" name="redirectTo" value={redirectTo} /> : null}
+
+      <Field
+        label="Adresse e-mail"
+        error={state.errors?.email}
+        required
+        hint={
+          defaultEmail ? 'Gardez celle-ci : c’est à elle que votre code a été envoyé.' : undefined
+        }
+      >
+        <Input
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          defaultValue={defaultEmail}
+        />
       </Field>
 
       <Field

@@ -18,6 +18,7 @@ import {
 import { publicSiteUrl } from '@stax/config';
 import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
 import { loadReleaseViews } from './editeur/contract/data';
+import { loadClientProposal, ProposalDashboard } from './proposition/proposal-dashboard';
 
 export const metadata: Metadata = { title: 'Tableau de bord' };
 
@@ -40,6 +41,24 @@ export default async function DashboardPage({
   const params = await searchParams;
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
+
+  // Site proposé après un appel, récupéré avec un code, pas encore livré :
+  // le client voit son site, le prix, et peut payer ou nous écrire.
+  if (site && !site.deliveredAt) {
+    const proposal = await loadClientProposal(db, site.id);
+    if (proposal && (proposal.status === 'claimed' || proposal.status === 'paid')) {
+      return (
+        <ProposalDashboard
+          db={db}
+          siteId={site.id}
+          firstName={workspace.profile.first_name ?? ''}
+          proposal={proposal}
+          paymentCancelled={params.paiement === 'annule'}
+          justClaimed={params.bienvenue === '1'}
+        />
+      );
+    }
+  }
 
   if (site && isSiteUnderConstruction(workspace)) {
     return (

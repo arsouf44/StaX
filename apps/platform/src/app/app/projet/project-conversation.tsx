@@ -39,18 +39,22 @@ function formatDate(iso: string): string {
 export function ProjectConversation({
   projectId,
   messages,
+  title = 'Échanges avec notre équipe',
+  intro = 'Tout se passe ici : pas d’e-mail perdu, pas de fil de discussion éparpillé.',
+  placeholder = 'Une question, une précision, une correction à demander…',
 }: {
   projectId: string;
   messages: Message[];
+  title?: string;
+  intro?: string;
+  placeholder?: string;
 }) {
   const [state, action] = useActionState<State, FormData>(sendProjectMessageAction, IDLE);
 
   return (
-    <Panel level={2} padding="lg">
-      <h2 className="text-sm font-medium">Échanges avec notre équipe</h2>
-      <p className="mt-1.5 text-xs text-[var(--muted)]">
-        Tout se passe ici : pas d’e-mail perdu, pas de fil de discussion éparpillé.
-      </p>
+    <Panel level={2} padding="lg" data-testid="team-conversation">
+      <h2 className="text-sm font-medium">{title}</h2>
+      <p className="mt-1.5 text-xs text-[var(--muted)]">{intro}</p>
 
       {messages.length === 0 ? (
         <p className="mt-6 text-sm text-[var(--foreground-muted)]">
@@ -105,7 +109,7 @@ export function ProjectConversation({
           rows={4}
           required
           minLength={2}
-          placeholder="Une question, une précision, une correction à demander…"
+          placeholder={placeholder}
         />
         <SubmitButton />
       </form>

@@ -83,6 +83,14 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
     sortOrder: 10,
   },
   {
+    href: '/app/discussion',
+    label: 'Écrire à l’équipe',
+    icon: 'message-circle',
+    capability: 'org.view',
+    group: 'pilotage',
+    sortOrder: 15,
+  },
+  {
     href: '/app/projet',
     label: 'Mon projet',
     icon: 'route',

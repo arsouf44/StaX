@@ -6,6 +6,7 @@ import { createUserClient, unwrapMaybe } from '@stax/database';
 import { boundedText, uuidSchema } from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireSession } from '~/lib/session';
+import { alertTeam } from '~/lib/team-alerts';
 import type { ActionState } from '~/lib/form-state';
 
 /**
@@ -100,6 +101,21 @@ export async function openTicketAction(
     return { status: 'error', message: 'Votre message n’a pas pu être enregistré.' };
   }
 
+  await alertTeam(
+    {
+      subject: `Nouvelle demande d’assistance — ${parsed.data.subject}`,
+      heading: 'Un client a ouvert une demande',
+      lines: [
+        ['Référence', reference],
+        ['De', session.profile.email],
+      ],
+      excerpt: parsed.data.body,
+      path: `/admin/support/${ticket.id}`,
+      actionLabel: 'Lire et répondre',
+    },
+    { db, organizationId: membership.organization_id },
+  );
+
   revalidatePath('/app/support');
   return {
     status: 'success',
@@ -140,6 +156,15 @@ export async function replyToTicketAction(
   });
 
   if (error) return { status: 'error', message: 'Votre message n’a pas pu être envoyé.' };
+
+  await alertTeam({
+    subject: 'Réponse d’un client sur une demande d’assistance',
+    heading: 'Un client a répondu',
+    lines: [['De', session.profile.email]],
+    excerpt: parsed.data.body,
+    path: `/admin/support/${ticket.id}`,
+    actionLabel: 'Lire et répondre',
+  });
 
   // Le ticket repasse en attente de notre cote : c est a nous de jouer.
   await db

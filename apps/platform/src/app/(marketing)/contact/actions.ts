@@ -10,6 +10,7 @@ import {
   quoteBriefSchema,
 } from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
+import { alertTeamOfLead } from '~/lib/team-alerts';
 
 /**
  * Demandes entrantes du site StaX.
@@ -128,6 +129,17 @@ export async function sendContactAction(
     };
   }
 
+  if (!(data as { spam?: boolean } | null)?.spam) {
+    await alertTeamOfLead({
+      kind: 'contact',
+      name: parsed.data.name,
+      email: parsed.data.email,
+      summary: `${parsed.data.subject}\n\n${parsed.data.message}${
+        parsed.data.phone ? `\n\nTéléphone : ${parsed.data.phone}` : ''
+      }${parsed.data.company ? `\nEntreprise : ${parsed.data.company}` : ''}`,
+    });
+  }
+
   return {
     status: 'success',
     message:
@@ -203,12 +215,23 @@ export async function sendQuoteRequestAction(
     p_locale: 'fr',
   });
 
-  const result = data as { ok?: boolean; reference?: string } | null;
+  const result = data as { ok?: boolean; reference?: string; spam?: boolean } | null;
   if (error || !result?.ok) {
     return {
       status: 'error',
       message: 'Votre demande n’a pas pu être enregistrée. Réessayez, ou écrivez-nous directement.',
     };
+  }
+
+  if (!result.spam) {
+    await alertTeamOfLead({
+      kind: 'quote',
+      name: parsed.data.contactName,
+      email: parsed.data.contactEmail,
+      summary: `${result.reference ?? ''}\n\n${parsed.data.objective}${
+        parsed.data.contactPhone ? `\n\nTéléphone : ${parsed.data.contactPhone}` : ''
+      }${parsed.data.companyName ? `\nEntreprise : ${parsed.data.companyName}` : ''}`,
+    });
   }
 
   return {

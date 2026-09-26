@@ -1,6 +1,7 @@
 import { tryCreateServiceClient } from '@stax/database';
 import { verifyCronSecret } from '@stax/infrastructure';
 import { runSiteOperations } from '~/lib/external-sites/operations';
+import { retryProposalDeliveries } from '~/lib/proposals';
 
 /**
  * Tache de fond des sites livres : publications programmees, suivi des
@@ -20,8 +21,10 @@ async function run(request: Request): Promise<Response> {
   }
   const db = tryCreateServiceClient();
   if (!db) return Response.json({ error: 'Indisponible.' }, { status: 503 });
-  const report = await runSiteOperations(db, { budgetMs: 50_000 });
-  return Response.json(report, { headers: { 'cache-control': 'no-store' } });
+  const report = await runSiteOperations(db, { budgetMs: 45_000 });
+  // Propositions payées dont la livraison automatique n'a pas encore abouti.
+  const proposals = await retryProposalDeliveries(db, { limit: 5 });
+  return Response.json({ ...report, proposals }, { headers: { 'cache-control': 'no-store' } });
 }
 
 export const GET = run;
