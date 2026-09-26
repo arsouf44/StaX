@@ -481,9 +481,14 @@ en mots simples, pastille des réponses non lues.
 
 ## Ce qui reste non terminé, sans détour
 
-0. **Migrations 0054 et 0055 à appliquer sur le projet Supabase réel**
-   (`pnpm db:migrate`), avant de déployer ce code. Elles sont compatibles avec
-   le code en ligne. Voir [LANCEMENT.md](./LANCEMENT.md), étape 1.
+0. ~~Migrations 0054 et 0055 à appliquer sur le projet Supabase réel~~ —
+   **fait le 2026-09-26**, tracées dans `app.schema_migrations` avec
+   l'empreinte de leur fichier ; production comparée au dépôt (fonctions,
+   colonnes, contraintes, index, policies identiques). L'analyseur Supabase
+   ne signale rien de nouveau hors du modèle voulu (fonctions `security
+   definer` appelables par une personne connectée, qui vérifient elles-mêmes
+   le rôle ; aucune ouverte à `anon`). Reste à activer la protection contre les
+   mots de passe compromis (point 3).
 
 0 ter. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
    2026-09-24** : les migrations 0042 à 0053 sont appliquées sur le projet

@@ -29,23 +29,16 @@ pile, dont le parcours « vente par téléphone » de bout en bout.
 
 ---
 
-## Étape 1 — Base de données : appliquer les migrations 0054 et 0055
+## Étape 1 — Base de données : ✅ fait le 2026-09-26
 
-La base de production (projet Supabase « StaX ») a reçu les migrations
-jusqu'à **0053**. Les deux nouvelles (propositions, messagerie, invitations)
-doivent être appliquées **avant** de déployer ce code :
+Les migrations **0054** (propositions) et **0055** (messagerie, invitations)
+sont appliquées sur le projet Supabase « StaX », chacune dans une transaction,
+et inscrites dans `app.schema_migrations` avec l'empreinte de leur fichier
+(`pnpm db:migrate` les voit comme passées). La production a été comparée au
+dépôt : corps des 37 fonctions concernées, colonnes, contraintes, index et
+règles de sécurité **identiques**.
 
-```bash
-SUPABASE_DB_URL="postgresql://…"   pnpm db:migrate
-```
-
-`pnpm db:migrate` les trace avec leur empreinte dans `app.schema_migrations`.
-Elles sont **compatibles avec le code actuellement en ligne** (rien n'est
-retiré ; `deliver_site` garde exactement ses contrôles), on peut donc migrer
-d'abord et déployer ensuite.
-
-**Vérifier :** `select version from app.schema_migrations order by version desc limit 2;`
-doit renvoyer `…0055_conversations_invitations` et `…0054_site_proposals`.
+Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 
 ## Étape 2 — Identité légale de la société (bloquant)
 
@@ -85,7 +78,9 @@ Deux choses distinctes, toutes deux nécessaires :
      identifiants SMTP). Le SMTP par défaut de Supabase est limité à quelques
      messages par heure : un client ne recevrait pas son lien ;
    - *URL Configuration* : **Site URL** = `https://votre-domaine` ;
-     **Redirect URLs** = `https://votre-domaine/auth/confirmation`.
+     **Redirect URLs** = `https://votre-domaine/auth/confirmation` ;
+   - *Password security* : activez la **protection contre les mots de passe
+     compromis** (signalée par l'analyseur de sécurité Supabase).
 
 **Vérifier :** créez un compte avec une adresse à vous, cliquez le lien reçu :
 vous devez arriver **connecté** dans votre espace. Puis « Mot de passe oublié »
