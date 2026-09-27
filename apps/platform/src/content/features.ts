@@ -137,7 +137,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     eyebrow: 'Contact',
     title: 'Des formulaires qui qualifient vos demandes',
     subtitle:
-      'Un formulaire de contact générique vous fait perdre du temps. Ceux que nous développons pour votre site posent les bonnes questions selon votre métier.',
+      'Un formulaire de contact générique vous fait perdre du temps. Ceux que nous développons pour votre site posent les bonnes questions selon votre activité.',
     visual: 'dashboard',
     requiredPlan: null,
     sections: [
@@ -246,7 +246,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
         ],
       },
       {
-        title: 'Des données structurées adaptées à votre métier',
+        title: 'Des données structurées adaptées à votre activité',
         body: 'Un restaurant déclare ses horaires, sa carte et sa fourchette de prix. Un artisan déclare sa zone d’intervention. Une agence immobilière déclare ses annonces. Google comprend ce que vous faites, pas seulement ce que vous écrivez.',
       },
       {
@@ -305,7 +305,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     requiredPlan: 'premium',
     sections: [
       {
-        title: 'Paramétré selon votre métier',
+        title: 'Paramétré selon votre activité',
         body: 'Un restaurant raisonne en couverts par service. Un coiffeur raisonne en prestation, durée et membre d’équipe. Un praticien raisonne en rendez-vous individuels. Le même moteur, configuré différemment.',
         points: [
           'Durée et temps de battement par prestation',

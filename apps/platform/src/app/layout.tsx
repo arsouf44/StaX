@@ -5,8 +5,9 @@ import { ToastProvider } from '@stax/ui';
 import './globals.css';
 
 /*
- * Typographie : Inter, servie par la plateforme (paquet @fontsource), jamais
- * par un tiers. Voir `--font-sans` dans packages/ui/src/styles/globals.css.
+ * Typographie : EB Garamond et Inter Tight, servies par la plateforme
+ * (paquets @fontsource), jamais par un tiers. Voir `--font-serif` et
+ * `--font-sans` dans packages/ui/src/styles/globals.css.
  */
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   },
   description:
     'StaX conçoit, héberge et maintient le site professionnel de votre entreprise. ' +
-    'Vous choisissez votre métier, nous construisons le site, vous gardez la main sur vos contenus, ' +
+    'Nous construisons le site, vous gardez la main sur vos contenus, ' +
     'vos messages et vos paiements.',
   applicationName: BRAND.name,
   authors: [{ name: BRAND.name }],
@@ -46,7 +47,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#f0f3f1',
+  themeColor: '#f1f2f3',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -55,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={locale}>
       <body className="min-h-dvh antialiased">
-        {/* La lumiere derriere toutes les pages : papier, brume et sauge. */}
+        {/* La lumiere derriere toutes les pages : gris perle et reflets de mer. */}
         <div className="atmosphere" aria-hidden="true" />
         {/* Lien d evitement : premiere cible au clavier, sur chaque page. */}
         <a

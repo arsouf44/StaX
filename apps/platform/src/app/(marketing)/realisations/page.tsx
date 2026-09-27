@@ -14,7 +14,7 @@ import { BrowserFrame, SitePreview } from '~/components/marketing/product-visual
 export const metadata: Metadata = {
   title: 'Réalisations',
   description:
-    'Des exemples concrets de sites StaX par métier. Ces démonstrations sont clairement ' +
+    'Des exemples concrets de sites StaX, offre par offre. Ces démonstrations sont clairement ' +
     'identifiées comme telles : nous ne présentons jamais un exemple comme un vrai client.',
   alternates: { canonical: '/realisations' },
 };
@@ -23,7 +23,6 @@ const SHOWCASES = [
   {
     variant: 'restaurant' as const,
     name: 'Restaurant Dupont',
-    sector: 'Restauration',
     plan: 'Premium',
     host: 'restaurant-dupont.fr',
     features: ['Carte & menus', 'Réservations en ligne', 'Horaires', 'Galerie'],
@@ -32,7 +31,6 @@ const SHOWCASES = [
   {
     variant: 'coiffeur' as const,
     name: 'Atelier Camille',
-    sector: 'Beauté & bien-être',
     plan: 'Premium',
     host: 'atelier-camille.fr',
     features: ['Prestations & tarifs', 'Prise de rendez-vous', 'Équipe', 'Avis clients'],
@@ -41,7 +39,6 @@ const SHOWCASES = [
   {
     variant: 'artisan' as const,
     name: 'Martin Plomberie',
-    sector: 'Artisanat & bâtiment',
     plan: 'Essentiel',
     host: 'martin-plomberie.fr',
     features: ['Prestations', 'Zones d’intervention', 'Galerie de chantiers', 'Demande de devis'],
@@ -84,14 +81,11 @@ export default function ShowcasePage() {
                       <Badge tone="warning" size="sm">
                         Démonstration
                       </Badge>
-                      <Badge tone="neutral" size="sm">
-                        {item.sector}
-                      </Badge>
                       <Badge tone="accent" size="sm">
                         Offre {item.plan}
                       </Badge>
                     </div>
-                    <h2 className="mt-4 text-2xl font-medium tracking-[-0.025em]">{item.name}</h2>
+                    <h2 className="mt-4 font-serif text-[2rem] leading-tight">{item.name}</h2>
                     <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
                       {item.note}
                     </p>
@@ -116,7 +110,7 @@ export default function ShowcasePage() {
       <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="narrow">
           <Panel level={2} padding="xl" className="text-center">
-            <h2 className="text-3xl font-medium tracking-[-0.03em]">
+            <h2 className="font-serif text-[2.4rem] leading-tight">
               Vous serez notre prochaine référence
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">

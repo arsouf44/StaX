@@ -42,7 +42,7 @@ export default function FeaturesIndexPage() {
                   href={`/fonctionnalites/${feature.slug}`}
                   className="group grid gap-3 border-b border-[var(--border)] py-7 transition-colors duration-300 hover:bg-[var(--glass-1)] md:grid-cols-[1fr_1.5fr_auto] md:items-center md:gap-10 md:px-4"
                 >
-                  <h2 className="text-2xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-[var(--accent-text)]">
+                  <h2 className="font-serif text-[1.85rem] leading-tight font-normal transition-colors group-hover:text-[var(--accent-text)]">
                     {feature.name}
                   </h2>
                   <p className="text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
@@ -74,7 +74,7 @@ export default function FeaturesIndexPage() {
 
       <Section spacing="compact">
         <Container size="narrow" className="text-center">
-          <h2 className="text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
+          <h2 className="font-serif text-[2.6rem] leading-tight font-normal sm:text-[3.2rem]">
             Une fonctionnalité qui manque ?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[var(--foreground-muted)]">

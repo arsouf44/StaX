@@ -1,0 +1,919 @@
+/*
+ * Page de garde : une pile de plaques (verre depoli, verre clair, papier,
+ * aluminium) posees en profondeur. Chaque bande de profondeur suit le
+ * pointeur a sa propre vitesse ; au defilement, la pile s ecarte comme une
+ * vue eclatee. Tout passe par des variables CSS ecrites par le composant.
+ *
+ * Les tailles de texte sont en `cqw` : elles suivent la largeur de la scene,
+ * pas celle de la fenetre, et la composition reste identique a toute taille.
+ */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 68px);
+  --ease: cubic-bezier(0.19, 0.85, 0.22, 1);
+}
+
+.light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  background: radial-gradient(
+    38vmax 30vmax at var(--lx, 30%) var(--ly, 20%),
+    rgb(255 255 255 / 0.65),
+    transparent 70%
+  );
+  mix-blend-mode: soft-light;
+}
+
+.stageWrap {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-block: clamp(8px, 1.6vh, 22px) clamp(28px, 5vh, 56px);
+}
+
+.fit {
+  --k: 0.0893;
+  position: relative;
+  container-type: inline-size;
+  aspect-ratio: 1200 / 780;
+  width: min(94vw, max(600px, min(1180px, calc((100dvh - 150px) * 1.5385))));
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  perspective: 127cqw;
+  perspective-origin: 50% 44%;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(calc((var(--srx, 1.4) + var(--u, 0) * 9) * 1deg))
+    rotateY(calc(var(--sry, 2.3) * 1deg));
+}
+
+.band {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform: translate3d(
+    calc(var(--mx, -12) * var(--p, 0) * var(--k) * 1cqw),
+    calc(var(--my, 7) * var(--p, 0) * var(--k) * 1cqw),
+    calc(var(--spread, 0) * var(--u, 0) * var(--k) * 1.5cqw)
+  );
+}
+.band[data-band='far'] {
+  --p: -0.55;
+  --spread: -80;
+}
+.band[data-band='mid'] {
+  --p: -0.22;
+  --spread: -42;
+}
+.band[data-band='core'] {
+  --p: 0;
+  --spread: 0;
+}
+.band[data-band='front'] {
+  --p: 0.36;
+  --spread: 62;
+}
+.band[data-band='near'] {
+  --p: 0.72;
+  --spread: 104;
+}
+
+.layer {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--z, 0) * var(--k) * 1cqw)) rotateX(calc(var(--rx, 0) * 1deg))
+    rotateY(calc(var(--ry, 0) * 1deg));
+}
+
+.layerIn {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: assemble 1.3s var(--ease) both;
+  animation-delay: calc(var(--d, 0s) + 0.12s);
+}
+
+@keyframes assemble {
+  0% {
+    opacity: 0;
+    transform: translateZ(calc(var(--spread, 0) * var(--k) * 1cqw))
+      rotateY(calc(var(--entry-ry, 3) * 1deg)) scale(0.965);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Matieres ------------------------------------------------------------ */
+.glass,
+.frost,
+.paper,
+.alu {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.glass {
+  background: linear-gradient(
+    142deg,
+    rgb(255 255 255 / 0.6),
+    rgb(255 255 255 / 0.26) 52%,
+    rgb(232 238 244 / 0.36)
+  );
+  border: 1px solid rgb(255 255 255 / 0.72);
+  box-shadow:
+    inset 0 1px #ffffffe6,
+    inset 0 -1px #ffffff52,
+    0 30px 68px -46px #1824328c;
+}
+.frost {
+  background: linear-gradient(158deg, rgb(252 253 253 / 0.9), rgb(240 243 246 / 0.76));
+  border: 1px solid rgb(255 255 255 / 0.86);
+  box-shadow:
+    inset 0 1px #fffffff2,
+    0 30px 68px -46px #1824328c;
+}
+.paper {
+  background: #fdfdfd;
+  border: 1px solid rgb(20 24 28 / 0.06);
+  box-shadow:
+    inset 0 1px #ffffffe6,
+    0 44px 90px -50px #1824329e;
+}
+.alu {
+  background: linear-gradient(101deg, #f5f7f8, #ccd2d8 34%, #eef1f4 51%, #b4bbc3 76%, #eaeef1);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow:
+    inset 0 1px #ffffffd9,
+    0 30px 68px -46px #1824328c;
+}
+/* La lumiere de chaque plaque suit la source (--hx, --hy). */
+.glass::before,
+.frost::before,
+.paper::before,
+.alu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    70% 55% at var(--hx, 18%) var(--hy, 0%),
+    rgb(255 255 255 / 0.75),
+    rgb(255 255 255 / 0) 70%
+  );
+  opacity: 0.6;
+}
+.alu::before {
+  background: linear-gradient(
+    101deg,
+    transparent calc(var(--hx, 30%) - 18%),
+    rgb(255 255 255 / 0.7) var(--hx, 30%),
+    transparent calc(var(--hx, 30%) + 18%)
+  );
+  opacity: 0.8;
+}
+.edgeRing::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid rgb(255 255 255 / 0.4);
+}
+
+/* --- Composition (bureau) ------------------------------------------------ */
+.lBackC {
+  --x: 21%;
+  --y: 2%;
+  --w: 60%;
+  --h: 76%;
+  --z: -62;
+  --ry: 1.5;
+  --d: 0s;
+  --entry-ry: 2;
+}
+.lSlabL {
+  --x: -2%;
+  --y: 13%;
+  --w: 22%;
+  --h: 62%;
+  --z: -96;
+  --ry: 6;
+  --d: 40ms;
+}
+.lSlabR {
+  --x: 77%;
+  --y: 5%;
+  --w: 22%;
+  --h: 48%;
+  --z: -108;
+  --ry: -8;
+  --d: 70ms;
+}
+.lBase3 {
+  --x: 5%;
+  --y: 69%;
+  --w: 90%;
+  --h: 12%;
+  --z: -80;
+  --rx: 4;
+  --ry: -2;
+  --d: 90ms;
+}
+.lBase2 {
+  --x: 10%;
+  --y: 78%;
+  --w: 80%;
+  --h: 10%;
+  --z: -118;
+  --rx: 3;
+  --ry: 1;
+  --d: 0.13s;
+}
+.lBase1 {
+  --x: 16%;
+  --y: 86%;
+  --w: 68%;
+  --h: 9%;
+  --z: -156;
+  --rx: 5;
+  --ry: -1;
+  --d: 0.17s;
+}
+.lMain {
+  --x: 26%;
+  --y: 5%;
+  --w: 43%;
+  --h: 70%;
+  --z: 0;
+  --d: 60ms;
+  --entry-ry: 1.5;
+}
+.lOffers {
+  --x: 3%;
+  --y: 14%;
+  --w: 19.5%;
+  --h: 54%;
+  --z: -30;
+  --ry: 7;
+  --d: 0.15s;
+}
+.lProc {
+  --x: 74%;
+  --y: 13%;
+  --w: 20%;
+  --h: 31%;
+  --z: -44;
+  --ry: -9;
+  --d: 0.19s;
+}
+.lDiv {
+  --x: 71.4%;
+  --y: 9%;
+  --w: 1.1%;
+  --h: 70%;
+  --z: 40;
+  --ry: -14;
+  --d: 0.3s;
+}
+.lSite {
+  --x: 62%;
+  --y: 45%;
+  --w: 27%;
+  --h: 32%;
+  --z: 54;
+  --ry: -11;
+  --d: 0.28s;
+}
+.lGrowth {
+  --x: 74%;
+  --y: 78%;
+  --w: 24%;
+  --h: 17%;
+  --z: 84;
+  --ry: -6;
+  --d: 0.31s;
+}
+.lSv1 {
+  --x: 18.5%;
+  --y: 79%;
+  --w: 18.5%;
+  --h: 18%;
+  --z: 94;
+  --d: 0.21s;
+}
+.lSv2 {
+  --x: 38%;
+  --y: 80%;
+  --w: 18.5%;
+  --h: 18%;
+  --z: 100;
+  --d: 0.24s;
+}
+.lSv3 {
+  --x: 57.5%;
+  --y: 79%;
+  --w: 18.5%;
+  --h: 18%;
+  --z: 94;
+  --d: 0.27s;
+}
+.lKnob {
+  --x: 0.5%;
+  --y: 58%;
+  --w: 8.6%;
+  --z: 128;
+  --ry: 14;
+  --d: 0.34s;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+.lEdge {
+  --x: -9%;
+  --y: 1%;
+  --w: 15%;
+  --h: 95%;
+  --z: 150;
+  --ry: 18;
+  --d: 0.34s;
+}
+
+/* --- Textes des plaques -------------------------------------------------- */
+.micro {
+  font-size: 1.1cqw;
+  letter-spacing: 0.055em;
+  color: #838c94;
+}
+.num {
+  font-size: 1.15cqw;
+  font-variant-numeric: tabular-nums;
+  color: #838c94;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #e9ebee;
+}
+.panelArt {
+  position: absolute;
+  inset: 0;
+  transform: scale(1.06)
+    translate3d(calc(var(--mx, 0) * -0.06cqw), calc(var(--my, 0) * -0.06cqw), 0);
+}
+.panelSheet {
+  position: absolute;
+  inset: 30% 0 0;
+  background: linear-gradient(
+    rgb(255 255 255 / 0),
+    rgb(255 255 255 / 0.58) 18%,
+    rgb(255 255 255 / 0.86) 44%,
+    rgb(255 255 255 / 0.95)
+  );
+}
+.panelSheen {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      80% 60% at var(--hx, 18%) var(--hy, 0%),
+      rgb(255 255 255 / 0.42),
+      transparent 62%
+    ),
+    linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.4),
+      transparent 34%,
+      transparent 68%,
+      rgb(255 255 255 / 0.2)
+    );
+}
+.panelInner {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.3cqw 2.5cqw 2.6cqw;
+}
+.panelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panelLogo {
+  font-family: var(--font-serif);
+  font-size: 2.1cqw;
+  line-height: 1;
+  color: #14181c;
+}
+.panelCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1cqw;
+}
+.h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 3.2cqw;
+  line-height: 1.08;
+  letter-spacing: -0.008em;
+  color: #14181c;
+  text-wrap: balance;
+}
+.h1 i {
+  font-style: italic;
+  color: #4b545c;
+}
+.sub {
+  margin: 0;
+  font-size: 1.32cqw;
+  line-height: 1.5;
+  color: #4b545c;
+  max-width: 31cqw;
+}
+.cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7cqw;
+  margin-top: 0.5cqw;
+  padding: 1.1cqw 1.65cqw;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2a3138 0%, #1d2328 100%);
+  color: #f4f6f8;
+  font-size: 1.26cqw;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.16),
+    0 16px 30px -18px rgb(20 24 28 / 0.7);
+  transition:
+    transform 0.32s var(--ease),
+    box-shadow 0.32s;
+}
+.cta svg {
+  width: 1em;
+  height: 1em;
+  transition: transform 0.38s var(--ease);
+}
+.cta:hover {
+  transform: translateY(-1.5px);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.2),
+    0 22px 38px -20px rgb(20 24 28 / 0.72);
+}
+.cta:hover svg {
+  transform: translateX(3px);
+}
+.cta:focus-visible {
+  outline: 2px solid #2f5f86;
+  outline-offset: 3px;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.offers {
+  display: flex;
+  flex-direction: column;
+  padding: 1.8cqw 1.6cqw 1.5cqw;
+}
+.offerList {
+  display: flex;
+  flex-direction: column;
+  margin: 1.2cqw 0 0;
+  padding: 0;
+  list-style: none;
+}
+.offerList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6cqw;
+  padding-block: 0.74cqw;
+  border-top: 1px solid rgb(20 24 28 / 0.11);
+  font-size: 1.32cqw;
+  color: #4b545c;
+  transition: color 0.4s;
+}
+.offerList li:last-child {
+  border-bottom: 1px solid rgb(20 24 28 / 0.11);
+}
+.offerList li span:last-child {
+  font-size: 1.1cqw;
+  font-variant-numeric: tabular-nums;
+  color: #838c94;
+  transition: color 0.4s;
+}
+.offerList li[data-on='true'] {
+  color: #14181c;
+}
+.offerList li[data-on='true'] span:last-child {
+  color: #2f5f86;
+}
+.offerThumb {
+  margin-top: auto;
+  height: 23%;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #dfe3e7;
+}
+
+.proc {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.6cqw;
+}
+.procSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7cqw;
+  margin-top: 1.1cqw;
+}
+.procStep {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7cqw;
+  font-size: 1.5cqw;
+  color: #14181c;
+}
+.procTick {
+  flex: 0 0 auto;
+  width: 0.9cqw;
+  height: 1px;
+  background: #838c94;
+  transform: translateY(-0.35em);
+}
+.procRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.site {
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
+  padding: 1.6cqw 1.6cqw 1.4cqw;
+}
+.siteTitle {
+  font-family: var(--font-serif);
+  font-size: 2.2cqw;
+  line-height: 1.12;
+  color: #14181c;
+}
+.siteThumb {
+  flex: 1 1 0;
+  min-height: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #dfe3e7;
+}
+
+.growth {
+  display: flex;
+  align-items: center;
+  gap: 1.1cqw;
+  padding: 1.2cqw;
+}
+.growthThumb {
+  flex: 0 0 auto;
+  width: 34%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #dfe3e7;
+}
+.growthTitle {
+  font-family: var(--font-serif);
+  font-size: 1.42cqw;
+  line-height: 1.16;
+  color: #14181c;
+}
+.growthTitle i {
+  font-style: italic;
+  color: #4b545c;
+}
+
+.sv {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.3cqw 1.45cqw;
+}
+.svTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.svTop svg {
+  width: 1.25cqw;
+  height: 1.25cqw;
+  color: #838c94;
+}
+.svTitle {
+  font-family: var(--font-serif);
+  font-size: 1.72cqw;
+  line-height: 1.12;
+  color: #14181c;
+}
+.svLine {
+  height: 1px;
+  margin-block: 0.75cqw 0.55cqw;
+  background: rgb(20 24 28 / 0.11);
+}
+.svBody {
+  font-size: 1.06cqw;
+  line-height: 1.38;
+  color: #4b545c;
+}
+
+.words {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.words span {
+  display: flex;
+  align-items: center;
+  padding-inline: 2.1cqw;
+  border-left: 1px solid rgb(20 24 28 / 0.11);
+  font-family: var(--font-serif);
+  font-size: 1.8cqw;
+  color: #4b545c;
+}
+.words span:first-child {
+  border-left: 0;
+}
+
+.fill {
+  position: absolute;
+  border-radius: 10px;
+}
+
+.knob {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 26%, rgb(255 255 255 / 0.95), transparent 46%),
+    conic-gradient(
+      from 210deg,
+      #e6eaee,
+      #b9c0c8 62deg,
+      #f2f5f7 122deg,
+      #a9b1ba 196deg,
+      #e8ecf0 268deg,
+      #b5bcc4 330deg,
+      #e6eaee 360deg
+    );
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    inset 0 -2px 6px rgb(30 40 52 / 0.22),
+    0 26px 44px -26px rgb(24 36 50 / 0.6);
+  transform: rotate(calc(var(--mx, 0) * 2.2deg + var(--u, 0) * 140deg));
+}
+.knob::before {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border-radius: 999px;
+  background: radial-gradient(circle at 40% 34%, #fbfcfd, #cfd5db 78%);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.9);
+}
+.knob::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 0.5px);
+  top: 7%;
+  width: 1px;
+  height: 12%;
+  border-radius: 1px;
+  background: #7d8791;
+}
+.knobRing {
+  position: absolute;
+  inset: -16%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from -1deg,
+    rgb(20 24 28 / 0.18) 0 1.2deg,
+    transparent 1.2deg 15deg
+  );
+  mask: radial-gradient(circle, transparent 62%, #000 63%, #000 70%, transparent 71%);
+}
+.edge {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  opacity: 0.55;
+  background: linear-gradient(
+    168deg,
+    rgb(255 255 255 / 0.5),
+    rgb(255 255 255 / 0.12) 44%,
+    rgb(255 255 255 / 0.36)
+  );
+  border: 1px solid rgb(255 255 255 / 0.5);
+}
+
+/* --- Composition (telephone, tablette) ----------------------------------- */
+@media (max-width: 900px) {
+  .hero {
+    min-height: calc(100dvh - 58px);
+  }
+  .fit {
+    aspect-ratio: 1000 / 1520;
+    width: min(94vw, 560px);
+  }
+  .lSlabL,
+  .lSlabR,
+  .lBase1,
+  .lBase2,
+  .lProc,
+  .lDiv,
+  .lKnob,
+  .lEdge,
+  .lGrowth {
+    display: none;
+  }
+  .lBackC {
+    --x: 2%;
+    --y: 1%;
+    --w: 96%;
+    --h: 94%;
+    --z: -50;
+  }
+  .lMain {
+    --x: 5%;
+    --y: 3%;
+    --w: 90%;
+    --h: 43%;
+  }
+  .lOffers {
+    --x: 5%;
+    --y: 48%;
+    --w: 43%;
+    --h: 29.5%;
+    --ry: 4;
+  }
+  .lSite {
+    --x: 52%;
+    --y: 48%;
+    --w: 43%;
+    --h: 29.5%;
+    --ry: -4;
+  }
+  .lSv1 {
+    --x: 5%;
+    --y: 79.5%;
+    --w: 28%;
+    --h: 12.5%;
+  }
+  .lSv2 {
+    --x: 36%;
+    --y: 79.5%;
+    --w: 28%;
+    --h: 12.5%;
+  }
+  .lSv3 {
+    --x: 67%;
+    --y: 79.5%;
+    --w: 28%;
+    --h: 12.5%;
+  }
+  .lBase3 {
+    --x: 5%;
+    --y: 93.5%;
+    --w: 90%;
+    --h: 5%;
+    --rx: 2;
+  }
+  .micro,
+  .num {
+    font-size: 2.9cqw;
+  }
+  /* Sur telephone, le texte occupe tout le panneau : l illustration
+     s efface au profit d un papier eclaire. */
+  .panel {
+    background: linear-gradient(160deg, #fdfdfd 0%, #f3f5f7 100%);
+  }
+  .panelArt,
+  .panelSheet {
+    display: none;
+  }
+  .panelInner {
+    padding: 5cqw 5cqw 5.5cqw;
+  }
+  .panelLogo {
+    font-size: 4.6cqw;
+  }
+  .h1 {
+    font-size: 7.2cqw;
+  }
+  .panelCopy {
+    gap: 2.4cqw;
+  }
+  .sub {
+    font-size: 3.5cqw;
+    max-width: 70cqw;
+  }
+  .cta {
+    font-size: 3.4cqw;
+    padding: 2.6cqw 3.8cqw;
+    gap: 1.6cqw;
+    margin-top: 1cqw;
+  }
+  .offers {
+    padding: 3cqw;
+  }
+  .offerList {
+    margin-top: 2cqw;
+  }
+  .offerList li {
+    font-size: 3.2cqw;
+    line-height: 1.2;
+    padding-block: 0.9cqw;
+  }
+  .offerList li span:last-child {
+    font-size: 2.8cqw;
+  }
+  .offerThumb {
+    display: none;
+  }
+  .site {
+    padding: 3cqw;
+    gap: 2.2cqw;
+  }
+  .siteTitle {
+    font-size: 4.2cqw;
+  }
+  .sv {
+    padding: 2.8cqw 3cqw;
+  }
+  .svTop svg {
+    width: 3cqw;
+    height: 3cqw;
+  }
+  .svTitle {
+    font-size: 3.4cqw;
+  }
+  .svLine,
+  .svBody {
+    display: none;
+  }
+  .words span {
+    font-size: 3.2cqw;
+    padding-inline: 2.4cqw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layerIn {
+    animation: none;
+  }
+  .band,
+  .scene,
+  .knob,
+  .panelArt {
+    transform: none;
+  }
+  .cta,
+  .cta svg {
+    transition: none;
+  }
+}

@@ -14,9 +14,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="relative flex min-h-dvh flex-col">
-      <header className="mx-auto flex min-h-[96px] w-[min(1370px,calc(100%-56px))] items-center justify-center border-b border-[var(--line)] max-[800px]:min-h-[82px] max-[800px]:w-[min(calc(100%-32px),620px)]">
+      <header className="mx-auto flex min-h-[76px] w-full max-w-[1280px] items-center justify-center border-b border-[var(--line)] px-[clamp(20px,4.4vw,64px)] max-[800px]:min-h-[64px]">
         <Link href="/" aria-label="StaX — accueil" className="inline-flex">
-          <Wordmark size={30} />
+          <Wordmark size={24} />
         </Link>
       </header>
 
@@ -24,8 +24,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">{children}</div>
       </main>
 
-      <footer className="mx-auto w-[min(1370px,calc(100%-56px))] pb-7 max-[800px]:w-[min(calc(100%-32px),620px)]">
-        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-[11px] font-[650] tracking-[0.05em] text-[var(--muted)] uppercase">
+      <footer className="mx-auto w-full max-w-[1280px] px-[clamp(20px,4.4vw,64px)] pb-7">
+        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-[12.5px] tracking-[0.01em] text-[var(--muted)]">
           <span>
             {company} © {new Date().getFullYear()}
           </span>

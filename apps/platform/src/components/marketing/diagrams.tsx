@@ -13,8 +13,8 @@ import { cn } from '@stax/ui';
 /* -------------------------------------------------------------------------- */
 
 const SITES = [
-  { host: 'restaurant-dupont.fr', project: 'restaurant-dupont', color: '#315a70' },
-  { host: 'atelier-camille.fr', project: 'atelier-camille', color: '#83ad9b' },
+  { host: 'restaurant-dupont.fr', project: 'restaurant-dupont', color: '#2f5f86' },
+  { host: 'atelier-camille.fr', project: 'atelier-camille', color: '#4f9a7a' },
   { host: 'martin-plomberie.fr', project: 'martin-plomberie', color: '#c9956b' },
 ];
 
@@ -44,7 +44,7 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
                 key={site.host}
                 className="grid gap-2 sm:grid-cols-[1fr_1.25rem_1fr_1.25rem_1fr] sm:items-center"
               >
-                <span className="flex min-w-0 items-center gap-2.5 rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 shadow-[0_8px_20px_-14px_rgb(35_78_94/0.4)]">
+                <span className="flex min-w-0 items-center gap-2.5 rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 shadow-[0_8px_20px_-14px_rgb(24_36_50/0.4)]">
                   <span
                     aria-hidden="true"
                     className="size-1.5 shrink-0 rounded-full"
@@ -55,11 +55,11 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
                   </code>
                 </span>
                 <FlowArrow />
-                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)] shadow-[0_8px_20px_-14px_rgb(35_78_94/0.4)]">
+                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)] shadow-[0_8px_20px_-14px_rgb(24_36_50/0.4)]">
                   {site.project}.pages.dev
                 </code>
                 <FlowArrow reverse />
-                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)] shadow-[0_8px_20px_-14px_rgb(35_78_94/0.4)]">
+                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)] shadow-[0_8px_20px_-14px_rgb(24_36_50/0.4)]">
                   {site.project}-site
                 </code>
               </li>
@@ -112,7 +112,7 @@ function FlowArrow({ reverse = false }: { reverse?: boolean }) {
       aria-hidden="true"
       viewBox="0 0 20 12"
       className={cn(
-        'mx-auto hidden h-3 w-5 text-[#5b94aa] sm:block',
+        'mx-auto hidden h-3 w-5 text-[#838c94] sm:block',
         reverse ? 'rotate-180' : null,
       )}
       fill="none"
@@ -204,14 +204,14 @@ function Node({
   return (
     <div
       className={cn(
-        'border bg-white/70 p-4 text-center shadow-[0_10px_24px_-16px_rgb(35_78_94/0.45)] sm:text-left',
+        'rounded-[var(--radius-lg)] border bg-white/70 p-4 text-center shadow-[0_10px_24px_-16px_rgb(24_36_50/0.45)] sm:text-left',
         borders[tone],
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-bold tracking-[-0.02em] text-[#284f60]">{title}</p>
+        <p className="text-sm font-bold tracking-[-0.02em] text-[#14181c]">{title}</p>
         {badge ? (
-          <span className="border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-[var(--accent-text)] uppercase">
+          <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--accent-text)]">
             {badge}
           </span>
         ) : null}
@@ -231,7 +231,7 @@ function Arrow() {
     <svg
       aria-hidden="true"
       viewBox="0 0 32 16"
-      className="mx-auto h-4 w-8 rotate-90 text-[#5b94aa] sm:rotate-0"
+      className="mx-auto h-4 w-8 rotate-90 text-[#838c94] sm:rotate-0"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.2"
@@ -268,16 +268,18 @@ export function CreationTimeline({
               className="absolute top-8 left-[15px] h-full w-px bg-gradient-to-b from-[var(--border-strong)] to-transparent"
             />
           ) : null}
-          <span className="relative z-10 flex size-8 shrink-0 items-center justify-center border border-[rgb(255_255_255/0.85)] bg-white/80 text-[11px] font-bold text-[#5d8ea3] tabular-nums shadow-[0_8px_20px_-14px_rgb(35_78_94/0.45)]">
+          <span className="relative z-10 flex size-8 shrink-0 items-center justify-center border border-[rgb(255_255_255/0.85)] bg-white/80 text-[11px] font-bold text-[#838c94] tabular-nums shadow-[0_8px_20px_-14px_rgb(24_36_50/0.45)]">
             {String(index + 1).padStart(2, '0')}
           </span>
           <div className="min-w-0 pt-0.5">
-            <h3 className="text-lg font-bold tracking-[-0.035em] text-[#284f60]">{step.title}</h3>
+            <h3 className="font-serif text-[1.45rem] leading-tight font-normal text-[#14181c]">
+              {step.title}
+            </h3>
             <p className="measure mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
               {step.description}
             </p>
             {step.detail ? (
-              <p className="mt-2 inline-flex border border-[var(--border)] bg-[var(--background-inset)] px-2.5 py-1 text-[11px] font-semibold tracking-[0.04em] text-[var(--muted)] uppercase">
+              <p className="mt-2 inline-flex rounded-full border border-[var(--border)] bg-[var(--background-inset)] px-2.5 py-1 text-xs text-[var(--muted)]">
                 {step.detail}
               </p>
             ) : null}
@@ -304,7 +306,7 @@ export function OperationalIndicators({ className }: { className?: string }) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex items-center gap-2.5 border border-[rgb(255_255_255/0.85)] bg-white/60 px-3.5 py-3 shadow-[0_8px_20px_-16px_rgb(35_78_94/0.45)]"
+          className="flex items-center gap-2.5 border border-[rgb(255_255_255/0.85)] bg-white/60 px-3.5 py-3 shadow-[0_8px_20px_-16px_rgb(24_36_50/0.45)]"
         >
           <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--success)]" />
           <div className="min-w-0">

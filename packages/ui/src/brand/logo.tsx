@@ -81,27 +81,28 @@ export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoP
 export interface WordmarkProps {
   size?: number;
   className?: string;
-  /** Met le X final dans le bleu de l eau : c est la signature de la marque. */
+  /** Met le X final dans le bleu de la mer. */
   highlightX?: boolean;
 }
 
 /**
- * Le mot StaX : tres gras, tres serre, le X dans le bleu de l eau. C est a lui
- * seul le logo des en-tetes — aucune marque graphique a cote.
+ * Le mot StaX, en EB Garamond : c est a lui seul le logo des en-tetes, aucune
+ * marque graphique a cote.
  */
-export function Wordmark({ size = 30, className, highlightX = true }: WordmarkProps) {
+export function Wordmark({ size = 30, className, highlightX = false }: WordmarkProps) {
   const style: CSSProperties = {
+    fontFamily: 'var(--font-serif)',
     fontSize: size,
     lineHeight: 1,
-    fontWeight: 790,
-    letterSpacing: '-0.085em',
+    fontWeight: 400,
+    letterSpacing: '0.01em',
     color: 'var(--foreground)',
     whiteSpace: 'nowrap',
   };
   return (
     <span className={className} style={style}>
       Sta
-      <span style={highlightX ? { color: 'var(--water-light, #669fb8)' } : undefined}>X</span>
+      <span style={highlightX ? { color: 'var(--accent)' } : undefined}>X</span>
     </span>
   );
 }
@@ -147,12 +148,12 @@ export function Logo({
  * dans un onglet de navigateur.
  */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-<rect width="32" height="32" fill="#183442"/>
+<rect width="32" height="32" rx="7" fill="#1D2328"/>
 <g stroke-width="5" stroke-linecap="round">
-<path d="M8 9 L14 15" stroke="#F0F3F1"/>
-<path d="M18 17 L24 23" stroke="#F0F3F1" stroke-opacity="0.55"/>
-<path d="M24 9 L18 15" stroke="#F0F3F1" stroke-opacity="0.8"/>
-<path d="M14 17 L8 23" stroke="#8CB6C9"/>
+<path d="M8 9 L14 15" stroke="#F4F6F8"/>
+<path d="M18 17 L24 23" stroke="#F4F6F8" stroke-opacity="0.55"/>
+<path d="M24 9 L18 15" stroke="#F4F6F8" stroke-opacity="0.8"/>
+<path d="M14 17 L8 23" stroke="#9FB7CB"/>
 </g>
 </svg>`;
 
@@ -167,14 +168,14 @@ export function faviconDataUri(): string {
 export const BRAND = {
   name: 'StaX',
   /** Positionnement, utilise dans les metadonnees et les partages. */
-  tagline: 'Votre site professionnel. Construit pour votre métier.',
+  tagline: 'Nous créons votre site. Vous le gérez ensuite.',
   colors: {
-    ink: '#183442',
-    paper: '#F0F3F1',
-    accent: '#315A70',
-    accentLight: '#5794B0',
-    glacier: '#8CB6C9',
-    ice: '#D3E4E6',
+    ink: '#14181C',
+    paper: '#F1F2F3',
+    accent: '#2F5F86',
+    accentLight: '#5D86A8',
+    glacier: '#9FB7CB',
+    ice: '#E3E7EA',
   },
-  radius: 0,
+  radius: 10,
 } as const;

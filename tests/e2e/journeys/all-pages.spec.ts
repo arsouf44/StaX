@@ -27,7 +27,6 @@ const PUBLIC_PAGES = [
   '/',
   '/tarifs',
   '/fonctionnalites',
-  '/metiers',
   '/comment-ca-marche',
   '/realisations',
   '/a-propos',

@@ -18,7 +18,7 @@ export const PROCESS_STEPS: readonly ProcessStep[] = [
   {
     title: 'Votre projet',
     description:
-      'Vous choisissez l’offre et nous expliquez votre activité : un questionnaire adapté à votre métier, puis vos textes, vos photos, votre logo et votre domaine, que vous déposez dans votre espace à votre rythme.',
+      'Vous choisissez l’offre et nous expliquez votre activité : un questionnaire sur votre activité, puis vos textes, vos photos, votre logo et votre domaine, que vous déposez dans votre espace à votre rythme.',
     detail: 'Seule la création est payée à la commande',
   },
   {
@@ -66,7 +66,7 @@ export const PRINCIPLE_POINTS: ReadonlyArray<{ title: string; description: strin
   {
     title: 'Vous nous présentez votre entreprise',
     description:
-      'Un questionnaire adapté à votre métier, vos textes, vos photos, votre logo, votre domaine. Vous le complétez depuis votre espace, à votre rythme.',
+      'Un questionnaire sur votre activité, vos textes, vos photos, votre logo, votre domaine. Vous le complétez depuis votre espace, à votre rythme.',
   },
   {
     title: 'Nous concevons et développons votre site',

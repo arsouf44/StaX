@@ -125,7 +125,7 @@ function NavItem({
       className={cn(
         'flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors',
         active
-          ? 'bg-[rgb(255_255_255/0.62)] font-semibold text-[var(--ink)] shadow-[inset_2px_0_0_var(--deep-water),0_10px_24px_-18px_rgb(35_78_94/0.5)]'
+          ? 'bg-[rgb(255_255_255/0.62)] font-semibold text-[var(--ink)] shadow-[inset_2px_0_0_var(--deep-water),0_10px_24px_-18px_rgb(24_36_50/0.5)]'
           : 'text-[var(--foreground-muted)] hover:bg-[rgb(255_255_255/0.4)] hover:text-[var(--foreground)]',
       )}
     >
