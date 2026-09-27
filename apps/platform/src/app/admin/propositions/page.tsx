@@ -159,10 +159,8 @@ export default async function AdminProposalsPage({
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-          Vente par téléphone
-        </p>
-        <h1 className="mt-2 text-2xl font-medium tracking-[-0.02em]">Propositions</h1>
+        <p className="kicker">Vente par téléphone</p>
+        <h1 className="title-page mt-2">Propositions</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--foreground-muted)]">
           Après un appel concluant : le site du prospect est construit et vérifié, puis vous lui
           envoyez une proposition. Il crée son compte avec son code, voit son site, vous écrit s’il

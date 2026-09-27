@@ -13,15 +13,15 @@ export function OrderSteps({ current }: { current: string }) {
 
   return (
     <nav aria-label="Étapes de la commande" className="mb-10">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[11px] font-bold tracking-[0.07em] uppercase">
         {ORDER_STEPS.map((step, position) => {
           const done = position < index;
           const active = position === index;
           const content = (
             <span
               className={cn(
-                'flex items-center gap-2 rounded-full px-3 py-1.5',
-                active && 'bg-[var(--surface-elevated)] font-medium text-[var(--foreground)]',
+                'flex items-center gap-2 px-3 py-2',
+                active && 'bg-white/70 text-[var(--ink)] shadow-[inset_0_-2px_0_var(--deep-water)]',
                 !active && 'text-[var(--muted)]',
                 done && 'text-[var(--foreground-muted)]',
               )}
@@ -29,7 +29,7 @@ export function OrderSteps({ current }: { current: string }) {
               <span
                 aria-hidden="true"
                 className={cn(
-                  'flex size-5 items-center justify-center rounded-full text-2xs tabular-nums',
+                  'flex size-5 items-center justify-center text-2xs tabular-nums',
                   active
                     ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
                     : done

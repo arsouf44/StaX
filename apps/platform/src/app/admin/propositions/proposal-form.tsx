@@ -35,16 +35,12 @@ export function CodeHandOff({ code, claimUrl }: { code: string; claimUrl?: strin
   return (
     <div className="mt-3 space-y-3 rounded-[var(--radius-md)] border border-[var(--border)] p-4">
       <div>
-        <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-          Code du prospect (affiché une seule fois)
-        </p>
+        <p className="kicker">Code du prospect (affiché une seule fois)</p>
         <p className="mt-1 font-mono text-xl tracking-[0.14em]">{code}</p>
       </div>
       {claimUrl ? (
         <div>
-          <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-            Lien « Récupérer mon site »
-          </p>
+          <p className="kicker">Lien « Récupérer mon site »</p>
           <p className="mt-1 text-sm break-all">{claimUrl}</p>
         </div>
       ) : null}

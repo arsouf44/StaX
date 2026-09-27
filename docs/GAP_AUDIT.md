@@ -241,7 +241,7 @@ servent à vendre.
 | Tarif d'appel recopié sur 4 pages | figé au jour de l'écriture | table `plans` | `entryPriceLabel()` + revalidation horaire |
 | Quotas écrits à la main sous chaque offre | figés | `plan_features` | ligne dérivée du catalogue |
 | Délai de livraison recopié à 3 endroits | figé | `deliveryPolicyConfig()` | lecture de la configuration |
-| Script anti-flash lisant une clé accentuée | thème clair choisi, sombre affiché | — | `tests/unit/theme-script.test.ts` |
+| Script anti-flash lisant une clé accentuée | thème clair choisi, sombre affiché | — | sans objet : un seul thème depuis la refonte « Premium Glass », script et sélecteur retirés |
 | Aucune CSP sur la plateforme | — | — | CSP à nonce (`src/proxy.ts`) + test d'en-têtes |
 | Ajout au panier sans jeton anti-CSRF | bouton sans effet (403) | — | jeton porté par le document |
 | Don réussi laissé en « pending » pour toujours | — | — | webhook confirme la ligne d'origine |

@@ -25,7 +25,7 @@ export default async function OrderInformationPage() {
     <>
       <OrderSteps current="/commander/informations" />
 
-      <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Parlez-nous de vous</h1>
+      <h1 className="title-page">Parlez-nous de vous</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         Ces informations nous permettent de préparer votre site. Rien n’est définitif : vous pourrez
         tout modifier depuis votre espace, avant comme après la mise en ligne.

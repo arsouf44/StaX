@@ -60,7 +60,7 @@ export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoP
           >
             <stop stopColor="var(--foreground)" />
             <stop offset="0.55" stopColor="var(--foreground)" stopOpacity="0.92" />
-            <stop offset="1" stopColor="var(--accent)" />
+            <stop offset="1" stopColor="var(--water-light, #669fb8)" />
           </linearGradient>
         </defs>
       ) : null}
@@ -81,21 +81,27 @@ export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoP
 export interface WordmarkProps {
   size?: number;
   className?: string;
-  /** Met le X final en accent : reserve aux usages ou la marque est le sujet. */
+  /** Met le X final dans le bleu de l eau : c est la signature de la marque. */
   highlightX?: boolean;
 }
 
-export function Wordmark({ size = 20, className, highlightX = true }: WordmarkProps) {
+/**
+ * Le mot StaX : tres gras, tres serre, le X dans le bleu de l eau. C est a lui
+ * seul le logo des en-tetes — aucune marque graphique a cote.
+ */
+export function Wordmark({ size = 30, className, highlightX = true }: WordmarkProps) {
   const style: CSSProperties = {
     fontSize: size,
     lineHeight: 1,
-    fontWeight: 600,
-    letterSpacing: '-0.035em',
+    fontWeight: 790,
+    letterSpacing: '-0.085em',
+    color: 'var(--foreground)',
+    whiteSpace: 'nowrap',
   };
   return (
     <span className={className} style={style}>
       Sta
-      <span style={highlightX ? { color: 'var(--accent)' } : undefined}>X</span>
+      <span style={highlightX ? { color: 'var(--water-light, #669fb8)' } : undefined}>X</span>
     </span>
   );
 }
@@ -109,7 +115,11 @@ export interface LogoProps2 {
   label?: string;
 }
 
-/** Verrou logo complet : marque + mot. Utilise dans les en-tetes et pieds de page. */
+/**
+ * Logo : le mot seul, ou la marque seule quand la place manque (barre
+ * laterale repliee). `size` reste la hauteur de reference de l ancienne marque,
+ * pour que les appels existants gardent leurs proportions.
+ */
 export function Logo({
   size = 28,
   className,
@@ -117,29 +127,32 @@ export function Logo({
   tone = 'duotone',
   label = 'StaX',
 }: LogoProps2) {
+  if (!showWordmark) {
+    return (
+      <span className={className} style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <LogoMark size={size} tone={tone} title={label} />
+      </span>
+    );
+  }
   return (
-    <span
-      className={className}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.32 }}
-    >
-      <LogoMark size={size} tone={tone} title={showWordmark ? undefined : label} />
-      {showWordmark ? <Wordmark size={size * 0.72} /> : null}
+    <span className={className} style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <Wordmark size={Math.round(size * 1.15)} />
     </span>
   );
 }
 
 /**
- * Favicon : la marque sur une pastille sombre, exportee en SVG inline.
+ * Favicon : la marque sur un carre d encre, exportee en SVG inline.
  * Chaine autonome, sans dependance a une variable CSS, pour rester correcte
  * dans un onglet de navigateur.
  */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-<rect width="32" height="32" rx="7" fill="#05070B"/>
+<rect width="32" height="32" fill="#183442"/>
 <g stroke-width="5" stroke-linecap="round">
-<path d="M8 9 L14 15" stroke="#F8FAFC"/>
-<path d="M18 17 L24 23" stroke="#F8FAFC" stroke-opacity="0.55"/>
-<path d="M24 9 L18 15" stroke="#F8FAFC" stroke-opacity="0.8"/>
-<path d="M14 17 L8 23" stroke="#147CFF"/>
+<path d="M8 9 L14 15" stroke="#F0F3F1"/>
+<path d="M18 17 L24 23" stroke="#F0F3F1" stroke-opacity="0.55"/>
+<path d="M24 9 L18 15" stroke="#F0F3F1" stroke-opacity="0.8"/>
+<path d="M14 17 L8 23" stroke="#8CB6C9"/>
 </g>
 </svg>`;
 
@@ -156,12 +169,12 @@ export const BRAND = {
   /** Positionnement, utilise dans les metadonnees et les partages. */
   tagline: 'Votre site professionnel. Construit pour votre métier.',
   colors: {
-    ink: '#05070B',
-    paper: '#F8FAFC',
-    accent: '#147CFF',
-    accentLight: '#0B66DA',
-    glacier: '#52B5FF',
-    ice: '#9DDBFF',
+    ink: '#183442',
+    paper: '#F0F3F1',
+    accent: '#315A70',
+    accentLight: '#5794B0',
+    glacier: '#8CB6C9',
+    ice: '#D3E4E6',
   },
-  radius: 7,
+  radius: 0,
 } as const;

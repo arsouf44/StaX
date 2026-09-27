@@ -66,7 +66,7 @@ export default async function AdminTicketPage({ params }: { params: Promise<{ id
           ← Tous les tickets
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-medium tracking-[-0.02em]">{ticket.subject}</h1>
+          <h1 className="title-page">{ticket.subject}</h1>
           <StatusPill tone={state?.tone ?? 'neutral'}>{state?.label ?? ticket.status}</StatusPill>
         </div>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">

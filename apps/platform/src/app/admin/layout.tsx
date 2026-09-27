@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="mx-auto flex w-full max-w-[110rem] items-center gap-4 px-4 py-3 sm:px-6">
           <Link href="/admin" aria-label="Administration StaX" className="flex items-center gap-2">
             <Logo size={22} showWordmark={false} />
-            <span className="text-sm font-medium tracking-[-0.01em]">Administration</span>
+            <span className="kicker !text-[var(--ink)]">Administration</span>
           </Link>
 
           <AdminSearch />
@@ -43,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span className="hidden text-xs text-[var(--muted)] sm:inline">
               {session.profile.email}
             </span>
-            <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-2xs text-[var(--foreground-muted)]">
+            <span className="border border-[var(--border)] px-2.5 py-1 text-2xs font-semibold tracking-[0.06em] text-[var(--foreground-muted)] uppercase">
               {ROLE_LABELS[role] ?? role}
             </span>
             <Link

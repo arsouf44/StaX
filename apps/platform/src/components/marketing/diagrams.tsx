@@ -13,9 +13,9 @@ import { cn } from '@stax/ui';
 /* -------------------------------------------------------------------------- */
 
 const SITES = [
-  { host: 'restaurant-dupont.fr', project: 'restaurant-dupont', color: '#147CFF' },
-  { host: 'atelier-camille.fr', project: 'atelier-camille', color: '#2FD29B' },
-  { host: 'martin-plomberie.fr', project: 'martin-plomberie', color: '#F5A524' },
+  { host: 'restaurant-dupont.fr', project: 'restaurant-dupont', color: '#315a70' },
+  { host: 'atelier-camille.fr', project: 'atelier-camille', color: '#83ad9b' },
+  { host: 'martin-plomberie.fr', project: 'martin-plomberie', color: '#c9956b' },
 ];
 
 /**
@@ -26,11 +26,11 @@ const SITES = [
 export function DomainRoutingDiagram({ className }: { className?: string }) {
   return (
     <figure className={cn('not-prose', className)}>
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+      <div className="grid gap-5">
         <div>
           <div
             aria-hidden="true"
-            className="hidden grid-cols-[1fr_1.25rem_1fr_1.25rem_1fr] gap-2 px-1 pb-2 text-2xs tracking-[0.12em] text-[var(--muted)] uppercase sm:grid"
+            className="kicker hidden grid-cols-[1fr_1.25rem_1fr_1.25rem_1fr] gap-2 px-1 pb-2 sm:grid"
           >
             <span>Votre domaine</span>
             <span />
@@ -44,7 +44,7 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
                 key={site.host}
                 className="grid gap-2 sm:grid-cols-[1fr_1.25rem_1fr_1.25rem_1fr] sm:items-center"
               >
-                <span className="flex min-w-0 items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5">
+                <span className="flex min-w-0 items-center gap-2.5 rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 shadow-[0_8px_20px_-14px_rgb(35_78_94/0.4)]">
                   <span
                     aria-hidden="true"
                     className="size-1.5 shrink-0 rounded-full"
@@ -55,11 +55,11 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
                   </code>
                 </span>
                 <FlowArrow />
-                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)]">
+                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)] shadow-[0_8px_20px_-14px_rgb(35_78_94/0.4)]">
                   {site.project}.pages.dev
                 </code>
                 <FlowArrow reverse />
-                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)]">
+                <code className="min-w-0 truncate rounded-[var(--radius-md)] border border-[rgb(255_255_255/0.85)] bg-white/70 px-3 py-2.5 font-mono text-xs text-[var(--foreground-muted)] shadow-[0_8px_20px_-14px_rgb(35_78_94/0.4)]">
                   {site.project}-site
                 </code>
               </li>
@@ -67,11 +67,9 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
           </ul>
         </div>
 
-        <div className="glass-edge rounded-[var(--radius-lg)] p-4 glass-2">
-          <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-            Un site, un projet
-          </p>
-          <ol className="mt-3 space-y-2 text-xs">
+        <div className="p-5 glass-2">
+          <p className="kicker">Un site, un projet</p>
+          <ol className="mt-4 grid gap-x-6 gap-y-2.5 text-xs sm:grid-cols-2">
             {[
               'Votre domaine pointe vers le projet Cloudflare de votre site',
               'Le certificat HTTPS est émis et renouvelé automatiquement',
@@ -114,7 +112,7 @@ function FlowArrow({ reverse = false }: { reverse?: boolean }) {
       aria-hidden="true"
       viewBox="0 0 20 12"
       className={cn(
-        'mx-auto hidden h-3 w-5 text-[var(--border-strong)] sm:block',
+        'mx-auto hidden h-3 w-5 text-[#5b94aa] sm:block',
         reverse ? 'rotate-180' : null,
       )}
       fill="none"
@@ -153,7 +151,7 @@ export function PaymentRoutingDiagram({ className }: { className?: string }) {
 
       <div className="mt-4 rounded-[var(--radius-md)] border border-dashed border-[var(--border-strong)] p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[var(--muted)]">
+          <span className="border border-[var(--border)] px-2.5 py-1 font-bold text-[var(--ink)]">
             StaX
           </span>
           <svg
@@ -198,7 +196,7 @@ function Node({
   tone: 'neutral' | 'accent' | 'success';
 }) {
   const borders = {
-    neutral: 'border-[var(--border)]',
+    neutral: 'border-[rgb(255_255_255/0.85)]',
     accent: 'border-[var(--accent)]/40',
     success: 'border-[var(--success)]/35',
   } as const;
@@ -206,21 +204,21 @@ function Node({
   return (
     <div
       className={cn(
-        'rounded-[var(--radius-md)] border bg-[var(--surface)] p-4 text-center sm:text-left',
+        'border bg-white/70 p-4 text-center shadow-[0_10px_24px_-16px_rgb(35_78_94/0.45)] sm:text-left',
         borders[tone],
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{title}</p>
+        <p className="text-sm font-bold tracking-[-0.02em] text-[#284f60]">{title}</p>
         {badge ? (
-          <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] text-[var(--accent-text)]">
+          <span className="border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-[var(--accent-text)] uppercase">
             {badge}
           </span>
         ) : null}
       </div>
       <p className="mt-1 text-xs text-[var(--muted)]">{subtitle}</p>
       {amount ? (
-        <p className="mt-2.5 font-mono text-lg tabular-nums">{amount}</p>
+        <p className="mt-2.5 text-xl font-bold tracking-[-0.05em] tabular-nums">{amount}</p>
       ) : (
         <div aria-hidden="true" className="mt-2.5 h-[1.75rem]" />
       )}
@@ -233,7 +231,7 @@ function Arrow() {
     <svg
       aria-hidden="true"
       viewBox="0 0 32 16"
-      className="mx-auto h-4 w-8 rotate-90 text-[var(--border-strong)] sm:rotate-0"
+      className="mx-auto h-4 w-8 rotate-90 text-[#5b94aa] sm:rotate-0"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.2"
@@ -270,16 +268,16 @@ export function CreationTimeline({
               className="absolute top-8 left-[15px] h-full w-px bg-gradient-to-b from-[var(--border-strong)] to-transparent"
             />
           ) : null}
-          <span className="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--background)] font-mono text-xs text-[var(--foreground-muted)]">
+          <span className="relative z-10 flex size-8 shrink-0 items-center justify-center border border-[rgb(255_255_255/0.85)] bg-white/80 text-[11px] font-bold text-[#5d8ea3] tabular-nums shadow-[0_8px_20px_-14px_rgb(35_78_94/0.45)]">
             {String(index + 1).padStart(2, '0')}
           </span>
           <div className="min-w-0 pt-0.5">
-            <h3 className="text-base font-medium tracking-[-0.015em]">{step.title}</h3>
+            <h3 className="text-lg font-bold tracking-[-0.035em] text-[#284f60]">{step.title}</h3>
             <p className="measure mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
               {step.description}
             </p>
             {step.detail ? (
-              <p className="mt-2 inline-flex rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--muted)]">
+              <p className="mt-2 inline-flex border border-[var(--border)] bg-[var(--background-inset)] px-2.5 py-1 text-[11px] font-semibold tracking-[0.04em] text-[var(--muted)] uppercase">
                 {step.detail}
               </p>
             ) : null}
@@ -306,12 +304,12 @@ export function OperationalIndicators({ className }: { className?: string }) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3"
+          className="flex items-center gap-2.5 border border-[rgb(255_255_255/0.85)] bg-white/60 px-3.5 py-3 shadow-[0_8px_20px_-16px_rgb(35_78_94/0.45)]"
         >
           <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--success)]" />
           <div className="min-w-0">
-            <p className="text-2xs tracking-wide text-[var(--muted)] uppercase">{item.label}</p>
-            <p className="truncate text-xs font-medium text-[var(--foreground)]">{item.value}</p>
+            <p className="kicker !text-[10px]">{item.label}</p>
+            <p className="truncate text-xs font-semibold text-[var(--foreground)]">{item.value}</p>
           </div>
         </div>
       ))}

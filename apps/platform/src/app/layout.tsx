@@ -2,13 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import { platformUrl, publicEnv } from '@stax/config';
 import { BRAND, faviconDataUri } from '@stax/ui/brand';
 import { ToastProvider } from '@stax/ui';
-import { ThemeScript } from '~/components/theme-script';
 import './globals.css';
 
 /*
- * Typographie systeme (SF Pro sur Apple, Helvetica ou Arial ailleurs) : aucune
- * police a telecharger, donc aucun decalage a l affichage et aucune requete de
- * plus. Voir `--font-sans` dans packages/ui/src/styles/globals.css.
+ * Typographie : Inter, servie par la plateforme (paquet @fontsource), jamais
+ * par un tiers. Voir `--font-sans` dans packages/ui/src/styles/globals.css.
  */
 
 export const metadata: Metadata = {
@@ -48,19 +46,17 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#05070b' },
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-  ],
+  themeColor: '#f0f3f1',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = publicEnv().NEXT_PUBLIC_DEFAULT_LOCALE;
 
   return (
-    <html lang={locale} data-theme="dark" suppressHydrationWarning>
+    <html lang={locale}>
       <body className="min-h-dvh antialiased">
-        <ThemeScript />
+        {/* La lumiere derriere toutes les pages : papier, brume et sauge. */}
+        <div className="atmosphere" aria-hidden="true" />
         {/* Lien d evitement : premiere cible au clavier, sur chaque page. */}
         <a
           href="#contenu-principal"

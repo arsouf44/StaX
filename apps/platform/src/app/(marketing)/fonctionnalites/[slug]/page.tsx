@@ -59,10 +59,6 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
   return (
     <>
       <Section className="relative overflow-hidden pb-0">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="spotlight absolute inset-0" />
-          <div className="grid-bg grid-bg-fade absolute inset-0" />
-        </div>
         <Container size="wide">
           <Breadcrumb
             className="mb-8"

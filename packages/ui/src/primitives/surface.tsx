@@ -5,10 +5,10 @@ import { cn } from '../lib';
 /**
  * Surfaces.
  *
- * Trois niveaux de verre plutot qu un composant unique : une carte posee dans
- * une page, une carte imbriquee dans une autre carte et un panneau flottant
- * n ont ni la meme densite, ni le meme flou, ni la meme bordure. C est cette
- * gradation qui cree la profondeur.
+ * Trois niveaux de verre depoli plutot qu un composant unique : une carte
+ * posee dans une page, une carte autonome et un panneau flottant n ont ni la
+ * meme densite, ni le meme flou. Bordure blanche lumineuse, angles vifs,
+ * ombre longue et bleutee : c est cette gradation qui cree la profondeur.
  */
 const panelVariants = cva('relative rounded-[var(--radius-lg)]', {
   variants: {
@@ -16,9 +16,9 @@ const panelVariants = cva('relative rounded-[var(--radius-lg)]', {
       /** Pose a plat dans la page : le plus discret. */
       1: 'glass-1',
       /** Carte autonome : le cas courant. */
-      2: 'glass-edge glass-2',
+      2: 'glass-2',
       /** Flottant au-dessus du contenu : menu, dialogue, panneau. */
-      3: 'glass-edge glass-3',
+      3: 'glass-3',
       /** Surface pleine, sans flou : tableaux denses et longues listes. */
       solid: 'border border-[var(--border)] bg-[var(--surface)]',
       /** Creux : champ de saisie, zone de code, encart. */
@@ -124,12 +124,17 @@ export function Separator({
   );
 }
 
-/** Ligne lumineuse horizontale : marque une transition entre deux sections. */
+/** Trait horizontal : marque une transition entre deux sections. */
 export function Beam({ className }: { className?: string }) {
   return <div aria-hidden="true" className={cn('beam h-px w-full opacity-60', className)} />;
 }
 
-/** Conteneur de largeur maitrisee, avec gouttiere de 16 px sur mobile. */
+/**
+ * Conteneur de largeur maitrisee.
+ *
+ * `wide` est la « coquille » des pages publiques : 1370 px au plus, 28 px de
+ * marge de chaque cote, puis 16 px et 620 px au plus sous 800 px.
+ */
 export function Container({
   className,
   size = 'default',
@@ -137,13 +142,13 @@ export function Container({
   ...props
 }: HTMLAttributes<HTMLDivElement> & { size?: 'narrow' | 'default' | 'wide' | 'full' }) {
   const widths = {
-    narrow: 'max-w-3xl',
-    default: 'max-w-6xl',
-    wide: 'max-w-[88rem]',
-    full: 'max-w-none',
+    narrow: 'w-full max-w-3xl px-4 sm:px-6 lg:px-8',
+    default: 'w-full max-w-6xl px-4 sm:px-6 lg:px-8',
+    wide: 'w-[min(1370px,calc(100%-56px))] max-[800px]:w-[min(calc(100%-32px),620px)]',
+    full: 'w-full max-w-none px-4 sm:px-6 lg:px-8',
   } as const;
   return (
-    <div className={cn('mx-auto w-full px-4 sm:px-6 lg:px-8', widths[size], className)} {...props}>
+    <div className={cn('mx-auto', widths[size], className)} {...props}>
       {children}
     </div>
   );
@@ -186,27 +191,22 @@ export function SectionHeading({
   as: Tag = 'h2',
 }: SectionHeadingProps) {
   return (
-    <div className={cn(align === 'center' && 'mx-auto text-center', 'max-w-3xl', className)}>
+    <div className={cn(align === 'center' && 'mx-auto text-center', 'max-w-4xl', className)}>
       {eyebrow ? (
-        <p className="mb-5 text-sm font-medium tracking-[-0.005em] text-accent">{eyebrow}</p>
+        <p className={cn('eyebrow-index mb-7', align === 'center' && 'justify-center')}>
+          {eyebrow}
+        </p>
       ) : null}
       <Tag
         className={cn(
-          'font-semibold tracking-[-0.04em] text-balance',
-          Tag === 'h1'
-            ? 'text-[2.75rem] leading-[1] sm:text-6xl lg:text-7xl'
-            : 'text-[2.25rem] leading-[1.04] sm:text-5xl lg:text-[3.5rem]',
+          'text-balance',
+          Tag === 'h1' ? 'display-statement' : Tag === 'h2' ? 'display-section' : 'display-panel',
         )}
       >
         {title}
       </Tag>
       {description ? (
-        <p
-          className={cn(
-            'mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)] sm:text-xl sm:leading-relaxed',
-            align === 'center' && 'mx-auto',
-          )}
-        >
+        <p className={cn('lead-text mt-7 max-w-[36rem]', align === 'center' && 'mx-auto')}>
           {description}
         </p>
       ) : null}

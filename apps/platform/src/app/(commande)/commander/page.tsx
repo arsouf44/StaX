@@ -22,9 +22,7 @@ export default async function OrderPlanPage() {
     <>
       <OrderSteps current="/commander" />
 
-      <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">
-        Choisissez votre offre
-      </h1>
+      <h1 className="title-page">Choisissez votre offre</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         Chaque offre comprend la conception et le développement de votre site par notre équipe et sa
         mise en ligne sur votre domaine. Vous ne payez maintenant que la création : la maintenance

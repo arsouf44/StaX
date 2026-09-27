@@ -113,9 +113,9 @@ function InclusionList({
 }) {
   const iconClass =
     tone === 'signature'
-      ? 'text-[var(--ice)]'
+      ? 'text-[#a7d0da]'
       : tone === 'featured'
-        ? 'text-[var(--accent-text)]'
+        ? 'text-[var(--water-bright)]'
         : 'text-[var(--muted-strong)]';
 
   if (compact) {
@@ -141,9 +141,7 @@ function InclusionList({
         if (items.length === 0) return null;
         return (
           <div key={group.category}>
-            <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              {group.label}
-            </p>
+            <p className="kicker">{group.label}</p>
             <ul className="mt-2.5 space-y-2.5">
               {items.map((inclusion) => (
                 <li key={inclusion.label} className="flex gap-2.5 text-sm">
@@ -177,31 +175,24 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
 
   return (
     <div
-      // Exceptionnel est une categorie a part : la carte reste noire et froide
-      // quel que soit le theme, comme une piece de collection dans la vitrine.
+      // Exceptionnel est une categorie a part : la carte prend l'eau profonde du
+      // bloc de cloture, comme une piece de collection dans la vitrine.
       data-theme={signature ? 'dark' : undefined}
       className={cn(
-        'relative flex flex-col rounded-[var(--radius-xl)] p-7 transition-[border-color,transform] duration-300',
+        'relative flex flex-col p-7 transition-[border-color,transform,background-color] duration-300',
         signature
-          ? 'glass-edge overflow-hidden bg-[var(--ink)] text-[var(--foreground)] shadow-[var(--shadow-stage)] ring-1 ring-[var(--glacier)]/35'
+          ? 'closing-block shadow-[0_28px_70px_rgb(35_78_94/0.32)]'
           : featured
-            ? 'glass-edge bg-[linear-gradient(180deg,rgb(20_124_255/0.14),transparent_45%)] ring-1 glass-2 ring-[var(--accent)]/45 xl:-translate-y-2'
-            : 'border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]',
+            ? 'glass-panel shadow-[inset_0_3px_0_var(--deep-water),0_20px_55px_rgb(36_76_87/0.12)] xl:-translate-y-2'
+            : 'glass-1 hover:bg-[var(--glass-2)]',
       )}
     >
-      {signature ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(120%_80%_at_50%_0%,rgb(157_219_255/0.16),transparent_70%)]"
-        />
-      ) : null}
-
       {plan.badge && !signature ? (
         <span
           className={cn(
-            'absolute top-5 right-6 rounded-full px-3 py-1 text-2xs font-medium',
+            'absolute top-6 right-6 px-2.5 py-1 text-2xs font-bold tracking-[0.08em] uppercase',
             featured
-              ? 'bg-[var(--accent)] text-white shadow-[0_8px_24px_-10px_var(--accent-glow)]'
+              ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
               : 'border border-[var(--border-strong)] text-[var(--foreground-muted)]',
           )}
         >
@@ -214,11 +205,9 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
           // Surtitre et badge sur la meme ligne : le badge n'est pas pose en
           // absolu ici, il chevaucherait le surtitre.
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-2xs font-medium tracking-[0.2em] text-[var(--ice)] uppercase">
-              Catégorie signature
-            </p>
+            <p className="kicker">Catégorie signature</p>
             {plan.badge ? (
-              <span className="rounded-full border border-[var(--ice)]/30 bg-[rgb(157_219_255/0.08)] px-3 py-1 text-2xs font-medium text-[var(--ice)]">
+              <span className="border border-[#a7d0da]/40 bg-white/5 px-2.5 py-1 text-2xs font-bold tracking-[0.08em] text-[#a7d0da] uppercase">
                 {plan.badge}
               </span>
             ) : null}
@@ -226,8 +215,8 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
         ) : null}
         <h3
           className={cn(
-            'font-semibold tracking-[-0.025em]',
-            signature ? 'mt-2 text-2xl' : 'text-xl',
+            'font-bold tracking-[-0.05em]',
+            signature ? 'mt-3 text-[1.75rem] leading-none' : 'text-2xl leading-none',
             plan.badge && !signature ? 'pr-24' : null,
           )}
         >
@@ -240,7 +229,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
 
       <div className="relative mt-6">
         <p className="flex items-baseline gap-1.5">
-          <span className="text-[2rem] font-semibold tracking-[-0.04em] tabular-nums xl:text-[2.25rem]">
+          <span className="text-[2.25rem] leading-none font-bold tracking-[-0.06em] tabular-nums xl:text-[2.5rem]">
             {formatMoney(plan.setupPriceCents, plan.currency, { hideDecimalsWhenRound: true })}
           </span>
           <span className="text-xs text-[var(--muted)]">HT · création</span>
@@ -277,7 +266,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
       <div
         className={cn(
           'relative mt-6 border-t pt-6',
-          signature ? 'border-[var(--ice)]/15' : 'border-[var(--border)]',
+          signature ? 'border-[rgb(216_237_239/0.2)]' : 'border-[var(--border)]',
         )}
       >
         <InclusionList inclusions={plan.inclusions} compact={compact} tone={tone} />
@@ -296,13 +285,13 @@ function QuoteCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
     : plan.inclusions;
 
   return (
-    <div className="grid gap-6 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] lg:items-center">
+    <div className="glass-panel glass-panel-warm grid gap-6 p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] lg:items-center">
       <div>
-        <h3 className="text-xl font-semibold tracking-[-0.025em]">{plan.name}</h3>
+        <h3 className="text-2xl leading-none font-bold tracking-[-0.05em]">{plan.name}</h3>
         {plan.tagline ? (
           <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">{plan.tagline}</p>
         ) : null}
-        <p className="mt-4 text-3xl font-semibold tracking-[-0.04em]">Sur devis</p>
+        <p className="mt-4 text-[2.25rem] leading-none font-bold tracking-[-0.06em]">Sur devis</p>
         <p className="mt-1 text-xs text-[var(--muted)]">
           Chiffrage détaillé après étude de votre besoin
         </p>
@@ -370,7 +359,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanView[] }) {
       role="region"
       aria-label="Comparaison détaillée des offres"
       tabIndex={0}
-      className="relative overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+      className="relative overflow-x-auto border border-[var(--border)] bg-[var(--glass-1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
     >
       <table className="w-full min-w-[48rem] border-collapse text-sm">
         <caption className="sr-only">
@@ -393,7 +382,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanView[] }) {
             <th
               scope="colgroup"
               colSpan={billable.length + 1}
-              className="px-4 py-2 text-left text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase"
+              className="kicker px-4 py-2 text-left"
             >
               Tarifs
             </th>
@@ -419,7 +408,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanView[] }) {
                 <th
                   scope="colgroup"
                   colSpan={billable.length + 1}
-                  className="px-4 py-2 text-left text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase"
+                  className="kicker px-4 py-2 text-left"
                 >
                   {CATEGORY_LABELS[category] ?? category}
                 </th>

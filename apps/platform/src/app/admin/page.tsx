@@ -99,9 +99,7 @@ export default async function AdminHomePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-xl font-medium tracking-[-0.02em]">
-          Bonjour {session.profile.first_name ?? ''}
-        </h1>
+        <h1 className="title-page">Bonjour {session.profile.first_name ?? ''}</h1>
         <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">
           {queue.length === 0
             ? 'Rien n’attend de décision pour le moment.'

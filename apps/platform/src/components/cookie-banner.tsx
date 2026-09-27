@@ -60,7 +60,7 @@ export function CookieBanner() {
       aria-modal="false"
       className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4"
     >
-      <div className="glass-edge mx-auto max-w-3xl rounded-[var(--radius-lg)] p-4 glass-3 sm:p-5">
+      <div className="mx-auto max-w-3xl rounded-[var(--radius-lg)] p-4 glass-3 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">Votre vie privée</p>

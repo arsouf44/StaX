@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isProduction, readEnv } from '@stax/config';
 import { buildContentSecurityPolicy, generateNonce } from '@stax/security';
-import { THEME_SCRIPT_CSP_HASH } from '~/lib/theme-script';
 
 /**
  * Politique de securite du contenu, par requete.
@@ -27,9 +26,6 @@ export default function proxy(request: NextRequest) {
   const csp = buildContentSecurityPolicy({
     profile: 'platform',
     nonce,
-    // Le script d'application du theme s'execute avant le premier rendu et
-    // n'a pas de nonce : il est autorise par son empreinte, constante.
-    scriptHashes: [THEME_SCRIPT_CSP_HASH],
     // Supabase : authentification et lectures directes depuis le navigateur.
     connectSrc: [readEnv('NEXT_PUBLIC_SUPABASE_URL') ?? ''].filter(Boolean),
     // Photos des clients (bibliotheque, editeur) servies par le stockage.

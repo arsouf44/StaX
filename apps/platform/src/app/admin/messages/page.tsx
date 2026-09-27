@@ -46,7 +46,7 @@ export default async function AdminMessagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-medium tracking-[-0.02em]">Messages clients</h1>
+        <h1 className="title-page">Messages clients</h1>
         <p className="mt-2 max-w-3xl text-sm text-[var(--foreground-muted)]">
           Les messages que les clients et les prospects vous envoient depuis leur espace. Chaque
           réponse part aussi par e-mail au client.{' '}

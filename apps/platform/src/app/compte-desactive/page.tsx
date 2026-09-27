@@ -29,7 +29,7 @@ export default function DisabledAccountPage() {
       <main id="contenu-principal" className="flex flex-1 items-center">
         <Container size="default">
           <div className="max-w-xl">
-            <h1 className="text-3xl font-medium tracking-[-0.03em]">Ce compte est désactivé</h1>
+            <h1 className="display-panel">Ce compte est désactivé</h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
               L’accès à votre espace est suspendu. Cela arrive après une demande de votre part, ou à
               la suite d’un manquement signalé.

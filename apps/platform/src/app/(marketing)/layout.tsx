@@ -15,7 +15,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
   return (
     <div className="relative flex min-h-dvh flex-col">
       <SiteHeader />
-      <main id="contenu-principal" className="flex-1 pt-16">
+      <main id="contenu-principal" className="flex-1">
         {children}
       </main>
       <SiteFooter sectors={sectors} />

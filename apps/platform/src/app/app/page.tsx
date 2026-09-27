@@ -211,9 +211,7 @@ export default async function DashboardPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-medium tracking-[-0.02em]">
-          Bonjour{firstName ? ` ${firstName}` : ''}
-        </h1>
+        <h1 className="title-page">Bonjour{firstName ? ` ${firstName}` : ''}</h1>
         <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">
           {site
             ? `Voici l’essentiel pour ${site.name}.`
@@ -232,9 +230,7 @@ export default async function DashboardPage({
         <Panel level={2} padding="lg" data-testid="my-site">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-                Mon site
-              </p>
+              <p className="kicker">Mon site</p>
               <h2 className="mt-1 text-xl font-medium">{site.name}</h2>
               <p className="mt-1 text-sm text-[var(--foreground-muted)]">
                 {activeHost ?? 'Adresse en cours de préparation'}
@@ -701,9 +697,7 @@ async function ProjectDashboard({
   return (
     <div className="space-y-6" data-testid="project-dashboard">
       <div>
-        <h1 className="text-2xl font-medium tracking-[-0.02em]">
-          Bonjour{firstName ? ` ${firstName}` : ''}
-        </h1>
+        <h1 className="title-page">Bonjour{firstName ? ` ${firstName}` : ''}</h1>
         <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">
           Nous créons {siteName}. Voici où en est votre projet, étape par étape.
         </p>
@@ -724,9 +718,7 @@ async function ProjectDashboard({
       <Panel level={2} padding="lg">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              Mon projet{project ? ` · ${project.reference}` : ''}
-            </p>
+            <p className="kicker">Mon projet{project ? ` · ${project.reference}` : ''}</p>
             <p className="mt-2 flex flex-wrap items-center gap-2">
               <StatusPill tone="accent">{statusLabel}</StatusPill>
               {project?.due_at ? (
@@ -996,9 +988,7 @@ async function ManagedSiteDashboard({
   return (
     <div className="space-y-8" data-testid="managed-site-dashboard">
       <div>
-        <h1 className="text-2xl font-medium tracking-[-0.02em]">
-          Bonjour{firstName ? ` ${firstName}` : ''}
-        </h1>
+        <h1 className="title-page">Bonjour{firstName ? ` ${firstName}` : ''}</h1>
         <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">
           Voici l’essentiel pour {site.name}.
         </p>
@@ -1007,9 +997,7 @@ async function ManagedSiteDashboard({
       <Panel level={2} padding="lg" data-testid="my-site">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              Mon site
-            </p>
+            <p className="kicker">Mon site</p>
             <h2 className="mt-1 text-xl font-medium">{site.name}</h2>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">
               {liveUrl ?? 'Adresse en préparation'}

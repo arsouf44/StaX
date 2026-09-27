@@ -66,9 +66,7 @@ export default async function AdminConversationPage({
         <Link href="/admin/messages" className="text-sm underline underline-offset-4">
           ← Tous les messages
         </Link>
-        <h1 className="mt-3 text-2xl font-medium tracking-[-0.02em]">
-          {project.organizations?.name ?? 'Client'}
-        </h1>
+        <h1 className="title-page mt-3">{project.organizations?.name ?? 'Client'}</h1>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
           {project.sites?.name ? `${project.sites.name} · ` : ''}
           {project.organizations?.billing_email ?? ''}
