@@ -20,9 +20,10 @@ import { storeMediaFile } from '~/lib/media-store';
  *     pas remonter dans l'arborescence ni ecrire chez un autre client ;
  *  3. le QUOTA de l'offre est verifie avant l'ecriture.
  *
- * Le SVG est accepte parce que beaucoup de logos en dependent, mais il est
- * servi depuis le stockage Supabase — une origine distincte du site client —
- * et jamais insere en ligne dans une page : un SVG peut contenir du script.
+ * Le SVG est refuse : c'est un document qui peut contenir du script, et le
+ * seau de stockage est public (il etait accepte jusqu'a l'audit de securite
+ * du 2026-09-27, migration 0056). Le type retenu est celui que le fichier EST,
+ * lu dans ses premiers octets — pas celui qu'annonce le navigateur.
  */
 
 export async function uploadMediaAction(

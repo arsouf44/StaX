@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createUserClient, unwrapMaybe } from '@stax/database';
-import { boundedText, uuidSchema } from '@stax/validation';
+import { uuidSchema } from '@stax/validation';
 import { guardAction } from '~/lib/action-guard';
+import { messageRefusal, messageText, singleLineText } from '~/lib/message-text';
 import { requireSession } from '~/lib/session';
 import { alertTeam } from '~/lib/team-alerts';
 import type { ActionState } from '~/lib/form-state';
@@ -18,11 +19,17 @@ import type { ActionState } from '~/lib/form-state';
  * propre ticket comme resolu pour le faire disparaitre d une file.
  */
 
+/** Message d'erreur a montrer tel quel : seulement ceux des champs de texte. */
+function textIssue(issues: ReadonlyArray<{ path: PropertyKey[]; message: string }>) {
+  const issue = issues.find((item) => item.path[0] === 'subject' || item.path[0] === 'body');
+  return issue?.message;
+}
+
 const ticketSchema = z
   .object({
-    subject: boundedText(5, 200, 'L objet'),
+    subject: singleLineText(5, 200, 'L’objet'),
     category: z.enum(['technical', 'content', 'billing', 'domain', 'other']).default('other'),
-    body: boundedText(10, 5000, 'Votre message'),
+    body: messageText(10, 5000, 'Décrivez votre demande en quelques lignes.'),
   })
   .strict();
 
@@ -39,7 +46,9 @@ export async function openTicketAction(
   if (!parsed.success) {
     return {
       status: 'error',
-      message: 'Décrivez votre demande en quelques lignes pour que nous puissions aider.',
+      message:
+        textIssue(parsed.error.issues) ??
+        'Décrivez votre demande en quelques lignes pour que nous puissions aider.',
     };
   }
 
@@ -77,7 +86,9 @@ export async function openTicketAction(
         organization_id: membership.organization_id,
         opened_by: session.user.id,
         subject: parsed.data.subject,
-        category: parsed.data.category,
+        // « Autre chose » : la base range ces demandes dans « general » (sa
+        // liste ne connait pas `other`, et refusait le ticket entier).
+        category: parsed.data.category === 'other' ? 'general' : parsed.data.category,
         status: 'open',
         priority: 'normal',
       })
@@ -98,7 +109,10 @@ export async function openTicketAction(
   });
 
   if (error) {
-    return { status: 'error', message: 'Votre message n’a pas pu être enregistré.' };
+    return {
+      status: 'error',
+      message: messageRefusal(error, 'Votre message n’a pas pu être enregistré.'),
+    };
   }
 
   await alertTeam(
@@ -123,7 +137,10 @@ export async function openTicketAction(
   };
 }
 
-const replySchema = z.object({ ticketId: uuidSchema, body: boundedText(2, 5000, 'Votre message') });
+const replySchema = z.object({
+  ticketId: uuidSchema,
+  body: messageText(2, 5000, 'Écrivez votre message.'),
+});
 
 export async function replyToTicketAction(
   _previous: ActionState,
@@ -133,9 +150,16 @@ export async function replyToTicketAction(
     ticketId: formData.get('ticketId'),
     body: formData.get('body'),
   });
-  if (!parsed.success) return { status: 'error', message: 'Écrivez votre message.' };
+  if (!parsed.success) {
+    return {
+      status: 'error',
+      message: textIssue(parsed.error.issues) ?? 'Écrivez votre message.',
+    };
+  }
 
   const session = await requireSession();
+  const guard = await guardAction({ limit: 'conversation', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
   const db = createUserClient(session.user.accessToken);
 
   const ticket = unwrapMaybe<{ id: string }>(
@@ -155,7 +179,12 @@ export async function replyToTicketAction(
     is_internal: false,
   });
 
-  if (error) return { status: 'error', message: 'Votre message n’a pas pu être envoyé.' };
+  if (error) {
+    return {
+      status: 'error',
+      message: messageRefusal(error, 'Votre message n’a pas pu être envoyé.'),
+    };
+  }
 
   await alertTeam({
     subject: 'Réponse d’un client sur une demande d’assistance',
@@ -166,12 +195,10 @@ export async function replyToTicketAction(
     actionLabel: 'Lire et répondre',
   });
 
-  // Le ticket repasse en attente de notre cote : c est a nous de jouer.
-  await db
-    .from('support_tickets')
-    .update({ status: 'waiting_support' })
-    .eq('id', ticket.id)
-    .in('status', ['waiting_customer', 'open']);
+  // Le ticket repasse « en attente de l'equipe » : c'est la base qui le fait
+  // (`app.reopen_ticket_on_client_reply`, migration 0056). La mise a jour
+  // tentee ici avec le jeton du client etait refusee en silence par la regle
+  // `tickets_update_staff`.
 
   revalidatePath('/app/support');
   return { status: 'success', message: 'Message envoyé.' };

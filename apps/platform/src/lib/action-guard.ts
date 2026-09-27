@@ -9,6 +9,7 @@ import {
   verifyTurnstile,
   type RateLimitName,
 } from '@stax/security';
+import { clientIp } from './client-ip';
 
 /**
  * Garde commune aux actions serveur publiques.
@@ -91,12 +92,7 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
     return { ok: false, message: 'Votre demande n’a pas pu être traitée.' };
   }
 
-  const store = await headers();
-  const ip =
-    store.get('cf-connecting-ip') ??
-    store.get('x-real-ip') ??
-    store.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    null;
+  const ip = clientIp(await headers());
 
   // `hashIp` refuse de signer sans STAX_SECRET_KEY en production, et c'est la
   // bonne regle : une empreinte calculee avec une cle devinable ne protege

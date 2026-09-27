@@ -82,7 +82,7 @@ export function ProjectFiles({
             type="file"
             className="sr-only"
             aria-label="Choisir un fichier"
-            accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml,application/pdf"
+            accept="image/jpeg,image/png,image/webp,image/avif,image/gif,application/pdf"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) upload(file);

@@ -98,7 +98,7 @@ export function MediaPicker({
             <input
               ref={fileRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml"
+              accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
               className="sr-only"
               aria-label="Envoyer une photo"
               data-testid="media-upload-input"

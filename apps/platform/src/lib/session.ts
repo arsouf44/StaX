@@ -7,6 +7,7 @@ import {
   type AuthenticatedUser,
   type SessionContext,
 } from '@stax/auth';
+import { safeRedirectPath } from '@stax/security';
 import type { Profile } from '@stax/types';
 
 /**
@@ -95,10 +96,14 @@ async function currentPath(): Promise<string> {
  * Destination apres connexion.
  * Seuls les chemins internes sont acceptes : une URL absolue permettrait une
  * redirection ouverte vers un site de hameconnage.
+ *
+ * Delegue a `safeRedirectPath`, qui refuse TOUS les caracteres de controle :
+ * le navigateur supprime tabulations et sauts de ligne d'une URL avant de la
+ * lire, si bien que `/<tab>/evil.example` devenait `//evil.example` — une
+ * adresse externe. L'ancienne verification ne connaissait que `\n` et `\r`.
  */
 export function safeRedirectTarget(value: string | null | undefined, fallback = '/app'): string {
-  if (!value) return fallback;
-  if (!value.startsWith('/') || value.startsWith('//')) return fallback;
-  if (value.includes('\\') || value.includes('\n') || value.includes('\r')) return fallback;
-  return value;
+  const path = safeRedirectPath(value, '');
+  if (!path || path.includes('\\')) return fallback;
+  return path;
 }
