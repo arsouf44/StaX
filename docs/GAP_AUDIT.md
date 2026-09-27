@@ -508,11 +508,15 @@ refusée par la base, ticket non relancé à la réponse du client).
 
 ## Ce qui reste non terminé, sans détour
 
-00. **Migration 0056 (durcissement de sécurité) à appliquer en production**,
-   comme 0054 et 0055. Puis **activer le double facteur du compte
-   propriétaire** et `mfa_enforced` sur les comptes de l'équipe : le seul
-   compte de l'équipe en production ne l'exigeait pas
-   ([LANCEMENT.md](./LANCEMENT.md), étape 7).
+00. ~~Migration 0056 (durcissement de sécurité) à appliquer en production~~ —
+   **fait** : 56 migrations tracées dans `app.schema_migrations`, empreinte du
+   fichier identique, aucune dérive. Après application, l'analyseur Supabase ne
+   signale rien de nouveau (65 fonctions `security definer` exposées, inchangé),
+   le seau `site-media` n'accepte plus le SVG et le compte propriétaire n'est
+   pas verrouillé (vérifié). **Reste à faire, côté propriétaire** : activer le
+   double facteur du compte propriétaire et passer `mfa_enforced = true` sur les
+   comptes de l'équipe ([LANCEMENT.md](./LANCEMENT.md), étape 7), et activer la
+   protection contre les mots de passe compromis dans Supabase.
 
 0. ~~Migrations 0054 et 0055 à appliquer sur le projet Supabase réel~~ —
    **fait le 2026-09-26**, tracées dans `app.schema_migrations` avec

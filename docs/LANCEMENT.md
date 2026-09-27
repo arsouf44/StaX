@@ -35,14 +35,17 @@ La migration **0056** (durcissement) est à appliquer comme les précédentes
 
 ---
 
-## Étape 1 — Base de données : ✅ fait le 2026-09-26
+## Étape 1 — Base de données : ✅ fait (0054–0056)
 
-Les migrations **0054** (propositions) et **0055** (messagerie, invitations)
-sont appliquées sur le projet Supabase « StaX », chacune dans une transaction,
-et inscrites dans `app.schema_migrations` avec l'empreinte de leur fichier
-(`pnpm db:migrate` les voit comme passées). La production a été comparée au
-dépôt : corps des 37 fonctions concernées, colonnes, contraintes, index et
-règles de sécurité **identiques**.
+Les migrations **0054** (propositions), **0055** (messagerie, invitations) et
+**0056** (durcissement de sécurité) sont appliquées sur le projet Supabase
+« StaX », chacune dans une transaction, et inscrites dans
+`app.schema_migrations` avec l'empreinte de leur fichier (`pnpm db:migrate` les
+voit comme passées : 56 migrations, aucune dérive). La production a été comparée
+au dépôt : fonctions, colonnes, contraintes, index et règles de sécurité
+**identiques**. Après 0056, l'analyseur Supabase ne signale **rien de nouveau**
+et le compte propriétaire (`mfa_enforced = false`) **n'est pas verrouillé** :
+vérifié, il garde son rôle avec un mot de passe seul.
 
 Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 
