@@ -234,8 +234,8 @@ em, i { font-style: italic; }
 .stax-ind__dot { width: .34cqw; height: .34cqw; border-radius: 99px; background: var(--stax-ink-3); opacity: .5; transition: background .4s, opacity .4s, transform .4s var(--ease); }
 .stax-ind__list li.is-on .stax-ind__dot { background: var(--stax-sea); opacity: 1; transform: scale(1.6); }
 .stax-ind__thumb { margin-top: auto; height: 23%; border-radius: 9px; overflow: hidden; background: #dfe3e7; }
-.stax-ind__thumb img, .stax-dining__thumb img, .stax-coast__thumb img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
-.stax-ind__thumb img { object-position: 50% 42%; }
+.stax-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.stax-art { display: block; width: 100%; height: 100%; }
 
 .stax-proc { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.6cqw; }
 .stax-proc__steps { display: flex; flex-direction: column; gap: .7cqw; margin-top: 1.1cqw; }
@@ -388,15 +388,12 @@ em, i { font-style: italic; }
 
 /* Process */
 .stax-split { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 76px); align-items: center; margin-top: 56px; }
-.stax-split__media { position: relative; aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-radius: 14px; background: #dfe3e7; box-shadow: var(--stax-shadow-soft); }
-.stax-split__media img {
-  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover;
-  opacity: 0; transform: scale(1.045); transition: opacity 1s var(--ease), transform 2.4s var(--ease);
+.stax-split__media { position: relative; aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-radius: 14px; background: #fafbfb; box-shadow: var(--stax-shadow-soft); }
+.stax-split__media .stax-art {
+  position: absolute; inset: 0;
+  opacity: 0; transform: scale(1.035); transition: opacity 1s var(--ease), transform 2.4s var(--ease);
 }
-.stax-split__media img.is-on { opacity: 1; transform: scale(1); }
-.stax-split__media img[data-view="design"] { object-position: 50% 38%; }
-.stax-split__media img[data-view="grow"] { object-position: 50% 90%; }
-.stax-split__media img[data-view="grow"].is-on { transform: scale(1.18); }
+.stax-split__media .stax-art.is-on { opacity: 1; transform: scale(1); }
 .stax-plate {
   position: absolute; left: 18px; bottom: 18px; z-index: 2;
   display: flex; align-items: center; gap: 16px; padding: 12px 16px 12px 14px; border-radius: 12px;
@@ -461,6 +458,150 @@ em, i { font-style: italic; }
 </style>
 </head>
 <body>
+<svg class="stax-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cbd6df"/><stop offset=".55" stop-color="#e6ebee"/><stop offset="1" stop-color="#f3f4f5"/></linearGradient>
+    <radialGradient id="g-sun" cx=".74" cy=".12" r=".55"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="g-slab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dde3e7"/></linearGradient>
+    <linearGradient id="g-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".62"/><stop offset=".6" stop-color="#d7e0e7" stop-opacity=".4"/><stop offset="1" stop-color="#b9c7d2" stop-opacity=".45"/></linearGradient>
+    <linearGradient id="g-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#182432" stop-opacity=".2"/><stop offset="1" stop-color="#182432" stop-opacity="0"/></linearGradient>
+    <linearGradient id="g-sky2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3dde5"/><stop offset=".45" stop-color="#e9eef1"/><stop offset="1" stop-color="#f5f6f7"/></linearGradient>
+    <linearGradient id="g-glass2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#2f5f86" stop-opacity=".22"/></linearGradient>
+    <linearGradient id="g-graphite" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3138"/><stop offset="1" stop-color="#1d2328"/></linearGradient>
+    <linearGradient id="g-sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f5f86" stop-opacity=".26"/><stop offset="1" stop-color="#2f5f86" stop-opacity="0"/></linearGradient>
+    <linearGradient id="g-alu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f5f7f8"/><stop offset=".34" stop-color="#ccd2d8"/><stop offset=".51" stop-color="#eef1f4"/><stop offset=".76" stop-color="#b4bbc3"/><stop offset="1" stop-color="#eaeef1"/></linearGradient>
+    <filter id="f-lift" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#182432" flood-opacity=".22"/></filter>
+
+    <!-- Pile de dalles : blanc, aluminium, graphite, comme la marque StaX -->
+    <symbol id="art-stack" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="300" fill="url(#g-sky2)"/>
+      <ellipse cx="210" cy="70" rx="230" ry="70" fill="#2f5f86" fill-opacity=".16"/>
+      <rect width="400" height="300" fill="url(#g-sun)"/>
+      <line x1="0" y1="128" x2="400" y2="128" stroke="#8fa3b3" stroke-width=".7"/>
+      <rect x="120" y="42" width="160" height="16" fill="url(#g-glass2)"/>
+      <rect x="130" y="74" width="160" height="16" fill="url(#g-glass2)"/>
+      <g stroke="#ffffff" stroke-opacity=".8" stroke-width=".8"><line x1="140" y1="42" x2="140" y2="58"/><line x1="170" y1="42" x2="170" y2="58"/><line x1="200" y1="42" x2="200" y2="58"/><line x1="230" y1="42" x2="230" y2="58"/><line x1="260" y1="42" x2="260" y2="58"/><line x1="150" y1="74" x2="150" y2="90"/><line x1="180" y1="74" x2="180" y2="90"/><line x1="210" y1="74" x2="210" y2="90"/><line x1="240" y1="74" x2="240" y2="90"/><line x1="270" y1="74" x2="270" y2="90"/></g>
+      <rect x="120" y="42" width="160" height="7" fill="url(#g-shade)"/>
+      <rect x="130" y="74" width="160" height="7" fill="url(#g-shade)"/>
+      <rect x="70" y="106" width="240" height="20" fill="url(#g-shade)"/>
+      <rect x="40" y="26" width="240" height="16" fill="url(#g-slab)"/>
+      <rect x="120" y="58" width="240" height="16" fill="url(#g-alu)"/>
+      <rect x="70" y="90" width="240" height="16" fill="url(#g-graphite)"/>
+      <g stroke-width=".8"><line x1="40" y1="26.5" x2="280" y2="26.5" stroke="#ffffff"/><line x1="120" y1="58.5" x2="360" y2="58.5" stroke="#ffffff" stroke-opacity=".8"/><line x1="70" y1="90.5" x2="310" y2="90.5" stroke="#ffffff" stroke-opacity=".18"/></g>
+    </symbol>
+
+    <!-- Maquette de site -->
+    <symbol id="art-site" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="200" fill="#fafbfb"/>
+      <rect width="320" height="22" fill="#f1f2f3"/>
+      <text x="12" y="14.5" font-family="EB Garamond, Georgia, serif" font-size="9" fill="#14181c">Your Business</text>
+      <g fill="#b8c0c7"><rect x="206" y="9" width="22" height="4" rx="2"/><rect x="236" y="9" width="22" height="4" rx="2"/><rect x="266" y="9" width="22" height="4" rx="2"/></g>
+      <use href="#art-stack" x="12" y="34" width="150" height="82"/>
+      <text x="176" y="50" font-family="EB Garamond, Georgia, serif" font-size="13" fill="#14181c">Built around</text>
+      <text x="176" y="64" font-family="EB Garamond, Georgia, serif" font-size="13" font-style="italic" fill="#14181c">your business.</text>
+      <g fill="#c3cad0"><rect x="176" y="74" width="120" height="4" rx="2"/><rect x="176" y="82" width="100" height="4" rx="2"/></g>
+      <rect x="176" y="96" width="54" height="14" rx="3.5" fill="#1d2328"/>
+      <g fill="#f1f2f3"><rect x="12" y="128" width="94" height="62" rx="5"/><rect x="113" y="128" width="94" height="62" rx="5"/><rect x="214" y="128" width="94" height="62" rx="5"/></g>
+      <g fill="#c9d0d6"><rect x="20" y="138" width="46" height="5" rx="2"/><rect x="121" y="138" width="46" height="5" rx="2"/><rect x="222" y="138" width="46" height="5" rx="2"/></g>
+      <g fill="#dde2e6"><rect x="20" y="150" width="76" height="3.5" rx="1.7"/><rect x="20" y="157" width="62" height="3.5" rx="1.7"/><rect x="121" y="150" width="76" height="3.5" rx="1.7"/><rect x="121" y="157" width="58" height="3.5" rx="1.7"/><rect x="222" y="150" width="76" height="3.5" rx="1.7"/><rect x="222" y="157" width="66" height="3.5" rx="1.7"/></g>
+    </symbol>
+
+    <!-- Courbe de croissance -->
+    <symbol id="art-growth" viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice">
+      <rect width="200" height="150" fill="#f6f7f8"/>
+      <g stroke="#14181c" stroke-opacity=".07"><line x1="0" y1="35" x2="200" y2="35"/><line x1="0" y1="70" x2="200" y2="70"/><line x1="0" y1="105" x2="200" y2="105"/></g>
+      <path d="M0 128 C40 122 62 112 92 98 S150 60 200 26 L200 150 L0 150 Z" fill="url(#g-sea)"/>
+      <path d="M0 128 C40 122 62 112 92 98 S150 60 200 26" fill="none" stroke="#2f5f86" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="92" cy="98" r="3.2" fill="#fdfdfd" stroke="#2f5f86" stroke-width="1.5"/>
+      <circle cx="150" cy="62" r="3.2" fill="#fdfdfd" stroke="#2f5f86" stroke-width="1.5"/>
+    </symbol>
+
+    <!-- Process : 01 Design -->
+    <symbol id="art-design" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="300" fill="#fafbfb"/>
+      <g stroke="#2f5f86" stroke-opacity=".12" stroke-width=".8"><line x1="28.0" y1="14" x2="28.0" y2="286"/><line x1="56.7" y1="14" x2="56.7" y2="286"/><line x1="85.3" y1="14" x2="85.3" y2="286"/><line x1="114.0" y1="14" x2="114.0" y2="286"/><line x1="142.7" y1="14" x2="142.7" y2="286"/><line x1="171.3" y1="14" x2="171.3" y2="286"/><line x1="200.0" y1="14" x2="200.0" y2="286"/><line x1="228.7" y1="14" x2="228.7" y2="286"/><line x1="257.3" y1="14" x2="257.3" y2="286"/><line x1="286.0" y1="14" x2="286.0" y2="286"/><line x1="314.7" y1="14" x2="314.7" y2="286"/><line x1="343.3" y1="14" x2="343.3" y2="286"/><line x1="372.0" y1="14" x2="372.0" y2="286"/></g>
+      <g fill="none" stroke="#838c94" stroke-width="1" stroke-dasharray="3 3">
+        <rect x="28" y="22" width="344" height="18" rx="3"/>
+        <rect x="28" y="58" width="186" height="96" rx="4"/>
+        <path d="M28 58 L214 154 M214 58 L28 154"/>
+        <rect x="228" y="64" width="144" height="14"/><rect x="228" y="84" width="110" height="14"/>
+        <rect x="228" y="108" width="144" height="6"/><rect x="228" y="120" width="120" height="6"/>
+        <rect x="228" y="136" width="58" height="18" rx="4"/>
+        <rect x="28" y="172" width="106" height="84" rx="4"/><rect x="147" y="172" width="106" height="84" rx="4"/><rect x="266" y="172" width="106" height="84" rx="4"/>
+      </g>
+      <g stroke="#2f5f86" stroke-width=".9"><path d="M228 52 H372 M228 49 V55 M372 49 V55"/><path d="M20 58 V154 M17 58 H23 M17 154 H23"/></g>
+      <g font-family="Inter Tight, system-ui, sans-serif" font-size="7.5" fill="#2f5f86" letter-spacing=".3">
+        <text x="300" y="47" text-anchor="middle">Headline · 2 lines</text>
+        <text x="28" y="276">Wireframe, version 2</text>
+        <text x="372" y="276" text-anchor="end">12 columns</text>
+      </g>
+    </symbol>
+
+    <!-- Process : 02 Build -->
+    <symbol id="art-build" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="300" fill="#fafbfb"/>
+      <rect x="28" y="22" width="344" height="18" rx="3" fill="#f1f2f3"/>
+      <text x="38" y="34.5" font-family="EB Garamond, Georgia, serif" font-size="10" fill="#14181c">Your Business</text>
+      <g fill="#b8c0c7"><rect x="262" y="29" width="26" height="4" rx="2"/><rect x="298" y="29" width="26" height="4" rx="2"/><rect x="334" y="29" width="26" height="4" rx="2"/></g>
+      <use href="#art-stack" x="28" y="58" width="186" height="96"/>
+      <text x="228" y="80" font-family="EB Garamond, Georgia, serif" font-size="18" fill="#14181c">Built around</text>
+      <text x="228" y="99" font-family="EB Garamond, Georgia, serif" font-size="18" font-style="italic" fill="#14181c">your business.</text>
+      <g fill="#c3cad0"><rect x="228" y="108" width="144" height="5" rx="2.5"/><rect x="228" y="119" width="118" height="5" rx="2.5"/></g>
+      <rect x="228" y="136" width="62" height="18" rx="4.5" fill="#1d2328"/>
+      <text x="259" y="147.5" text-anchor="middle" font-family="Inter Tight, system-ui, sans-serif" font-size="7" fill="#f4f6f8">Book a visit</text>
+      <g fill="#f1f2f3"><rect x="28" y="172" width="106" height="84" rx="5"/><rect x="147" y="172" width="106" height="84" rx="5"/></g>
+      <g fill="#c9d0d6"><rect x="38" y="184" width="54" height="6" rx="3"/><rect x="157" y="184" width="54" height="6" rx="3"/></g>
+      <g fill="#dde2e6"><rect x="38" y="198" width="84" height="4" rx="2"/><rect x="38" y="207" width="70" height="4" rx="2"/><rect x="157" y="198" width="84" height="4" rx="2"/><rect x="157" y="207" width="64" height="4" rx="2"/></g>
+      <rect x="266" y="172" width="106" height="84" rx="5" fill="none" stroke="#838c94" stroke-dasharray="3 3"/>
+      <g filter="url(#f-lift)"><rect x="238" y="188" width="146" height="94" rx="9" fill="#1d2328"/></g>
+      <g font-family="ui-monospace, Menlo, monospace" font-size="7" fill="#9fb7cb">
+        <text x="252" y="208">&lt;section class="hero"&gt;</text>
+        <text x="260" y="222" fill="#eef1f4">&lt;h1&gt;Built around&lt;/h1&gt;</text>
+        <text x="260" y="236" fill="#7fa6c4">&lt;Booking /&gt;</text>
+        <text x="260" y="250" fill="#eef1f4" fill-opacity=".55">&lt;Editable field="hours" /&gt;</text>
+        <text x="252" y="264">&lt;/section&gt;</text>
+      </g>
+    </symbol>
+
+    <!-- Process : 03 Launch -->
+    <symbol id="art-launch" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="300" fill="#eef1f3"/>
+      <rect width="400" height="300" fill="url(#g-sun)"/>
+      <g filter="url(#f-lift)"><rect x="44" y="34" width="312" height="226" rx="10" fill="#fdfdfd"/></g>
+      <path d="M44 44 a10 10 0 0 1 10 -10 H346 a10 10 0 0 1 10 10 V60 H44 Z" fill="#f1f2f3"/>
+      <rect x="122" y="40" width="156" height="14" rx="7" fill="#fdfdfd" stroke="#14181c" stroke-opacity=".08"/>
+      <path d="M150 45.5 v-1.2 a2.4 2.4 0 0 1 4.8 0 v1.2 M149 45.5 h6.8 v4.6 h-6.8 Z" fill="none" stroke="#4b545c" stroke-width=".9"/>
+      <text x="206" y="50" text-anchor="middle" font-family="Inter Tight, system-ui, sans-serif" font-size="7.5" fill="#4b545c">yourbusiness.com</text>
+      <use href="#art-site" x="54" y="66" width="292" height="186"/>
+      <g filter="url(#f-lift)"><rect x="296" y="14" width="74" height="24" rx="12" fill="#fdfdfd"/></g>
+      <circle cx="312" cy="26" r="4" fill="#2f5f86"/><circle cx="312" cy="26" r="7.5" fill="#2f5f86" fill-opacity=".16"/>
+      <text x="324" y="29.5" font-family="Inter Tight, system-ui, sans-serif" font-size="9" fill="#14181c">Live</text>
+      <g filter="url(#f-lift)"><rect x="18" y="200" width="118" height="78" rx="9" fill="#fdfdfd"/></g>
+      <g font-family="Inter Tight, system-ui, sans-serif" font-size="8" fill="#14181c"><text x="44" y="224">HTTPS</text><text x="44" y="243">Redirects</text><text x="44" y="262">Analytics</text></g>
+      <g fill="none" stroke="#2f5f86" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M30 220.5 l3 3 l5.5 -6"/><path d="M30 239.5 l3 3 l5.5 -6"/><path d="M30 258.5 l3 3 l5.5 -6"/></g>
+    </symbol>
+
+    <!-- Process : 04 Grow -->
+    <symbol id="art-grow" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="300" fill="#fafbfb"/>
+      <g stroke="#14181c" stroke-opacity=".07"><line x1="40" y1="60" x2="372" y2="60"/><line x1="40" y1="120" x2="372" y2="120"/><line x1="40" y1="180" x2="372" y2="180"/></g>
+      <line x1="40" y1="240" x2="372" y2="240" stroke="#14181c" stroke-opacity=".2"/>
+      <g fill="#dfe4e8"><rect x="48" y="206" width="16" height="34" rx="2"/><rect x="75" y="200" width="16" height="40" rx="2"/><rect x="102" y="202" width="16" height="38" rx="2"/><rect x="129" y="188" width="16" height="52" rx="2"/><rect x="156" y="182" width="16" height="58" rx="2"/><rect x="183" y="185" width="16" height="55" rx="2"/><rect x="210" y="170" width="16" height="70" rx="2"/><rect x="237" y="162" width="16" height="78" rx="2"/><rect x="264" y="166" width="16" height="74" rx="2"/><rect x="291" y="148" width="16" height="92" rx="2"/><rect x="318" y="136" width="16" height="104" rx="2"/><rect x="345" y="122" width="16" height="118" rx="2"/></g>
+      <path d="M56,240 L56,200 L83,196 L110,188 L137,184 L164,172 L191,166 L218,150 L245,140 L272,128 L299,112 L326,96 L353,78 L353,240 Z" fill="url(#g-sea)"/>
+      <polyline points="56,200 83,196 110,188 137,184 164,172 191,166 218,150 245,140 272,128 299,112 326,96 353,78" fill="none" stroke="#2f5f86" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <g fill="#fdfdfd" stroke="#2f5f86" stroke-width="1.6"><circle cx="110" cy="188" r="3.5"/><circle cx="191" cy="166" r="3.5"/><circle cx="272" cy="128" r="3.5"/><circle cx="353" cy="78" r="3.5"/></g>
+      <g font-family="Inter Tight, system-ui, sans-serif" font-size="8" fill="#838c94" text-anchor="middle"><text x="83" y="256">Q1</text><text x="164" y="256">Q2</text><text x="245" y="256">Q3</text><text x="326" y="256">Q4</text></g>
+      <g font-family="Inter Tight, system-ui, sans-serif" font-size="7.5" fill="#4b545c">
+        <rect x="40" y="26" width="8" height="8" rx="1.5" fill="#dfe4e8"/><text x="53" y="33">Enquiries</text>
+        <line x1="104" y1="30" x2="118" y2="30" stroke="#2f5f86" stroke-width="2" stroke-linecap="round"/><text x="123" y="33">Search visibility</text>
+      </g>
+      <g filter="url(#f-lift)"><rect x="232" y="18" width="140" height="30" rx="8" fill="#fdfdfd"/></g>
+      <text x="244" y="37" font-family="EB Garamond, Georgia, serif" font-size="11" fill="#14181c">Quarterly review</text>
+      <circle cx="358" cy="33" r="3.5" fill="#2f5f86"/>
+    </symbol>
+  </defs>
+</svg>
+
 <a class="skip" href="#industries">Skip to content</a>
 
 <header class="stax-navbar" id="navbar">
@@ -507,7 +648,7 @@ em, i { font-style: italic; }
                       <li><span>Lawyers</span><span class="stax-ind__dot"></span></li>
                       <li><span>Artisans</span><span class="stax-ind__dot"></span></li>
                     </ul>
-                    <div class="stax-ind__thumb"><img src="assets/villa.jpg" alt="" width="1200" height="1600"></div>
+                    <div class="stax-ind__thumb"><svg class="stax-art"><use href="#art-stack" width="100%" height="100%"/></svg></div>
                   </div>
                 </div>
               </div>
@@ -533,7 +674,7 @@ em, i { font-style: italic; }
               <div class="stax-layer l-main">
                 <div class="stax-layer__in m-white m-edge-ring">
                   <div class="stax-panel">
-                    <img class="stax-panel__photo" src="assets/villa.jpg" alt="A modern villa of white concrete and glass above a calm sea" width="1200" height="1600" fetchpriority="high">
+                    <svg class="stax-panel__photo stax-art" aria-hidden="true"><use href="#art-stack" width="100%" height="100%"/></svg>
                     <div class="stax-panel__sheet"></div>
                     <div class="stax-panel__sheen"></div>
                     <div class="stax-panel__inner">
@@ -558,14 +699,14 @@ em, i { font-style: italic; }
                 <div class="stax-layer__in m-white">
                   <div class="stax-dining">
                     <div class="stax-dining__title">A Website Built Around Your Business</div>
-                    <div class="stax-dining__thumb"><img src="assets/interior.jpg" alt="" width="1600" height="1200"></div>
+                    <div class="stax-dining__thumb"><svg class="stax-art"><use href="#art-site" width="100%" height="100%"/></svg></div>
                   </div>
                 </div>
               </div>
               <div class="stax-layer l-coast" aria-hidden="true">
                 <div class="stax-layer__in m-frost">
                   <div class="stax-coast">
-                    <div class="stax-coast__thumb"><img src="assets/coast.jpg" alt="" width="1600" height="900"></div>
+                    <div class="stax-coast__thumb"><svg class="stax-art"><use href="#art-growth" width="100%" height="100%"/></svg></div>
                     <div class="stax-coast__title">More Than a Website.<br><i>A Stronger Future.</i></div>
                   </div>
                 </div>
@@ -676,10 +817,10 @@ em, i { font-style: italic; }
         <h2 class="stax-h2 rv" id="process-title">Design. Build. Launch. <em>Grow.</em></h2>
         <div class="stax-split">
           <figure class="stax-split__media rv" id="process-media">
-            <img data-view="design" class="is-on" src="assets/villa.jpg" alt="A villa of white concrete and glass cantilevered above the sea" width="1200" height="1600" loading="lazy" decoding="async">
-            <img data-view="build" src="assets/interior.jpg" alt="A villa dining room in pale oak and glass, opening onto a stone terrace and the sea" width="1600" height="1200" loading="lazy" decoding="async">
-            <img data-view="launch" src="assets/coast.jpg" alt="A calm sea meeting a pale limestone coastline" width="1600" height="900" loading="lazy" decoding="async">
-            <img data-view="grow" src="assets/villa.jpg" alt="Open sea below the villa terrace" width="1200" height="1600" loading="lazy" decoding="async">
+            <svg class="stax-art is-on" data-view="design" role="img" aria-label="Wireframe of a website on a twelve-column grid"><use href="#art-design" width="100%" height="100%"/></svg>
+            <svg class="stax-art" data-view="build" role="img" aria-label="The same page built, with its code alongside"><use href="#art-build" width="100%" height="100%"/></svg>
+            <svg class="stax-art" data-view="launch" role="img" aria-label="The website live on its own domain, with HTTPS, redirects and analytics checked"><use href="#art-launch" width="100%" height="100%"/></svg>
+            <svg class="stax-art" data-view="grow" role="img" aria-label="Enquiries and search visibility rising over four quarters"><use href="#art-grow" width="100%" height="100%"/></svg>
             <figcaption class="stax-plate" aria-live="polite"><span class="stax-plate__num" id="plate-num">01 / 04</span><span class="stax-plate__name" id="plate-name">Design</span></figcaption>
           </figure>
           <ol class="stax-steps" id="steps" style="--dwell: 5s;">
@@ -839,7 +980,7 @@ em, i { font-style: italic; }
   const steps = $$('#steps .stax-step');
   const stepList = $('#steps');
   const media = $('#process-media');
-  const imgs = $$('img', media);
+  const imgs = $$('.stax-art', media);
   const plateNum = $('#plate-num'), plateName = $('#plate-name');
   const dwell = 5000;
   let active = 0, timer = 0, playing = false, inView = false, userTook = false;
