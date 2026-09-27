@@ -2,11 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { PlanView } from '@stax/database';
 import { formatMoney, maintenancePeriodLabel } from '@stax/payments';
-import { Reveal } from '@stax/ui';
-import { StudioHero, type HeroOffer } from '~/components/marketing/studio-hero';
+import { ButtonLink, Reveal } from '@stax/ui';
 import { StudioArtSprite } from '~/components/marketing/studio-art';
 import { ProcessShowcase } from '~/components/marketing/process-showcase';
-import { entryPriceLabel, getPlans } from '~/lib/catalog';
+import { deliveryWeeksLabel, entryPriceLabel, getPlans } from '~/lib/catalog';
 import { PLAN_EXAMPLES, PLAN_FALLBACK } from '~/content/plan-examples';
 
 /**
@@ -73,18 +72,107 @@ function offerCells(plans: PlanView[]): OfferCell[] {
   }));
 }
 
+/**
+ * Les reperes sous le titre : prix d'entree et delais lus dans le catalogue.
+ * Un repere que le catalogue ne peut pas confirmer n'est pas affiche.
+ */
+function heroFacts(plans: PlanView[]): Array<{ label: string; value: string }> {
+  const priced = plans.filter((plan) => !plan.isQuoteOnly);
+  const cheapest = [...priced].sort((a, b) => a.setupPriceCents - b.setupPriceCents)[0];
+  const weeks = priced.flatMap((plan) => (plan.deliveryWeeks ? [plan.deliveryWeeks] : []));
+  const facts: Array<{ label: string; value: string }> = [];
+  if (cheapest) {
+    facts.push({
+      label: 'Création',
+      value: `dès ${formatMoney(cheapest.setupPriceCents, cheapest.currency, {
+        hideDecimalsWhenRound: true,
+      })} HT`,
+    });
+  }
+  if (weeks.length > 0) {
+    facts.push({
+      label: 'Délai',
+      value: deliveryWeeksLabel({
+        min: Math.min(...weeks.map((range) => range.min)),
+        max: Math.max(...weeks.map((range) => range.max)),
+      }),
+    });
+  }
+  facts.push(
+    { label: 'Mise en ligne', value: 'Votre domaine, en HTTPS' },
+    { label: 'Après la livraison', value: 'Éditeur StaX inclus' },
+  );
+  return facts;
+}
+
 export default async function HomePage() {
   const plans = await getPlans();
   const offers = offerCells(plans);
-  const heroOffers: HeroOffer[] = offers.map((offer) => ({
-    name: offer.name,
-    price: offer.price,
-  }));
+  const facts = heroFacts(plans);
 
   return (
     <>
       <StudioArtSprite />
-      <StudioHero offers={heroOffers} />
+
+      {/* --- Titre ------------------------------------------------------------ */}
+      <section
+        aria-labelledby="accueil-titre"
+        className="pt-[clamp(48px,9vh,128px)] pb-[clamp(72px,11vh,132px)]"
+      >
+        <div className="shell">
+          <p className="eyebrow-index mb-8">Studio de sites web sur mesure</p>
+          <h1
+            id="accueil-titre"
+            className="max-w-[17ch] font-serif text-[clamp(3rem,7vw,6.6rem)] leading-[1.01] font-normal tracking-[-0.018em] text-balance text-[var(--ink)]"
+          >
+            Un site fait à la main, à la hauteur de votre <em>entreprise.</em>
+          </h1>
+
+          <div className="mt-[clamp(40px,6vh,64px)] grid items-end gap-x-16 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+            <p className="max-w-[20ch] font-serif text-[clamp(1.55rem,2.3vw,2.1rem)] leading-[1.18] text-[var(--ink-2)]">
+              Nous créons votre site. <em>Vous le gérez ensuite.</em>
+            </p>
+            <div>
+              <p className="lead-text max-w-[46ch]">
+                Notre équipe conçoit et code chaque site, un par un, le met en ligne sur votre
+                domaine, puis vous le livre avec un éditeur simple pour modifier vos textes, vos
+                photos et vos horaires.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-x-9 gap-y-5">
+                <ButtonLink href="/commander" variant="primary" size="pill-lg">
+                  Commander mon site
+                  <span aria-hidden="true">→</span>
+                </ButtonLink>
+                <Link href="#offres" className="text-link">
+                  Voir les offres
+                  <span aria-hidden="true" className="arrow">
+                    ↓
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <dl className="mt-[clamp(48px,7vh,88px)] grid grid-cols-2 border-t border-[var(--border)] lg:grid-cols-4">
+            {facts.map((fact, index) => (
+              <div
+                key={fact.label}
+                className={
+                  'grid content-start gap-2 border-[var(--border)] py-6 ' +
+                  (index % 2 === 1 ? 'border-l pl-6 ' : 'max-lg:pr-6 ') +
+                  (index >= 2 ? 'max-lg:border-t ' : '') +
+                  (index === 2 ? 'lg:border-l lg:pl-6' : '')
+                }
+              >
+                <dt className="kicker">{fact.label}</dt>
+                <dd className="font-serif text-[clamp(1.2rem,1.6vw,1.45rem)] leading-snug text-[var(--ink)]">
+                  {fact.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
 
       {/* --- Les offres ----------------------------------------------------- */}
       <section id="offres" aria-labelledby="offres-titre" className="py-[clamp(80px,12vh,148px)]">
