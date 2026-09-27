@@ -10,6 +10,7 @@ import {
 } from '@stax/payments';
 import { ButtonLink, cn } from '@stax/ui';
 import { deliveryWeeksLabel } from '~/lib/catalog';
+import { PLAN_EXAMPLES } from '~/content/plan-examples';
 
 /**
  * Cartes tarifaires.
@@ -19,6 +20,10 @@ import { deliveryWeeksLabel } from '~/lib/catalog';
  * adossee a un droit que l'offre n'accorde pas), les chiffres de
  * `plan_features`. Aucune promesse n'est ecrite ici : une carte ne peut pas
  * annoncer plus que ce que la plateforme applique.
+ *
+ * Seule exception : « Idéal pour », quelques exemples de clients a qui
+ * l'offre convient (`content/plan-examples.ts`). Ce sont des reperes pour
+ * choisir, pas des droits.
  *
  * La maintenance est MENSUELLE et ne commence qu'a la LIVRAISON du site : rien
  * n'est preleve pendant la conception. Le cout de la premiere annee est affiche
@@ -113,7 +118,7 @@ function InclusionList({
 }) {
   const iconClass =
     tone === 'signature'
-      ? 'text-[#a7d0da]'
+      ? 'text-[#b4c8d8]'
       : tone === 'featured'
         ? 'text-[var(--water-bright)]'
         : 'text-[var(--muted-strong)]';
@@ -164,6 +169,48 @@ function InclusionList({
   );
 }
 
+/**
+ * « Idéal pour » : une phrase et quelques exemples. Une offre sans exemple
+ * garde l'accroche du catalogue.
+ */
+function PlanFit({
+  slug,
+  tagline,
+  tone,
+}: {
+  slug: string;
+  tagline: string | null;
+  tone: 'default' | 'featured' | 'signature';
+}) {
+  const fit = PLAN_EXAMPLES[slug];
+  if (!fit) {
+    return tagline ? (
+      <p className="mt-5 text-sm leading-relaxed text-[var(--foreground-muted)]">{tagline}</p>
+    ) : null;
+  }
+  return (
+    <div className="mt-5">
+      <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">{fit.audience}</p>
+      <p className="sr-only">Par exemple :</p>
+      <ul className="mt-3 flex flex-wrap gap-1.5">
+        {fit.examples.map((example) => (
+          <li
+            key={example}
+            className={cn(
+              'rounded-full border px-2.5 py-1 text-xs',
+              tone === 'signature'
+                ? 'border-[rgb(255_255_255/0.2)] bg-[rgb(255_255_255/0.06)] text-[var(--foreground-muted)]'
+                : 'border-[var(--border)] bg-[rgb(255_255_255/0.55)] text-[var(--foreground-muted)]',
+            )}
+          >
+            {example}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
   const signature = plan.highlight === 'signature';
   const featured = plan.highlight === 'popular';
@@ -179,20 +226,20 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
       // bloc de cloture, comme une piece de collection dans la vitrine.
       data-theme={signature ? 'dark' : undefined}
       className={cn(
-        'relative flex flex-col p-7 transition-[border-color,transform,background-color] duration-300',
+        'relative flex flex-col rounded-[var(--radius-xl)] p-7 transition-[border-color,transform,background-color] duration-300',
         signature
-          ? 'closing-block shadow-[0_28px_70px_rgb(35_78_94/0.32)]'
+          ? 'closing-block shadow-[0_28px_70px_rgb(24_36_50/0.32)]'
           : featured
-            ? 'glass-panel shadow-[inset_0_3px_0_var(--deep-water),0_20px_55px_rgb(36_76_87/0.12)] xl:-translate-y-2'
+            ? 'paper-panel xl:-translate-y-2'
             : 'glass-1 hover:bg-[var(--glass-2)]',
       )}
     >
       {plan.badge && !signature ? (
         <span
           className={cn(
-            'absolute top-6 right-6 px-2.5 py-1 text-2xs font-bold tracking-[0.08em] uppercase',
+            'absolute top-6 right-6 rounded-full px-2.5 py-1 text-xs font-medium',
             featured
-              ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+              ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
               : 'border border-[var(--border-strong)] text-[var(--foreground-muted)]',
           )}
         >
@@ -207,7 +254,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="kicker">Catégorie signature</p>
             {plan.badge ? (
-              <span className="border border-[#a7d0da]/40 bg-white/5 px-2.5 py-1 text-2xs font-bold tracking-[0.08em] text-[#a7d0da] uppercase">
+              <span className="rounded-full border border-[#b4c8d8]/40 bg-white/5 px-2.5 py-1 text-xs font-medium text-[#b4c8d8]">
                 {plan.badge}
               </span>
             ) : null}
@@ -215,21 +262,19 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
         ) : null}
         <h3
           className={cn(
-            'font-bold tracking-[-0.05em]',
-            signature ? 'mt-3 text-[1.75rem] leading-none' : 'text-2xl leading-none',
+            'font-serif font-normal tracking-[-0.005em]',
+            signature ? 'mt-3 text-[2rem] leading-none' : 'text-[1.85rem] leading-none',
             plan.badge && !signature ? 'pr-24' : null,
           )}
         >
           {plan.name}
         </h3>
-        {plan.tagline ? (
-          <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">{plan.tagline}</p>
-        ) : null}
+        <PlanFit slug={plan.slug} tagline={plan.tagline} tone={tone} />
       </div>
 
-      <div className="relative mt-6">
+      <div className="relative mt-6 border-t border-[var(--border)] pt-6">
         <p className="flex items-baseline gap-1.5">
-          <span className="text-[2.25rem] leading-none font-bold tracking-[-0.06em] tabular-nums xl:text-[2.5rem]">
+          <span className="font-serif text-[2.5rem] leading-none tracking-[-0.01em] tabular-nums xl:text-[2.75rem]">
             {formatMoney(plan.setupPriceCents, plan.currency, { hideDecimalsWhenRound: true })}
           </span>
           <span className="text-xs text-[var(--muted)]">HT · création</span>
@@ -266,7 +311,7 @@ function PlanCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
       <div
         className={cn(
           'relative mt-6 border-t pt-6',
-          signature ? 'border-[rgb(216_237_239/0.2)]' : 'border-[var(--border)]',
+          signature ? 'border-[rgb(255_255_255/0.2)]' : 'border-[var(--border)]',
         )}
       >
         <InclusionList inclusions={plan.inclusions} compact={compact} tone={tone} />
@@ -287,11 +332,9 @@ function QuoteCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
   return (
     <div className="glass-panel glass-panel-warm grid gap-6 p-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] lg:items-center">
       <div>
-        <h3 className="text-2xl leading-none font-bold tracking-[-0.05em]">{plan.name}</h3>
-        {plan.tagline ? (
-          <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">{plan.tagline}</p>
-        ) : null}
-        <p className="mt-4 text-[2.25rem] leading-none font-bold tracking-[-0.06em]">Sur devis</p>
+        <h3 className="font-serif text-[1.85rem] leading-none font-normal">{plan.name}</h3>
+        <PlanFit slug={plan.slug} tagline={plan.tagline} tone="default" />
+        <p className="mt-5 font-serif text-[2.5rem] leading-none italic">Sur devis</p>
         <p className="mt-1 text-xs text-[var(--muted)]">
           Chiffrage détaillé après étude de votre besoin
         </p>
@@ -315,7 +358,7 @@ function QuoteCard({ plan, compact }: { plan: PlanView; compact: boolean }) {
 
 const CATEGORY_LABELS: Record<string, string> = {
   site: 'Votre site',
-  modules: 'Fonctionnalités métier',
+  modules: 'Fonctionnalités spécifiques',
   analytics: 'Statistiques',
   organisation: 'Organisation',
   support: 'Accompagnement',

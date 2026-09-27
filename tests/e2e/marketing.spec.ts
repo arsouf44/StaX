@@ -36,7 +36,7 @@ test.describe('Site public', () => {
   });
 
   test('aucune page principale ne defile horizontalement', async ({ page }) => {
-    for (const path of ['/', '/tarifs', '/metiers', '/fonctionnalites', '/cgv']) {
+    for (const path of ['/', '/tarifs', '/realisations', '/fonctionnalites', '/cgv']) {
       await page.goto(path);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
@@ -108,6 +108,21 @@ test.describe('Site public', () => {
     expect(body).toContain('Vous publiez, et c’est réellement en ligne');
   });
 
+  test('les anciennes pages par métier mènent aux offres', async ({ page }) => {
+    await page.goto('/metiers');
+    await expect(page).toHaveURL(/\/tarifs$/);
+    await page.goto('/metiers/restauration/restaurant');
+    await expect(page).toHaveURL(/\/tarifs$/);
+  });
+
+  test('chaque offre donne des exemples, sans liste de métiers', async ({ page }) => {
+    await page.goto('/');
+    const main = await page.locator('main').innerText();
+    expect(main).toContain('Idéal pour un petit commerce');
+    expect(main).toContain('Un architecte');
+    expect(main).not.toMatch(/Métiers|Tous les métiers/);
+  });
+
   test('« Comment ça marche » suit six étapes, de votre projet à votre autonomie', async ({
     page,
   }) => {
@@ -130,7 +145,6 @@ test.describe('Site public', () => {
       '/comment-ca-marche',
       '/fonctionnalites',
       '/fonctionnalites/editeur',
-      '/metiers',
       '/realisations',
       '/faq',
     ]) {

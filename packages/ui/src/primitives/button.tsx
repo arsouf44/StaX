@@ -7,10 +7,9 @@ import { cn } from '../lib';
 /**
  * Bouton.
  *
- * Des aplats a angles vifs, jamais de degrade : l encre pour l action
- * principale, l eau profonde pour l appel a l action de marque, le verre pour
- * tout le reste. Sur les pages publiques (tailles `pill*`), le libelle passe en
- * petites capitales espacees, comme la navigation.
+ * Le graphite, en leger degrade, pour l action principale et l appel a
+ * l action de marque ; le verre pour tout le reste. Angles adoucis, ombre
+ * longue, et un leger soulevement au survol.
  *
  * Accessibilite : hauteur minimale de 40 px (44 px sur mobile), focus toujours
  * visible, etat de chargement annonce aux lecteurs d ecran, et `aria-disabled`
@@ -19,8 +18,8 @@ import { cn } from '../lib';
 const buttonVariants = cva(
   [
     'relative inline-flex items-center justify-center gap-2 whitespace-nowrap',
-    'font-semibold tracking-[0.005em] select-none',
-    'transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200',
+    'rounded-[var(--radius-md)] font-medium tracking-[0.01em] select-none',
+    'transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300 ease-[cubic-bezier(0.19,0.85,0.22,1)]',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]',
     'disabled:pointer-events-none disabled:opacity-45',
     'active:translate-y-px',
@@ -29,12 +28,12 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_14px_32px_-18px_rgb(24_52_66/0.7)] hover:opacity-90',
-        /** Appel a l action de marque : l eau profonde, reserve a UNE action par ecran. */
+          'bg-[var(--primary)] [background-image:var(--primary-gradient)] text-[var(--primary-foreground)] shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_16px_30px_-18px_rgb(20_24_28/0.7)] hover:-translate-y-px hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_22px_38px_-20px_rgb(20_24_28/0.72)]',
+        /** Appel a l action de marque : le graphite, reserve a UNE action par ecran. */
         accent:
-          'bg-[var(--accent)] text-[var(--accent-foreground)] shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_16px_34px_-18px_rgb(49_90_112/0.8)] hover:bg-[var(--accent-hover)]',
+          'bg-[var(--primary)] [background-image:var(--primary-gradient)] text-[var(--primary-foreground)] shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_16px_30px_-18px_rgb(20_24_28/0.7)] hover:-translate-y-px hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_22px_38px_-20px_rgb(20_24_28/0.72)]',
         secondary:
-          'border border-[var(--border-strong)] bg-[var(--background-inset)] text-[var(--foreground)] backdrop-blur-md hover:bg-[var(--surface-hover)]',
+          'border border-[var(--border-strong)] bg-[var(--background-inset)] text-[var(--foreground)] shadow-[inset_0_1px_0_rgb(255_255_255/0.6)] backdrop-blur-md hover:border-[var(--foreground)] hover:bg-[var(--surface-elevated)]',
         glass: 'text-[var(--foreground)] glass-2 hover:bg-[var(--glass-3)]',
         ghost:
           'text-[var(--foreground-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
@@ -49,10 +48,10 @@ const buttonVariants = cva(
         md: 'h-10 px-4 text-sm',
         lg: 'h-12 px-6 text-[0.9375rem]',
         xl: 'h-14 px-8 text-base',
-        /** Pages publiques : petites capitales espacees. */
-        pill: 'h-12 px-6 text-xs font-bold tracking-[0.07em] uppercase',
-        'pill-lg': 'h-[3.375rem] px-8 text-xs font-bold tracking-[0.08em] uppercase',
-        'pill-sm': 'h-10 px-4 text-[0.6875rem] font-bold tracking-[0.07em] uppercase',
+        /** Pages publiques : un peu plus d air, le meme libelle. */
+        pill: 'h-12 px-6 text-[0.9375rem]',
+        'pill-lg': 'h-[3.25rem] px-7 text-[0.9375rem]',
+        'pill-sm': 'h-10 px-4 text-sm',
         icon: 'size-10',
         'icon-sm': 'size-8',
       },

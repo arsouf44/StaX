@@ -110,7 +110,7 @@ export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey: string | n
       <Field
         label="Votre message"
         error={state.errors?.message}
-        hint="Le plus utile : votre métier, votre ville, et ce que vous attendez de votre site."
+        hint="Le plus utile : votre activité, votre ville, et ce que vous attendez de votre site."
         required
       >
         <Textarea name="message" rows={6} required minLength={20} />

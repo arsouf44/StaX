@@ -6,34 +6,34 @@ import { COMPANY_LINKS, FEATURE_LINKS, LEGAL_LINKS, RESOURCE_LINKS } from '~/lib
 /**
  * Pied de page.
  *
- * Un plan du site sur un trait de 1 px, puis la ligne de signature en petites
- * capitales. Les mentions legales proviennent de la configuration, jamais du
- * code. Tant qu une valeur n est pas renseignee, un marqueur explicite
- * s affiche hors production — il vaut mieux un texte visiblement a completer
- * qu un numero de SIREN invente.
+ * Le plan du site sur un trait de 1 px, puis la ligne de signature : le
+ * studio, l adresse de contact, l annee. Les mentions legales proviennent de
+ * la configuration, jamais du code. Tant qu une valeur n est pas renseignee,
+ * un marqueur explicite s affiche hors production : il vaut mieux un texte
+ * visiblement a completer qu un numero de SIREN invente.
  */
-export function SiteFooter({ sectors }: { sectors?: Array<{ slug: string; label: string }> }) {
+export function SiteFooter() {
   const status = legalStatus();
   const company = legalValue('LEGAL_COMPANY_NAME');
   const support = legalValue('SUPPORT_EMAIL');
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mx-auto w-[min(1370px,calc(100%-56px))] pt-24 pb-7 max-[800px]:w-[min(calc(100%-32px),620px)] max-[800px]:pt-16">
-      <div className="grid gap-12 border-t border-[var(--line)] pt-12 lg:grid-cols-[1.25fr_3fr]">
+    <footer className="shell pt-24 pb-10 max-[800px]:pt-16">
+      <div className="grid gap-12 border-t border-[var(--border)] pt-12 lg:grid-cols-[1.2fr_3fr]">
         <div>
           <Wordmark size={30} />
           <p className="mt-5 max-w-[22rem] text-sm leading-relaxed text-[var(--foreground-muted)]">
-            StaX conçoit, héberge et maintient le site professionnel de votre entreprise. Vous
-            gardez la main sur vos contenus, vos messages et vos paiements.
+            Studio de conception et de développement de sites web. Nous créons votre site, vous le
+            gérez ensuite.
           </p>
           <Link
             href="/status"
-            className="mt-6 inline-flex items-center gap-2.5 text-[11px] font-bold tracking-[0.08em] text-[var(--foreground-muted)] uppercase transition-colors hover:text-[var(--ink)]"
+            className="mt-6 inline-flex items-center gap-2.5 text-[12.5px] tracking-[0.02em] text-[var(--foreground-muted)] transition-colors hover:text-[var(--ink)]"
           >
             <span
               aria-hidden="true"
-              className="size-2 rounded-full bg-[#83ad9b] shadow-[0_0_0_5px_rgb(131_173_155/0.14)]"
+              className="size-1.5 rounded-full bg-[#4f9a7a] shadow-[0_0_0_4px_rgb(79_154_122/0.14)]"
             />
             État des services
           </Link>
@@ -41,35 +41,31 @@ export function SiteFooter({ sectors }: { sectors?: Array<{ slug: string; label:
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <FooterColumn
-            title="Fonctionnalités"
-            links={FEATURE_LINKS.slice(0, 7).map((l) => ({ label: l.label, href: l.href }))}
-            extra={{ label: 'Toutes les fonctionnalités', href: '/fonctionnalites' }}
-          />
-          <FooterColumn
-            title="Métiers"
-            links={(sectors ?? []).slice(0, 7).map((s) => ({
-              label: s.label,
-              href: `/metiers/${s.slug}`,
-            }))}
-            extra={{ label: 'Tous les métiers', href: '/metiers' }}
-          />
-          <FooterColumn
-            title="Ressources"
+            title="Offres"
             links={[
-              ...RESOURCE_LINKS.map((l) => ({ label: l.label, href: l.href })),
-              { label: 'Tarifs', href: '/tarifs' },
+              { label: 'Toutes les offres', href: '/tarifs' },
               { label: 'Projet sur mesure', href: '/sur-mesure' },
               { label: 'Demander un devis', href: '/devis' },
+              { label: 'Commander mon site', href: '/commander' },
             ]}
           />
           <FooterColumn
-            title="Entreprise"
+            title="Fonctionnalités"
+            links={FEATURE_LINKS.slice(0, 6).map((l) => ({ label: l.label, href: l.href }))}
+            extra={{ label: 'Tout voir', href: '/fonctionnalites' }}
+          />
+          <FooterColumn
+            title="Ressources"
+            links={RESOURCE_LINKS.map((l) => ({ label: l.label, href: l.href }))}
+          />
+          <FooterColumn
+            title="Le studio"
             links={COMPANY_LINKS.map((l) => ({ label: l.label, href: l.href }))}
           />
         </div>
       </div>
 
-      <div className="mt-14 border-t border-[var(--line)] pt-6">
+      <div className="mt-14 border-t border-[var(--border)] pt-6">
         <ul className="flex flex-wrap gap-x-6 gap-y-2">
           {LEGAL_LINKS.map((link) => (
             <li key={link.href}>
@@ -94,24 +90,24 @@ export function SiteFooter({ sectors }: { sectors?: Array<{ slug: string; label:
         </ul>
 
         {!status.configured && !isProduction() ? (
-          <p className="mt-6 border border-[var(--warning)]/30 bg-[var(--warning-soft)] px-4 py-3 text-xs text-[var(--warning)]">
+          <p className="mt-6 rounded-[var(--radius-md)] border border-[var(--warning)]/30 bg-[var(--warning-soft)] px-4 py-3 text-xs text-[var(--warning)]">
             Informations légales incomplètes ({status.missingRequired.join(', ')}). Renseignez-les
-            avant toute ouverture commerciale — voir docs/legal-configuration.md.
+            avant toute ouverture commerciale : voir docs/legal-configuration.md.
           </p>
         ) : null}
       </div>
 
       {/* Ligne de signature */}
-      <div className="mt-10 flex flex-col gap-3 text-[11px] leading-[1.35] font-[650] tracking-[0.05em] text-[#53717e] uppercase sm:flex-row sm:justify-between">
-        <p>
-          {company} © {year}
-        </p>
+      <div className="mt-8 flex flex-col gap-2.5 border-t border-[var(--border)] pt-7 text-[13.5px] text-[var(--foreground-muted)] sm:flex-row sm:items-baseline sm:justify-between">
+        <p>StaX. Studio de conception et de développement de sites web.</p>
         <p>
           <a href={`mailto:${support}`} className="transition-colors hover:text-[var(--ink)]">
             {support}
           </a>
         </p>
-        <p>Conçu avec intention</p>
+        <p>
+          © {year} {company}
+        </p>
       </div>
     </footer>
   );
@@ -128,7 +124,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="side-note">{title}</h2>
+      <h2 className="font-serif text-[1.2rem] leading-tight text-[var(--foreground)]">{title}</h2>
       <ul className="mt-4 space-y-2.5">
         {links.map((link) => (
           <li key={link.href}>
@@ -144,7 +140,7 @@ function FooterColumn({
           <li>
             <Link
               href={extra.href}
-              className="text-sm font-bold text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
+              className="text-sm font-medium text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
             >
               {extra.label} →
             </Link>

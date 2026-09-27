@@ -41,13 +41,7 @@ function SubmitButton() {
   );
 }
 
-export function QuoteForm({
-  sectors,
-  turnstileSiteKey,
-}: {
-  sectors: Array<{ id: string; label: string }>;
-  turnstileSiteKey: string | null;
-}) {
+export function QuoteForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [state, action] = useActionState<LeadState, FormData>(sendQuoteRequestAction, LEAD_IDLE);
 
   if (state.status === 'success') {
@@ -93,16 +87,6 @@ export function QuoteForm({
             <Input name="contactPhone" type="tel" autoComplete="tel" />
           </Field>
         </div>
-        <Field label="Votre secteur" error={state.errors?.sectorSlug}>
-          <Select name="sectorSlug" defaultValue="">
-            <option value="">Je préfère l’expliquer plus bas</option>
-            {sectors.map((sector) => (
-              <option key={sector.id} value={sector.id}>
-                {sector.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
       </fieldset>
 
       <fieldset className="space-y-5">

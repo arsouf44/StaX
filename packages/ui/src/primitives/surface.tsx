@@ -132,8 +132,8 @@ export function Beam({ className }: { className?: string }) {
 /**
  * Conteneur de largeur maitrisee.
  *
- * `wide` est la « coquille » des pages publiques : 1370 px au plus, 28 px de
- * marge de chaque cote, puis 16 px et 620 px au plus sous 800 px.
+ * `wide` est la « coquille » des pages publiques : 1280 px au plus, avec une
+ * marge laterale qui va de 20 px (telephone) a 64 px (grand ecran).
  */
 export function Container({
   className,
@@ -144,7 +144,7 @@ export function Container({
   const widths = {
     narrow: 'w-full max-w-3xl px-4 sm:px-6 lg:px-8',
     default: 'w-full max-w-6xl px-4 sm:px-6 lg:px-8',
-    wide: 'w-[min(1370px,calc(100%-56px))] max-[800px]:w-[min(calc(100%-32px),620px)]',
+    wide: 'w-full max-w-[1280px] px-[clamp(20px,4.4vw,64px)]',
     full: 'w-full max-w-none px-4 sm:px-6 lg:px-8',
   } as const;
   return (

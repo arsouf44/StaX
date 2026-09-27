@@ -144,7 +144,7 @@ export default function SecurityPage() {
 
       <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">
+          <h2 className="font-serif text-[2.4rem] leading-tight font-normal">
             Des questions plus techniques ?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">

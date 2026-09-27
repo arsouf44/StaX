@@ -5,7 +5,7 @@ import { CreationTimeline } from '~/components/marketing/diagrams';
 export const metadata: Metadata = {
   title: 'Projets sur mesure',
   description:
-    'Application métier, intégrations, reprise de données, volumétries importantes : ' +
+    'Application sur mesure, intégrations, reprise de données, volumétries importantes : ' +
     'StaX étudie votre besoin et établit un devis détaillé, ligne par ligne.',
   alternates: { canonical: '/sur-mesure' },
 };
@@ -33,7 +33,7 @@ const CASES = [
   },
   {
     title: 'Contraintes réglementaires',
-    body: 'Mentions obligatoires de votre secteur, accessibilité renforcée, conservation de données spécifiques, engagements de service.',
+    body: 'Mentions obligatoires de votre activité, accessibilité renforcée, conservation de données spécifiques, engagements de service.',
   },
 ];
 
@@ -124,7 +124,9 @@ export default function CustomPage() {
       <Section spacing="compact">
         <Container size="narrow">
           <Panel level={2} padding="xl" className="text-center">
-            <h2 className="text-3xl font-medium tracking-[-0.03em]">Parlons de votre projet</h2>
+            <h2 className="font-serif text-[2.4rem] leading-tight font-normal">
+              Parlons de votre projet
+            </h2>
             <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
               Le formulaire prend une dizaine de minutes. Plus vos réponses sont précises, plus le
               devis sera juste — et plus vite nous pourrons vous répondre.

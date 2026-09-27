@@ -45,8 +45,8 @@ export default function NotFound() {
                 </Link>
               </li>
               <li>
-                <Link href="/metiers" className="underline underline-offset-4">
-                  Les sites par métier
+                <Link href="/tarifs" className="underline underline-offset-4">
+                  Nos offres
                 </Link>
               </li>
               <li>

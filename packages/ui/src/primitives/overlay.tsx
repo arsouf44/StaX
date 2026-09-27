@@ -198,7 +198,7 @@ export function Dialog({
         <div
           aria-hidden="true"
           onClick={dismissible ? onClose : undefined}
-          className="absolute inset-0 bg-[rgb(24_52_66/0.32)] backdrop-blur-[6px]"
+          className="absolute inset-0 bg-[rgb(24_36_50/0.32)] backdrop-blur-[6px]"
         />
         <div
           ref={panelRef}
@@ -363,7 +363,7 @@ export function Sheet({ open, onClose, title, children, side = 'right', footer }
         <div
           aria-hidden="true"
           onClick={onClose}
-          className="absolute inset-0 bg-[rgb(24_52_66/0.32)] backdrop-blur-[6px]"
+          className="absolute inset-0 bg-[rgb(24_36_50/0.32)] backdrop-blur-[6px]"
         />
         <div
           ref={panelRef}

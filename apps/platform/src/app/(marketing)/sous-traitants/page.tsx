@@ -67,7 +67,7 @@ export default async function SubprocessorsPage() {
                   <TR key={entry.name}>
                     <TD>
                       <span className="font-medium">{entry.name}</span>
-                      <span className="mt-1 block text-2xs tracking-[0.1em] text-[var(--muted)] uppercase">
+                      <span className="mt-1 block text-xs tracking-[0.02em] text-[var(--muted)]">
                         {CATEGORY_LABELS[entry.category] ?? entry.category}
                       </span>
                       {entry.privacyUrl ? (

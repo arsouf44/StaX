@@ -13,14 +13,7 @@ import { expect, test } from '@playwright/test';
  */
 
 /** Points de depart : tout ce qu'un visiteur peut atteindre depuis l'accueil. */
-const ENTRY_POINTS = [
-  '/',
-  '/tarifs',
-  '/fonctionnalites',
-  '/metiers',
-  '/realisations',
-  '/sur-mesure',
-];
+const ENTRY_POINTS = ['/', '/tarifs', '/fonctionnalites', '/realisations', '/sur-mesure'];
 
 /** Chemins prives : leur redirection vers la connexion est normale. */
 const PRIVATE_PREFIXES = ['/app', '/admin', '/commander', '/facture', '/activation', '/compte'];

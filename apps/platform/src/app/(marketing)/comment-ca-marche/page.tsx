@@ -112,7 +112,7 @@ export default function HowItWorksPage() {
               </ul>
             </Panel>
             <Panel level={1} padding="lg" className="h-full">
-              <p className="text-2xs font-medium tracking-[0.12em] text-[var(--accent-text)] uppercase">
+              <p className="text-[12.5px] tracking-[0.04em] text-[var(--accent-text)]">
                 Après la livraison
               </p>
               <ul className="mt-4 space-y-2.5">
@@ -131,7 +131,7 @@ export default function HowItWorksPage() {
 
           <div className="mt-12 grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:items-center">
             <div>
-              <h2 className="text-2xl font-semibold tracking-[-0.03em]">
+              <h2 className="font-serif text-[1.85rem] leading-tight font-normal">
                 Ce qui reste entre nos mains
               </h2>
               <p className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
@@ -185,7 +185,7 @@ export default function HowItWorksPage() {
 
       <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">Commençons</h2>
+          <h2 className="font-serif text-[2.4rem] leading-tight font-normal">Commençons</h2>
           <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
             Choisissez votre offre : vous pouvez vous arrêter à tout moment avant le paiement. La
             maintenance, elle, ne commencera qu’à la livraison de votre site.

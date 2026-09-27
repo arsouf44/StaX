@@ -108,7 +108,7 @@ export default function AboutPage() {
 
       <Section spacing="compact">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">Une question ?</h2>
+          <h2 className="font-serif text-[2.4rem] leading-tight font-normal">Une question ?</h2>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink href="/contact" size="pill-lg">
               Nous écrire

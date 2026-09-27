@@ -63,7 +63,7 @@ export function TH({ className, ...props }: ThHTMLAttributes<HTMLTableCellElemen
     <th
       scope="col"
       className={cn(
-        'px-4 py-3 text-left text-xs font-medium tracking-wide whitespace-nowrap text-[var(--muted)] uppercase',
+        'px-4 py-3 text-left text-xs font-medium tracking-[0.03em] whitespace-nowrap text-[var(--muted)]',
         className,
       )}
       {...props}

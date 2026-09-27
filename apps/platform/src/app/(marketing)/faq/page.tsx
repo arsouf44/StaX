@@ -68,7 +68,7 @@ export default function FaqPage() {
                   <section key={category} id={category} aria-labelledby={`${category}-title`}>
                     <h2
                       id={`${category}-title`}
-                      className="text-sm font-medium tracking-[0.12em] text-[var(--muted)] uppercase"
+                      className="text-[12.5px] font-medium tracking-[0.05em] text-[var(--muted)]"
                     >
                       {FAQ_CATEGORIES[category]}
                     </h2>
@@ -92,7 +92,9 @@ export default function FaqPage() {
 
       <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">Votre question n’y est pas ?</h2>
+          <h2 className="font-serif text-[2.4rem] leading-tight font-normal">
+            Votre question n’y est pas ?
+          </h2>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink href="/contact" size="pill-lg">
               Nous écrire

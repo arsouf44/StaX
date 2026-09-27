@@ -13,14 +13,6 @@ export interface NavLink {
   badge?: string;
 }
 
-export interface NavGroup {
-  label: string;
-  href?: string;
-  /** Un groupe sans enfants devient un lien simple dans l en-tete. */
-  items?: NavLink[];
-  featured?: { title: string; description: string; href: string; cta: string };
-}
-
 export const FEATURE_LINKS: NavLink[] = [
   {
     label: 'Éditeur de contenu',
@@ -101,35 +93,21 @@ export const RESOURCE_LINKS: NavLink[] = [
   {
     label: 'Réalisations',
     href: '/realisations',
-    description: 'Des exemples concrets par métier.',
+    description: 'Des exemples concrets, offre par offre.',
   },
 ];
 
-export const PRIMARY_NAV: NavGroup[] = [
-  {
-    label: 'Fonctionnalités',
-    href: '/fonctionnalites',
-    items: FEATURE_LINKS,
-    featured: {
-      title: 'Un seul espace',
-      description:
-        'Votre site, vos contenus, vos messages, vos réservations et vos paiements. ' +
-        'Pas six outils a raccorder.',
-      href: '/fonctionnalites',
-      cta: 'Tout voir',
-    },
-  },
-  { label: 'Métiers', href: '/metiers' },
-  { label: 'Tarifs', href: '/tarifs' },
+/**
+ * Navigation principale : cinq entrees, comme sur la page d accueil. Les
+ * fonctionnalites, les ressources et l entreprise restent detaillees dans le
+ * pied de page et le panneau mobile.
+ */
+export const PRIMARY_NAV: NavLink[] = [
+  { label: 'Offres', href: '/tarifs' },
+  { label: 'Méthode', href: '/comment-ca-marche' },
+  { label: 'Fonctionnalités', href: '/fonctionnalites' },
+  { label: 'Réalisations', href: '/realisations' },
   { label: 'Sur mesure', href: '/sur-mesure' },
-  {
-    label: 'Ressources',
-    items: RESOURCE_LINKS,
-  },
-  {
-    label: 'Entreprise',
-    items: COMPANY_LINKS,
-  },
 ];
 
 export const LEGAL_LINKS: NavLink[] = [
@@ -159,7 +137,6 @@ export const SITEMAP_ROUTES: Array<{
     priority: 0.7,
     changeFrequency: 'monthly' as const,
   })),
-  { path: '/metiers', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/tarifs', priority: 0.9, changeFrequency: 'monthly' },
   { path: '/sur-mesure', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/realisations', priority: 0.7, changeFrequency: 'weekly' },

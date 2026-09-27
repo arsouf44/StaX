@@ -27,21 +27,21 @@ export function BrowserFrame({
   return (
     <div
       className={cn(
-        'overflow-hidden border border-[rgb(255_255_255/0.85)] bg-[rgb(250_252_251/0.86)] shadow-[var(--shadow-stage)] backdrop-blur-xl',
+        'overflow-hidden border border-[rgb(255_255_255/0.85)] bg-[rgb(250_251_251/0.86)] shadow-[var(--shadow-stage)] backdrop-blur-xl',
         className,
       )}
     >
       <div
-        className={cn('flex items-center gap-3 border-b border-[rgb(37_82_101/0.13)] px-3 py-2.5')}
+        className={cn('flex items-center gap-3 border-b border-[rgb(20_24_28/0.13)] px-3 py-2.5')}
       >
         <div aria-hidden="true" className="flex gap-1.5">
           {[0, 1, 2].map((dot) => (
-            <span key={dot} className="size-2.5 rounded-full border border-[rgb(37_82_101/0.35)]" />
+            <span key={dot} className="size-2.5 rounded-full border border-[rgb(20_24_28/0.35)]" />
           ))}
         </div>
         <div
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-1.5 border border-[rgb(37_82_101/0.12)] bg-white/80 px-2.5 py-1 text-2xs font-semibold text-[#3f6f86]',
+            'flex min-w-0 flex-1 items-center gap-1.5 border border-[rgb(20_24_28/0.12)] bg-white/80 px-2.5 py-1 text-2xs font-semibold text-[#2f5f86]',
           )}
         >
           {secure ? (
@@ -57,8 +57,8 @@ export function BrowserFrame({
           <span className="truncate">{url}</span>
         </div>
         <div aria-hidden="true" className="hidden gap-1 sm:flex">
-          <span className="h-3 w-3 border border-[rgb(37_82_101/0.2)]" />
-          <span className="h-3 w-3 border border-[rgb(37_82_101/0.2)]" />
+          <span className="h-3 w-3 border border-[rgb(20_24_28/0.2)]" />
+          <span className="h-3 w-3 border border-[rgb(20_24_28/0.2)]" />
         </div>
       </div>
       {children}
@@ -117,19 +117,19 @@ export function DashboardMock({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-full min-h-[26rem] bg-[rgb(247_250_249/0.9)] text-[#183442]',
+        'flex h-full min-h-[26rem] bg-[rgb(250_251_251/0.9)] text-[#14181c]',
         className,
       )}
     >
       {/* Barre laterale */}
-      <aside className="hidden w-52 shrink-0 flex-col border-r border-[rgb(37_82_101/0.14)] p-3 sm:flex">
-        <div className="mb-4 flex items-center gap-2 border border-[rgb(37_82_101/0.14)] bg-white/80 p-2">
-          <span className="flex size-6 shrink-0 items-center justify-center bg-[#183442] text-[10px] font-semibold text-[#f0f3f1]">
+      <aside className="hidden w-52 shrink-0 flex-col border-r border-[rgb(20_24_28/0.14)] p-3 sm:flex">
+        <div className="mb-4 flex items-center gap-2 border border-[rgb(20_24_28/0.14)] bg-white/80 p-2">
+          <span className="flex size-6 shrink-0 items-center justify-center bg-[#14181c] text-[10px] font-semibold text-[#f1f2f3]">
             RD
           </span>
           <div className="min-w-0">
             <p className="truncate text-[11px] font-medium">Restaurant Dupont</p>
-            <p className="truncate text-[9px] text-[#53717e]">Offre Ultra Premium</p>
+            <p className="truncate text-[9px] text-[#5e676f]">Offre Ultra Premium</p>
           </div>
         </div>
         <nav className="space-y-0.5">
@@ -139,24 +139,24 @@ export function DashboardMock({ className }: { className?: string }) {
               className={cn(
                 'flex items-center gap-2 px-2 py-1.5 text-[11px]',
                 item.active
-                  ? 'bg-white font-semibold text-[#183442] shadow-[inset_2px_0_0_#315a70]'
-                  : 'text-[#4f6c79]',
+                  ? 'bg-white font-semibold text-[#14181c] shadow-[inset_2px_0_0_#2f5f86]'
+                  : 'text-[#4b545c]',
               )}
             >
               <NavIcon name={item.icon} />
               <span className="truncate">{item.label}</span>
               {item.badge ? (
-                <span className="ml-auto bg-[#315a70] px-1.5 text-[9px] font-medium text-white">
+                <span className="ml-auto bg-[#2f5f86] px-1.5 text-[9px] font-medium text-white">
                   {item.badge}
                 </span>
               ) : null}
             </div>
           ))}
         </nav>
-        <div className="mt-auto border border-[rgb(37_82_101/0.14)] bg-white/70 p-2.5">
-          <p className="text-[10px] text-[#4f6c79]">Site en ligne</p>
-          <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2f7a5c]">
-            <span className="size-1.5 rounded-full bg-[#2f7a5c]" />
+        <div className="mt-auto border border-[rgb(20_24_28/0.14)] bg-white/70 p-2.5">
+          <p className="text-[10px] text-[#4b545c]">Site en ligne</p>
+          <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2c7659]">
+            <span className="size-1.5 rounded-full bg-[#2c7659]" />
             restaurant-dupont.fr
           </p>
         </div>
@@ -167,11 +167,11 @@ export function DashboardMock({ className }: { className?: string }) {
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-[13px] font-medium">Bonjour Marc.</p>
-            <p className="mt-0.5 text-[11px] text-[#53717e]">
+            <p className="mt-0.5 text-[11px] text-[#5e676f]">
               Votre site est en ligne depuis 42 jours.
             </p>
           </div>
-          <span className="hidden border border-[rgb(37_82_101/0.18)] px-2 py-1 text-[10px] text-[#4f6c79] sm:block">
+          <span className="hidden border border-[rgb(20_24_28/0.18)] px-2 py-1 text-[10px] text-[#4b545c] sm:block">
             30 derniers jours
           </span>
         </div>
@@ -183,24 +183,24 @@ export function DashboardMock({ className }: { className?: string }) {
             { label: 'Réservations', value: '61', delta: '+9,1 %', good: true },
             { label: 'Couverts', value: '184', delta: null, good: true },
           ].map((stat) => (
-            <div key={stat.label} className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
-              <p className="text-[10px] text-[#53717e]">{stat.label}</p>
+            <div key={stat.label} className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
+              <p className="text-[10px] text-[#5e676f]">{stat.label}</p>
               <p className="mt-1 text-lg font-medium tabular-nums">{stat.value}</p>
               {stat.delta ? (
-                <p className="mt-0.5 text-[10px] text-[#2f7a5c] tabular-nums">{stat.delta}</p>
+                <p className="mt-0.5 text-[10px] text-[#2c7659] tabular-nums">{stat.delta}</p>
               ) : (
-                <p className="mt-0.5 text-[10px] text-[#7a949f]">—</p>
+                <p className="mt-0.5 text-[10px] text-[#838c94]">—</p>
               )}
             </div>
           ))}
         </div>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-[1.6fr_1fr]">
-          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
+          <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
             <p className="text-[11px] font-medium">Fréquentation</p>
             <SparkChart className="mt-3" />
           </div>
-          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
+          <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
             <p className="text-[11px] font-medium">Prochaines réservations</p>
             <ul className="mt-2.5 space-y-2">
               {[
@@ -209,11 +209,11 @@ export function DashboardMock({ className }: { className?: string }) {
                 { time: '20:45', name: 'Table 12', size: 6 },
               ].map((booking) => (
                 <li key={booking.time} className="flex items-center gap-2.5 text-[10px]">
-                  <span className="bg-[rgb(37_82_101/0.08)] px-1.5 py-0.5 font-mono text-[#284f60]">
+                  <span className="bg-[rgb(20_24_28/0.08)] px-1.5 py-0.5 font-mono text-[#14181c]">
                     {booking.time}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-[#284f60]">{booking.name}</span>
-                  <span className="text-[#53717e]">{booking.size} pers.</span>
+                  <span className="min-w-0 flex-1 truncate text-[#14181c]">{booking.name}</span>
+                  <span className="text-[#5e676f]">{booking.size} pers.</span>
                 </li>
               ))}
             </ul>
@@ -243,7 +243,7 @@ export function ProjectMock({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-full min-h-[24rem] bg-[rgb(247_250_249/0.9)] text-[#183442]',
+        'flex h-full min-h-[24rem] bg-[rgb(250_251_251/0.9)] text-[#14181c]',
         className,
       )}
     >
@@ -251,11 +251,11 @@ export function ProjectMock({ className }: { className?: string }) {
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium">Votre projet — Restaurant Dupont</p>
-            <p className="mt-0.5 text-[11px] text-[#53717e]">
+            <p className="mt-0.5 text-[11px] text-[#5e676f]">
               Offre Premium · votre site est en cours de développement
             </p>
           </div>
-          <span className="shrink-0 border border-[rgb(37_82_101/0.18)] px-2 py-1 text-[10px] text-[#4f6c79]">
+          <span className="shrink-0 border border-[rgb(20_24_28/0.18)] px-2 py-1 text-[10px] text-[#4b545c]">
             Étape 4 sur 7
           </span>
         </div>
@@ -267,10 +267,10 @@ export function ProjectMock({ className }: { className?: string }) {
               className={cn(
                 'flex items-center gap-2.5 border px-2.5 py-2 text-[11px]',
                 step.state === 'current'
-                  ? 'border-[#315a70]/45 bg-[rgb(87_148_176/0.14)] font-semibold text-[#183442]'
-                  : 'border-[rgb(37_82_101/0.14)] bg-white/70',
-                step.state === 'todo' ? 'text-[#53717e]' : null,
-                step.state === 'done' ? 'text-[#284f60]' : null,
+                  ? 'border-[#2f5f86]/45 bg-[rgb(47_95_134/0.14)] font-semibold text-[#14181c]'
+                  : 'border-[rgb(20_24_28/0.14)] bg-white/70',
+                step.state === 'todo' ? 'text-[#5e676f]' : null,
+                step.state === 'done' ? 'text-[#14181c]' : null,
               )}
             >
               <span
@@ -278,28 +278,28 @@ export function ProjectMock({ className }: { className?: string }) {
                 className={cn(
                   'size-2 shrink-0 rounded-full',
                   step.state === 'done'
-                    ? 'bg-[#2f7a5c]'
+                    ? 'bg-[#2c7659]'
                     : step.state === 'current'
-                      ? 'bg-[#5794b0]'
-                      : 'border border-[rgb(37_82_101/0.35)]',
+                      ? 'bg-[#2f5f86]'
+                      : 'border border-[rgb(20_24_28/0.35)]',
                 )}
               />
               <span className="truncate">{step.label}</span>
               {step.state === 'current' ? (
-                <span className="ml-auto text-[9px] text-[#3f6f86]">en cours</span>
+                <span className="ml-auto text-[9px] text-[#2f5f86]">en cours</span>
               ) : null}
             </li>
           ))}
         </ol>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
-            <p className="text-[10px] text-[#53717e]">Éléments demandés</p>
+          <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
+            <p className="text-[10px] text-[#5e676f]">Éléments demandés</p>
             <p className="mt-1 text-[11px]">Photos de la salle · 2 fichiers attendus</p>
           </div>
-          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
-            <p className="text-[10px] text-[#53717e]">Éditeur</p>
-            <p className="mt-1 text-[11px] text-[#3d5a67]">S’ouvre à la livraison de votre site</p>
+          <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
+            <p className="text-[10px] text-[#5e676f]">Éditeur</p>
+            <p className="mt-1 text-[11px] text-[#4b545c]">S’ouvre à la livraison de votre site</p>
           </div>
         </div>
       </div>
@@ -331,15 +331,15 @@ function SparkChart({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#5794b0" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#5794b0" stopOpacity="0" />
+          <stop stopColor="#2f5f86" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#2f5f86" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={`${path} L${width} ${height} L0 ${height} Z`} fill="url(#spark-fill)" />
       <path
         d={path}
         fill="none"
-        stroke="#315a70"
+        stroke="#2f5f86"
         strokeWidth="1.5"
         vectorEffect="non-scaling-stroke"
       />
@@ -359,12 +359,12 @@ export function EditorMock({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-full min-h-[24rem] bg-[rgb(247_250_249/0.9)] text-[#183442]',
+        'flex h-full min-h-[24rem] bg-[rgb(250_251_251/0.9)] text-[#14181c]',
         className,
       )}
     >
-      <aside className="hidden w-44 shrink-0 flex-col border-r border-[rgb(37_82_101/0.14)] p-3 md:flex">
-        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-[#53717e] uppercase">
+      <aside className="hidden w-44 shrink-0 flex-col border-r border-[rgb(20_24_28/0.14)] p-3 md:flex">
+        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-[#5e676f] uppercase">
           Contenus modifiables
         </p>
         <ul className="space-y-1">
@@ -379,22 +379,22 @@ export function EditorMock({ className }: { className?: string }) {
               className={cn(
                 'border px-2 py-1.5 text-[10px]',
                 page.active
-                  ? 'border-[#315a70]/45 bg-[rgb(87_148_176/0.14)] font-semibold text-[#183442]'
-                  : 'border-[rgb(37_82_101/0.14)] bg-white/70 text-[#4f6c79]',
+                  ? 'border-[#2f5f86]/45 bg-[rgb(47_95_134/0.14)] font-semibold text-[#14181c]'
+                  : 'border-[rgb(20_24_28/0.14)] bg-white/70 text-[#4b545c]',
               )}
             >
               {page.label}
             </li>
           ))}
         </ul>
-        <p className="mt-4 mb-2 text-[9px] font-medium tracking-[0.12em] text-[#53717e] uppercase">
+        <p className="mt-4 mb-2 text-[9px] font-medium tracking-[0.12em] text-[#5e676f] uppercase">
           Informations
         </p>
         <ul className="space-y-1">
           {['Horaires', 'Coordonnées', 'Réseaux sociaux'].map((label) => (
             <li
               key={label}
-              className="border border-[rgb(37_82_101/0.14)] bg-white/70 px-2 py-1.5 text-[10px] text-[#4f6c79]"
+              className="border border-[rgb(20_24_28/0.14)] bg-white/70 px-2 py-1.5 text-[10px] text-[#4b545c]"
             >
               {label}
             </li>
@@ -403,42 +403,42 @@ export function EditorMock({ className }: { className?: string }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 border-b border-[rgb(37_82_101/0.14)] px-3 py-2">
+        <div className="flex items-center gap-2 border-b border-[rgb(20_24_28/0.14)] px-3 py-2">
           {/* Sous 400 px, l etat du brouillon s efface : l action de publier
               doit rester visible, l information peut attendre. */}
-          <span className="hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-[#53717e] min-[400px]:flex">
+          <span className="hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-[#5e676f] min-[400px]:flex">
             <span className="size-1.5 rounded-full bg-[#b7793a]" />
             Brouillon enregistré — 3 modifications
           </span>
-          <span className="ml-auto border border-[rgb(37_82_101/0.28)] px-2.5 py-1 text-[9px] whitespace-nowrap text-[#284f60]">
+          <span className="ml-auto border border-[rgb(20_24_28/0.28)] px-2.5 py-1 text-[9px] whitespace-nowrap text-[#14181c]">
             Aperçu
           </span>
-          <span className="bg-[#183442] px-2.5 py-1 text-[9px] font-semibold whitespace-nowrap text-[#f0f3f1]">
+          <span className="bg-[#14181c] px-2.5 py-1 text-[9px] font-semibold whitespace-nowrap text-[#f1f2f3]">
             Publier
           </span>
         </div>
 
         <div className="p-4">
-          <p className="text-[9px] text-[#53717e]">Aperçu de votre site — restaurant-dupont.fr</p>
-          <div className="mt-2 border border-[rgb(37_82_101/0.14)] p-4">
-            <div className="outline-1 outline-offset-4 outline-[#315a70] outline-dashed">
-              <p className="text-[9px] text-[#3f6f86]">Titre · modifiable</p>
-              <div className="mt-1.5 h-2.5 w-2/3 bg-[rgb(37_82_101/0.28)]" />
+          <p className="text-[9px] text-[#5e676f]">Aperçu de votre site — restaurant-dupont.fr</p>
+          <div className="mt-2 border border-[rgb(20_24_28/0.14)] p-4">
+            <div className="outline-1 outline-offset-4 outline-[#2f5f86] outline-dashed">
+              <p className="text-[9px] text-[#2f5f86]">Titre · modifiable</p>
+              <div className="mt-1.5 h-2.5 w-2/3 bg-[rgb(20_24_28/0.28)]" />
             </div>
-            <div className="mt-2 h-2 w-1/2 bg-[rgb(37_82_101/0.14)]" />
+            <div className="mt-2 h-2 w-1/2 bg-[rgb(20_24_28/0.14)]" />
             <div className="mt-3 flex gap-2">
-              <span className="bg-[#183442] px-3 py-1 text-[9px] text-[#f0f3f1]">Réserver</span>
-              <span className="border border-[rgb(37_82_101/0.3)] px-3 py-1 text-[9px] text-[#284f60]">
+              <span className="bg-[#14181c] px-3 py-1 text-[9px] text-[#f1f2f3]">Réserver</span>
+              <span className="border border-[rgb(20_24_28/0.3)] px-3 py-1 text-[9px] text-[#14181c]">
                 Voir la carte
               </span>
             </div>
           </div>
           <div className="mt-2 space-y-2 opacity-45">
-            <div className="border border-[rgb(37_82_101/0.14)] p-4">
-              <div className="h-2 w-1/3 bg-[rgb(37_82_101/0.18)]" />
+            <div className="border border-[rgb(20_24_28/0.14)] p-4">
+              <div className="h-2 w-1/3 bg-[rgb(20_24_28/0.18)]" />
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {[0, 1, 2].map((index) => (
-                  <div key={index} className="h-10 bg-[rgb(37_82_101/0.07)]" />
+                  <div key={index} className="h-10 bg-[rgb(20_24_28/0.07)]" />
                 ))}
               </div>
             </div>
@@ -446,35 +446,35 @@ export function EditorMock({ className }: { className?: string }) {
         </div>
       </div>
 
-      <aside className="hidden w-48 shrink-0 border-l border-[rgb(37_82_101/0.14)] p-3 lg:block">
-        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-[#53717e] uppercase">
+      <aside className="hidden w-48 shrink-0 border-l border-[rgb(20_24_28/0.14)] p-3 lg:block">
+        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-[#5e676f] uppercase">
           Bannière
         </p>
         <div className="space-y-2.5">
           <div>
-            <p className="text-[9px] text-[#53717e]">Titre</p>
-            <div className="mt-1 border border-[#315a70]/55 bg-white/80 px-2 py-1.5 text-[10px] text-[#183442]">
+            <p className="text-[9px] text-[#5e676f]">Titre</p>
+            <div className="mt-1 border border-[#2f5f86]/55 bg-white/80 px-2 py-1.5 text-[10px] text-[#14181c]">
               Une cuisine qui vous ressemble
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-[#53717e]">Texte</p>
-            <div className="mt-1 h-10 border border-[rgb(37_82_101/0.18)] bg-white/80 px-2 py-1.5 text-[9px] leading-relaxed text-[#4f6c79]">
+            <p className="text-[9px] text-[#5e676f]">Texte</p>
+            <div className="mt-1 h-10 border border-[rgb(20_24_28/0.18)] bg-white/80 px-2 py-1.5 text-[9px] leading-relaxed text-[#4b545c]">
               Découvrez notre carte et réservez votre table.
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-[#53717e]">Image</p>
+            <p className="text-[9px] text-[#5e676f]">Image</p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="h-7 w-10 bg-[linear-gradient(135deg,#d7c2b3,#8cb6c9)]" />
-              <span className="border border-[rgb(37_82_101/0.2)] px-2 py-1 text-[9px] text-[#3d5a67]">
+              <span className="h-7 w-10 bg-[linear-gradient(135deg,#d8d6d2,#9fb7cb)]" />
+              <span className="border border-[rgb(20_24_28/0.2)] px-2 py-1 text-[9px] text-[#4b545c]">
                 Remplacer
               </span>
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-[#53717e]">Bouton — texte et lien</p>
-            <div className="mt-1 border border-[rgb(37_82_101/0.18)] bg-white/80 px-2 py-1.5 text-[10px] text-[#3d5a67]">
+            <p className="text-[9px] text-[#5e676f]">Bouton — texte et lien</p>
+            <div className="mt-1 border border-[rgb(20_24_28/0.18)] bg-white/80 px-2 py-1.5 text-[10px] text-[#4b545c]">
               Réserver · /reservation
             </div>
           </div>

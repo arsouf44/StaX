@@ -1,7 +1,12 @@
 @import 'tailwindcss';
-/* Inter, servie par la plateforme elle-meme : aucune requete vers un tiers,
-   et la meme lettre partout, quel que soit le systeme du visiteur. */
-@import '@fontsource-variable/inter';
+/* EB Garamond (titres) et Inter Tight (texte), servies par la plateforme
+   elle-meme : aucune requete vers un tiers, et la meme lettre partout,
+   quel que soit le systeme du visiteur. Seules les graisses utilisees sont
+   chargees. */
+@import '@fontsource/eb-garamond/400.css';
+@import '@fontsource/eb-garamond/400-italic.css';
+@import '@fontsource/eb-garamond/500.css';
+@import '@fontsource-variable/inter-tight';
 
 /*
  * Les composants partages font partie des sources a analyser.
@@ -21,23 +26,22 @@
 @source '../../src';
 
 /* ==========================================================================
-   StaX — systeme de design « Premium Glass »
+   StaX — systeme de design « Studio »
    --------------------------------------------------------------------------
-   Direction : un lieu plutot qu une vitrine. Un papier tres legerement vert,
-   une encre bleu-nuit, l eau (du bleu brume au bleu profond), la sauge et
-   l argile — et rien d autre. Des surfaces de verre depoli posees sur une
-   atmosphere lumineuse, des traits de 1 px, des angles vifs. Une typographie
-   tres grande, tres dense, tres serree ; des petites capitales espacees pour
-   tout ce qui indexe.
+   Direction : un studio d architecture plutot qu une vitrine. Un gris perle
+   tres clair, une encre presque noire, un seul bleu (la mer) et le graphite
+   des boutons. Des plaques de verre depoli, de metal brosse et de papier
+   blanc, posees en couches. Les titres en EB Garamond, le texte en Inter
+   Tight ; des traits de 1 px, des angles adoucis.
 
-   Chaque texte courant conserve un contraste conforme WCAG AA ; les tons les
-   plus clairs sont reserves aux tres grands titres et aux ornements.
+   Chaque texte courant conserve un contraste conforme WCAG AA ; le gris le
+   plus clair (#838c94) est reserve aux ornements et aux numeros.
    ========================================================================== */
 
 /*
- * `dark:` cible les blocs « eau profonde » (fond bleu-nuit, texte clair) :
- * le bloc de cloture, la carte tarifaire superieure. Le site n a plus qu un
- * seul theme ; ces blocs en sont des inversions locales.
+ * `dark:` cible les blocs graphite (fond sombre, texte clair) : le bloc de
+ * cloture, la carte tarifaire superieure. Le site n a qu un seul theme ; ces
+ * blocs en sont des inversions locales.
  */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
@@ -48,120 +52,127 @@
   color-scheme: light;
 
   /* Palette de marque */
-  --paper: #f0f3f1;
-  --ink: #183442;
-  --ink-deep: #15313e;
-  --water: #8cb6c9;
-  --water-bright: #5794b0;
-  --water-light: #669fb8;
-  --deep-water: #315a70;
-  --deep-water-2: #284d5e;
-  --mist: #d3e4e6;
-  --sage: #c9d8d0;
-  --clay: #d7c2b3;
-  --line: rgb(37 82 101 / 0.2);
+  --paper: #f1f2f3;
+  --paper-2: #fafbfb;
+  --ink: #14181c;
+  --ink-deep: #14181c;
+  --ink-2: #4b545c;
+  --ink-3: #838c94;
+  --graphite: #1d2328;
+  --sea: #2f5f86;
+  --water: #9fb7cb;
+  --water-bright: #2f5f86;
+  --water-light: #5d86a8;
+  --deep-water: #2f5f86;
+  --deep-water-2: #1d2328;
+  --mist: #e3e7ea;
+  --sage: #dfe3e7;
+  --clay: #d8d6d2;
+  --line: rgb(20 24 28 / 0.11);
 
   /* Anciens noms, conserves pour les composants qui les lisent encore */
-  --snow: #f0f3f1;
-  --electric: #315a70;
-  --glacier: #5794b0;
-  --ice: #8cb6c9;
+  --snow: #f1f2f3;
+  --electric: #2f5f86;
+  --glacier: #5d86a8;
+  --ice: #9fb7cb;
 
   /* Fonds */
-  --background: #f0f3f1;
-  --background-subtle: rgb(247 250 249 / 0.5);
-  --background-inset: rgb(255 255 255 / 0.55);
+  --background: #f1f2f3;
+  --background-subtle: rgb(250 251 251 / 0.6);
+  --background-inset: rgb(255 255 255 / 0.62);
 
   /* Texte */
-  --foreground: #183442;
-  --heading: #1d3c49;
-  --foreground-muted: #4f6c79;
-  --muted: #53717e;
-  --muted-strong: #4a6773;
+  --foreground: #14181c;
+  --heading: #14181c;
+  --foreground-muted: #4b545c;
+  --muted: #5e676f;
+  --muted-strong: #50595f;
 
   /* Surfaces opaques : tableaux denses, longues listes */
-  --surface: #f7faf9;
-  --surface-elevated: #fbfcfb;
-  --surface-hover: #e6eeed;
+  --surface: #fafbfb;
+  --surface-elevated: #fdfdfd;
+  --surface-hover: #eceef0;
 
   /* Verre — trois niveaux, bordure blanche lumineuse */
-  --glass-1: rgb(240 247 246 / 0.36);
-  --glass-2: rgb(240 247 246 / 0.48);
-  --glass-3: rgb(245 249 248 / 0.9);
-  --glass-warm: rgb(250 247 240 / 0.47);
-  --glass-border: rgb(255 255 255 / 0.7);
-  --glass-border-strong: rgb(255 255 255 / 0.86);
+  --glass-1: rgb(255 255 255 / 0.42);
+  --glass-2: rgb(252 253 253 / 0.66);
+  --glass-3: rgb(252 253 253 / 0.92);
+  --glass-warm: rgb(250 251 251 / 0.72);
+  --glass-border: rgb(255 255 255 / 0.78);
+  --glass-border-strong: rgb(255 255 255 / 0.9);
   --glass-sheen: rgb(255 255 255 / 0.92);
   --glass-blur-sm: 14px;
-  --glass-blur-md: 22px;
+  --glass-blur-md: 20px;
   --glass-blur-lg: 24px;
 
   /* Traits */
-  --border: rgb(37 82 101 / 0.2);
-  --border-strong: rgb(37 82 101 / 0.34);
-  --border-focus: rgb(49 90 112 / 0.6);
+  --border: rgb(20 24 28 / 0.11);
+  --border-strong: rgb(20 24 28 / 0.22);
+  --border-focus: rgb(47 95 134 / 0.6);
 
-  /* Accent — l eau profonde : actions, focus, liens */
-  --accent: #315a70;
-  --accent-hover: #284d5e;
-  --accent-soft: rgb(87 148 176 / 0.14);
-  --accent-glow: rgb(140 182 201 / 0.42);
-  --accent-foreground: #f0f3f1;
+  /* Accent — la mer : liens, focus, reperes */
+  --accent: #2f5f86;
+  --accent-hover: #264f71;
+  --accent-soft: rgb(47 95 134 / 0.1);
+  --accent-glow: rgb(47 95 134 / 0.2);
+  --accent-foreground: #f4f6f8;
   /* Accent lisible en petit texte sur le papier (AA) */
-  --accent-text: #3f6f86;
+  --accent-text: #2f5f86;
 
-  /* Action principale : l encre */
-  --primary: #183442;
-  --primary-foreground: #f0f3f1;
+  /* Action principale : le graphite */
+  --primary: #1d2328;
+  --primary-foreground: #f4f6f8;
+  --primary-gradient: linear-gradient(180deg, #2a3138 0%, #1d2328 100%);
 
-  /* Etats — accordes a la palette, lisibles sur le papier */
-  --success: #2f7a5c;
-  --success-soft: rgb(131 173 155 / 0.2);
+  /* Etats — lisibles sur le papier */
+  --success: #2c7659;
+  --success-soft: rgb(44 118 89 / 0.12);
   --warning: #9a5b16;
-  --warning-soft: rgb(215 194 179 / 0.34);
+  --warning-soft: rgb(154 91 22 / 0.12);
   --danger: #b23a3a;
   --danger-soft: rgb(178 58 58 / 0.1);
-  --info: #315a70;
-  --info-soft: rgb(140 182 201 / 0.22);
+  --info: #2f5f86;
+  --info-soft: rgb(47 95 134 / 0.12);
 
-  /* Angles vifs, partout */
-  --radius-xs: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
+  /* Angles adoucis, comme des plaques usinees */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 18px;
 
-  /* Ombres — longues, bleutees, jamais noires */
-  --shadow-sm: 0 1px 2px rgb(24 52 66 / 0.06);
-  --shadow-md: 0 12px 30px -14px rgb(35 78 94 / 0.22);
-  --shadow-lg: 0 28px 70px rgb(35 78 94 / 0.17);
-  --shadow-glass: 0 20px 55px rgb(36 76 87 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.94);
-  --shadow-glass-sm: 0 10px 28px -12px rgb(36 76 87 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  /* Ombres — longues, douces, bleutees */
+  --shadow-sm: 0 1px 2px rgb(20 24 28 / 0.06);
+  --shadow-md: 0 16px 34px -20px rgb(24 36 50 / 0.45);
+  --shadow-lg: 0 44px 90px -50px rgb(24 36 50 / 0.62);
+  --shadow-glass: 0 30px 68px -46px rgb(24 36 50 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.95);
+  --shadow-glass-sm: 0 18px 40px -28px rgb(24 36 50 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.92);
   --shadow-focus: 0 0 0 1px var(--background), 0 0 0 3px var(--border-focus);
-  --shadow-stage: 0 28px 70px rgb(35 78 94 / 0.17), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --shadow-stage: 0 44px 90px -50px rgb(24 36 50 / 0.62), inset 0 1px 0 rgb(255 255 255 / 0.9);
 
   /* Grille technique de fond */
-  --grid-line: rgb(37 82 101 / 0.05);
-  --grid-line-strong: rgb(37 82 101 / 0.08);
+  --grid-line: rgb(20 24 28 / 0.04);
+  --grid-line-strong: rgb(20 24 28 / 0.07);
   --grid-size: 72px;
 
   --noise-opacity: 0.02;
+  --ease-studio: cubic-bezier(0.19, 0.85, 0.22, 1);
 }
 
 /* --------------------------------------------------------------------------
-   2. Inversion locale « eau profonde »
+   2. Inversion locale « graphite »
    -------------------------------------------------------------------------- */
 [data-theme='dark'] {
-  --background: #284d5e;
+  --background: #1d2328;
   --background-subtle: rgb(255 255 255 / 0.04);
-  --background-inset: rgb(12 32 42 / 0.28);
+  --background-inset: rgb(0 0 0 / 0.22);
 
-  --foreground: #eff5f2;
-  --heading: #eff5f2;
-  --foreground-muted: #cfe0e4;
-  --muted: #b3ced6;
-  --muted-strong: #c3d9df;
+  --foreground: #f4f6f8;
+  --heading: #f4f6f8;
+  --foreground-muted: #c9d0d6;
+  --muted: #b7bec5;
+  --muted-strong: #c3c9cf;
 
   --surface: rgb(255 255 255 / 0.05);
   --surface-elevated: rgb(255 255 255 / 0.08);
@@ -169,32 +180,33 @@
 
   --glass-1: rgb(255 255 255 / 0.04);
   --glass-2: rgb(255 255 255 / 0.07);
-  --glass-3: rgb(30 62 76 / 0.92);
-  --glass-border: rgb(216 237 239 / 0.2);
-  --glass-border-strong: rgb(216 237 239 / 0.32);
-  --glass-sheen: rgb(216 237 239 / 0.36);
+  --glass-3: rgb(40 47 54 / 0.94);
+  --glass-border: rgb(255 255 255 / 0.14);
+  --glass-border-strong: rgb(255 255 255 / 0.24);
+  --glass-sheen: rgb(255 255 255 / 0.3);
 
-  --border: rgb(216 237 239 / 0.2);
-  --border-strong: rgb(216 237 239 / 0.34);
-  --border-focus: rgb(155 197 212 / 0.7);
+  --border: rgb(255 255 255 / 0.14);
+  --border-strong: rgb(255 255 255 / 0.26);
+  --border-focus: rgb(159 183 203 / 0.75);
 
-  --accent: #9bc5d4;
-  --accent-hover: #b7dae1;
-  --accent-soft: rgb(155 197 212 / 0.16);
-  --accent-glow: rgb(126 178 192 / 0.3);
-  --accent-foreground: #183442;
-  --accent-text: #a7d0da;
+  --accent: #9fb7cb;
+  --accent-hover: #bccfdd;
+  --accent-soft: rgb(159 183 203 / 0.16);
+  --accent-glow: rgb(159 183 203 / 0.24);
+  --accent-foreground: #14181c;
+  --accent-text: #b4c8d8;
 
-  --primary: #eff5f2;
-  --primary-foreground: #183442;
+  --primary: #f4f6f8;
+  --primary-foreground: #14181c;
+  --primary-gradient: linear-gradient(180deg, #ffffff 0%, #e6eaee 100%);
 
   --success: #a8d8c1;
   --warning: #ecc9a6;
   --danger: #f3b0b0;
-  --info: #a7d0da;
+  --info: #b4c8d8;
 
-  --shadow-glass: 0 20px 55px rgb(10 30 40 / 0.3), inset 0 1px 0 rgb(216 237 239 / 0.2);
-  --shadow-glass-sm: 0 10px 28px -12px rgb(10 30 40 / 0.35), inset 0 1px 0 rgb(216 237 239 / 0.16);
+  --shadow-glass: 0 20px 55px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  --shadow-glass-sm: 0 10px 28px -12px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.1);
 
   color: var(--foreground);
 }
@@ -231,6 +243,10 @@
   --color-glacier: var(--glacier);
   --color-ice: var(--ice);
   --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-graphite: var(--graphite);
+  --color-sea: var(--sea);
   --color-snow: var(--snow);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -253,10 +269,12 @@
   --shadow-glass: var(--shadow-glass);
   --shadow-glass-sm: var(--shadow-glass-sm);
 
-  /* Inter en premier ; a defaut, la police du systeme. */
+  /* Inter Tight pour le texte, EB Garamond pour les titres ; a defaut, les
+     polices du systeme. */
   --font-sans:
-    'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
+    'Inter Tight Variable', 'Inter Tight', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Echelle typographique */
@@ -318,7 +336,8 @@
     color: var(--foreground);
     font-family: var(--font-sans);
     font-size: var(--text-base);
-    line-height: 1.45;
+    line-height: 1.5;
+    font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -334,8 +353,8 @@
   h4,
   h5,
   h6 {
-    font-weight: 700;
-    letter-spacing: -0.03em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     text-wrap: balance;
   }
 
@@ -350,7 +369,7 @@
   }
 
   ::selection {
-    background: rgb(140 182 201 / 0.4);
+    background: rgb(47 95 134 / 0.18);
     color: var(--ink);
   }
 
@@ -395,169 +414,139 @@
     inset: 0;
     overflow: hidden;
     pointer-events: none;
-    background: linear-gradient(118deg, #f4f6f2 0%, #e3edec 48%, #d7e7eb 100%);
+    background: radial-gradient(120% 90% at 50% 8%, #fbfcfc 0%, #f1f2f3 46%, #e8eaec 100%);
   }
   .atmosphere::before {
     content: '';
     position: absolute;
-    width: 76vw;
-    height: 65vw;
-    top: -34vw;
-    right: -16vw;
-    border-radius: 47% 53% 48% 52%;
-    background: radial-gradient(
-      ellipse at 37% 56%,
-      rgb(238 249 247 / 0.92),
-      rgb(183 214 223 / 0.55) 42%,
-      rgb(112 159 179 / 0.1) 68%,
-      transparent 72%
-    );
-    transform: rotate(-19deg);
+    inset: 0;
+    background: radial-gradient(60% 42% at 26% 24%, rgb(120 152 178 / 0.16), transparent 70%);
   }
   .atmosphere::after {
     content: '';
     position: absolute;
-    width: 52vw;
-    height: 72vh;
-    left: -18vw;
-    bottom: -24vh;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgb(201 216 208 / 0.74), rgb(201 216 208 / 0.05) 67%);
+    inset: 0;
+    background: radial-gradient(48% 36% at 80% 72%, rgb(47 95 134 / 0.1), transparent 72%);
   }
 
   /* ------------------------------------------------------------------------
-     Gabarit de page : la « coquille » de 1370 px, gouttieres de 28 px
+     Gabarit de page : la « coquille » de 1280 px
      ------------------------------------------------------------------------ */
   .shell {
-    width: min(1370px, calc(100% - 56px));
+    width: 100%;
+    max-width: 1280px;
     margin-inline: auto;
+    padding-inline: clamp(20px, 4.4vw, 64px);
   }
 
   /* ------------------------------------------------------------------------
-     Petites capitales
+     Reperes
      ------------------------------------------------------------------------ */
   /* Index de section : un trait, puis le repere. */
   .eyebrow-index {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: #42708a;
-    font-size: 11px;
-    font-weight: 720;
-    letter-spacing: 0.13em;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
     line-height: 1.3;
-    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
   }
   .eyebrow-index::before {
     content: '';
-    width: 33px;
+    width: 22px;
     height: 1px;
     flex-shrink: 0;
     background: currentColor;
-  }
-  [data-theme='dark'] .eyebrow-index,
-  [data-theme='dark'].eyebrow-index {
-    color: #a7d0da;
+    opacity: 0.7;
   }
 
   /* Repere de panneau */
   .kicker {
-    color: #42708a;
-    font-size: 11px;
-    font-weight: 740;
-    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.055em;
     line-height: 1.35;
-    text-transform: uppercase;
-  }
-  [data-theme='dark'] .kicker {
-    color: #a7d0da;
   }
 
   /* Note laterale, soulignee par le haut */
   .side-note {
     padding-top: 14px;
-    border-top: 1px solid #6f98a8;
+    border-top: 1px solid var(--border-strong);
     color: var(--muted);
-    font-size: 12px;
-    font-weight: 660;
-    letter-spacing: 0.05em;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
     line-height: 1.45;
-    text-transform: uppercase;
   }
 
   /* ------------------------------------------------------------------------
-     Titres d affiche
+     Titres : EB Garamond, une seule graisse, l italique pour un mot
      ------------------------------------------------------------------------ */
-  .display-hero {
+  .display-hero,
+  .display-statement,
+  .display-section,
+  .display-panel,
+  .display-closing,
+  .title-page,
+  .display {
     margin: 0;
-    color: var(--ink-deep);
-    font-size: clamp(4.1rem, 7.1vw, 7.7rem);
-    font-weight: 760;
-    line-height: 0.84;
-    letter-spacing: -0.091em;
-    text-wrap: initial;
+    color: var(--heading);
+    font-family: var(--font-serif);
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  .display-hero {
+    font-size: clamp(2.9rem, 6vw, 5.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.015em;
   }
   .display-statement {
-    margin: 0;
-    color: var(--heading);
-    font-size: clamp(2.7rem, 5.15vw, 5.75rem);
-    font-weight: 735;
-    line-height: 0.93;
-    letter-spacing: -0.085em;
+    font-size: clamp(2.35rem, 4.6vw, 4.3rem);
+    line-height: 1.05;
+    letter-spacing: -0.012em;
   }
   .display-section {
-    margin: 0;
-    color: var(--heading);
-    font-size: clamp(2.35rem, 4.3vw, 4.6rem);
-    font-weight: 735;
-    line-height: 0.94;
-    letter-spacing: -0.08em;
+    font-size: clamp(1.95rem, 3.9vw, 3.35rem);
+    line-height: 1.07;
+    letter-spacing: -0.01em;
   }
   .display-panel {
-    margin: 0;
-    color: #1c4253;
-    font-size: clamp(2rem, 3.2vw, 3.5rem);
-    font-weight: 730;
-    line-height: 0.93;
-    letter-spacing: -0.075em;
+    font-size: clamp(1.6rem, 2.6vw, 2.35rem);
+    line-height: 1.1;
+    letter-spacing: -0.005em;
   }
   .display-closing {
-    margin: 0;
-    font-size: clamp(3rem, 5.6vw, 6.6rem);
-    font-weight: 730;
-    line-height: 0.86;
-    letter-spacing: -0.092em;
+    font-size: clamp(2.1rem, 4.6vw, 3.9rem);
+    line-height: 1.07;
+    letter-spacing: -0.012em;
   }
   /* Titre d ecran (espace client, administration, parcours) */
   .title-page {
-    margin: 0;
-    color: var(--heading);
     font-size: clamp(1.9rem, 2.6vw, 2.5rem);
-    font-weight: 730;
-    line-height: 0.98;
-    letter-spacing: -0.06em;
+    line-height: 1.06;
+    letter-spacing: -0.01em;
   }
-  [data-theme='dark'] .display-section,
-  [data-theme='dark'] .display-panel,
-  [data-theme='dark'] .display-statement {
-    color: var(--foreground);
+  :where(.display-hero, .display-statement, .display-section, .display-panel, .display-closing)
+    :where(em, i) {
+    font-style: italic;
+    color: var(--foreground-muted);
   }
 
-  /* L eau dans le texte : un mot, jamais une phrase */
-  .text-water {
-    color: var(--water-bright);
-  }
+  /* Un mot en italique, jamais une phrase */
+  .text-water,
   .text-water-light {
-    color: #679eb2;
-  }
-  [data-theme='dark'] .text-water,
-  [data-theme='dark'] .text-water-light {
-    color: #9bc5d4;
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--foreground-muted);
   }
   /* Lettres au trait */
   .text-outline {
     color: transparent;
-    -webkit-text-stroke: 1.25px rgb(36 83 103 / 0.56);
+    -webkit-text-stroke: 1px rgb(20 24 28 / 0.5);
   }
   @media (forced-colors: active) {
     .text-outline {
@@ -568,85 +557,117 @@
 
   /* Texte courant d introduction */
   .lead-text {
-    color: #567381;
-    font-size: 17px;
-    letter-spacing: -0.017em;
-    line-height: 1.56;
-  }
-  [data-theme='dark'] .lead-text {
     color: var(--foreground-muted);
+    font-size: 16.5px;
+    line-height: 1.62;
   }
 
   /* ------------------------------------------------------------------------
-     Lien d action : un trait dessous, une fleche qui s echappe
+     Lien d action : un trait dessous, qui se remplit au survol
      ------------------------------------------------------------------------ */
   .text-link {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 13px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #336478;
-    color: #264f62;
-    font-size: 13px;
-    font-weight: 730;
-    letter-spacing: 0.025em;
+    gap: 10px;
+    padding-bottom: 8px;
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
     line-height: 1.3;
-    transition: color 0.2s ease;
+  }
+  .text-link::before,
+  .text-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+  }
+  .text-link::before {
+    background: var(--border-strong);
+  }
+  .text-link::after {
+    background: currentColor;
+    transform: scaleX(0.18);
+    transform-origin: 0 50%;
+    transition: transform 0.52s var(--ease-studio);
+  }
+  .text-link:hover::after,
+  .text-link:focus-visible::after {
+    transform: scaleX(1);
   }
   .text-link .arrow {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 400;
     line-height: 1;
-    transition: transform 0.2s ease;
+    transition: transform 0.38s var(--ease-studio);
   }
   .text-link:hover .arrow {
-    transform: translate(4px, -4px);
-  }
-  [data-theme='dark'] .text-link {
-    border-bottom-color: #b7dae1;
-    color: #eaf3f1;
-  }
-  [data-theme='dark'] .text-link .arrow {
-    color: #9bc5d4;
+    transform: translate(3px, -3px);
   }
 
   /* Lien de navigation : trait qui se deploie au survol */
   .nav-link {
     position: relative;
-    padding: 7px 0;
+    padding: 6px 0;
   }
   .nav-link::after {
     content: '';
     position: absolute;
     left: 0;
-    bottom: 0;
-    width: 0;
+    bottom: 2px;
+    width: 100%;
     height: 1px;
-    background: var(--ink);
-    transition: width 0.25s ease;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.42s var(--ease-studio);
   }
   .nav-link:hover::after,
   .nav-link[aria-current='page']::after,
   .nav-link[aria-expanded='true']::after {
-    width: 100%;
+    transform: scaleX(1);
   }
 
   /* ------------------------------------------------------------------------
-     Panneaux de verre
+     Plaques : verre depoli, verre clair, papier blanc, aluminium
      ------------------------------------------------------------------------ */
   .glass-panel {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 0.76);
-    background: var(--glass-2);
+    border: 1px solid rgb(255 255 255 / 0.86);
+    border-radius: var(--radius-xl);
+    background: linear-gradient(158deg, rgb(252 253 253 / 0.9), rgb(240 243 246 / 0.76));
     box-shadow:
-      0 20px 55px rgb(36 76 87 / 0.12),
-      inset 0 1px 0 rgb(255 255 255 / 0.94);
-    backdrop-filter: blur(22px) saturate(125%);
-    -webkit-backdrop-filter: blur(22px) saturate(125%);
+      inset 0 1px 0 rgb(255 255 255 / 0.95),
+      0 30px 68px -46px rgb(24 36 50 / 0.55);
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
   }
   .glass-panel-warm {
-    background: var(--glass-warm);
+    background: linear-gradient(
+      142deg,
+      rgb(255 255 255 / 0.7),
+      rgb(255 255 255 / 0.36) 52%,
+      rgb(232 238 244 / 0.46)
+    );
+  }
+  .paper-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgb(20 24 28 / 0.06);
+    border-radius: var(--radius-xl);
+    background: #fdfdfd;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 44px 90px -50px rgb(24 36 50 / 0.62);
+  }
+  .metal {
+    background: linear-gradient(101deg, #f5f7f8, #ccd2d8 34%, #eef1f4 51%, #b4bbc3 76%, #eaeef1);
+    border: 1px solid rgb(255 255 255 / 0.7);
   }
   /* Reflet diagonal, comme une vitre traversee par la lumiere */
   .glass-sheen {
@@ -656,17 +677,17 @@
   .glass-sheen::before {
     content: '';
     position: absolute;
-    width: 130%;
-    height: 48%;
-    left: -31%;
-    top: 9%;
-    transform: rotate(-23deg);
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.54), transparent);
-    border-top: 1px solid rgb(255 255 255 / 0.65);
-    border-bottom: 1px solid rgb(116 169 187 / 0.27);
+    inset: 0;
+    background: linear-gradient(
+      118deg,
+      rgb(255 255 255 / 0.5),
+      transparent 34%,
+      transparent 68%,
+      rgb(255 255 255 / 0.22)
+    );
     pointer-events: none;
   }
-  /* Anneaux d eau dans un coin de panneau */
+  /* Halo de lumiere dans un coin de panneau */
   .glass-rings {
     position: relative;
     overflow: hidden;
@@ -676,21 +697,18 @@
     content: '';
     position: absolute;
     z-index: -1;
-    width: 93%;
+    width: 90%;
     aspect-ratio: 1;
-    top: -40%;
+    top: -45%;
     right: -35%;
-    border: 1px solid rgb(116 157 162 / 0.34);
     border-radius: 50%;
-    box-shadow:
-      0 0 0 32px rgb(211 228 230 / 0.35),
-      0 0 0 64px rgb(215 194 179 / 0.16);
+    background: radial-gradient(circle, rgb(120 152 178 / 0.18), transparent 68%);
     pointer-events: none;
   }
 
   /* Liste en lignes : numero, intitule, texte, fleche */
   .step-list {
-    border-top: 1px solid rgb(43 93 111 / 0.24);
+    border-top: 1px solid var(--border);
   }
   .step-row {
     display: grid;
@@ -698,71 +716,62 @@
     gap: 12px;
     align-items: center;
     min-height: 67px;
-    border-bottom: 1px solid rgb(43 93 111 / 0.19);
-    color: #284f60;
+    border-bottom: 1px solid var(--border);
+    color: var(--foreground);
   }
   .step-number {
-    color: #5d8ea3;
-    font-size: 11px;
-    font-weight: 760;
+    color: var(--ink-3);
+    font-size: 13px;
+    font-weight: 450;
     font-variant-numeric: tabular-nums;
   }
   .step-name {
-    font-size: 15px;
-    font-weight: 695;
-    letter-spacing: -0.02em;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 400;
+    letter-spacing: -0.005em;
   }
   .step-text {
-    color: #56737f;
-    font-size: 12px;
+    color: var(--muted);
+    font-size: 13px;
   }
   .step-arrow {
-    color: #5b94aa;
-    font-size: 19px;
+    color: var(--ink-3);
+    font-size: 17px;
     line-height: 1;
   }
 
   /* Entree de la page de garde : chaque ligne monte, une a une */
   .hero-enter {
-    animation: hero-enter 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: hero-enter 0.95s var(--ease-studio) both;
   }
 
   /* ------------------------------------------------------------------------
-     Bloc de cloture : l eau profonde
+     Bloc de cloture : le graphite
      ------------------------------------------------------------------------ */
   .closing-block {
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    background: #284d5e;
-    color: #eff5f2;
+    background: linear-gradient(180deg, #262d34 0%, #1d2328 100%);
+    color: #f4f6f8;
   }
   .closing-block::before {
     content: '';
     position: absolute;
     z-index: -1;
-    width: 55%;
-    aspect-ratio: 1;
-    bottom: -50%;
-    right: -6%;
-    border: 1px solid rgb(216 237 239 / 0.4);
-    border-radius: 48% 52% 64% 36%;
-    transform: rotate(27deg);
-    box-shadow:
-      0 0 0 32px rgb(126 178 192 / 0.14),
-      0 0 0 70px rgb(126 178 192 / 0.08);
+    inset: 0;
+    background:
+      radial-gradient(60% 50% at 18% 0%, rgb(159 183 203 / 0.18), transparent 70%),
+      radial-gradient(40% 40% at 90% 100%, rgb(47 95 134 / 0.3), transparent 72%);
     pointer-events: none;
   }
   .closing-block::after {
     content: '';
     position: absolute;
     z-index: -1;
-    width: 44%;
-    height: 120%;
-    top: -24%;
-    right: 7%;
-    background: linear-gradient(90deg, transparent, rgb(211 233 234 / 0.13), transparent);
-    transform: rotate(28deg);
+    inset: 0;
+    background: linear-gradient(118deg, rgb(255 255 255 / 0.06), transparent 34%);
     pointer-events: none;
   }
 }
@@ -909,22 +918,13 @@
     transition: opacity 0.35s ease;
     background: radial-gradient(
       220px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-      rgb(255 255 255 / 0.5),
+      rgb(255 255 255 / 0.55),
       transparent 65%
     );
     pointer-events: none;
   }
   .cursor-glow:hover::before {
     opacity: 1;
-  }
-
-  /* Titre d affiche */
-  .display {
-    color: var(--heading);
-    font-weight: 740;
-    letter-spacing: -0.08em;
-    line-height: 0.9;
-    text-wrap: balance;
   }
 
   .text-accent {
@@ -955,8 +955,8 @@
 
   .spotlight {
     background:
-      radial-gradient(60% 45% at 50% -5%, rgb(140 182 201 / 0.28), transparent 70%),
-      radial-gradient(30% 25% at 50% 0%, rgb(238 249 247 / 0.6), transparent 70%);
+      radial-gradient(60% 45% at 50% -5%, rgb(120 152 178 / 0.2), transparent 70%),
+      radial-gradient(30% 25% at 50% 0%, rgb(251 252 252 / 0.7), transparent 70%);
   }
 
   .hairline {
@@ -1046,6 +1046,16 @@
   }
 }
 
+/* Barre de progression d une etape qui defile seule */
+@keyframes stax-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes float {
   0%,
   100% {
@@ -1057,16 +1067,15 @@
 }
 
 @layer utilities {
+  /* Le contenu n est jamais cache : il glisse seulement en place quand il
+     entre a l ecran. Sans JavaScript, il reste lisible, simplement decale de
+     quelques pixels. */
   .reveal-on-scroll {
-    opacity: 0;
     transform: translate3d(0, 18px, 0);
-    transition:
-      opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: opacity, transform;
+    transition: transform 1.1s var(--ease-studio);
+    will-change: transform;
   }
   .reveal-on-scroll[data-revealed='true'] {
-    opacity: 1;
     transform: translate3d(0, 0, 0);
   }
 
@@ -1102,7 +1111,6 @@
   }
 
   .reveal-on-scroll {
-    opacity: 1 !important;
     transform: none !important;
   }
 
@@ -1157,10 +1165,10 @@
 /* Contraste renforce : traits francs, texte plus sombre */
 @media (prefers-contrast: more) {
   :root {
-    --border: rgb(24 52 66 / 0.45);
-    --border-strong: rgb(24 52 66 / 0.65);
-    --muted: #34505c;
-    --foreground-muted: #253f4b;
+    --border: rgb(20 24 28 / 0.45);
+    --border-strong: rgb(20 24 28 / 0.65);
+    --muted: #3a4249;
+    --foreground-muted: #2a3036;
   }
   .text-outline {
     color: var(--ink);

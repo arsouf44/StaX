@@ -64,7 +64,7 @@ export default function InfrastructurePage() {
             as="h1"
             eyebrow="Infrastructure"
             title="Où tournent vos sites"
-            description="Chaque site est un projet indépendant, avec son propre code et son propre déploiement. Nous ne gérons pas de serveurs physiques : chaque couche est confiée à un acteur dont c’est le métier, et nous documentons lequel."
+            description="Chaque site est un projet indépendant, avec son propre code et son propre déploiement. Nous ne gérons pas de serveurs physiques : chaque couche est confiée à un acteur dont c’est la spécialité, et nous documentons lequel."
           />
           <OperationalIndicators className="mt-12 lg:grid-cols-4" />
         </Container>
@@ -152,7 +152,7 @@ export default function InfrastructurePage() {
 
       <Section spacing="compact">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">
+          <h2 className="font-serif text-[2.4rem] leading-tight font-normal">
             La liste complète de nos sous-traitants
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">

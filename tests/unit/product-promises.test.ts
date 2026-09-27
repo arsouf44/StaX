@@ -103,12 +103,14 @@ describe('formulations interdites', () => {
 describe('le vrai produit, dit clairement', () => {
   it('« Nous créons votre site. Vous le gérez ensuite. » est le titre de l’accueil', () => {
     const hero = readFileSync(
-      join(ROOT, 'apps/platform/src/components/marketing/hero.tsx'),
+      join(ROOT, 'apps/platform/src/components/marketing/studio-hero.tsx'),
       'utf8',
     );
+    const home = readFileSync(join(ROOT, 'apps/platform/src/app/(marketing)/page.tsx'), 'utf8');
     expect(hero).toContain('Nous créons votre site.');
     expect(hero).toContain('Vous le gérez ensuite.');
-    expect(hero).toContain('Pas de modèle à personnaliser');
+    expect(home).toContain('Pas de modèle à personnaliser');
+    expect(home).toContain('Vous publiez, et c’est réellement en ligne');
   });
 
   it('le message tient en sept points, du choix de l’offre à la publication réelle', () => {

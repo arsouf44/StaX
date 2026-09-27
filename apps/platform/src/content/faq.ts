@@ -39,7 +39,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'general',
     question: 'Que se passe-t-il si je n’ai ni logo ni photos ?',
     answer:
-      'Ce n’est pas bloquant. Nous construisons une identité typographique soignée et vous guidons sur les visuels à produire, en vous indiquant précisément ce qui est utile. Beaucoup de métiers s’en sortent très bien avec quelques photos prises au téléphone, dans de bonnes conditions de lumière.',
+      'Ce n’est pas bloquant. Nous construisons une identité typographique soignée et vous guidons sur les visuels à produire, en vous indiquant précisément ce qui est utile. Beaucoup d’entreprises s’en sortent très bien avec quelques photos prises au téléphone, dans de bonnes conditions de lumière.',
   },
   {
     category: 'contenu',
@@ -117,7 +117,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'technique',
     question: 'Mon site apparaîtra-t-il sur Google ?',
     answer:
-      'Nous mettons en place tout ce qui relève de la technique : structure des pages, balises, données structurées adaptées à votre métier, plan du site, vitesse d’affichage, version mobile. Nous ne promettons pas une position précise sur Google — personne ne peut honnêtement le garantir. Le référencement dépend aussi de votre concurrence locale et de la fraîcheur de vos contenus.',
+      'Nous mettons en place tout ce qui relève de la technique : structure des pages, balises, données structurées adaptées à votre activité, plan du site, vitesse d’affichage, version mobile. Nous ne promettons pas une position précise sur Google — personne ne peut honnêtement le garantir. Le référencement dépend aussi de votre concurrence locale et de la fraîcheur de vos contenus.',
   },
   {
     category: 'juridique',

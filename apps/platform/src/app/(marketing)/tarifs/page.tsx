@@ -41,8 +41,12 @@ export default async function PricingPage() {
             as="h1"
             align="center"
             eyebrow="Tarifs"
-            title="Un prix clair, sans surprise"
-            description="Vous payez la création de votre site à la commande. La maintenance mensuelle — hébergement, publication, surveillance, support et accès à l’éditeur — ne commence qu’à la livraison. Rien d’autre."
+            title={
+              <>
+                Un prix clair, <em>sans surprise.</em>
+              </>
+            }
+            description="Chaque offre indique à qui elle convient, avec des exemples. Vous payez la création à la commande ; la maintenance mensuelle (hébergement, publication, surveillance, support et éditeur) ne commence qu’à la livraison."
             className="mx-auto"
           />
         </Container>
@@ -188,7 +192,9 @@ export default async function PricingPage() {
 
       <Section spacing="compact">
         <Container size="narrow" className="text-center">
-          <h2 className="text-3xl font-medium tracking-[-0.03em]">Une question sur nos tarifs ?</h2>
+          <h2 className="font-serif text-[2.4rem] leading-tight font-normal">
+            Une question sur nos tarifs ?
+          </h2>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink variant="accent" href="/commander" size="pill-lg">
               Commander mon site

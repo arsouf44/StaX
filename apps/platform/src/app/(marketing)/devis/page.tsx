@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { readEnv } from '@stax/config';
-import { SECTORS } from '@stax/business';
 import { Container, Panel, Section, SectionHeading } from '@stax/ui';
 import { QuoteForm } from './quote-form';
 
@@ -9,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Demander un devis',
   description:
-    'Projet sur mesure, fonctionnalité spécifique, intégration métier : décrivez votre besoin, ' +
+    'Projet sur mesure, fonctionnalité spécifique, intégration à vos outils : décrivez votre besoin, ' +
     'nous établissons un devis chiffré.',
   alternates: { canonical: '/devis' },
 };
@@ -28,10 +27,7 @@ export default function QuotePage() {
             />
 
             <div className="mt-10">
-              <QuoteForm
-                sectors={SECTORS.map((sector) => ({ id: sector.id, label: sector.label }))}
-                turnstileSiteKey={readEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY') ?? null}
-              />
+              <QuoteForm turnstileSiteKey={readEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY') ?? null} />
             </div>
           </div>
 

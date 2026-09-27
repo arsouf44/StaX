@@ -175,6 +175,11 @@ const nextConfig: NextConfig = {
       { source: '/pricing', destination: '/tarifs', permanent: true },
       { source: '/dashboard', destination: '/app', permanent: true },
       { source: '/cgu-cgv', destination: '/cgv', permanent: true },
+      // Les pages par metier n existent plus : le site presente les offres,
+      // avec des exemples, plutot qu une liste de metiers. Les anciens liens
+      // menent aux offres.
+      { source: '/metiers', destination: '/tarifs', permanent: true },
+      { source: '/metiers/:path*', destination: '/tarifs', permanent: true },
     ];
   },
 };
