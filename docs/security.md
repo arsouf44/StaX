@@ -10,14 +10,16 @@ intention.
 
 | Adversaire | Ce qu’il cherche | Défense principale |
 | --- | --- | --- |
-| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 461 assertions SQL |
+| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 563 assertions SQL, dont un balayage de **toutes** les fonctions exposées |
+| Client qui appelle l’API directement | Contourner les contrôles de l’application | Chaque règle est **aussi** en base : c’est la base qui refuse (voir § 13) |
 | Client pressé | Modifier son site avant la livraison, ou après une suspension | `app.site_content_access` en base |
 | Client malveillant | Rattacher le dépôt ou le site d’une autre organisation | rattachement réservé à l’équipe, un dépôt = un site, propriétaire vérifié |
 | Tiers qui forge un webhook | Faire passer une version pour publiée, altérer un dépôt connu | signature HMAC / secret, idempotence, relecture auprès de l’API du fournisseur |
 | Fuite d’un jeton de fournisseur | Écrire dans tous les dépôts, piloter le compte Cloudflare | application GitHub (jetons d’une heure, un dépôt, `contents`), jeton Cloudflare minimal, serveur uniquement |
 | Visiteur d’un site client | Obtenir un service gratuitement, fausser un prix | Prix et capacités calculés en base |
 | Robot | Envoyer du pourriel, tester des codes | Limitation de débit, champ piège, Turnstile |
-| Attaquant avec un mot de passe volé | Prendre un compte | Double facteur, obligatoire pour l’administration |
+| Attaquant avec un mot de passe volé | Prendre un compte | Double facteur, obligatoire pour l’administration — **exigé par la base**, pas seulement par l’écran |
+| Client ou robot dans la messagerie | Exécuter du code, tromper l’équipe, noyer la file | Texte jamais interprété, caractères invisibles retirés, débit plafonné en base (§ 13) |
 | Employé | Accéder à des données sans motif | Journal d’audit, prise en main tracée et limitée |
 | Personne qui obtient une sauvegarde | Réutiliser des secrets | Codes et jetons stockés en HMAC, jamais en clair |
 
@@ -64,6 +66,16 @@ L’accès au back-office exige trois conditions cumulatives :
 2. un rôle inscrit en base ;
 3. un second facteur **réellement validé** pour la session en cours (`aal2`), pas
    seulement enrôlé.
+
+Depuis la migration 0056, la troisième condition est **aussi appliquée par la
+base** : `app.platform_role()`, dont dépendent toutes les règles « équipe
+StaX », ne reconnaît le rôle d’un compte soumis au second facteur
+(`mfa_enforced`) qu’avec un jeton `aal2`. Avant, un mot de passe volé donnait
+un jeton `aal1` qui, présenté directement à l’API, ouvrait les données de tous
+les clients — l’écran de second facteur n’était qu’un écran. Un jeton `aal1`
+ne peut pas non plus lever sa propre obligation. **Activez donc
+`mfa_enforced` sur chaque compte de l’équipe** (voir
+[LANCEMENT.md](./LANCEMENT.md), étape 7).
 
 ---
 
@@ -287,12 +299,97 @@ Encadrée strictement :
 
 ---
 
-## 12. Ce que nous ne prétendons pas
+## 12. Messagerie, tickets, contenus malveillants
+
+Un message (discussion avec l’équipe, ticket, réponse à une validation) est du
+**texte** : stocké par requête paramétrée, affiché échappé par React, envoyé
+échappé dans les e-mails. `<script>`, `<img onerror=…>`, `'); DROP TABLE …`,
+`$(rm -rf /)` ou `{{7*7}}` s’affichent tels quels et ne font rien. Le prouvent :
+la base (le texte est conservé à l’identique, la table visée est intacte) et un
+parcours navigateur réel (aucune balise créée, aucun script exécuté, côté
+client comme côté équipe).
+
+Ce que la base impose à **tout** message, même écrit directement via l’API
+(`app.guard_conversation_message`, migration 0056) :
+
+| Règle | Pourquoi |
+| --- | --- |
+| Caractères invisibles et trompeurs retirés (`app.clean_message_text`) | U+202E retourne l’affichage (`facture` + U+202E + `fdp.exe` s’affiche « factureexe.pdf »), les caractères « tag » cachent du texte, les largeurs nulles déguisent un lien |
+| Date, accusés de lecture et pièces jointes posés par la base | Un client ne peut ni antidater un message, ni le marquer « lu par l’équipe » pour qu’il n’apparaisse nulle part, ni joindre un lien `javascript:` |
+| Côté de l’auteur imposé (0055) | Un client ne peut pas écrire « au nom de l’équipe StaX » |
+| 5 000 caractères au plus pour un client | Même limite que l’écran |
+| 10 messages par minute, 60 par heure, par client | Un robot ne noie pas l’équipe ; l’écran ajoute 30 messages par 10 minutes |
+| Ticket : statut « ouvert », priorité normale, non assigné | Un client ne se met pas « urgent » ni « résolu » |
+
+La même règle de nettoyage (`cleanMessageText`, `@stax/security`) est appliquée
+par les actions serveur avant validation : la longueur comptée est celle du
+texte réellement affiché, et un message fait uniquement d’invisibles est vide.
+Les en-têtes d’e-mail (objet, réponse à) tiennent sur une seule ligne
+(`headerSafe`), quel que soit le nom saisi par un client ou un prospect.
+
+## 13. Ce que l’application vérifie, la base le vérifie aussi
+
+Un utilisateur connecté détient un jeton valide : il peut appeler l’API
+Supabase **sans passer par StaX**. Chaque contrôle de l’application doit donc
+exister en base. L’audit du 2026-09-27 l’a vérifié systématiquement :
+
+- **balayage automatique** (`tests/sql/rls.test.sql`) : chaque fonction que
+  l’API permet d’appeler est invoquée par un intrus avec les identifiants réels
+  d’un client, puis avec des valeurs nulles — 130 appels, rien de modifié,
+  rien de divulgué. Une fonction ajoutée demain est balayée d’office ;
+- aucune fonction de l’API n’est appelable sans compte ;
+- le schéma interne `app` n’est **pas** exposé par l’API (vérifié sur le projet :
+  seuls `public` et `graphql_public` le sont). **Ne l’ajoutez jamais** aux
+  schémas exposés de Supabase : ses fonctions supposent un appelant de
+  confiance.
+
+## 14. Téléversements
+
+- Le **SVG est refusé** partout : c’est un document qui peut contenir du
+  script, et le seau `site-media` est public. Le seau lui-même le refuse
+  (migration 0056), donc un envoi direct via l’API de stockage aussi.
+- Le type retenu est celui que le fichier **est** (`sniffMediaType`, lu dans ses
+  premiers octets), pas celui qu’annonce le navigateur : une page HTML renommée
+  `photo.png` n’est reconnue comme aucun format et est refusée.
+- Chemin de stockage construit côté serveur, quota de l’offre, débit plafonné.
+
+## 15. Adresse IP et limitation de débit
+
+La limitation de débit des formulaires publics (connexion, inscription, mot de
+passe oublié, codes) compte par empreinte d’IP. L’adresse n’est lue que dans
+l’en-tête que **l’hébergeur** pose lui-même (`lib/client-ip.ts`) :
+`cf-connecting-ip` sur Cloudflare Workers, `x-real-ip` sur Vercel — où un
+`cf-connecting-ip` fourni par le visiteur était auparavant cru, ce qui
+permettait de changer d’« adresse » à chaque essai. Derrière un autre
+mandataire (Cloudflare devant Vercel, serveur maison), `STAX_CLIENT_IP_HEADER`
+désigne l’en-tête à croire.
+
+## 16. Audit du 2026-09-27 : ce qui a été trouvé et corrigé
+
+| Gravité | Constat | Correction | Preuve |
+| --- | --- | --- | --- |
+| Haute | Double facteur de l’équipe vérifié par l’écran seulement : un mot de passe volé ouvrait les données de tous les clients via l’API | `app.platform_role()` exige `aal2` si `mfa_enforced` | SQL « Durcissement (0056) » |
+| Haute | SVG (script possible) accepté dans le stockage public, sans vérification du contenu réel | SVG refusé (seau + application), type lu dans les octets | `audit-2026-09.test.ts` |
+| Moyenne | Messagerie : date, accusés de lecture, pièces jointes et statut de ticket falsifiables via l’API ; aucun plafond d’envoi ; caractères invisibles | Déclencheurs en base, plafonds, nettoyage | SQL + parcours navigateur |
+| Moyenne | Redirection ouverte après connexion avec une tabulation (`/<tab>/site-externe`) | `safeRedirectPath`, qui refuse tout caractère de contrôle | `audit-2026-09.test.ts` |
+| Moyenne | Adresse IP falsifiable sur Vercel : limitation de débit contournable | En-tête choisi selon l’hébergeur | `audit-2026-09.test.ts` |
+| Basse | Recherche de l’administration : une virgule ajoutait une condition au filtre | Valeur entre guillemets | vérifié contre PostgREST ; test unitaire |
+| Basse | Panier des sites publics : nom de produit inséré comme HTML | Construction nœud par nœud | `audit-2026-09.test.ts` |
+| Basse | En-têtes d’e-mail et CSV : saut de ligne, formule précédée d’espaces | `headerSafe`, `csvCell` | `audit-2026-09.test.ts` |
+| Bug | Ticket « Autre chose » refusé par la base ; la réponse d’un client ne relançait pas le ticket | Catégorie `general` ; relance en base | SQL |
+
+Dépendances : `pnpm audit --prod` ne signale **aucune** vulnérabilité. Trois
+avis concernent des outils de développement seulement (Vitest, esbuild via
+tsx), jamais déployés.
+
+## 17. Ce que nous ne prétendons pas
 
 - **Aucun chiffre de disponibilité n’est publié** tant qu’il n’est pas mesuré et
   vérifiable. La page d’état affiche « non mesuré » quand une sonde n’a jamais
   tourné, plutôt qu’un vert rassurant.
-- **Aucun audit de sécurité externe n’a été réalisé** à ce jour.
+- **Aucun audit de sécurité externe n’a été réalisé** à ce jour. L’audit du
+  2026-09-27 (§ 16) est un audit interne du code, de la base et de la
+  configuration Supabase ; un test d’intrusion par un tiers reste recommandé.
 - **Aucune certification n’est revendiquée.**
 
 ---

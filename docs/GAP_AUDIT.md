@@ -479,7 +479,40 @@ en mots simples, pastille des réponses non lues.
 
 ---
 
+## 14. Audit de sécurité du 2026-09-27
+
+Tout le code, la base et la configuration Supabase ont été repassés, avec une
+question : **qu'est-ce qu'un client, un prospect, un robot ou un voleur de mot
+de passe peut faire en appelant directement l'API, sans passer par l'écran ?**
+Détail, gravité et preuves : [security.md § 12 à 16](./security.md#16-audit-du-2026-09-27--ce-qui-a-été-trouvé-et-corrigé).
+
+| Vérifié | Résultat |
+|---|---|
+| 145 fonctions exportées par les 44 fichiers d'actions serveur : identité et droits contrôlés | toutes contrôlées |
+| 10 routes (webhooks, tâche de fond, aperçu, retour Stripe) : signature, secret, session | conformes |
+| 65 fonctions de la base appelables par l'API : balayage par un intrus (130 appels) | rien modifié, rien divulgué |
+| Schéma interne `app` exposé par l'API ? (sondé sur le projet réel) | non |
+| Injection SQL, HTML, commandes dans la messagerie | texte inerte, prouvé en base et dans un vrai navigateur |
+| Dépendances de production (`pnpm audit --prod`) | aucune vulnérabilité connue |
+| Secrets dans le dépôt | aucun |
+
+Trouvé et corrigé (migration **0056** + application) : double facteur de
+l'équipe non exigé par la base (**haute**), SVG accepté dans le stockage
+public (**haute**), champs système de la messagerie falsifiables et aucun
+plafond d'envoi, redirection ouverte par tabulation, adresse IP falsifiable
+sur Vercel, filtre de recherche admin, panier des sites en HTML, en-têtes
+d'e-mail et CSV ; et deux bugs de l'assistance (catégorie « Autre chose »
+refusée par la base, ticket non relancé à la réponse du client).
+
+---
+
 ## Ce qui reste non terminé, sans détour
+
+00. **Migration 0056 (durcissement de sécurité) à appliquer en production**,
+   comme 0054 et 0055. Puis **activer le double facteur du compte
+   propriétaire** et `mfa_enforced` sur les comptes de l'équipe : le seul
+   compte de l'équipe en production ne l'exigeait pas
+   ([LANCEMENT.md](./LANCEMENT.md), étape 7).
 
 0. ~~Migrations 0054 et 0055 à appliquer sur le projet Supabase réel~~ —
    **fait le 2026-09-26**, tracées dans `app.schema_migrations` avec

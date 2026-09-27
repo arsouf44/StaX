@@ -23,9 +23,14 @@ permanence ce qui manque encore.
 | Maintenance mensuelle qui démarre à la livraison, résiliable en ligne | ✅ | [stripe.md](./stripe.md) |
 | Mot de passe oublié, confirmation d'inscription, invitations de collaborateurs | ✅ | corrigés (voir [GAP_AUDIT.md § 13](./GAP_AUDIT.md)) |
 
-Preuves : 525 assertions SQL, 340 tests unitaires et d'intégration, 62 tests
+Preuves : 563 assertions SQL, 361 tests unitaires et d'intégration, 62 tests
 navigateur (ordinateur + téléphone), 19 parcours complets contre une vraie
 pile, dont le parcours « vente par téléphone » de bout en bout.
+
+**Sécurité :** audit complet du 2026-09-27 — voir
+[security.md § 16](./security.md#16-audit-du-2026-09-27--ce-qui-a-été-trouvé-et-corrigé).
+La migration **0056** (durcissement) est à appliquer comme les précédentes
+(étape 1).
 
 ---
 
@@ -124,12 +129,32 @@ Cloudflare **Turnstile** : `NEXT_PUBLIC_TURNSTILE_SITE_KEY`,
 `TURNSTILE_SECRET_KEY`. Sans lui, les formulaires restent protégés par la
 limitation de débit et le champ piège, mais moins bien.
 
-## Étape 7 — Comptes de l'équipe
+La limitation de débit lit l'adresse IP dans l'en-tête posé par l'hébergeur
+(Vercel ou Cloudflare Workers, détecté automatiquement). **Seulement si** vous
+placez Cloudflare (nuage orange) devant Vercel, ajoutez
+`STAX_CLIENT_IP_HEADER=cf-connecting-ip` ; sinon ne mettez rien.
+
+## Étape 7 — Comptes de l'équipe (et double facteur : bloquant)
 
 `pnpm admin:bootstrap` (voir [admin-bootstrap.md](./admin-bootstrap.md)),
 puis connexion, **double facteur**, changement du mot de passe. Chaque
 personne de l'équipe a son propre compte ; le rôle `platform_admin` suffit pour
 envoyer des propositions et livrer.
+
+**À faire maintenant sur le compte propriétaire existant.** Le 2026-09-27, le
+seul compte de l'équipe en production (`platform_owner`) avait
+`mfa_enforced = false` : **son mot de passe seul ouvre le back-office, donc les
+données de tous les clients.** Depuis la migration 0056, la base exige le
+second facteur de tout compte qui porte `mfa_enforced` — encore faut-il le
+porter :
+
+1. connectez-vous, ouvrez **Mot de passe et sécurité** (`/app/securite`) → **Activer la
+   double authentification** (application Google Authenticator, 1Password…) ;
+2. puis, dans Supabase → *SQL Editor* :
+   `update public.profiles set mfa_enforced = true where platform_role is not null;`
+
+**Vérifier :** déconnectez-vous, reconnectez-vous : le code à 6 chiffres est
+demandé avant l'administration.
 
 ## Étape 8 — Répétition générale (1 heure, avant le premier client)
 
