@@ -62,7 +62,7 @@ export default async function InvoicePage({
       <main id="contenu-principal" className="flex flex-1 items-start pb-16">
         <Container size="default">
           <div className="max-w-xl">
-            <h1 className="text-3xl font-medium tracking-[-0.03em]">
+            <h1 className="display-panel">
               {profile?.first_name ? `Bonjour ${profile.first_name}, ` : ''}rattachez votre facture
             </h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">

@@ -82,7 +82,7 @@ export function ContentReportPanel({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-medium tracking-[-0.02em]">Signalements de contenus</h1>
+        <h1 className="title-page">Signalements de contenus</h1>
         <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
           Contenus signalés comme illicites sur les sites hébergés. Chaque signalement reçoit une
           décision humaine et motivée, communiquée à son auteur et, en cas de retrait, à l’éditeur

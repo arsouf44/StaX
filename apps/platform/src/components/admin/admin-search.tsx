@@ -106,7 +106,7 @@ export function AdminSearch() {
           id={listId}
           role="listbox"
           aria-label="Résultats"
-          className="absolute glass-edge top-[calc(100%+6px)] left-0 z-50 w-full overflow-hidden rounded-[var(--radius-md)] p-1 glass-3"
+          className="absolute top-[calc(100%+6px)] left-0 z-50 w-full overflow-hidden rounded-[var(--radius-md)] p-1 glass-3"
         >
           {visible.length === 0 ? (
             <p className="px-3 py-3 text-sm text-[var(--muted)]">

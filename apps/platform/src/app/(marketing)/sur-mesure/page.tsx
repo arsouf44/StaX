@@ -66,10 +66,6 @@ export default function CustomPage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="spotlight absolute inset-0" />
-          <div className="grid-bg grid-bg-fade absolute inset-0" />
-        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"

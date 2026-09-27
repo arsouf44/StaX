@@ -96,10 +96,8 @@ export async function ProposalDashboard({
   return (
     <div className="space-y-8" data-testid="proposal-dashboard">
       <div>
-        <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-          {proposal.companyName}
-        </p>
-        <h1 className="mt-2 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">
+        <p className="kicker">{proposal.companyName}</p>
+        <h1 className="title-page mt-2">
           {proposal.deliveryPending
             ? 'Merci ! Votre site est en cours de remise'
             : `${hello}, voici votre site`}
@@ -184,9 +182,7 @@ export async function ProposalDashboard({
 
         <div className="space-y-4">
           <Panel level={2} padding="lg">
-            <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              Offre {proposal.planName}
-            </p>
+            <p className="kicker">Offre {proposal.planName}</p>
             <dl className="mt-4 space-y-3 text-sm">
               <div>
                 <dt className="text-[var(--foreground-muted)]">Création du site, payée une fois</dt>

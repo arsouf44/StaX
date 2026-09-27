@@ -132,10 +132,6 @@ export default async function BusinessPage({
       />
 
       <Section className="relative overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="spotlight absolute inset-0" />
-          <div className="grid-bg grid-bg-fade absolute inset-0" />
-        </div>
         <Container size="wide">
           <Breadcrumb
             className="mb-8"
@@ -164,10 +160,7 @@ export default async function BusinessPage({
               </div>
             </div>
             <Reveal delay={100}>
-              <BrowserFrame
-                url={`${business.id}-exemple.fr`}
-                tone={previewFor(sector.id) === 'coiffeur' ? 'light' : 'dark'}
-              >
+              <BrowserFrame url={`${business.id}-exemple.fr`}>
                 <SitePreview variant={previewFor(sector.id)} />
               </BrowserFrame>
               <p className="mt-3 text-center text-xs text-[var(--muted)]">

@@ -278,7 +278,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           ) : null}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-medium tracking-[-0.02em]">{site.name}</h1>
+          <h1 className="title-page">{site.name}</h1>
           <StatusPill tone={state.tone}>{state.label}</StatusPill>
           {site.is_demo ? <Badge>Démonstration</Badge> : null}
         </div>

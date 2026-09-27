@@ -50,12 +50,8 @@ export default async function ClaimSitePage({
       <main id="contenu-principal" className="flex flex-1 items-start pb-16">
         <Container size="default">
           <div className="max-w-xl">
-            <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-              Votre site est prêt
-            </p>
-            <h1 className="mt-2 text-3xl font-medium tracking-[-0.03em]">
-              Récupérez votre site en quelques minutes
-            </h1>
+            <p className="kicker">Votre site est prêt</p>
+            <h1 className="display-panel mt-2">Récupérez votre site en quelques minutes</h1>
 
             <ol className="mt-6 space-y-3">
               {[

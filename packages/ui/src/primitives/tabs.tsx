@@ -119,7 +119,7 @@ export function Tab({
       {typeof count === 'number' ? (
         <span
           className={cn(
-            'rounded-full px-1.5 py-0.5 text-2xs tabular-nums',
+            'px-1.5 py-0.5 text-2xs tabular-nums',
             selected
               ? 'bg-[var(--surface-hover)] text-[var(--foreground)]'
               : 'bg-[var(--surface)] text-[var(--muted)]',

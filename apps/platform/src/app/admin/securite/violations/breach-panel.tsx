@@ -105,7 +105,7 @@ export function BreachRegister({ breaches }: { breaches: BreachView[] }) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
-          <h1 className="text-xl font-medium tracking-[-0.02em]">Registre des violations</h1>
+          <h1 className="title-page">Registre des violations</h1>
           <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
             L’article 33.5 du RGPD impose de documenter <strong>toute</strong> violation, y compris
             celles que nous choisissons de ne pas notifier. Ouvrez une entrée dès le constat : une

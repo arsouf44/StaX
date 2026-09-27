@@ -16,7 +16,6 @@ import {
 } from '@stax/ui';
 import type { Workspace } from '@stax/database';
 import { ROLE_LABELS } from '@stax/business';
-import { ThemeToggle } from '~/components/theme-toggle';
 import { signOutAction, switchOrganizationAction, switchSiteAction } from '~/app/app/actions';
 
 /**
@@ -37,8 +36,8 @@ const SITE_STATUS: Record<string, { label: string; tone: StatusTone }> = {
 };
 
 const TRIGGER_CLASS =
-  'flex max-w-40 items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm ' +
-  'text-[var(--foreground-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--foreground)]';
+  'flex max-w-40 items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold ' +
+  'text-[var(--foreground-muted)] transition-colors hover:bg-[var(--background-inset)] hover:text-[var(--foreground)]';
 
 export function AppHeader({ workspace }: { workspace: Workspace }) {
   const [pending, startTransition] = useTransition();
@@ -130,8 +129,6 @@ export function AppHeader({ workspace }: { workspace: Workspace }) {
             Voir mon site
           </a>
         ) : null}
-
-        <ThemeToggle />
 
         <DropdownMenu>
           <DropdownTrigger className={TRIGGER_CLASS}>

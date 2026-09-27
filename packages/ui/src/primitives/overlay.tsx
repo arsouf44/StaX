@@ -198,7 +198,7 @@ export function Dialog({
         <div
           aria-hidden="true"
           onClick={dismissible ? onClose : undefined}
-          className="absolute inset-0 bg-[rgb(0_0_0/0.6)] backdrop-blur-sm"
+          className="absolute inset-0 bg-[rgb(24_52_66/0.32)] backdrop-blur-[6px]"
         />
         <div
           ref={panelRef}
@@ -208,7 +208,7 @@ export function Dialog({
           aria-describedby={description ? descriptionId : undefined}
           tabIndex={-1}
           className={cn(
-            'glass-edge relative w-full overflow-hidden glass-3',
+            'relative w-full overflow-hidden glass-3',
             'rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-xl)]',
             'max-h-[90dvh] animate-[reveal_0.28s_cubic-bezier(0.16,1,0.3,1)]',
             widths[size],
@@ -363,7 +363,7 @@ export function Sheet({ open, onClose, title, children, side = 'right', footer }
         <div
           aria-hidden="true"
           onClick={onClose}
-          className="absolute inset-0 bg-[rgb(0_0_0/0.6)] backdrop-blur-sm"
+          className="absolute inset-0 bg-[rgb(24_52_66/0.32)] backdrop-blur-[6px]"
         />
         <div
           ref={panelRef}
@@ -482,7 +482,7 @@ export function DropdownContent({
       role="menu"
       aria-labelledby={context.triggerId}
       className={cn(
-        'absolute glass-edge top-[calc(100%+6px)] z-40 min-w-52 overflow-hidden glass-3',
+        'absolute top-[calc(100%+6px)] z-40 min-w-52 overflow-hidden glass-3',
         'animate-[reveal_0.16s_ease-out] rounded-[var(--radius-md)] p-1',
         align === 'end' ? 'right-0' : 'left-0',
         className,

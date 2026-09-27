@@ -21,9 +21,7 @@ export default async function OrderDomainPage() {
     <>
       <OrderSteps current="/commander/adresse" />
 
-      <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">
-        Quelle sera l’adresse de votre site ?
-      </h1>
+      <h1 className="title-page">Quelle sera l’adresse de votre site ?</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         Vous pouvez utiliser un nom de domaine que vous possédez déjà, nous demander de l’acheter
         pour vous, ou le choisir plus tard : votre site est alors d’abord en ligne sur l’adresse

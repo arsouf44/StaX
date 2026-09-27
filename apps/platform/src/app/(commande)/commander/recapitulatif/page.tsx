@@ -97,7 +97,7 @@ export default async function OrderSummaryPage({
         </Alert>
       ) : null}
 
-      <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Récapitulatif</h1>
+      <h1 className="title-page">Récapitulatif</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         {internal
           ? 'Vérifiez ces informations avant d’enregistrer la commande.'

@@ -54,7 +54,7 @@ export function AppShell({ groups, header, children, badges = {} }: AppShellProp
           <Icon name="menu" />
           Menu
           {totalBadges > 0 ? (
-            <span className="rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+            <span className="bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
               {totalBadges}
             </span>
           ) : null}
@@ -73,9 +73,7 @@ export function AppShell({ groups, header, children, badges = {} }: AppShellProp
             if (primary.length === 0) return null;
             return (
               <div key={group.id} className="mb-7">
-                <p className="mb-2 px-3 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-                  {group.label}
-                </p>
+                <p className="kicker mb-2 px-3">{group.label}</p>
                 <ul className="space-y-0.5">
                   {primary.map((item) => (
                     <li key={item.href}>
@@ -127,15 +125,15 @@ function NavItem({
       className={cn(
         'flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors',
         active
-          ? 'bg-[var(--surface-elevated)] font-medium text-[var(--foreground)]'
-          : 'text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+          ? 'bg-[rgb(255_255_255/0.62)] font-semibold text-[var(--ink)] shadow-[inset_2px_0_0_var(--deep-water),0_10px_24px_-18px_rgb(35_78_94/0.5)]'
+          : 'text-[var(--foreground-muted)] hover:bg-[rgb(255_255_255/0.4)] hover:text-[var(--foreground)]',
       )}
     >
       <Icon name={item.icon} />
       <span className="truncate">{item.label}</span>
       {badge ? (
         <span
-          className="ml-auto rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]"
+          className="ml-auto bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]"
           aria-label={`${badge} non lu(s)`}
         >
           {badge}

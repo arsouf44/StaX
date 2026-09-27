@@ -10,10 +10,6 @@ import { ButtonLink, Container, Logo } from '@stax/ui';
 export default function NotFound() {
   return (
     <div className="relative flex min-h-dvh flex-col">
-      <div
-        aria-hidden="true"
-        className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-      />
       <header className="py-8">
         <Container size="default">
           <Link href="/" aria-label="StaX — accueil" className="inline-flex">
@@ -25,12 +21,8 @@ export default function NotFound() {
       <main id="contenu-principal" className="flex flex-1 items-center">
         <Container size="default">
           <div className="max-w-xl">
-            <p className="text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-              Erreur 404
-            </p>
-            <h1 className="mt-4 text-3xl font-medium tracking-[-0.03em] sm:text-4xl">
-              Cette page n’existe pas
-            </h1>
+            <p className="eyebrow-index">Erreur 404</p>
+            <h1 className="display-panel mt-4">Cette page n’existe pas</h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
               Le lien est peut-être ancien, ou l’adresse comporte une erreur. Voici où aller
               maintenant.

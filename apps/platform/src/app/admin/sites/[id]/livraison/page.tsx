@@ -403,7 +403,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
       <div>
         <Breadcrumbs site={site} />
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-medium tracking-[-0.02em]">Infrastructure & livraison</h1>
+          <h1 className="title-page">Infrastructure & livraison</h1>
           {delivered ? (
             <StatusPill tone="success">Livré le {when(site.delivered_at)}</StatusPill>
           ) : readiness.ready ? (

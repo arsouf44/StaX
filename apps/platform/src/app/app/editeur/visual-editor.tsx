@@ -529,10 +529,7 @@ export function VisualEditor({
   const structure = (
     <div className="flex h-full flex-col" data-testid="structure-panel">
       <div className="border-b border-[var(--border)] p-3">
-        <label
-          className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase"
-          htmlFor="page-select"
-        >
+        <label className="kicker" htmlFor="page-select">
           Page
         </label>
         <select
@@ -559,9 +556,7 @@ export function VisualEditor({
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
-        <p className="px-2 py-1.5 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-          Sections de la page
-        </p>
+        <p className="kicker px-2 py-1.5">Sections de la page</p>
         {blocks.length === 0 ? (
           <p className="px-2 py-3 text-sm text-[var(--foreground-muted)]">
             Cette page est vide. Cliquez sur « Ajouter une section » pour commencer.

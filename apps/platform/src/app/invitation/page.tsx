@@ -56,7 +56,7 @@ export default async function InvitationPage({
       <main id="contenu-principal" className="flex flex-1 items-start pb-16">
         <Container size="default">
           <div className="max-w-xl">
-            <h1 className="text-3xl font-medium tracking-[-0.03em]">
+            <h1 className="display-panel">
               {organizationName ? `Rejoindre ${organizationName}` : 'Vous êtes invité sur StaX'}
             </h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">

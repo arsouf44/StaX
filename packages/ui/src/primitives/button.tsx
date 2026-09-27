@@ -7,9 +7,10 @@ import { cn } from '../lib';
 /**
  * Bouton.
  *
- * L action principale est un aplat a contraste maximal — blanc sur noir en
- * sombre, noir sur blanc en clair. Aucun degrade : la hierarchie vient du
- * contraste et de l espace, pas de la couleur.
+ * Des aplats a angles vifs, jamais de degrade : l encre pour l action
+ * principale, l eau profonde pour l appel a l action de marque, le verre pour
+ * tout le reste. Sur les pages publiques (tailles `pill*`), le libelle passe en
+ * petites capitales espacees, comme la navigation.
  *
  * Accessibilite : hauteur minimale de 40 px (44 px sur mobile), focus toujours
  * visible, etat de chargement annonce aux lecteurs d ecran, et `aria-disabled`
@@ -18,43 +19,42 @@ import { cn } from '../lib';
 const buttonVariants = cva(
   [
     'relative inline-flex items-center justify-center gap-2 whitespace-nowrap',
-    'font-medium tracking-[-0.01em] select-none',
-    'transition-[background-color,border-color,color,box-shadow,transform] duration-200',
+    'font-semibold tracking-[0.005em] select-none',
+    'transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]',
     'disabled:pointer-events-none disabled:opacity-45',
-    'active:scale-[0.985]',
+    'active:translate-y-px',
   ].join(' '),
   {
     variants: {
       variant: {
         primary:
-          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_1px_0_0_rgb(255_255_255/0.2)_inset] hover:opacity-90',
-        /** Appel a l action de marque : bleu electrique, reserve a UNE action par ecran. */
+          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_14px_32px_-18px_rgb(24_52_66/0.7)] hover:opacity-90',
+        /** Appel a l action de marque : l eau profonde, reserve a UNE action par ecran. */
         accent:
-          'bg-[var(--accent)] text-[var(--accent-foreground)] shadow-[0_1px_0_0_rgb(255_255_255/0.22)_inset,0_10px_30px_-12px_var(--accent-glow)] hover:bg-[var(--accent-hover)]',
+          'bg-[var(--accent)] text-[var(--accent-foreground)] shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_16px_34px_-18px_rgb(49_90_112/0.8)] hover:bg-[var(--accent-hover)]',
         secondary:
-          'border border-[var(--border-strong)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]',
-        glass:
-          'glass-edge text-[var(--foreground)] glass-2 hover:bg-[color-mix(in_oklab,var(--glass-2),var(--foreground)_6%)]',
+          'border border-[var(--border-strong)] bg-[var(--background-inset)] text-[var(--foreground)] backdrop-blur-md hover:bg-[var(--surface-hover)]',
+        glass: 'text-[var(--foreground)] glass-2 hover:bg-[var(--glass-3)]',
         ghost:
-          'text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]',
+          'text-[var(--foreground-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
         outline:
-          'border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface)]',
+          'border border-[var(--border-strong)] text-[var(--foreground)] hover:bg-[var(--background-inset)]',
         danger:
           'bg-[var(--danger)] text-white hover:opacity-90 focus-visible:outline-[var(--danger)]',
         link: 'h-auto p-0 text-[var(--foreground)] underline decoration-[var(--border-strong)] underline-offset-4 hover:decoration-[var(--foreground)]',
       },
       size: {
-        sm: 'h-9 rounded-[var(--radius-sm)] px-3 text-sm',
-        md: 'h-10 rounded-[var(--radius-md)] px-4 text-sm',
-        lg: 'h-12 rounded-[var(--radius-md)] px-6 text-base',
-        xl: 'h-14 rounded-[var(--radius-lg)] px-8 text-lg',
-        /** Pastille : boutons des pages publiques. */
-        pill: 'h-11 rounded-full px-6 text-[0.9375rem]',
-        'pill-lg': 'h-[3.25rem] rounded-full px-7 text-base',
-        'pill-sm': 'h-9 rounded-full px-4 text-sm',
-        icon: 'size-10 rounded-[var(--radius-md)]',
-        'icon-sm': 'size-8 rounded-[var(--radius-sm)]',
+        sm: 'h-9 px-3 text-sm',
+        md: 'h-10 px-4 text-sm',
+        lg: 'h-12 px-6 text-[0.9375rem]',
+        xl: 'h-14 px-8 text-base',
+        /** Pages publiques : petites capitales espacees. */
+        pill: 'h-12 px-6 text-xs font-bold tracking-[0.07em] uppercase',
+        'pill-lg': 'h-[3.375rem] px-8 text-xs font-bold tracking-[0.08em] uppercase',
+        'pill-sm': 'h-10 px-4 text-[0.6875rem] font-bold tracking-[0.07em] uppercase',
+        icon: 'size-10',
+        'icon-sm': 'size-8',
       },
       block: { true: 'w-full', false: '' },
     },

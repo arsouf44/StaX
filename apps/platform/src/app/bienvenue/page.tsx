@@ -51,7 +51,7 @@ export default async function WelcomePage() {
       <main id="contenu-principal" className="flex flex-1 items-center">
         <Container size="default">
           <div className="max-w-xl">
-            <h1 className="text-3xl font-medium tracking-[-0.03em]">Votre compte est prêt</h1>
+            <h1 className="display-panel">Votre compte est prêt</h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
               Il ne lui manque qu’un site. Choisissez votre situation.
             </p>

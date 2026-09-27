@@ -17,42 +17,31 @@ export function BrowserFrame({
   url,
   children,
   className,
-  tone = 'dark',
   secure = true,
 }: {
   url: string;
   children: React.ReactNode;
   className?: string;
-  tone?: 'dark' | 'light';
   secure?: boolean;
 }) {
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-[var(--radius-xl)] border shadow-[var(--shadow-stage)]',
-        tone === 'dark' ? 'border-white/10 bg-[#0a0e15]' : 'border-black/10 bg-white',
+        'overflow-hidden border border-[rgb(255_255_255/0.85)] bg-[rgb(250_252_251/0.86)] shadow-[var(--shadow-stage)] backdrop-blur-xl',
         className,
       )}
     >
       <div
-        className={cn(
-          'flex items-center gap-3 border-b px-3 py-2.5',
-          tone === 'dark' ? 'border-white/8 bg-white/[0.02]' : 'border-black/6 bg-black/[0.015]',
-        )}
+        className={cn('flex items-center gap-3 border-b border-[rgb(37_82_101/0.13)] px-3 py-2.5')}
       >
         <div aria-hidden="true" className="flex gap-1.5">
-          {['#FF5F57', '#FEBC2E', '#28C840'].map((color) => (
-            <span
-              key={color}
-              className="size-2.5 rounded-full opacity-70"
-              style={{ backgroundColor: color }}
-            />
+          {[0, 1, 2].map((dot) => (
+            <span key={dot} className="size-2.5 rounded-full border border-[rgb(37_82_101/0.35)]" />
           ))}
         </div>
         <div
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2.5 py-1 text-2xs',
-            tone === 'dark' ? 'bg-white/[0.04] text-white/55' : 'bg-black/[0.04] text-black/50',
+            'flex min-w-0 flex-1 items-center gap-1.5 border border-[rgb(37_82_101/0.12)] bg-white/80 px-2.5 py-1 text-2xs font-semibold text-[#3f6f86]',
           )}
         >
           {secure ? (
@@ -65,15 +54,11 @@ export function BrowserFrame({
               <path d="M8 1a3.2 3.2 0 0 0-3.2 3.2V6H4.5A1.5 1.5 0 0 0 3 7.5v5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 6h-.3V4.2A3.2 3.2 0 0 0 8 1Zm1.8 5H6.2V4.2a1.8 1.8 0 1 1 3.6 0V6Z" />
             </svg>
           ) : null}
-          <span className="truncate font-mono">{url}</span>
+          <span className="truncate">{url}</span>
         </div>
         <div aria-hidden="true" className="hidden gap-1 sm:flex">
-          <span
-            className={cn('h-3 w-3 rounded-sm', tone === 'dark' ? 'bg-white/8' : 'bg-black/8')}
-          />
-          <span
-            className={cn('h-3 w-3 rounded-sm', tone === 'dark' ? 'bg-white/8' : 'bg-black/8')}
-          />
+          <span className="h-3 w-3 border border-[rgb(37_82_101/0.2)]" />
+          <span className="h-3 w-3 border border-[rgb(37_82_101/0.2)]" />
         </div>
       </div>
       {children}
@@ -130,16 +115,21 @@ function NavIcon({ name }: { name: string }) {
 
 export function DashboardMock({ className }: { className?: string }) {
   return (
-    <div className={cn('flex h-full min-h-[26rem] bg-[#0a0e15] text-white/90', className)}>
+    <div
+      className={cn(
+        'flex h-full min-h-[26rem] bg-[rgb(247_250_249/0.9)] text-[#183442]',
+        className,
+      )}
+    >
       {/* Barre laterale */}
-      <aside className="hidden w-52 shrink-0 flex-col border-r border-white/8 p-3 sm:flex">
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-white/8 bg-white/[0.03] p-2">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[#147CFF]/15 text-[10px] font-semibold text-[#52B5FF]">
+      <aside className="hidden w-52 shrink-0 flex-col border-r border-[rgb(37_82_101/0.14)] p-3 sm:flex">
+        <div className="mb-4 flex items-center gap-2 border border-[rgb(37_82_101/0.14)] bg-white/80 p-2">
+          <span className="flex size-6 shrink-0 items-center justify-center bg-[#183442] text-[10px] font-semibold text-[#f0f3f1]">
             RD
           </span>
           <div className="min-w-0">
             <p className="truncate text-[11px] font-medium">Restaurant Dupont</p>
-            <p className="truncate text-[9px] text-white/40">Offre Ultra Premium</p>
+            <p className="truncate text-[9px] text-[#53717e]">Offre Ultra Premium</p>
           </div>
         </div>
         <nav className="space-y-0.5">
@@ -147,24 +137,26 @@ export function DashboardMock({ className }: { className?: string }) {
             <div
               key={item.label}
               className={cn(
-                'flex items-center gap-2 rounded-md px-2 py-1.5 text-[11px]',
-                item.active ? 'bg-white/[0.07] text-white' : 'text-white/50',
+                'flex items-center gap-2 px-2 py-1.5 text-[11px]',
+                item.active
+                  ? 'bg-white font-semibold text-[#183442] shadow-[inset_2px_0_0_#315a70]'
+                  : 'text-[#4f6c79]',
               )}
             >
               <NavIcon name={item.icon} />
               <span className="truncate">{item.label}</span>
               {item.badge ? (
-                <span className="ml-auto rounded-full bg-[#147CFF] px-1.5 text-[9px] font-medium text-white">
+                <span className="ml-auto bg-[#315a70] px-1.5 text-[9px] font-medium text-white">
                   {item.badge}
                 </span>
               ) : null}
             </div>
           ))}
         </nav>
-        <div className="mt-auto rounded-lg border border-white/8 bg-white/[0.02] p-2.5">
-          <p className="text-[10px] text-white/50">Site en ligne</p>
-          <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2FD29B]">
-            <span className="size-1.5 rounded-full bg-[#2FD29B]" />
+        <div className="mt-auto border border-[rgb(37_82_101/0.14)] bg-white/70 p-2.5">
+          <p className="text-[10px] text-[#4f6c79]">Site en ligne</p>
+          <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2f7a5c]">
+            <span className="size-1.5 rounded-full bg-[#2f7a5c]" />
             restaurant-dupont.fr
           </p>
         </div>
@@ -175,11 +167,11 @@ export function DashboardMock({ className }: { className?: string }) {
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-[13px] font-medium">Bonjour Marc.</p>
-            <p className="mt-0.5 text-[11px] text-white/45">
+            <p className="mt-0.5 text-[11px] text-[#53717e]">
               Votre site est en ligne depuis 42 jours.
             </p>
           </div>
-          <span className="hidden rounded-md border border-white/10 px-2 py-1 text-[10px] text-white/50 sm:block">
+          <span className="hidden border border-[rgb(37_82_101/0.18)] px-2 py-1 text-[10px] text-[#4f6c79] sm:block">
             30 derniers jours
           </span>
         </div>
@@ -191,24 +183,24 @@ export function DashboardMock({ className }: { className?: string }) {
             { label: 'Réservations', value: '61', delta: '+9,1 %', good: true },
             { label: 'Couverts', value: '184', delta: null, good: true },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
-              <p className="text-[10px] text-white/45">{stat.label}</p>
+            <div key={stat.label} className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
+              <p className="text-[10px] text-[#53717e]">{stat.label}</p>
               <p className="mt-1 text-lg font-medium tabular-nums">{stat.value}</p>
               {stat.delta ? (
-                <p className="mt-0.5 text-[10px] text-[#2FD29B] tabular-nums">{stat.delta}</p>
+                <p className="mt-0.5 text-[10px] text-[#2f7a5c] tabular-nums">{stat.delta}</p>
               ) : (
-                <p className="mt-0.5 text-[10px] text-white/30">—</p>
+                <p className="mt-0.5 text-[10px] text-[#7a949f]">—</p>
               )}
             </div>
           ))}
         </div>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-[1.6fr_1fr]">
-          <div className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
+          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
             <p className="text-[11px] font-medium">Fréquentation</p>
             <SparkChart className="mt-3" />
           </div>
-          <div className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
+          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
             <p className="text-[11px] font-medium">Prochaines réservations</p>
             <ul className="mt-2.5 space-y-2">
               {[
@@ -217,11 +209,11 @@ export function DashboardMock({ className }: { className?: string }) {
                 { time: '20:45', name: 'Table 12', size: 6 },
               ].map((booking) => (
                 <li key={booking.time} className="flex items-center gap-2.5 text-[10px]">
-                  <span className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-white/70">
+                  <span className="bg-[rgb(37_82_101/0.08)] px-1.5 py-0.5 font-mono text-[#284f60]">
                     {booking.time}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-white/70">{booking.name}</span>
-                  <span className="text-white/40">{booking.size} pers.</span>
+                  <span className="min-w-0 flex-1 truncate text-[#284f60]">{booking.name}</span>
+                  <span className="text-[#53717e]">{booking.size} pers.</span>
                 </li>
               ))}
             </ul>
@@ -249,16 +241,21 @@ export function ProjectMock({ className }: { className?: string }) {
   ] as const;
 
   return (
-    <div className={cn('flex h-full min-h-[24rem] bg-[#0a0e15] text-white/90', className)}>
+    <div
+      className={cn(
+        'flex h-full min-h-[24rem] bg-[rgb(247_250_249/0.9)] text-[#183442]',
+        className,
+      )}
+    >
       <div className="min-w-0 flex-1 p-4 sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium">Votre projet — Restaurant Dupont</p>
-            <p className="mt-0.5 text-[11px] text-white/45">
+            <p className="mt-0.5 text-[11px] text-[#53717e]">
               Offre Premium · votre site est en cours de développement
             </p>
           </div>
-          <span className="shrink-0 rounded-md border border-white/10 px-2 py-1 text-[10px] text-white/50">
+          <span className="shrink-0 border border-[rgb(37_82_101/0.18)] px-2 py-1 text-[10px] text-[#4f6c79]">
             Étape 4 sur 7
           </span>
         </div>
@@ -268,12 +265,12 @@ export function ProjectMock({ className }: { className?: string }) {
             <li
               key={step.label}
               className={cn(
-                'flex items-center gap-2.5 rounded-md border px-2.5 py-2 text-[11px]',
+                'flex items-center gap-2.5 border px-2.5 py-2 text-[11px]',
                 step.state === 'current'
-                  ? 'border-[#147CFF]/45 bg-[#147CFF]/10 text-white'
-                  : 'border-white/8 bg-white/[0.02]',
-                step.state === 'todo' ? 'text-white/40' : null,
-                step.state === 'done' ? 'text-white/70' : null,
+                  ? 'border-[#315a70]/45 bg-[rgb(87_148_176/0.14)] font-semibold text-[#183442]'
+                  : 'border-[rgb(37_82_101/0.14)] bg-white/70',
+                step.state === 'todo' ? 'text-[#53717e]' : null,
+                step.state === 'done' ? 'text-[#284f60]' : null,
               )}
             >
               <span
@@ -281,28 +278,28 @@ export function ProjectMock({ className }: { className?: string }) {
                 className={cn(
                   'size-2 shrink-0 rounded-full',
                   step.state === 'done'
-                    ? 'bg-[#2FD29B]'
+                    ? 'bg-[#2f7a5c]'
                     : step.state === 'current'
-                      ? 'bg-[#52B5FF]'
-                      : 'border border-white/25',
+                      ? 'bg-[#5794b0]'
+                      : 'border border-[rgb(37_82_101/0.35)]',
                 )}
               />
               <span className="truncate">{step.label}</span>
               {step.state === 'current' ? (
-                <span className="ml-auto text-[9px] text-[#52B5FF]">en cours</span>
+                <span className="ml-auto text-[9px] text-[#3f6f86]">en cours</span>
               ) : null}
             </li>
           ))}
         </ol>
 
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <div className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
-            <p className="text-[10px] text-white/45">Éléments demandés</p>
+          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
+            <p className="text-[10px] text-[#53717e]">Éléments demandés</p>
             <p className="mt-1 text-[11px]">Photos de la salle · 2 fichiers attendus</p>
           </div>
-          <div className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
-            <p className="text-[10px] text-white/45">Éditeur</p>
-            <p className="mt-1 text-[11px] text-white/60">S’ouvre à la livraison de votre site</p>
+          <div className="border border-[rgb(37_82_101/0.14)] bg-white/70 p-3">
+            <p className="text-[10px] text-[#53717e]">Éditeur</p>
+            <p className="mt-1 text-[11px] text-[#3d5a67]">S’ouvre à la livraison de votre site</p>
           </div>
         </div>
       </div>
@@ -334,15 +331,15 @@ function SparkChart({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#147CFF" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#147CFF" stopOpacity="0" />
+          <stop stopColor="#5794b0" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#5794b0" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={`${path} L${width} ${height} L0 ${height} Z`} fill="url(#spark-fill)" />
       <path
         d={path}
         fill="none"
-        stroke="#52B5FF"
+        stroke="#315a70"
         strokeWidth="1.5"
         vectorEffect="non-scaling-stroke"
       />
@@ -360,9 +357,14 @@ export function EditorMock({ className }: { className?: string }) {
   // modifiables. Pas de sections a deplacer, pas de couleurs a choisir : la
   // mise en page et le design restent ceux que l'equipe a concus.
   return (
-    <div className={cn('flex h-full min-h-[24rem] bg-[#0a0e15] text-white/90', className)}>
-      <aside className="hidden w-44 shrink-0 flex-col border-r border-white/8 p-3 md:flex">
-        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
+    <div
+      className={cn(
+        'flex h-full min-h-[24rem] bg-[rgb(247_250_249/0.9)] text-[#183442]',
+        className,
+      )}
+    >
+      <aside className="hidden w-44 shrink-0 flex-col border-r border-[rgb(37_82_101/0.14)] p-3 md:flex">
+        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-[#53717e] uppercase">
           Contenus modifiables
         </p>
         <ul className="space-y-1">
@@ -375,24 +377,24 @@ export function EditorMock({ className }: { className?: string }) {
             <li
               key={page.label}
               className={cn(
-                'rounded-md border px-2 py-1.5 text-[10px]',
+                'border px-2 py-1.5 text-[10px]',
                 page.active
-                  ? 'border-[#147CFF]/45 bg-[#147CFF]/10 text-white'
-                  : 'border-white/8 bg-white/[0.02] text-white/55',
+                  ? 'border-[#315a70]/45 bg-[rgb(87_148_176/0.14)] font-semibold text-[#183442]'
+                  : 'border-[rgb(37_82_101/0.14)] bg-white/70 text-[#4f6c79]',
               )}
             >
               {page.label}
             </li>
           ))}
         </ul>
-        <p className="mt-4 mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
+        <p className="mt-4 mb-2 text-[9px] font-medium tracking-[0.12em] text-[#53717e] uppercase">
           Informations
         </p>
         <ul className="space-y-1">
           {['Horaires', 'Coordonnées', 'Réseaux sociaux'].map((label) => (
             <li
               key={label}
-              className="rounded-md border border-white/8 bg-white/[0.02] px-2 py-1.5 text-[10px] text-white/55"
+              className="border border-[rgb(37_82_101/0.14)] bg-white/70 px-2 py-1.5 text-[10px] text-[#4f6c79]"
             >
               {label}
             </li>
@@ -401,42 +403,42 @@ export function EditorMock({ className }: { className?: string }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 border-b border-white/8 px-3 py-2">
+        <div className="flex items-center gap-2 border-b border-[rgb(37_82_101/0.14)] px-3 py-2">
           {/* Sous 400 px, l etat du brouillon s efface : l action de publier
               doit rester visible, l information peut attendre. */}
-          <span className="hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-white/40 min-[400px]:flex">
-            <span className="size-1.5 rounded-full bg-[#F5A524]" />
+          <span className="hidden items-center gap-1.5 text-[9px] whitespace-nowrap text-[#53717e] min-[400px]:flex">
+            <span className="size-1.5 rounded-full bg-[#b7793a]" />
             Brouillon enregistré — 3 modifications
           </span>
-          <span className="ml-auto rounded-md border border-white/15 px-2.5 py-1 text-[9px] whitespace-nowrap text-white/70">
+          <span className="ml-auto border border-[rgb(37_82_101/0.28)] px-2.5 py-1 text-[9px] whitespace-nowrap text-[#284f60]">
             Aperçu
           </span>
-          <span className="rounded-md bg-white px-2.5 py-1 text-[9px] font-medium whitespace-nowrap text-black">
+          <span className="bg-[#183442] px-2.5 py-1 text-[9px] font-semibold whitespace-nowrap text-[#f0f3f1]">
             Publier
           </span>
         </div>
 
         <div className="p-4">
-          <p className="text-[9px] text-white/35">Aperçu de votre site — restaurant-dupont.fr</p>
-          <div className="mt-2 rounded-lg border border-white/8 p-4">
-            <div className="rounded-md outline-1 outline-offset-4 outline-[#147CFF] outline-dashed">
-              <p className="text-[9px] text-[#52B5FF]">Titre · modifiable</p>
-              <div className="mt-1.5 h-2.5 w-2/3 rounded bg-white/18" />
+          <p className="text-[9px] text-[#53717e]">Aperçu de votre site — restaurant-dupont.fr</p>
+          <div className="mt-2 border border-[rgb(37_82_101/0.14)] p-4">
+            <div className="outline-1 outline-offset-4 outline-[#315a70] outline-dashed">
+              <p className="text-[9px] text-[#3f6f86]">Titre · modifiable</p>
+              <div className="mt-1.5 h-2.5 w-2/3 bg-[rgb(37_82_101/0.28)]" />
             </div>
-            <div className="mt-2 h-2 w-1/2 rounded bg-white/10" />
+            <div className="mt-2 h-2 w-1/2 bg-[rgb(37_82_101/0.14)]" />
             <div className="mt-3 flex gap-2">
-              <span className="rounded bg-white/85 px-3 py-1 text-[9px] text-black">Réserver</span>
-              <span className="rounded border border-white/20 px-3 py-1 text-[9px] text-white/70">
+              <span className="bg-[#183442] px-3 py-1 text-[9px] text-[#f0f3f1]">Réserver</span>
+              <span className="border border-[rgb(37_82_101/0.3)] px-3 py-1 text-[9px] text-[#284f60]">
                 Voir la carte
               </span>
             </div>
           </div>
           <div className="mt-2 space-y-2 opacity-45">
-            <div className="rounded-lg border border-white/8 p-4">
-              <div className="h-2 w-1/3 rounded bg-white/12" />
+            <div className="border border-[rgb(37_82_101/0.14)] p-4">
+              <div className="h-2 w-1/3 bg-[rgb(37_82_101/0.18)]" />
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {[0, 1, 2].map((index) => (
-                  <div key={index} className="h-10 rounded bg-white/[0.05]" />
+                  <div key={index} className="h-10 bg-[rgb(37_82_101/0.07)]" />
                 ))}
               </div>
             </div>
@@ -444,35 +446,35 @@ export function EditorMock({ className }: { className?: string }) {
         </div>
       </div>
 
-      <aside className="hidden w-48 shrink-0 border-l border-white/8 p-3 lg:block">
-        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-white/35 uppercase">
+      <aside className="hidden w-48 shrink-0 border-l border-[rgb(37_82_101/0.14)] p-3 lg:block">
+        <p className="mb-2 text-[9px] font-medium tracking-[0.12em] text-[#53717e] uppercase">
           Bannière
         </p>
         <div className="space-y-2.5">
           <div>
-            <p className="text-[9px] text-white/40">Titre</p>
-            <div className="mt-1 rounded border border-[#147CFF]/45 bg-white/[0.03] px-2 py-1.5 text-[10px] text-white/80">
+            <p className="text-[9px] text-[#53717e]">Titre</p>
+            <div className="mt-1 border border-[#315a70]/55 bg-white/80 px-2 py-1.5 text-[10px] text-[#183442]">
               Une cuisine qui vous ressemble
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-white/40">Texte</p>
-            <div className="mt-1 h-10 rounded border border-white/10 bg-white/[0.03] px-2 py-1.5 text-[9px] leading-relaxed text-white/55">
+            <p className="text-[9px] text-[#53717e]">Texte</p>
+            <div className="mt-1 h-10 border border-[rgb(37_82_101/0.18)] bg-white/80 px-2 py-1.5 text-[9px] leading-relaxed text-[#4f6c79]">
               Découvrez notre carte et réservez votre table.
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-white/40">Image</p>
+            <p className="text-[9px] text-[#53717e]">Image</p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="h-7 w-10 rounded bg-[linear-gradient(135deg,#C2703A,#2a1a12)]" />
-              <span className="rounded border border-white/12 px-2 py-1 text-[9px] text-white/60">
+              <span className="h-7 w-10 bg-[linear-gradient(135deg,#d7c2b3,#8cb6c9)]" />
+              <span className="border border-[rgb(37_82_101/0.2)] px-2 py-1 text-[9px] text-[#3d5a67]">
                 Remplacer
               </span>
             </div>
           </div>
           <div>
-            <p className="text-[9px] text-white/40">Bouton — texte et lien</p>
-            <div className="mt-1 rounded border border-white/10 bg-white/[0.03] px-2 py-1.5 text-[10px] text-white/60">
+            <p className="text-[9px] text-[#53717e]">Bouton — texte et lien</p>
+            <div className="mt-1 border border-[rgb(37_82_101/0.18)] bg-white/80 px-2 py-1.5 text-[10px] text-[#3d5a67]">
               Réserver · /reservation
             </div>
           </div>
@@ -647,12 +649,10 @@ export function SitePreview({
 
 export function InboxPanel({ className }: { className?: string }) {
   return (
-    <div className={cn('glass-edge rounded-[var(--radius-md)] p-3.5 glass-3', className)}>
+    <div className={cn('p-3.5 glass-3', className)}>
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-medium">Messages</p>
-        <span className="rounded-full bg-[var(--accent)] px-1.5 text-[9px] font-medium text-white">
-          3
-        </span>
+        <p className="kicker !text-[10px]">Messages</p>
+        <span className="bg-[var(--accent)] px-1.5 text-[9px] font-semibold text-white">3</span>
       </div>
       <ul className="mt-2.5 space-y-2">
         {[
@@ -679,9 +679,9 @@ export function InboxPanel({ className }: { className?: string }) {
 
 export function PaymentPanel({ className }: { className?: string }) {
   return (
-    <div className={cn('glass-edge rounded-[var(--radius-md)] p-3.5 glass-3', className)}>
-      <p className="text-[11px] font-medium">Paiement reçu</p>
-      <p className="mt-2 text-2xl font-medium tracking-[-0.03em] tabular-nums">48,00 €</p>
+    <div className={cn('p-3.5 glass-3', className)}>
+      <p className="kicker !text-[10px]">Paiement reçu</p>
+      <p className="mt-2 text-2xl font-bold tracking-[-0.05em] tabular-nums">48,00 €</p>
       <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--success)]">
         <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor" className="size-3">
           <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
@@ -697,8 +697,8 @@ export function PaymentPanel({ className }: { className?: string }) {
 
 export function BookingPanel({ className }: { className?: string }) {
   return (
-    <div className={cn('glass-edge rounded-[var(--radius-md)] p-3.5 glass-3', className)}>
-      <p className="text-[11px] font-medium">Nouvelle réservation</p>
+    <div className={cn('p-3.5 glass-3', className)}>
+      <p className="kicker !text-[10px]">Nouvelle réservation</p>
       <div className="mt-2.5 space-y-1.5 text-[10px]">
         <div className="flex justify-between">
           <span className="text-[var(--muted)]">Samedi 14 mars</span>
@@ -714,10 +714,10 @@ export function BookingPanel({ className }: { className?: string }) {
         </div>
       </div>
       <div className="mt-3 flex gap-1.5">
-        <span className="flex-1 rounded-md bg-[var(--primary)] py-1 text-center text-[9px] font-medium text-[var(--primary-foreground)]">
+        <span className="flex-1 bg-[var(--primary)] py-1 text-center text-[9px] font-medium text-[var(--primary-foreground)]">
           Confirmer
         </span>
-        <span className="rounded-md border border-[var(--border)] px-2.5 py-1 text-[9px] text-[var(--muted)]">
+        <span className="border border-[var(--border)] px-2.5 py-1 text-[9px] text-[var(--muted)]">
           Refuser
         </span>
       </div>
@@ -727,8 +727,8 @@ export function BookingPanel({ className }: { className?: string }) {
 
 export function DeployPanel({ className }: { className?: string }) {
   return (
-    <div className={cn('glass-edge rounded-[var(--radius-md)] p-3.5 font-mono glass-3', className)}>
-      <p className="text-[10px] text-[var(--muted)]">Publication</p>
+    <div className={cn('p-3.5 glass-3', className)}>
+      <p className="kicker !text-[10px]">Publication</p>
       <ul className="mt-2 space-y-1.5 text-[10px]">
         {[
           { label: 'Contenu validé', done: true },

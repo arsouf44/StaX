@@ -2119,7 +2119,7 @@ export function buildAccessibility(): LegalDocument {
               'et tableaux correctement balisés ;',
             'navigation complète au clavier, ordre de tabulation cohérent, focus toujours ' +
               'visible et lien d’évitement vers le contenu principal ;',
-            'contrastes de couleur vérifiés dans les thèmes clair et sombre ;',
+            'contrastes de couleur vérifiés sur chaque surface, y compris les blocs sur fond sombre ;',
             'formulaires avec étiquettes explicites, messages d’erreur reliés à leur champ et ' +
               'résumé d’erreurs annoncé aux technologies d’assistance ;',
             'respect de « prefers-reduced-motion » : les animations sont désactivées et le ' +

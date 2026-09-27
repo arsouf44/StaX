@@ -11,11 +11,12 @@ import { cn } from '../lib';
  */
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap',
+  'inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap',
   {
     variants: {
       tone: {
-        neutral: 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground-muted)]',
+        neutral:
+          'border-[var(--border)] bg-[var(--background-inset)] text-[var(--foreground-muted)]',
         accent: 'border-[var(--accent)]/30 bg-[var(--accent-soft)] text-[var(--accent)]',
         success: 'border-[var(--success)]/30 bg-[var(--success-soft)] text-[var(--success)]',
         warning: 'border-[var(--warning)]/30 bg-[var(--warning-soft)] text-[var(--warning)]',
@@ -86,8 +87,8 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-2 rounded-full border border-[var(--border)]',
-        'bg-[var(--surface)] px-3 py-1 text-xs font-medium text-[var(--foreground-muted)]',
+        'inline-flex items-center gap-2 border border-[var(--border)]',
+        'bg-[var(--background-inset)] px-3 py-1 text-xs font-semibold text-[var(--foreground-muted)]',
         className,
       )}
     >

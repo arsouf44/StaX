@@ -107,12 +107,8 @@ export function LegalDocumentView({ document, lead }: LegalDocumentViewProps) {
       <Container size="wide">
         <div className="grid gap-12 lg:grid-cols-[1fr_17rem] lg:gap-16">
           <div className="max-w-3xl min-w-0">
-            <p className="text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-              Informations légales
-            </p>
-            <h1 className="mt-4 text-3xl font-medium tracking-[-0.03em] text-balance sm:text-4xl">
-              {document.title}
-            </h1>
+            <p className="kicker">Informations légales</p>
+            <h1 className="display-panel mt-4 text-balance">{document.title}</h1>
             <p className="mt-5 text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
               {document.description}
             </p>
@@ -183,9 +179,7 @@ export function LegalDocumentView({ document, lead }: LegalDocumentViewProps) {
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <nav aria-label="Sommaire du document">
-              <p className="text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-                Sommaire
-              </p>
+              <p className="kicker">Sommaire</p>
               <ol className="mt-3 space-y-1.5 border-l border-[var(--border)] pl-4">
                 {document.articles.map((article) => (
                   <li key={article.id}>
@@ -201,9 +195,7 @@ export function LegalDocumentView({ document, lead }: LegalDocumentViewProps) {
             </nav>
 
             <nav aria-label="Autres documents légaux" className="mt-10">
-              <p className="text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-                Autres documents
-              </p>
+              <p className="kicker">Autres documents</p>
               <ul className="mt-3 space-y-1.5">
                 {LEGAL_ORDER.filter((slug) => slug !== document.slug).map((slug) => (
                   <li key={slug}>

@@ -157,7 +157,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
     <div
       role={toast.tone === 'error' ? 'alert' : 'status'}
       className={cn(
-        'pointer-events-auto glass-edge w-full max-w-sm rounded-[var(--radius-md)] p-4 glass-3',
+        'pointer-events-auto w-full max-w-sm rounded-[var(--radius-md)] p-4 glass-3',
         'animate-[reveal_0.28s_cubic-bezier(0.16,1,0.3,1)]',
         style.border,
       )}

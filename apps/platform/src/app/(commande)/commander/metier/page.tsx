@@ -23,9 +23,7 @@ export default async function OrderBusinessPage() {
     <>
       <OrderSteps current="/commander/metier" />
 
-      <h1 className="text-2xl font-medium tracking-[-0.02em] sm:text-3xl">
-        Quel est votre métier ?
-      </h1>
+      <h1 className="title-page">Quel est votre métier ?</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         Ce choix détermine les pages proposées, les fonctionnalités activées et le vocabulaire de
         votre espace. Un restaurateur gère une carte, un plombier des zones d’intervention : ce

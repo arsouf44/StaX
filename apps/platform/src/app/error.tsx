@@ -26,12 +26,8 @@ export default function GlobalError({
     <div className="flex min-h-dvh items-center">
       <Container size="default">
         <div className="max-w-xl">
-          <p className="text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-            Une erreur est survenue
-          </p>
-          <h1 className="mt-4 text-3xl font-medium tracking-[-0.03em]">
-            Cette page n’a pas pu s’afficher
-          </h1>
+          <p className="kicker">Une erreur est survenue</p>
+          <h1 className="display-panel mt-4">Cette page n’a pas pu s’afficher</h1>
           <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
             L’incident a été signalé automatiquement. Vos données ne sont pas affectées : rien n’est
             perdu et aucune action n’a été enregistrée à moitié.

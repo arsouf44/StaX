@@ -4,21 +4,18 @@ import { listBusinesses } from '@stax/business';
 import { refundPolicyConfig } from '@stax/config';
 import { formatMoney } from '@stax/payments';
 import {
-  Beam,
   ButtonLink,
   Container,
   Panel,
   Parallax,
   Reveal,
   ScrollTilt,
-  Section,
   SectionHeading,
 } from '@stax/ui';
 import { Hero } from '~/components/marketing/hero';
 import { BusinessSwitcher } from '~/components/marketing/business-switcher';
 import { PricingCards } from '~/components/marketing/pricing-cards';
 import {
-  CreationTimeline,
   DomainRoutingDiagram,
   OperationalIndicators,
   PaymentRoutingDiagram,
@@ -66,39 +63,46 @@ export default async function HomePage() {
     entryPriceLabel(),
   ]);
   const refund = refundPolicyConfig();
+  const sectorList = sectors.length > 0 ? sectors : FALLBACK_SECTORS;
 
   return (
     <>
       <Hero entryPrice={entry} businessCount={listBusinesses().length} />
 
-      {/* --- Le principe --------------------------------------------------- */}
-      <Section>
-        <Container size="wide">
-          <div className="grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:items-start">
-            <div className="lg:sticky lg:top-28">
-              <SectionHeading
-                eyebrow="Le principe"
-                title="Nous créons votre site. Vous le gérez ensuite."
-                description="Vous ne construisez rien vous-même. Chaque site est un projet individuel, conçu et développé par notre équipe, puis livré en ligne. C’est seulement à ce moment-là que l’éditeur StaX s’ouvre."
-              />
-              <p className="mt-8 border-l-2 border-[var(--accent)] pl-5 text-lg font-semibold tracking-[-0.02em] text-balance">
-                Pas de modèle à personnaliser. Votre site est conçu pour votre entreprise.
-              </p>
-            </div>
-            <ol className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+      <Container size="wide">
+        {/* --- Le principe : le manifeste ------------------------------------- */}
+        <section
+          id="approche"
+          aria-labelledby="approche-title"
+          className="grid grid-cols-[27%_1fr] gap-[4vw] pt-[145px] pb-[125px] max-[800px]:grid-cols-1 max-[800px]:gap-[25px] max-[800px]:py-[82px]"
+        >
+          <p className="side-note self-start">
+            Pas un générateur.
+            <br />
+            Une équipe qui construit.
+          </p>
+          <div>
+            <h2 id="approche-title" className="display-statement max-w-[860px]">
+              Chaque site est un projet à part, conçu pour une seule{' '}
+              <span className="text-water-light">entreprise.</span>
+            </h2>
+            <p className="lead-text mt-[35px] max-w-[470px]">
+              Vous ne construisez rien vous-même. Notre équipe conçoit et développe votre site, le
+              met en ligne, puis vous le livre. C’est seulement à ce moment-là que l’éditeur StaX
+              s’ouvre.
+            </p>
+            <ol className="mt-16 grid border-t border-[rgb(43_93_111/0.24)] md:grid-cols-2 md:gap-x-10">
               {PRINCIPLE_POINTS.map((point, index) => (
                 <Reveal
                   key={point.title}
                   as="li"
                   delay={Math.min(index * 50, 300)}
-                  className="grid gap-2 py-5 sm:grid-cols-[3rem_1fr] sm:gap-4"
+                  className="grid grid-cols-[43px_1fr] gap-3 border-b border-[rgb(43_93_111/0.19)] py-5"
                 >
-                  <span className="pt-1 font-mono text-xs text-accent">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
+                  <span className="step-number pt-1">{String(index + 1).padStart(2, '0')}</span>
                   <div>
-                    <h3 className="text-lg font-semibold tracking-[-0.02em]">{point.title}</h3>
-                    <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                    <h3 className="step-name text-[#284f60]">{point.title}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
                       {point.description}
                     </p>
                   </div>
@@ -106,48 +110,120 @@ export default async function HomePage() {
               ))}
             </ol>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Secteurs ---------------------------------------------------- */}
-      <Section spacing="compact">
-        <Container size="wide">
-          <p className="text-center text-sm text-[var(--muted)]">
-            Des sites conçus pour des entreprises de tous les secteurs
-          </p>
-          <ul className="mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-2">
-            {(sectors.length > 0 ? sectors : FALLBACK_SECTORS).map((sector) => (
-              <li key={sector.slug}>
-                <Link
-                  href={`/metiers/${sector.slug}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-1)] px-4 py-2 text-sm text-[var(--foreground-muted)] transition-[border-color,color,background-color] duration-300 hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
-                >
-                  {sector.label}
+        {/* --- La methode : deux panneaux de verre ------------------------------ */}
+        <section
+          id="methode"
+          aria-labelledby="methode-title"
+          className="pb-[135px] max-[800px]:pb-[82px]"
+        >
+          <div className="grid grid-cols-[1.08fr_0.92fr] gap-5 max-[800px]:grid-cols-1">
+            <Reveal
+              as="article"
+              className="glass-panel flex min-h-[470px] flex-col p-[33px] max-[800px]:min-h-[410px] max-[800px]:p-6"
+            >
+              <p className="kicker">Le parcours / en six étapes</p>
+              <h2 id="methode-title" className="display-panel mt-[15px] mb-[46px] max-w-[475px]">
+                De votre projet à votre site en ligne.
+              </h2>
+              <ol className="step-list">
+                {PROCESS_STEPS.map((step, index) => (
+                  <li key={step.title} className="step-row">
+                    <span className="step-number">{String(index + 1).padStart(2, '0')}</span>
+                    <h3 className="step-name">{step.title}</h3>
+                    <span className="step-text max-[800px]:hidden">{step.detail}</span>
+                    <span aria-hidden="true" className="step-arrow">
+                      →
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-auto pt-9">
+                <Link href="/comment-ca-marche" className="text-link">
+                  Voir le détail de chaque étape
+                  <span aria-hidden="true" className="arrow">
+                    ↗
+                  </span>
+                </Link>
+              </div>
+            </Reveal>
+
+            <Reveal
+              as="article"
+              delay={80}
+              className="glass-panel glass-panel-warm glass-rings flex min-h-[470px] flex-col justify-between p-[33px] max-[800px]:min-h-[410px] max-[800px]:p-6"
+            >
+              <p className="kicker">Principe StaX</p>
+              <blockquote className="mt-[65px] max-w-[415px] text-[clamp(2.15rem,4vw,4.1rem)] leading-[0.94] font-[725] tracking-[-0.08em] text-[#244758]">
+                « Vous publiez. C’est réellement en ligne. »
+              </blockquote>
+              <p className="mt-10 border-t border-[rgb(68_104_113/0.24)] pt-4 text-xs font-[670] text-[#55737d]">
+                Chaque publication est un vrai déploiement, daté et restaurable.
+              </p>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* --- Secteurs ------------------------------------------------------- */}
+        <section
+          aria-labelledby="secteurs-title"
+          className="grid grid-cols-[27%_1fr] gap-[4vw] border-t border-[var(--line)] py-[110px] max-[800px]:grid-cols-1 max-[800px]:gap-[25px] max-[800px]:py-[72px]"
+        >
+          <h2 id="secteurs-title" className="side-note self-start">
+            Des entreprises de tous les secteurs.
+            <br />
+            Un site pour chacune.
+          </h2>
+          <div>
+            <ul className="flex flex-wrap items-baseline gap-y-1 text-[clamp(1.9rem,3.4vw,3.6rem)] leading-[1.02] font-[720] tracking-[-0.065em] text-[var(--heading)]">
+              {sectorList.map((sector, index) => (
+                <li key={sector.slug} className="inline-flex items-baseline">
+                  <Link
+                    href={`/metiers/${sector.slug}`}
+                    className="transition-colors duration-300 hover:text-[var(--water-bright)]"
+                  >
+                    {sector.label}
+                  </Link>
                   {'businessCount' in sector && sector.businessCount > 0 ? (
-                    <span className="text-xs text-[var(--muted)] tabular-nums">
+                    <sup className="ml-1 text-xs font-bold tracking-normal text-[var(--accent-text)] tabular-nums">
                       {sector.businessCount}
+                    </sup>
+                  ) : null}
+                  {index < sectorList.length - 1 ? (
+                    <span aria-hidden="true" className="mx-[0.3em] font-[400] text-[var(--water)]">
+                      /
                     </span>
                   ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </Section>
+                </li>
+              ))}
+            </ul>
+            <Link href="/metiers" className="text-link mt-10">
+              Voir tous les métiers
+              <span aria-hidden="true" className="arrow">
+                ↗
+              </span>
+            </Link>
+          </div>
+        </section>
 
-      {/* --- Proposition de valeur --------------------------------------- */}
-      <Section>
-        <Container size="wide">
+        {/* --- Proposition de valeur ------------------------------------------ */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <SectionHeading
-            eyebrow="Un seul espace"
-            title="Votre site. Vos contenus. Vos clients. Vos paiements."
+            eyebrow="03 / Un seul espace"
+            title={
+              <>
+                Votre site. Vos contenus. Vos clients.{' '}
+                <span className="text-water-light">Vos paiements.</span>
+              </>
+            }
             description="Beaucoup d’entreprises jonglent avec un site chez un prestataire, un formulaire chez un autre, un outil de réservation ailleurs et un tableur pour les clients. Avec StaX, votre site est conçu pour vous, et ce qu’il reçoit arrive dans un seul espace, que nous maintenons."
           />
 
           <div className="mt-16 grid gap-16 lg:grid-cols-[1fr_1fr] lg:items-start">
-            <dl className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-              <Reveal as="div" className="py-8">
-                <dt className="text-2xl font-semibold tracking-[-0.03em]">
+            <dl className="step-list">
+              <Reveal as="div" className="border-b border-[rgb(43_93_111/0.19)] py-8">
+                <dt className="text-2xl font-bold tracking-[-0.045em] text-[#284f60]">
                   Un site qui reste à jour, sans que vous y pensiez
                 </dt>
                 <dd className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
@@ -157,21 +233,26 @@ export default async function HomePage() {
                   <OperationalIndicators className="mt-6" />
                 </dd>
               </Reveal>
-              <Reveal as="div" delay={60} className="py-8">
-                <dt className="text-2xl font-semibold tracking-[-0.03em]">
+              <Reveal as="div" delay={60} className="border-b border-[rgb(43_93_111/0.19)] py-8">
+                <dt className="text-2xl font-bold tracking-[-0.045em] text-[#284f60]">
                   Vous gardez la main sur vos contenus
                 </dt>
                 <dd className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   Une fois votre site livré, vous changez un horaire, une photo ou un tarif
                   vous-même, puis vous publiez : la modification est réellement déployée.{' '}
-                  <Link href="/fonctionnalites/editeur" className="font-medium text-accent">
+                  <Link href="/fonctionnalites/editeur" className="font-bold text-accent">
                     Voir l’éditeur →
                   </Link>
                 </dd>
               </Reveal>
               {VALUE_TILES.map((tile, index) => (
-                <Reveal key={tile.title} as="div" delay={120 + index * 60} className="py-6">
-                  <dt className="flex items-center gap-3 text-lg font-semibold tracking-[-0.02em]">
+                <Reveal
+                  key={tile.title}
+                  as="div"
+                  delay={120 + index * 60}
+                  className="border-b border-[rgb(43_93_111/0.19)] py-6"
+                >
+                  <dt className="flex items-center gap-3 text-lg font-bold tracking-[-0.03em] text-[#284f60]">
                     <svg
                       aria-hidden="true"
                       viewBox="0 0 16 16"
@@ -180,7 +261,7 @@ export default async function HomePage() {
                       strokeWidth="1.3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="size-4 shrink-0 text-[var(--accent-text)]"
+                      className="size-4 shrink-0 text-[var(--water-bright)]"
                     >
                       {tile.icon}
                     </svg>
@@ -194,7 +275,7 @@ export default async function HomePage() {
             </dl>
 
             {/* Les memes ecrans, reunis : ce que le client voit dans son espace. */}
-            <div className="relative hidden lg:sticky lg:top-28 lg:block">
+            <div className="relative hidden lg:sticky lg:top-12 lg:block">
               <div className="stage relative mx-auto h-[32rem] max-w-md">
                 <Parallax speed={-0.1} className="absolute top-0 left-0 w-72">
                   <InboxPanel />
@@ -208,75 +289,47 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Comment ca marche -------------------------------------------- */}
-      <Section className="relative bg-[var(--background-subtle)]">
-        <div
-          aria-hidden="true"
-          className="grid-bg pointer-events-none absolute inset-0 -z-10 opacity-40"
-        />
-        <Container size="wide">
-          <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-start">
-            <div className="lg:sticky lg:top-28">
-              <SectionHeading
-                eyebrow="Le parcours"
-                title="Six étapes, de votre projet à votre site en ligne"
-                description="Vous n’avez rien à construire. Vous nous présentez votre entreprise ; notre équipe conçoit et développe votre site, le met en ligne et vous le livre. Vous validez les étapes clés."
-              />
-              <ButtonLink
-                size="pill"
-                href="/comment-ca-marche"
-                variant="secondary"
-                className="mt-8"
-              >
-                Voir le détail de chaque étape
-              </ButtonLink>
-            </div>
-            <Reveal>
-              <CreationTimeline steps={PROCESS_STEPS} />
-            </Reveal>
-          </div>
-        </Container>
-      </Section>
-
-      {/* --- Metier -> site ----------------------------------------------- */}
-      <Section>
-        <Container size="wide">
+        {/* --- Metier -> site ------------------------------------------------- */}
+        <section className="border-t border-[var(--line)] pt-[125px] pb-[110px] max-[800px]:py-[82px]">
           <SectionHeading
             align="center"
-            eyebrow="Adapté à votre activité"
+            eyebrow="04 / Adapté à votre activité"
             title="Votre métier oriente le projet. Il ne choisit pas votre site."
             description="Votre métier nous aide à comprendre vos besoins : il adapte le questionnaire, nous permet de vous suggérer les fonctionnalités utiles et donne à votre espace le bon vocabulaire. Le site, lui, est conçu pour votre entreprise."
             className="mx-auto"
           />
-        </Container>
-        <div className="mt-14">
-          <BusinessSwitcher />
-        </div>
-      </Section>
+        </section>
+      </Container>
 
-      {/* --- Editeur ------------------------------------------------------ */}
-      <Section className="overflow-hidden bg-[var(--background-subtle)]">
-        <Container size="wide">
+      <div className="-mt-4 pb-[125px] max-[800px]:pb-[82px]">
+        <BusinessSwitcher />
+      </div>
+
+      <Container size="wide">
+        {/* --- Editeur -------------------------------------------------------- */}
+        <section className="overflow-hidden border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <div className="grid gap-16 lg:grid-cols-[0.9fr_1.5fr] lg:items-center">
             <div>
               <SectionHeading
-                eyebrow="Après la livraison"
+                eyebrow="05 / Après la livraison"
                 title="Vous modifiez votre site, sans toucher à du code"
                 description="Cliquez sur un texte ou une image dans l’aperçu de votre vrai site : StaX affiche les champs que votre site permet de modifier. Enregistrez un brouillon, vérifiez l’aperçu, puis publiez. Rien n’apparaît en ligne avant « Publier »."
               />
-              <ul className="mt-8 space-y-3">
+              <ul className="step-list mt-10">
                 {EDITOR_POINTS.map((point) => (
-                  <li key={point} className="flex gap-3 text-sm">
+                  <li
+                    key={point}
+                    className="flex gap-3 border-b border-[rgb(43_93_111/0.19)] py-3 text-sm"
+                  >
                     <svg
                       aria-hidden="true"
                       viewBox="0 0 16 16"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.6"
-                      className="mt-0.5 size-3.5 shrink-0 text-[var(--accent-text)]"
+                      className="mt-0.5 size-3.5 shrink-0 text-[var(--water-bright)]"
                     >
                       <path d="m3 8.5 3.5 3.5L13 5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -287,7 +340,7 @@ export default async function HomePage() {
             </div>
             <Reveal delay={80}>
               <ScrollTilt maxDeg={6}>
-                <div className="stage lg:-mr-24 xl:-mr-40">
+                <div className="stage lg:-mr-16 xl:-mr-24">
                   <BrowserFrame url="stax.fr/app/editeur">
                     <EditorMock />
                   </BrowserFrame>
@@ -295,44 +348,43 @@ export default async function HomePage() {
               </ScrollTilt>
             </Reveal>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Modules metier ------------------------------------------------ */}
-      <Section>
-        <Container size="wide">
+        {/* --- Modules metier -------------------------------------------------- */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <SectionHeading
-            eyebrow="Modules"
+            eyebrow="06 / Modules"
             title="Ce dont votre métier a besoin, et rien de plus"
             description="Selon votre activité, nous vous suggérons les fonctionnalités utiles. Celles que votre offre comprend sont développées dans votre site, et vous les gérez ensuite depuis votre espace."
           />
-          <ul className="mt-14 border-t border-[var(--border)]">
+          <ul className="step-list mt-14">
             {MODULE_TILES.map((module, index) => (
               <Reveal
                 key={module.title}
                 as="li"
                 delay={Math.min(index * 40, 240)}
-                className="group grid gap-2 border-b border-[var(--border)] py-6 transition-colors duration-300 hover:bg-[var(--glass-1)] sm:grid-cols-[1fr_1.4fr_1fr] sm:items-baseline sm:gap-8 sm:px-4"
+                className="group grid gap-2 border-b border-[rgb(43_93_111/0.19)] py-6 transition-colors duration-300 hover:bg-[rgb(255_255_255/0.32)] sm:grid-cols-[43px_1fr_1.4fr_1fr] sm:items-baseline sm:gap-6 sm:px-3"
               >
-                <h3 className="text-xl font-semibold tracking-[-0.025em] transition-colors group-hover:text-[var(--accent-text)]">
+                <span className="step-number">{String(index + 1).padStart(2, '0')}</span>
+                <h3 className="text-xl font-bold tracking-[-0.045em] text-[#284f60] transition-colors group-hover:text-[var(--water-bright)]">
                   {module.title}
                 </h3>
                 <p className="text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   {module.description}
                 </p>
-                <p className="text-sm text-[var(--muted)] sm:text-right">{module.who}</p>
+                <p className="text-[11px] font-[650] tracking-[0.06em] text-[var(--muted)] uppercase sm:text-right">
+                  {module.who}
+                </p>
               </Reveal>
             ))}
           </ul>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Domaines ------------------------------------------------------ */}
-      <Section className="bg-[var(--background-subtle)]">
-        <Container size="wide">
+        {/* --- Domaines ------------------------------------------------------ */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <div className="grid gap-12 lg:grid-cols-[0.9fr_1.4fr] lg:items-center">
             <SectionHeading
-              eyebrow="Noms de domaine"
+              eyebrow="07 / Noms de domaine"
               title="Votre domaine, votre marque, votre adresse"
               description="Vous arrivez avec votre nom de domaine ou nous vous en trouvons un. Nous le connectons, le certificat HTTPS s’installe automatiquement, et votre site répond sous votre propre adresse."
             />
@@ -340,33 +392,33 @@ export default async function HomePage() {
               <DomainRoutingDiagram />
             </Reveal>
           </div>
-          <div className="mt-16 grid gap-10 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[var(--border)]">
+          <div className="mt-16 grid gap-10 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[var(--line)] sm:border-t sm:border-[var(--line)] sm:pt-8">
             {DOMAIN_POINTS.map((point, index) => (
               <div key={point.title} className="sm:px-8 sm:first:pl-0 sm:last:pr-0">
-                <p className="font-mono text-xs text-accent">0{index + 1}</p>
-                <h3 className="mt-3 text-lg font-semibold tracking-[-0.02em]">{point.title}</h3>
+                <p className="step-number">0{index + 1}</p>
+                <h3 className="mt-3 text-lg font-bold tracking-[-0.03em] text-[#284f60]">
+                  {point.title}
+                </h3>
                 <p className="mt-2 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   {point.description}
                 </p>
               </div>
             ))}
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Paiements ----------------------------------------------------- */}
-      <Section>
-        <Container size="wide">
+        {/* --- Paiements ----------------------------------------------------- */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
             <div>
               <SectionHeading
-                eyebrow="Paiements"
+                eyebrow="08 / Paiements"
                 title="L’argent de vos clients va sur votre compte, pas sur le nôtre"
                 description="Quand votre site encaisse un acompte, une commande ou un don, la transaction passe par votre propre compte Stripe, ouvert à votre nom. StaX n’est pas dans ce circuit et ne prélève aucune commission dessus."
               />
-              <div className="mt-10 border-l-2 border-[var(--accent)] pl-5">
-                <p className="text-sm font-medium">Ce que vous payez à StaX</p>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+              <div className="mt-10 max-w-[36rem] border-t border-[#6f98a8] pt-4">
+                <p className="kicker">Ce que vous payez à StaX</p>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   La création de votre site, puis la maintenance mensuelle à partir de sa livraison.
                   C’est tout. Les frais bancaires de vos encaissements sont ceux de Stripe, facturés
                   directement par Stripe, en toute transparence.
@@ -375,122 +427,116 @@ export default async function HomePage() {
             </div>
             <Reveal delay={80}>
               <div className="stage">
-                <Panel level={2} padding="lg" className="rounded-[var(--radius-xl)]">
+                <Panel level={2} padding="lg">
                   <PaymentRoutingDiagram />
                 </Panel>
               </div>
             </Reveal>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Referencement, performance, securite -------------------------- */}
-      <Section className="bg-[var(--background-subtle)]">
-        <Container size="wide">
+        {/* --- Referencement, performance, securite -------------------------- */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <SectionHeading
-            eyebrow="Les fondations techniques"
+            eyebrow="09 / Les fondations techniques"
             title="Ce qui ne se voit pas, mais qui fait la différence"
             description="Un site lent, mal référencé ou mal protégé coûte des clients. Ces points ne sont pas des options chez StaX : ils sont faits correctement dès le premier jour, sur tous les sites."
           />
-          <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-0 md:divide-x md:divide-[var(--border)]">
+          <div className="mt-16 grid gap-5 md:grid-cols-3">
             {TECHNICAL_PILLARS.map((pillar, index) => (
               <Reveal
                 key={pillar.title}
+                as="article"
                 delay={index * 70}
-                className="md:px-8 md:first:pl-0 md:last:pr-0"
+                className="glass-panel flex flex-col p-[33px] max-[800px]:p-6"
               >
-                <h3 className="text-2xl font-semibold tracking-[-0.03em]">{pillar.title}</h3>
-                <p className="mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                <p className="kicker">{String(index + 1).padStart(2, '0')} / Fondation</p>
+                <h3 className="display-panel mt-4 text-[clamp(1.9rem,2.5vw,2.7rem)]">
+                  {pillar.title}
+                </h3>
+                <p className="mt-4 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
                   {pillar.description}
                 </p>
-                <ul className="mt-6 space-y-2.5">
+                <ul className="step-list mt-7">
                   {pillar.items.map((item) => (
-                    <li key={item} className="flex gap-3 text-sm">
-                      <span
-                        aria-hidden="true"
-                        className="mt-2 size-1 shrink-0 rounded-full bg-[var(--accent-text)]"
-                      />
-                      <span className="text-[var(--foreground-muted)]">{item}</span>
+                    <li
+                      key={item}
+                      className="flex gap-3 border-b border-[rgb(43_93_111/0.19)] py-2.5 text-sm text-[var(--foreground-muted)]"
+                    >
+                      <span aria-hidden="true" className="text-[#5b94aa]">
+                        →
+                      </span>
+                      {item}
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={pillar.href}
-                  className="mt-6 inline-block text-sm font-medium text-accent"
-                >
-                  En savoir plus →
-                </Link>
+                <div className="mt-auto pt-8">
+                  <Link href={pillar.href} className="text-link">
+                    En savoir plus
+                    <span aria-hidden="true" className="arrow">
+                      ↗
+                    </span>
+                  </Link>
+                </div>
               </Reveal>
             ))}
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Tarifs -------------------------------------------------------- */}
-      <Section>
-        <Container size="wide">
+        {/* --- Tarifs -------------------------------------------------------- */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <SectionHeading
             align="center"
-            eyebrow="Tarifs"
+            eyebrow="10 / Tarifs"
             title="Un prix de création, puis une maintenance mensuelle"
             description="La maintenance ne commence qu’à la livraison de votre site, sans durée minimale. Pas de coût caché, pas de commission sur vos ventes : vous voyez exactement ce que vous paierez."
             className="mx-auto"
           />
           <PricingCards plans={plans} compact className="mt-14" />
           <p className="mt-8 text-center text-sm text-[var(--foreground-muted)]">
-            <Link href="/tarifs" className="font-medium underline underline-offset-4">
+            <Link href="/tarifs" className="font-bold underline underline-offset-4">
               Comparer les offres en détail
             </Link>{' '}
             · Tous les prix sont indiqués hors taxes.
           </p>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Garantie ------------------------------------------------------ */}
-      <Section spacing="compact" className="bg-[var(--background-subtle)]">
-        <Container size="wide">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
-            <SectionHeading
-              eyebrow="Garantie commerciale"
-              title={`${refund.windowDays} jours pour changer d’avis`}
-            />
-            <div>
-              <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Si le site livré ne vous convient pas, vous disposez de {refund.windowDays} jours
-                après sa mise en ligne pour demander un remboursement. Lorsqu’un nom de domaine a
-                réellement été acheté pour vous, son coût —{' '}
-                {formatMoney(refund.domainDeductionCents, refund.currency, {
-                  hideDecimalsWhenRound: true,
-                })}{' '}
-                — est déduit du remboursement, puisqu’il est déjà engagé. Si aucun domaine n’a été
-                acheté, rien n’est déduit.
-              </p>
-              <p className="mt-4 text-xs leading-relaxed text-[var(--muted)]">
-                Cette garantie commerciale s’ajoute à vos droits légaux et ne s’y substitue pas. Les
-                conditions exactes figurent dans nos{' '}
-                <Link href="/remboursements" className="underline underline-offset-4">
-                  conditions de remboursement
-                </Link>
-                .
-              </p>
-            </div>
+        {/* --- Garantie ------------------------------------------------------ */}
+        <section className="grid grid-cols-[27%_1fr] gap-[4vw] border-t border-[var(--line)] py-[110px] max-[800px]:grid-cols-1 max-[800px]:gap-[25px] max-[800px]:py-[72px]">
+          <p className="side-note self-start">Garantie commerciale</p>
+          <div>
+            <h2 className="display-section max-w-[760px]">
+              {refund.windowDays} jours pour{' '}
+              <span className="text-water-light">changer d’avis.</span>
+            </h2>
+            <p className="lead-text mt-8 max-w-[560px]">
+              Si le site livré ne vous convient pas, vous disposez de {refund.windowDays} jours
+              après sa mise en ligne pour demander un remboursement. Lorsqu’un nom de domaine a
+              réellement été acheté pour vous, son coût —{' '}
+              {formatMoney(refund.domainDeductionCents, refund.currency, {
+                hideDecimalsWhenRound: true,
+              })}{' '}
+              — est déduit du remboursement, puisqu’il est déjà engagé. Si aucun domaine n’a été
+              acheté, rien n’est déduit.
+            </p>
+            <p className="mt-4 max-w-[560px] text-xs leading-relaxed text-[var(--muted)]">
+              Cette garantie commerciale s’ajoute à vos droits légaux et ne s’y substitue pas. Les
+              conditions exactes figurent dans nos{' '}
+              <Link href="/remboursements" className="underline underline-offset-4">
+                conditions de remboursement
+              </Link>
+              .
+            </p>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- Sur mesure ---------------------------------------------------- */}
-      <Section>
-        <Container size="wide">
-          <Panel
-            level={2}
-            padding="xl"
-            className="halo relative overflow-hidden rounded-[var(--radius-2xl)]"
-          >
-            <div aria-hidden="true" className="absolute noise inset-0" />
+        {/* --- Sur mesure ---------------------------------------------------- */}
+        <section className="pb-[125px] max-[800px]:pb-[82px]">
+          <Reveal className="glass-panel glass-panel-warm glass-rings p-12 max-[800px]:p-6">
             <div className="relative grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
               <div>
                 <SectionHeading
-                  eyebrow="Projets sur mesure"
+                  eyebrow="11 / Projets sur mesure"
                   title="Un besoin qui sort du cadre ? Parlons-en."
                   description="Application métier, intégration à votre logiciel de caisse ou de gestion, reprise d’un site existant, volumétries importantes, contraintes réglementaires : nous étudions votre besoin et établissons un devis détaillé, ligne par ligne."
                 />
@@ -498,125 +544,124 @@ export default async function HomePage() {
                   <ButtonLink href="/devis" variant="primary" size="pill-lg">
                     Demander un devis
                   </ButtonLink>
-                  <ButtonLink href="/sur-mesure" variant="glass" size="pill-lg">
+                  <ButtonLink href="/sur-mesure" variant="secondary" size="pill-lg">
                     Comment ça se passe
                   </ButtonLink>
                 </div>
               </div>
-              <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-                {CUSTOM_EXAMPLES.map((example) => (
+              <ul className="step-list">
+                {CUSTOM_EXAMPLES.map((example, index) => (
                   <li
                     key={example}
-                    className="flex items-center gap-3 py-3.5 text-[0.9375rem] text-[var(--foreground-muted)]"
+                    className="grid grid-cols-[43px_1fr] items-center border-b border-[rgb(43_93_111/0.19)] py-3.5 text-[0.9375rem] font-semibold tracking-[-0.015em] text-[#284f60]"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="size-1.5 shrink-0 rounded-full bg-[var(--accent-text)]"
-                    />
+                    <span className="step-number">{String(index + 1).padStart(2, '0')}</span>
                     {example}
                   </li>
                 ))}
               </ul>
             </div>
-          </Panel>
-        </Container>
-      </Section>
+          </Reveal>
+        </section>
 
-      {/* --- Temoignages --------------------------------------------------- */}
-      <Section spacing="compact">
-        <Container size="wide">
+        {/* --- Temoignages --------------------------------------------------- */}
+        <section className="border-t border-[var(--line)] py-[110px] max-[800px]:py-[72px]">
           <SectionHeading
-            eyebrow="Ils nous font confiance"
+            eyebrow="12 / Ils nous font confiance"
             title="Les premiers retours clients arrivent bientôt"
             description="StaX est un produit jeune. Nous préférons une page vide à des témoignages inventés : cet espace accueillera les avis de nos clients, avec leur nom, leur métier et leur accord."
           />
-          <div className="mt-10 grid gap-3 sm:grid-cols-3">
+          <div className="mt-12 grid gap-5 sm:grid-cols-3">
             {[0, 1, 2].map((index) => (
               <div
                 key={index}
-                className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] p-6"
+                className="border border-dashed border-[var(--border-strong)] bg-[var(--glass-1)] p-7"
               >
-                <div aria-hidden="true" className="space-y-2">
-                  <div className="h-2 w-full rounded-full bg-[var(--border)]" />
-                  <div className="h-2 w-5/6 rounded-full bg-[var(--border)]" />
-                  <div className="h-2 w-3/5 rounded-full bg-[var(--border)]" />
+                <div aria-hidden="true" className="space-y-2.5">
+                  <div className="h-2 w-full bg-[var(--border)]" />
+                  <div className="h-2 w-5/6 bg-[var(--border)]" />
+                  <div className="h-2 w-3/5 bg-[var(--border)]" />
                 </div>
-                <p className="mt-5 text-xs text-[var(--muted)]">
-                  Emplacement réservé à un avis client
-                </p>
+                <p className="kicker mt-6">Emplacement réservé à un avis client</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-center text-xs text-[var(--muted)]">
+          <p className="mt-6 text-xs text-[var(--muted)]">
             <Link href="/realisations" className="underline underline-offset-4">
               Voir nos exemples de sites
             </Link>{' '}
             — clairement identifiés comme démonstrations.
           </p>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- FAQ ----------------------------------------------------------- */}
-      <Section>
-        <Container size="wide">
+        {/* --- FAQ ----------------------------------------------------------- */}
+        <section className="border-t border-[var(--line)] py-[125px] max-[800px]:py-[82px]">
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.4fr] lg:items-start">
-            <div className="lg:sticky lg:top-28">
+            <div className="lg:sticky lg:top-12">
               <SectionHeading
-                eyebrow="Questions fréquentes"
+                eyebrow="13 / Questions fréquentes"
                 title="Les réponses aux questions qu’on nous pose"
               />
-              <p className="mt-6 text-sm text-[var(--foreground-muted)]">
+              <p className="mt-7 text-sm text-[var(--foreground-muted)]">
                 Vous ne trouvez pas votre réponse ?{' '}
-                <Link href="/contact" className="font-medium underline underline-offset-4">
+                <Link href="/contact" className="font-bold underline underline-offset-4">
                   Écrivez-nous
                 </Link>
                 , nous répondons rapidement.
               </p>
             </div>
-            <dl className="divide-y divide-[var(--border)]">
-              {HOMEPAGE_FAQ.map((item) => (
-                <div key={item.question} className="py-6 first:pt-0">
-                  <dt className="text-lg font-semibold tracking-[-0.02em]">{item.question}</dt>
-                  <dd className="measure mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
-                    {item.answer}
-                  </dd>
+            <dl className="step-list">
+              {HOMEPAGE_FAQ.map((item, index) => (
+                <div
+                  key={item.question}
+                  className="grid grid-cols-[43px_1fr] gap-3 border-b border-[rgb(43_93_111/0.19)] py-7"
+                >
+                  <span aria-hidden="true" className="step-number pt-1.5">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <dt className="text-xl font-bold tracking-[-0.04em] text-[#284f60]">
+                      {item.question}
+                    </dt>
+                    <dd className="measure mt-3 text-[0.9375rem] leading-relaxed text-[var(--foreground-muted)]">
+                      {item.answer}
+                    </dd>
+                  </div>
                 </div>
               ))}
             </dl>
           </div>
-        </Container>
-      </Section>
+        </section>
 
-      {/* --- CTA finale ---------------------------------------------------- */}
-      <Section className="relative overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="grid-bg grid-bg-fade absolute inset-0 rotate-180 opacity-60" />
-          <div className="absolute bottom-[-22rem] left-1/2 h-[34rem] w-[56rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-glow),transparent)] opacity-40 blur-3xl" />
-        </div>
-        <Beam className="absolute inset-x-0 top-0 opacity-40" />
-        <Container size="default" className="text-center">
-          <h2 className="display text-5xl sm:text-7xl lg:text-8xl">
-            Votre site, conçu pour votre entreprise.
-          </h2>
-          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
-            Choisissez votre offre et présentez-nous votre entreprise : notre équipe conçoit et
-            développe votre site, le met en ligne et vous le livre. Vous le gérez ensuite.
-          </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <ButtonLink
-              href="/commander"
-              variant="accent"
-              size="pill-lg"
-              className="w-full sm:w-auto"
-            >
-              Commander mon site
-            </ButtonLink>
-            <ButtonLink href="/contact" variant="glass" size="pill-lg" className="w-full sm:w-auto">
-              Poser une question
-            </ButtonLink>
+        {/* --- Cloture : l eau profonde ---------------------------------------- */}
+        <section id="contact" aria-labelledby="closing-title" className="pt-5">
+          <div
+            data-theme="dark"
+            className="closing-block flex min-h-[405px] flex-col justify-between gap-12 p-12 max-[800px]:min-h-[365px] max-[800px]:p-[31px]"
+          >
+            <p className="kicker">Votre prochain point de départ</p>
+            <h2 id="closing-title" className="display-closing max-w-[780px]">
+              Votre site, conçu pour votre <span className="text-[#9bc5d4]">entreprise.</span>
+              <br />
+              Vous le gérez ensuite.
+            </h2>
+            <div className="flex flex-wrap gap-x-10 gap-y-5">
+              <Link href="/commander" className="text-link">
+                Commander mon site
+                <span aria-hidden="true" className="arrow">
+                  ↗
+                </span>
+              </Link>
+              <Link href="/contact" className="text-link">
+                Poser une question
+                <span aria-hidden="true" className="arrow">
+                  ↗
+                </span>
+              </Link>
+            </div>
           </div>
-        </Container>
-      </Section>
+        </section>
+      </Container>
     </>
   );
 }

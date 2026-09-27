@@ -22,9 +22,7 @@ export function SiteUnderConstruction({
   if (awaitingPayment) {
     return (
       <Panel level={2} padding="lg" data-testid="site-awaiting-payment">
-        <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-          {siteName}
-        </p>
+        <p className="kicker">{siteName}</p>
         <h2 className="mt-1 text-xl font-medium tracking-[-0.01em]">
           Cette page s’ouvrira quand votre site vous sera confié
         </h2>
@@ -51,9 +49,7 @@ export function SiteUnderConstruction({
           <Icon name="pencil-ruler" size={20} />
         </span>
         <div className="min-w-0">
-          <p className="text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-            {siteName}
-          </p>
+          <p className="kicker">{siteName}</p>
           <h2 className="mt-1 text-xl font-medium tracking-[-0.01em]">
             Votre site est en cours de création
           </h2>

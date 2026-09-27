@@ -154,7 +154,7 @@ export function AdminNav({
           <Icon name="menu" />
           Menu
           {pending > 0 ? (
-            <span className="rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+            <span className="bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
               {pending}
             </span>
           ) : null}
@@ -165,20 +165,18 @@ export function AdminNav({
             if (items.length === 0) return null;
             return (
               <div key={group.label}>
-                <p className="mb-1 px-3 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-                  {group.label}
-                </p>
+                <p className="kicker mb-1 px-3">{group.label}</p>
                 <ul>
                   {items.map((item) => (
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        className="flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]"
+                        className="flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[rgb(255_255_255/0.4)]"
                       >
                         <Icon name={item.icon} />
                         {item.label}
                         {badges[item.href] ? (
-                          <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+                          <span className="ml-auto bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
                             {badges[item.href]}
                           </span>
                         ) : null}
@@ -202,9 +200,7 @@ export function AdminNav({
 
           return (
             <div key={group.label} className="mb-7">
-              <p className="mb-2 px-3 text-2xs font-medium tracking-[0.12em] text-[var(--muted)] uppercase">
-                {group.label}
-              </p>
+              <p className="kicker mb-2 px-3">{group.label}</p>
               <ul className="space-y-0.5">
                 {items.map((item) => {
                   const active =
@@ -217,14 +213,14 @@ export function AdminNav({
                         className={cn(
                           'flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors',
                           active
-                            ? 'bg-[var(--surface-elevated)] font-medium text-[var(--foreground)]'
-                            : 'text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+                            ? 'bg-[rgb(255_255_255/0.62)] font-semibold text-[var(--ink)] shadow-[inset_2px_0_0_var(--deep-water),0_10px_24px_-18px_rgb(35_78_94/0.5)]'
+                            : 'text-[var(--foreground-muted)] hover:bg-[rgb(255_255_255/0.4)] hover:text-[var(--foreground)]',
                         )}
                       >
                         <Icon name={item.icon} />
                         {item.label}
                         {badges[item.href] ? (
-                          <span className="ml-auto rounded-full bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
+                          <span className="ml-auto bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]">
                             {badges[item.href]}
                           </span>
                         ) : null}

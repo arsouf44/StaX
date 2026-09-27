@@ -26,7 +26,6 @@ const SHOWCASES = [
     sector: 'Restauration',
     plan: 'Premium',
     host: 'restaurant-dupont.fr',
-    tone: 'dark' as const,
     features: ['Carte & menus', 'Réservations en ligne', 'Horaires', 'Galerie'],
     note: 'Carte gérée par le restaurateur, réservations validées depuis le téléphone, horaires modifiables en trente secondes.',
   },
@@ -36,7 +35,6 @@ const SHOWCASES = [
     sector: 'Beauté & bien-être',
     plan: 'Premium',
     host: 'atelier-camille.fr',
-    tone: 'light' as const,
     features: ['Prestations & tarifs', 'Prise de rendez-vous', 'Équipe', 'Avis clients'],
     note: 'Prise de rendez-vous par prestation et par coiffeuse, avec durée et tarif affichés.',
   },
@@ -46,7 +44,6 @@ const SHOWCASES = [
     sector: 'Artisanat & bâtiment',
     plan: 'Essentiel',
     host: 'martin-plomberie.fr',
-    tone: 'dark' as const,
     features: ['Prestations', 'Zones d’intervention', 'Galerie de chantiers', 'Demande de devis'],
     note: 'Formulaire de devis qualifiant la demande : nature de la panne, urgence, code postal.',
   },
@@ -56,10 +53,6 @@ export default function ShowcasePage() {
   return (
     <>
       <Section className="relative overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="spotlight absolute inset-0" />
-          <div className="grid-bg grid-bg-fade absolute inset-0" />
-        </div>
         <Container size="wide">
           <SectionHeading
             as="h1"
@@ -82,7 +75,7 @@ export default function ShowcasePage() {
               <Reveal key={item.variant} delay={index * 60}>
                 <article className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-center">
                   <div className={index % 2 === 1 ? 'lg:order-2' : undefined}>
-                    <BrowserFrame url={item.host} tone={item.tone}>
+                    <BrowserFrame url={item.host}>
                       <SitePreview variant={item.variant} />
                     </BrowserFrame>
                   </div>

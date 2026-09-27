@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Container, Logo } from '@stax/ui';
+import { Wordmark } from '@stax/ui';
 import { legalValue } from '@stax/config';
 
 /**
@@ -14,37 +14,33 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="relative flex min-h-dvh flex-col">
-      <div
-        aria-hidden="true"
-        className="grid-bg grid-bg-fade pointer-events-none absolute inset-0 -z-10"
-      />
-      <header className="py-8">
-        <Container size="default">
-          <Link href="/" aria-label="StaX — accueil" className="inline-flex">
-            <Logo />
-          </Link>
-        </Container>
+      <header className="mx-auto flex min-h-[96px] w-[min(1370px,calc(100%-56px))] items-center justify-center border-b border-[var(--line)] max-[800px]:min-h-[82px] max-[800px]:w-[min(calc(100%-32px),620px)]">
+        <Link href="/" aria-label="StaX — accueil" className="inline-flex">
+          <Wordmark size={30} />
+        </Link>
       </header>
 
-      <main id="contenu-principal" className="flex flex-1 items-center py-6">
-        <Container size="default">{children}</Container>
+      <main id="contenu-principal" className="flex flex-1 items-center py-12">
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">{children}</div>
       </main>
 
-      <footer className="py-8 text-xs text-[var(--muted)]">
-        <Container size="default">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span>{company}</span>
-            <Link href="/mentions-legales" className="hover:text-[var(--foreground)]">
+      <footer className="mx-auto w-[min(1370px,calc(100%-56px))] pb-7 max-[800px]:w-[min(calc(100%-32px),620px)]">
+        <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-[11px] font-[650] tracking-[0.05em] text-[var(--muted)] uppercase">
+          <span>
+            {company} © {new Date().getFullYear()}
+          </span>
+          <span className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link href="/mentions-legales" className="hover:text-[var(--ink)]">
               Mentions légales
             </Link>
-            <Link href="/confidentialite" className="hover:text-[var(--foreground)]">
+            <Link href="/confidentialite" className="hover:text-[var(--ink)]">
               Confidentialité
             </Link>
-            <Link href="/aide" className="hover:text-[var(--foreground)]">
+            <Link href="/aide" className="hover:text-[var(--ink)]">
               Aide
             </Link>
-          </div>
-        </Container>
+          </span>
+        </div>
       </footer>
     </div>
   );

@@ -3,20 +3,25 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, ButtonLink, Logo, Sheet, cn, useScrolledPast } from '@stax/ui';
+import { ButtonLink, Sheet, Wordmark, cn } from '@stax/ui';
 import { PRIMARY_NAV, type NavGroup } from '~/lib/navigation';
 
 /**
  * En-tete du site public.
  *
- * Une pastille de verre qui flotte au-dessus de la page et se densifie au
- * defilement. Menus deroulants au survol ET au clavier, panneau lateral sur
- * mobile. La navigation reste entierement utilisable sans souris : chaque
- * groupe est un bouton, chaque menu se ferme avec Echap.
+ * Trois colonnes, comme une page de garde : la navigation en petites
+ * capitales a gauche, le mot StaX au centre, l action a droite, le tout pose
+ * sur un trait de 1 px. Menus deroulants au survol ET au clavier, panneau
+ * lateral sous 1180 px. La navigation reste entierement utilisable sans
+ * souris : chaque groupe est un bouton, chaque menu se ferme avec Echap.
+ *
+ * Le groupe « Entreprise » ne figure que dans le panneau mobile et le pied de
+ * page : six entrees ne tiennent pas dans la moitie gauche sans se serrer.
  */
+const DESKTOP_NAV = PRIMARY_NAV.filter((group) => group.label !== 'Entreprise');
+
 export function SiteHeader() {
   const pathname = usePathname();
-  const scrolled = useScrolledPast(12);
   const [menuState, setMenuState] = useState<{
     path: string;
     group: string | null;
@@ -60,27 +65,11 @@ export function SiteHeader() {
     Boolean(href) && (pathname === href || (href !== '/' && pathname.startsWith(`${href}/`)));
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
-      <div
-        className={cn(
-          'mx-auto flex h-14 w-full max-w-6xl items-center gap-3 rounded-full border pr-2 pl-4 transition-[background-color,border-color,box-shadow] duration-300 sm:pl-5',
-          'backdrop-blur-xl backdrop-saturate-150',
-          scrolled
-            ? 'border-[var(--glass-border-strong)] bg-[color-mix(in_oklab,var(--background)_78%,transparent)] shadow-[0_18px_50px_-24px_rgb(0_0_0/0.9)]'
-            : 'border-[var(--glass-border)] bg-[color-mix(in_oklab,var(--background)_45%,transparent)]',
-        )}
-      >
-        <Link
-          href="/"
-          aria-label="StaX — accueil"
-          className="shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
-        >
-          <Logo size={24} />
-        </Link>
-
-        <nav aria-label="Navigation principale" className="hidden flex-1 justify-center lg:flex">
-          <ul className="flex items-center gap-0.5">
-            {PRIMARY_NAV.map((group) => (
+    <header className="relative z-50">
+      <div className="mx-auto grid min-h-[82px] w-[min(1370px,calc(100%-56px))] grid-cols-[1fr_auto] items-center border-b border-[var(--line)] max-[800px]:w-[min(calc(100%-32px),620px)] min-[1180px]:min-h-[114px] min-[1180px]:grid-cols-[1fr_auto_1fr]">
+        <nav aria-label="Navigation principale" className="hidden min-[1180px]:block">
+          <ul className="flex items-center gap-[27px] text-xs font-[690] tracking-[0.03em] text-[#4f6c79] uppercase">
+            {DESKTOP_NAV.map((group) => (
               <li
                 key={group.label}
                 className="relative"
@@ -100,26 +89,11 @@ export function SiteHeader() {
                       aria-haspopup="true"
                       onClick={() => setOpenGroup(openGroup === group.label ? null : group.label)}
                       className={cn(
-                        'inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[0.8125rem] transition-colors',
-                        openGroup === group.label || isActive(group.href)
-                          ? 'bg-[var(--glass-2)] text-[var(--foreground)]'
-                          : 'text-[var(--foreground-muted)] hover:bg-[var(--glass-1)] hover:text-[var(--foreground)]',
+                        'nav-link uppercase transition-colors hover:text-[var(--ink)]',
+                        (openGroup === group.label || isActive(group.href)) && 'text-[var(--ink)]',
                       )}
                     >
                       {group.label}
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        className={cn(
-                          'size-3 transition-transform duration-200',
-                          openGroup === group.label && 'rotate-180',
-                        )}
-                      >
-                        <path d="m4 6 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
                     </button>
                     {openGroup === group.label ? (
                       <MegaMenu group={group} onNavigate={() => setOpenGroup(null)} />
@@ -128,11 +102,10 @@ export function SiteHeader() {
                 ) : (
                   <Link
                     href={group.href ?? '/'}
+                    aria-current={isActive(group.href) ? 'page' : undefined}
                     className={cn(
-                      'inline-flex h-9 items-center rounded-full px-3.5 text-[0.8125rem] transition-colors',
-                      isActive(group.href)
-                        ? 'bg-[var(--glass-2)] text-[var(--foreground)]'
-                        : 'text-[var(--foreground-muted)] hover:bg-[var(--glass-1)] hover:text-[var(--foreground)]',
+                      'nav-link transition-colors hover:text-[var(--ink)]',
+                      isActive(group.href) && 'text-[var(--ink)]',
                     )}
                   >
                     {group.label}
@@ -143,57 +116,80 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
-          <ButtonLink
+        <Link
+          href="/"
+          aria-label="StaX — accueil"
+          className="justify-self-start min-[1180px]:justify-self-center"
+        >
+          <Wordmark size={30} />
+        </Link>
+
+        <div className="flex items-center gap-6 justify-self-end text-xs font-[680] tracking-[0.03em] text-[#476878] uppercase">
+          <Link
             href="/connexion"
-            variant="ghost"
-            size="pill-sm"
-            className="hidden sm:inline-flex"
+            className="nav-link hidden transition-colors hover:text-[var(--ink)] sm:inline-block"
           >
             Se connecter
-          </ButtonLink>
-          <ButtonLink href="/commander" variant="accent" size="pill-sm">
-            Créer mon site
-          </ButtonLink>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full lg:hidden"
+          </Link>
+          <Link
+            href="/commander"
+            className="group inline-flex items-center gap-[9px] text-[var(--ink)] transition-colors"
+          >
+            <span className="max-[480px]:sr-only">Créer mon site</span>
+            <span
+              aria-hidden="true"
+              className="text-base leading-none text-[#1c586f] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 max-[480px]:text-lg"
+            >
+              ↗
+            </span>
+          </Link>
+          <button
+            type="button"
+            className="inline-flex h-10 items-center gap-2.5 uppercase transition-colors hover:text-[var(--ink)] min-[1180px]:hidden"
             aria-label="Ouvrir le menu"
             onClick={() => setMobileOpen(true)}
           >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M2 4h12M2 8h12M2 12h12" strokeLinecap="round" />
+            <span className="max-sm:sr-only">Menu</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              className="h-3 w-5"
+            >
+              <path d="M0 1h20M0 6h20M6 11h14" />
             </svg>
-          </Button>
+          </button>
         </div>
       </div>
 
       <Sheet open={mobileOpen} onClose={() => setMobileOpen(false)} title="Navigation">
-        <nav aria-label="Navigation mobile" className="space-y-6">
+        <nav aria-label="Navigation mobile" className="space-y-7">
           {PRIMARY_NAV.map((group) => (
             <div key={group.label}>
               {group.href ? (
                 <Link
                   href={group.href}
-                  className="block text-sm font-medium text-[var(--foreground)]"
+                  className="kicker block !text-[var(--ink)] transition-colors hover:!text-[var(--accent)]"
                 >
                   {group.label}
                 </Link>
               ) : (
-                <p className="text-2xs font-medium tracking-[0.14em] text-[var(--muted)] uppercase">
-                  {group.label}
-                </p>
+                <p className="kicker">{group.label}</p>
               )}
               {group.items ? (
-                <ul className="mt-3 space-y-1 border-l border-[var(--border)] pl-4">
+                <ul className="mt-3 border-t border-[var(--line)]">
                   {group.items.map((item) => (
-                    <li key={item.href}>
+                    <li key={item.href} className="border-b border-[var(--line)]">
                       <Link
                         href={item.href}
-                        className="block py-1.5 text-sm text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
+                        className="flex items-center justify-between py-2.5 text-sm font-semibold text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
                       >
                         {item.label}
+                        <span aria-hidden="true" className="text-[#5b94aa]">
+                          →
+                        </span>
                       </Link>
                     </li>
                   ))}
@@ -201,11 +197,11 @@ export function SiteHeader() {
               ) : null}
             </div>
           ))}
-          <div className="space-y-2 border-t border-[var(--border)] pt-6">
+          <div className="space-y-2 border-t border-[var(--line)] pt-6">
             <ButtonLink size="pill" href="/connexion" variant="secondary" block>
               Se connecter
             </ButtonLink>
-            <ButtonLink size="pill" href="/commander" variant="accent" block>
+            <ButtonLink size="pill" href="/commander" variant="primary" block>
               Créer mon site
             </ButtonLink>
           </div>
@@ -220,7 +216,7 @@ function MegaMenu({ group, onNavigate }: { group: NavGroup; onNavigate: () => vo
   return (
     <div
       className={cn(
-        'absolute glass-edge top-[calc(100%+14px)] left-0 z-40 rounded-[var(--radius-xl)] p-2 glass-3',
+        'absolute top-[calc(100%+22px)] left-0 z-40 p-2 normal-case glass-3',
         'animate-[reveal_0.18s_cubic-bezier(0.16,1,0.3,1)]',
         hasFeatured ? 'w-[46rem]' : 'w-[22rem]',
       )}
@@ -237,18 +233,18 @@ function MegaMenu({ group, onNavigate }: { group: NavGroup; onNavigate: () => vo
               <Link
                 href={item.href}
                 onClick={onNavigate}
-                className="group block rounded-[var(--radius-md)] p-3 transition-colors hover:bg-[var(--surface-hover)]"
+                className="group block p-3 tracking-normal transition-colors hover:bg-[rgb(255_255_255/0.7)]"
               >
-                <span className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
+                <span className="flex items-center gap-2 text-sm font-bold tracking-[-0.015em] text-[var(--foreground)]">
                   {item.label}
                   {item.badge ? (
-                    <span className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-2xs text-accent">
+                    <span className="border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-1.5 py-0.5 text-2xs text-accent">
                       {item.badge}
                     </span>
                   ) : null}
                 </span>
                 {item.description ? (
-                  <span className="mt-0.5 block text-xs leading-relaxed text-[var(--muted)]">
+                  <span className="mt-0.5 block text-xs leading-relaxed font-normal text-[var(--muted)]">
                     {item.description}
                   </span>
                 ) : null}
@@ -258,26 +254,25 @@ function MegaMenu({ group, onNavigate }: { group: NavGroup; onNavigate: () => vo
         </ul>
 
         {group.featured ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--background-inset)] p-5">
-            <p className="text-sm font-medium">{group.featured.title}</p>
-            <p className="mt-2 text-xs leading-relaxed text-[var(--foreground-muted)]">
-              {group.featured.description}
-            </p>
+          <div className="glass-rings flex flex-col justify-between border border-[rgb(255_255_255/0.76)] bg-[var(--glass-warm)] p-5 tracking-normal">
+            <div>
+              <p className="kicker">Principe StaX</p>
+              <p className="mt-4 text-2xl leading-[0.98] font-[725] tracking-[-0.06em] text-[#244758]">
+                {group.featured.title}
+              </p>
+              <p className="mt-3 text-xs leading-relaxed font-normal text-[var(--foreground-muted)]">
+                {group.featured.description}
+              </p>
+            </div>
             <Link
               href={group.featured.href}
               onClick={onNavigate}
-              className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-accent"
+              className="text-link mt-5 self-start"
             >
               {group.featured.cta}
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="size-3"
-              >
-                <path d="M3 8h10m0 0-4-4m4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span aria-hidden="true" className="arrow">
+                ↗
+              </span>
             </Link>
           </div>
         ) : null}

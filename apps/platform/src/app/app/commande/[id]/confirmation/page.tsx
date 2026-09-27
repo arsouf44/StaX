@@ -76,9 +76,7 @@ export default async function OrderConfirmationPage({
         delivered ? (
           <>
             <StatusPill tone="success">Paiement confirmé</StatusPill>
-            <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
-              Merci ! Votre site est à vous
-            </h1>
+            <h1 className="title-page mt-4">Merci ! Votre site est à vous</h1>
             <p className="mt-3 text-[var(--foreground-muted)]">
               Il est en ligne et vous est confié dès maintenant. Vous pouvez changer vous-même vos
               textes, vos photos et vos horaires : chaque modification est d’abord un brouillon, que
@@ -88,9 +86,7 @@ export default async function OrderConfirmationPage({
         ) : (
           <>
             <StatusPill tone="success">Paiement confirmé</StatusPill>
-            <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
-              Merci ! Nous vous remettons votre site
-            </h1>
+            <h1 className="title-page mt-4">Merci ! Nous vous remettons votre site</h1>
             <p className="mt-3 text-[var(--foreground-muted)]">
               Votre règlement est bien arrivé. Une dernière vérification de votre site en ligne, et
               il vous est confié : en général quelques minutes, au plus un jour ouvré. Vous recevrez
@@ -101,9 +97,7 @@ export default async function OrderConfirmationPage({
       ) : paid ? (
         <>
           <StatusPill tone="success">Paiement confirmé</StatusPill>
-          <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
-            Merci, votre projet est lancé
-          </h1>
+          <h1 className="title-page mt-4">Merci, votre projet est lancé</h1>
           <p className="mt-3 text-[var(--foreground-muted)]">
             Nous avons bien reçu votre règlement. Votre espace est ouvert et vous pouvez suivre
             l’avancement de votre site à tout moment.
@@ -114,9 +108,7 @@ export default async function OrderConfirmationPage({
           <StatusPill tone="info" pulse>
             Confirmation en cours
           </StatusPill>
-          <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
-            Nous confirmons votre paiement
-          </h1>
+          <h1 className="title-page mt-4">Nous confirmons votre paiement</h1>
           <p className="mt-3 text-[var(--foreground-muted)]">
             Votre banque nous transmet la confirmation, ce qui prend généralement quelques secondes.
             Actualisez cette page dans un instant : nous ne considérons un paiement comme acquis que
@@ -131,9 +123,7 @@ export default async function OrderConfirmationPage({
       ) : (
         <>
           <StatusPill tone="warning">Commande {order.status}</StatusPill>
-          <h1 className="mt-4 text-2xl font-medium tracking-[-0.02em]">
-            Cette commande n’est pas active
-          </h1>
+          <h1 className="title-page mt-4">Cette commande n’est pas active</h1>
           <p className="mt-3 text-[var(--foreground-muted)]">
             Contactez-nous depuis votre espace si vous pensez qu’il s’agit d’une erreur.
           </p>
