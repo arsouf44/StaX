@@ -338,6 +338,13 @@ exister en base. L’audit du 2026-09-27 l’a vérifié systématiquement :
   d’un client, puis avec des valeurs nulles — 130 appels, rien de modifié,
   rien de divulgué. Une fonction ajoutée demain est balayée d’office ;
 - aucune fonction de l’API n’est appelable sans compte ;
+- **simulation d’intrusion** (`tests/e2e/journeys/penetration.spec.ts`) contre
+  la pile réelle (authentification, API, moteur des sites) : deux clients
+  étrangers et un visiteur anonyme. L’attaquant, en connaissant les
+  identifiants exacts de la victime, ne peut rien lire ni modifier chez elle,
+  ne peut pas s’attribuer de rôle plateforme, n’atteint pas le back-office
+  même connecté, et le moteur des sites ne sert rien sur un hôte inconnu ou
+  usurpé. Rejoué à chaque exécution ;
 - le schéma interne `app` n’est **pas** exposé par l’API (vérifié sur le projet :
   seuls `public` et `graphql_public` le sont). **Ne l’ajoutez jamais** aux
   schémas exposés de Supabase : ses fonctions supposent un appelant de

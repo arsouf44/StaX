@@ -25,7 +25,8 @@ permanence ce qui manque encore.
 
 Preuves : 563 assertions SQL, 361 tests unitaires et d'intégration, 62 tests
 navigateur (ordinateur + téléphone), 19 parcours complets contre une vraie
-pile, dont le parcours « vente par téléphone » de bout en bout.
+pile, dont le parcours « vente par téléphone » de bout en bout et une
+simulation d’intrusion (deux clients étrangers et un visiteur anonyme).
 
 **Sécurité :** audit complet du 2026-09-27 — voir
 [security.md § 16](./security.md#16-audit-du-2026-09-27--ce-qui-a-été-trouvé-et-corrigé).
