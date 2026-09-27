@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An independent studio building custom websites for architects, restaurants, hotels, lawyers and artisans. Strategy, design and development in one place.">
+<title>StaX Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter+Tight:wght@300..600&display=swap">
+<style>
+/* ==========================================================================
+   StaX. Same typefaces, same palette, same structure as the studio site:
+   EB Garamond + Inter Tight, pearl grey, ink, sea, graphite.
+   ========================================================================== */
+:root {
+  --stax-bg: #f1f2f3;
+  --stax-bg-2: #fafbfb;
+  --stax-ink: #14181c;
+  --stax-ink-2: #4b545c;
+  --stax-ink-3: #838c94;
+  --stax-graphite: #1d2328;
+  --stax-line: #14181c1c;
+  --stax-sea: #2f5f86;
+  --stax-serif: "EB Garamond", "Iowan Old Style", Palatino, Georgia, serif;
+  --stax-sans: "Inter Tight Variable", "Inter Tight", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --stax-shadow-soft: 0 30px 68px -46px #1824328c;
+  --stax-shadow-lift: 0 44px 90px -50px #1824329e;
+  --ease: cubic-bezier(0.19, 0.85, 0.22, 1);
+  --nav-h: 68px;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--nav-h) + 12px); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+html, body { background-color: var(--stax-bg); color: var(--stax-ink); }
+body {
+  margin: 0;
+  font-family: var(--stax-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img { display: block; max-width: 100%; }
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 1.5px solid var(--stax-sea); outline-offset: 4px; border-radius: 2px; }
+::selection { background: #2f5f8629; }
+em, i { font-style: italic; }
+
+.stax-shell { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: clamp(20px, 4.4vw, 64px); }
+.skip { position: fixed; left: 16px; top: 12px; z-index: 90; background: var(--stax-graphite); color: #f4f6f8; padding: 10px 16px; border-radius: 8px; transform: translateY(-180%); transition: transform .3s var(--ease); }
+.skip:focus { transform: none; }
+
+/* --- Navigation --------------------------------------------------------- */
+.stax-navbar {
+  position: fixed; inset: 0 0 auto; z-index: 40;
+  padding-top: env(safe-area-inset-top, 0px);
+  border-bottom: 1px solid transparent;
+  transition: background-color .5s var(--ease), border-color .5s, backdrop-filter .5s;
+}
+.stax-navbar.is-scrolled {
+  background-color: rgb(241 242 243 / 0.78);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom-color: var(--stax-line);
+}
+.stax-nav { display: flex; justify-content: space-between; align-items: center; gap: 24px; height: var(--nav-h); }
+.stax-wordmark { font-family: var(--stax-serif); font-size: 22px; letter-spacing: 0.01em; color: var(--stax-ink); text-decoration: none; }
+.stax-nav__links { display: flex; align-items: center; gap: clamp(18px, 2.6vw, 38px); font-size: 13.5px; letter-spacing: 0.01em; color: var(--stax-ink-2); }
+.stax-nav__links a { position: relative; padding-block: 6px; text-decoration: none; transition: color .3s; }
+.stax-nav__links a:hover { color: var(--stax-ink); }
+.stax-nav__links a:not(.stax-nav-cta)::after {
+  content: ""; position: absolute; left: 0; bottom: 2px; width: 100%; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: 0 50%; transition: transform .42s var(--ease);
+}
+.stax-nav__links a:not(.stax-nav-cta):hover::after { transform: scaleX(1); }
+.stax-nav-cta { color: var(--stax-ink); padding-bottom: 8px; }
+.stax-nav-cta::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--stax-line); }
+.stax-nav-cta::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: var(--stax-ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform .46s var(--ease); }
+.stax-nav-cta:hover::after { transform: scaleX(1); }
+@media (max-width: 720px) {
+  :root { --nav-h: 58px; }
+  .stax-nav__links a:not(.stax-nav-cta) { display: none; }
+}
+
+/* --- Hero : la pile de verre -------------------------------------------- */
+.stax-hero {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 100vh; min-height: 100dvh;
+  padding-top: var(--nav-h);
+  background: radial-gradient(120% 90% at 50% 8%, #fbfcfc 0%, var(--stax-bg) 46%, #e8eaec 100%);
+}
+.stax-hero__glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(60% 42% at 26% 24%, rgb(120 152 178 / 0.16), transparent 70%),
+    radial-gradient(48% 36% at 80% 72%, rgb(47 95 134 / 0.10), transparent 72%);
+}
+.stax-hero__light {
+  position: absolute; inset: 0; pointer-events: none; opacity: .9;
+  background: radial-gradient(38vmax 30vmax at var(--lx, 30%) var(--ly, 20%), rgb(255 255 255 / 0.65), transparent 70%);
+  mix-blend-mode: soft-light;
+}
+.stax-stage-wrap {
+  position: relative; z-index: 10; flex: 1 1 auto;
+  display: flex; justify-content: center; align-items: center;
+  padding-block: clamp(8px, 1.6vh, 22px) clamp(28px, 5vh, 56px);
+}
+.stax-fit {
+  --k: .0893;
+  position: relative; container-type: inline-size;
+  aspect-ratio: 1200 / 780;
+  width: min(94vw, max(600px, min(1180px, calc((100dvh - 150px) * 1.5385))));
+}
+.stax-stage { position: absolute; inset: 0; perspective: 127cqw; perspective-origin: 50% 44%; }
+.stax-scene {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  transform: rotateX(calc((var(--srx, 0) + var(--u, 0) * 9) * 1deg)) rotateY(calc(var(--sry, 0) * 1deg));
+}
+.stax-band {
+  position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform;
+  transform: translate3d(
+    calc(var(--mx, 0) * var(--p, 0) * var(--k) * 1cqw),
+    calc(var(--my, 0) * var(--p, 0) * var(--k) * 1cqw),
+    calc(var(--spread, 0) * var(--u, 0) * var(--k) * 1.5cqw));
+}
+.stax-band[data-band="far"] { --p: -.55; --spread: -80; }
+.stax-band[data-band="mid"] { --p: -.22; --spread: -42; }
+.stax-band[data-band="core"] { --p: 0; --spread: 0; }
+.stax-band[data-band="front"] { --p: .36; --spread: 62; }
+.stax-band[data-band="near"] { --p: .72; --spread: 104; }
+.stax-layer {
+  position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h);
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--z, 0) * var(--k) * 1cqw)) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) rotate(calc(var(--rz, 0) * 1deg));
+}
+.stax-layer__in {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  animation: stax-assemble 1.3s var(--ease) both;
+  animation-delay: calc(var(--d, 0s) + .12s);
+}
+@keyframes stax-assemble {
+  0% { opacity: 0; transform: translateZ(calc(var(--spread, 0) * var(--k) * 1cqw)) rotateY(calc(var(--entry-ry, 3) * 1deg)) scale(.965); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* Matières */
+.m-glass, .m-frost, .m-white, .m-aluminium { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; }
+.m-glass {
+  background: linear-gradient(142deg, rgb(255 255 255 / .6), rgb(255 255 255 / .26) 52%, rgb(232 238 244 / .36));
+  border: 1px solid rgb(255 255 255 / .72);
+  box-shadow: inset 0 1px #ffffffe6, inset 0 -1px #ffffff52, var(--stax-shadow-soft);
+}
+.m-frost {
+  background: linear-gradient(158deg, rgb(252 253 253 / .9), rgb(240 243 246 / .76));
+  border: 1px solid rgb(255 255 255 / .86);
+  box-shadow: inset 0 1px #fffffff2, var(--stax-shadow-soft);
+}
+.m-white { background: #fdfdfd; border: 1px solid rgb(20 24 28 / .06); box-shadow: inset 0 1px #ffffffe6, var(--stax-shadow-lift); }
+.m-aluminium {
+  background: linear-gradient(101deg, #f5f7f8, #ccd2d8 34%, #eef1f4 51%, #b4bbc3 76%, #eaeef1);
+  border: 1px solid rgb(255 255 255 / .7);
+  box-shadow: inset 0 1px #ffffffd9, var(--stax-shadow-soft);
+}
+.m-glass::before, .m-frost::before, .m-white::before, .m-aluminium::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(70% 55% at var(--hx, 18%) var(--hy, 0%), rgb(255 255 255 / .75), rgb(255 255 255 / 0) 70%);
+  opacity: .6;
+}
+.m-aluminium::before { background: linear-gradient(101deg, transparent calc(var(--hx, 30%) - 18%), rgb(255 255 255 / .7) var(--hx, 30%), transparent calc(var(--hx, 30%) + 18%)); opacity: .8; }
+.m-edge-ring::after { content: ""; position: absolute; inset: 1px; border-radius: inherit; pointer-events: none; border: 1px solid rgb(255 255 255 / .4); z-index: 5; }
+
+/* Composition (bureau) */
+.l-backC   { --x: 21%;  --y: 2%;  --w: 60%; --h: 76%; --z: -62;  --ry: 1.5; --d: 0s; --entry-ry: 2; }
+.l-slabL   { --x: -2%;  --y: 13%; --w: 22%; --h: 62%; --z: -96;  --ry: 6;  --d: 40ms; }
+.l-slabR   { --x: 77%;  --y: 5%;  --w: 22%; --h: 48%; --z: -108; --ry: -8; --d: 70ms; }
+.l-base3   { --x: 5%;   --y: 69%; --w: 90%; --h: 12%; --z: -80;  --rx: 4; --ry: -2; --d: 90ms; }
+.l-base2   { --x: 10%;  --y: 78%; --w: 80%; --h: 10%; --z: -118; --rx: 3; --ry: 1;  --d: .13s; }
+.l-base1   { --x: 16%;  --y: 86%; --w: 68%; --h: 9%;  --z: -156; --rx: 5; --ry: -1; --d: .17s; }
+.l-main    { --x: 26%;  --y: 5%;  --w: 43%; --h: 70%; --z: 0;    --d: 60ms; --entry-ry: 1.5; }
+.l-ind     { --x: 3%;   --y: 14%; --w: 19.5%; --h: 54%; --z: -30; --ry: 7; --d: .15s; }
+.l-proc    { --x: 74%;  --y: 13%; --w: 20%; --h: 31%; --z: -44;  --ry: -9;  --d: .19s; }
+.l-div     { --x: 71.4%; --y: 9%; --w: 1.1%; --h: 70%; --z: 40;  --ry: -14; --d: .3s; }
+.l-dining  { --x: 62%;  --y: 45%; --w: 27%; --h: 32%; --z: 54;   --ry: -11; --d: .28s; }
+.l-coast   { --x: 74%; --y: 78%; --w: 24%; --h: 17%; --z: 84;  --ry: -6;  --d: .31s; }
+.l-sv1     { --x: 18.5%; --y: 79%; --w: 18.5%; --h: 18%; --z: 94;  --d: .21s; }
+.l-sv2     { --x: 38%;  --y: 80%; --w: 18.5%; --h: 18%; --z: 100; --d: .24s; }
+.l-sv3     { --x: 57.5%; --y: 79%; --w: 18.5%; --h: 18%; --z: 94;  --d: .27s; }
+.l-knob    { --x: 0.5%; --y: 58%; --w: 8.6%; --z: 128; --ry: 14; --d: .34s; height: auto; aspect-ratio: 1 / 1; }
+.l-edge    { --x: -9%;  --y: 1%;  --w: 15%; --h: 95%; --z: 150; --ry: 18; --d: .34s; }
+
+/* Textes des plaques */
+.stax-plate-micro { font-size: 1.1cqw; letter-spacing: .055em; color: var(--stax-ink-3); }
+.stax-plate-num { font-size: 1.15cqw; font-variant-numeric: tabular-nums; color: var(--stax-ink-3); }
+
+.stax-panel { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; background: #e9ebee; }
+.stax-panel__photo {
+  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none;
+  object-fit: cover; object-position: 50% 58%;
+  transform: scale(1.06) translate3d(calc(var(--mx, 0) * -.06cqw), calc(var(--my, 0) * -.06cqw), 0);
+}
+.stax-panel__sheet { position: absolute; inset: 30% 0 0; background: linear-gradient(rgb(255 255 255 / 0), rgb(255 255 255 / .58) 18%, rgb(255 255 255 / .86) 44%, rgb(255 255 255 / .95)); }
+.stax-panel__sheen { position: absolute; inset: 0; background: radial-gradient(80% 60% at var(--hx, 18%) var(--hy, 0%), rgb(255 255 255 / .42), transparent 62%), linear-gradient(118deg, rgb(255 255 255 / .4), transparent 34%, transparent 68%, rgb(255 255 255 / .2)); }
+.stax-panel__inner { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 2.3cqw 2.5cqw 2.6cqw; }
+.stax-panel__head { display: flex; justify-content: space-between; align-items: center; }
+.stax-panel__logo { font-family: var(--stax-serif); font-size: 2.1cqw; line-height: 1; color: var(--stax-ink); }
+.stax-panel__copy { display: flex; flex-direction: column; gap: 1.1cqw; }
+.stax-panel__h1 { font-family: var(--stax-serif); font-weight: 400; font-size: 3.35cqw; line-height: 1.07; letter-spacing: -0.008em; color: var(--stax-ink); text-wrap: balance; }
+.stax-panel__h1 i { font-weight: 400; }
+.stax-panel__sub { font-size: 1.36cqw; line-height: 1.5; color: var(--stax-ink-2); max-width: 30cqw; }
+.stax-cta {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: .7cqw; margin-top: .5cqw;
+  padding: 1.1cqw 1.65cqw; border-radius: 10px;
+  background: linear-gradient(180deg, #2a3138 0%, var(--stax-graphite) 100%); color: #f4f6f8;
+  font-size: 1.26cqw; letter-spacing: .01em; text-decoration: none;
+  box-shadow: inset 0 1px rgb(255 255 255 / .16), 0 16px 30px -18px rgb(20 24 28 / .7);
+  transition: transform .32s var(--ease), box-shadow .32s;
+}
+.stax-cta svg { width: 1em; height: 1em; transition: transform .38s var(--ease); }
+.stax-cta:hover { transform: translateY(-1.5px); box-shadow: inset 0 1px rgb(255 255 255 / .2), 0 22px 38px -20px rgb(20 24 28 / .72); }
+.stax-cta:hover svg { transform: translateX(3px); }
+.stax-cta:active { transform: translateY(.5px) scale(.995); }
+
+.stax-ind { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; padding: 1.8cqw 1.6cqw 1.5cqw; }
+.stax-ind__list { display: flex; flex-direction: column; margin-top: 1.2cqw; }
+.stax-ind__list li { display: flex; justify-content: space-between; align-items: center; gap: .6cqw; padding-block: .74cqw; border-top: 1px solid var(--stax-line); font-size: 1.36cqw; color: var(--stax-ink); transition: color .4s; }
+.stax-ind__list li:last-child { border-bottom: 1px solid var(--stax-line); }
+.stax-ind__dot { width: .34cqw; height: .34cqw; border-radius: 99px; background: var(--stax-ink-3); opacity: .5; transition: background .4s, opacity .4s, transform .4s var(--ease); }
+.stax-ind__list li.is-on .stax-ind__dot { background: var(--stax-sea); opacity: 1; transform: scale(1.6); }
+.stax-ind__thumb { margin-top: auto; height: 23%; border-radius: 9px; overflow: hidden; background: #dfe3e7; }
+.stax-ind__thumb img, .stax-dining__thumb img, .stax-coast__thumb img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.stax-ind__thumb img { object-position: 50% 42%; }
+
+.stax-proc { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.6cqw; }
+.stax-proc__steps { display: flex; flex-direction: column; gap: .7cqw; margin-top: 1.1cqw; }
+.stax-proc__step { display: flex; align-items: baseline; gap: .7cqw; font-size: 1.6cqw; color: var(--stax-ink); }
+.stax-proc__tick { flex: 0 0 auto; width: .9cqw; height: 1px; background: var(--stax-ink-3); transform: translateY(-.35em); }
+.stax-proc__row { display: flex; justify-content: space-between; align-items: flex-end; }
+
+.stax-dining { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; gap: 1cqw; padding: 1.6cqw 1.6cqw 1.4cqw; }
+.stax-dining__title { font-family: var(--stax-serif); font-size: 2.3cqw; line-height: 1.12; color: var(--stax-ink); }
+.stax-dining__thumb { flex: 1 1 0; min-height: 0; border-radius: 9px; overflow: hidden; background: #dfe3e7; }
+
+.stax-coast { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; gap: 1.1cqw; padding: 1.2cqw; }
+.stax-coast__thumb { flex: 0 0 auto; width: 34%; height: 100%; border-radius: 8px; overflow: hidden; background: #dfe3e7; }
+.stax-coast__title { font-family: var(--stax-serif); font-size: 1.45cqw; line-height: 1.16; color: var(--stax-ink); }
+
+.stax-sv { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 1.3cqw 1.45cqw 1.3cqw; }
+.stax-sv__top { display: flex; justify-content: space-between; align-items: center; color: var(--stax-ink-2); }
+.stax-sv__top svg { width: 1.25cqw; height: 1.25cqw; color: var(--stax-ink-3); }
+.stax-sv__title { font-family: var(--stax-serif); font-size: 1.78cqw; line-height: 1.12; color: var(--stax-ink); }
+.stax-sv__line { height: 1px; margin-block: .75cqw .55cqw; background: var(--stax-line); }
+.stax-sv__body { font-size: 1.08cqw; line-height: 1.38; color: var(--stax-ink-2); }
+
+.stax-words { position: absolute; inset: 0; z-index: 1; display: grid; grid-template-columns: repeat(4, 1fr); }
+.stax-words span { display: flex; align-items: center; padding-inline: 2.1cqw; border-left: 1px solid var(--stax-line); font-family: var(--stax-serif); font-size: 1.85cqw; color: var(--stax-ink-2); }
+.stax-words span:first-child { border-left: 0; }
+
+.stax-knob {
+  position: absolute; inset: 0; border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 26%, rgb(255 255 255 / .95), transparent 46%),
+    conic-gradient(from 210deg, #e6eaee, #b9c0c8 62deg, #f2f5f7 122deg, #a9b1ba 196deg, #e8ecf0 268deg, #b5bcc4 330deg, #e6eaee 360deg);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / .9), inset 0 -2px 6px rgb(30 40 52 / .22), 0 26px 44px -26px rgb(24 36 50 / .6);
+  transform: rotate(calc(var(--mx, 0) * 2.2deg + var(--u, 0) * 140deg));
+}
+.stax-knob::before {
+  content: ""; position: absolute; inset: 22%; border-radius: 999px;
+  background: radial-gradient(circle at 40% 34%, #fbfcfd, #cfd5db 78%);
+  border: 1px solid rgb(255 255 255 / .7); box-shadow: inset 0 1px 1px rgb(255 255 255 / .9);
+}
+.stax-knob::after {
+  content: ""; position: absolute; left: calc(50% - .5px); top: 7%; width: 1px; height: 12%;
+  background: #7d8791; border-radius: 1px;
+}
+.stax-knob-ring {
+  position: absolute; inset: -16%; border-radius: 999px; pointer-events: none;
+  background: repeating-conic-gradient(from -1deg, rgb(20 24 28 / .18) 0 1.2deg, transparent 1.2deg 15deg);
+  -webkit-mask: radial-gradient(circle, transparent 62%, #000 63%, #000 70%, transparent 71%);
+  mask: radial-gradient(circle, transparent 62%, #000 63%, #000 70%, transparent 71%);
+}
+.stax-edge {
+  position: absolute; inset: 0; border-radius: 18px; opacity: .55;
+  background: linear-gradient(168deg, rgb(255 255 255 / .5), rgb(255 255 255 / .12) 44%, rgb(255 255 255 / .36));
+  border: 1px solid rgb(255 255 255 / .5);
+}
+.stax-fill { position: absolute; border-radius: 10px; }
+
+/* Composition (mobile) */
+@media (max-width: 900px) {
+  .stax-fit { aspect-ratio: 1000 / 1520; width: min(94vw, 560px); }
+  .l-slabL, .l-slabR, .l-base1, .l-base2, .l-proc, .l-div, .l-knob, .l-edge, .l-coast { display: none; }
+  .l-backC  { --x: 2%;  --y: 1%;  --w: 96%; --h: 94%; --z: -50; }
+  .l-main   { --x: 5%;  --y: 3%;  --w: 90%; --h: 43%; }
+  .l-ind    { --x: 5%;  --y: 48%; --w: 43%; --h: 29.5%; --ry: 4; }
+  .l-dining { --x: 52%; --y: 48%; --w: 43%; --h: 29.5%; --ry: -4; }
+  .l-sv1    { --x: 5%;  --y: 79.5%; --w: 28%; --h: 12.5%; }
+  .l-sv2    { --x: 36%; --y: 79.5%; --w: 28%; --h: 12.5%; }
+  .l-sv3    { --x: 67%; --y: 79.5%; --w: 28%; --h: 12.5%; }
+  .l-base3  { --x: 5%;  --y: 93.5%; --w: 90%; --h: 5%; --rx: 2; }
+  .stax-plate-micro, .stax-plate-num { font-size: 2.9cqw; }
+  .stax-panel__inner { padding: 5cqw 5cqw 5.5cqw; }
+  .stax-panel__logo { font-size: 4.6cqw; }
+  .stax-panel__h1 { font-size: 7.4cqw; }
+  .stax-panel__copy { gap: 2.4cqw; }
+  .stax-panel__sub { font-size: 3.5cqw; max-width: 70cqw; }
+  .stax-cta { font-size: 3.4cqw; padding: 2.6cqw 3.8cqw; gap: 1.6cqw; margin-top: 1cqw; }
+  .stax-ind { padding: 3cqw 3cqw; }
+  .stax-ind__list { margin-top: 2cqw; }
+  .stax-ind__list li { font-size: 3.3cqw; line-height: 1.2; padding-block: .9cqw; }
+  .stax-ind__dot { width: .9cqw; height: .9cqw; }
+  .stax-ind__thumb { display: none; }
+  .stax-dining { padding: 3cqw 3cqw; gap: 2.2cqw; }
+  .stax-dining__title { font-size: 4.3cqw; }
+  .stax-sv { padding: 2.8cqw 3cqw; }
+  .stax-sv__top svg { width: 3cqw; height: 3cqw; }
+  .stax-sv__title { font-size: 3.5cqw; }
+  .stax-sv__line, .stax-sv__body { display: none; }
+  .stax-words span { font-size: 3.2cqw; padding-inline: 2.4cqw; }
+}
+
+/* --- Sections ------------------------------------------------------------- */
+.stax-section { position: relative; padding-block: clamp(80px, 12vh, 148px); }
+.stax-eyebrow { display: flex; align-items: center; gap: 12px; font-size: 12.5px; letter-spacing: .055em; color: var(--stax-ink-3); margin-bottom: 26px; font-variant-numeric: tabular-nums; }
+.stax-eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--stax-ink-3); }
+.stax-h2 { max-width: 22ch; font-family: var(--stax-serif); font-weight: 400; font-size: clamp(31px, 4vw, 56px); line-height: 1.06; letter-spacing: -0.012em; color: var(--stax-ink); text-wrap: balance; }
+.stax-h2 em { color: var(--stax-ink-2); }
+.stax-lede { max-width: 54ch; margin-top: 22px; font-size: 16px; line-height: 1.62; color: var(--stax-ink-2); }
+
+/* Industries */
+.stax-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 40px 28px; margin-top: 64px; }
+.stax-grid__cell { position: relative; grid-column: span 2; padding-top: 22px; border-top: 1px solid var(--stax-line); }
+.stax-grid__cell:nth-child(4), .stax-grid__cell:nth-child(5) { grid-column: span 3; }
+.stax-grid__cell::before { content: ""; position: absolute; left: 0; top: -1px; width: 100%; height: 1px; background: var(--stax-ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform .7s var(--ease); }
+.stax-grid__cell:hover::before { transform: scaleX(1); }
+.stax-grid__top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 10px; }
+.stax-grid__cell h3 { font-family: var(--stax-serif); font-weight: 400; font-size: clamp(22px, 2vw, 28px); line-height: 1.15; color: var(--stax-ink); }
+.stax-grid__num { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--stax-ink-3); }
+.stax-grid__cell p { max-width: 34ch; font-size: 14.5px; line-height: 1.58; color: var(--stax-ink-2); }
+.stax-grid__pages { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.stax-grid__pages span { font-size: 12px; letter-spacing: .02em; color: var(--stax-ink-2); padding: 4px 10px; border-radius: 99px; background: rgb(255 255 255 / .55); border: 1px solid var(--stax-line); }
+@media (max-width: 900px) {
+  .stax-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 20px; }
+  .stax-grid__cell, .stax-grid__cell:nth-child(4) { grid-column: span 1; }
+  .stax-grid__cell:nth-child(5) { grid-column: span 2; }
+}
+@media (max-width: 520px) {
+  .stax-grid { grid-template-columns: 1fr; }
+  .stax-grid__cell, .stax-grid__cell:nth-child(4), .stax-grid__cell:nth-child(5) { grid-column: auto; }
+}
+
+/* Services */
+.stax-rows { display: flex; flex-direction: column; margin-top: 56px; }
+.stax-row {
+  position: relative; isolation: isolate;
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.15fr) 40px; gap: 28px; align-items: baseline;
+  padding-block: 34px; border-top: 1px solid var(--stax-line); text-decoration: none; color: inherit;
+}
+.stax-row:last-child { border-bottom: 1px solid var(--stax-line); }
+.stax-row::before {
+  content: ""; position: absolute; inset: 0 -20px; z-index: -1; border-radius: 14px;
+  background: linear-gradient(100deg, rgb(255 255 255 / .9), rgb(250 251 251 / .5));
+  box-shadow: var(--stax-shadow-soft);
+  opacity: 0; transform: scale(.985); transition: opacity .5s var(--ease), transform .6s var(--ease);
+}
+.stax-row:hover::before, .stax-row:focus-visible::before { opacity: 1; transform: none; }
+.stax-row__num { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--stax-ink-3); }
+.stax-row__title { display: flex; align-items: center; gap: 14px; font-family: var(--stax-serif); font-weight: 400; font-size: clamp(24px, 2.4vw, 34px); line-height: 1.1; color: var(--stax-ink); }
+.stax-row__icon { display: inline-flex; color: var(--stax-ink-3); transition: color .34s; }
+.stax-row__icon svg { width: .9em; height: .9em; }
+.stax-row__body { max-width: 46ch; font-size: 15px; line-height: 1.6; color: var(--stax-ink-2); }
+.stax-row__go { justify-self: end; color: var(--stax-ink-3); transition: transform .38s var(--ease), color .34s; }
+.stax-row__go svg { width: 18px; height: 18px; }
+.stax-row:hover .stax-row__go { color: var(--stax-ink); transform: translate(3px, -3px); }
+.stax-row:hover .stax-row__icon { color: var(--stax-ink); }
+@media (max-width: 900px) {
+  .stax-row { grid-template-columns: 40px minmax(0, 1fr); gap: 12px 16px; padding-block: 28px; }
+  .stax-row__body { grid-column: 2; }
+  .stax-row__go { display: none; }
+  .stax-row::before { inset: 0 -12px; }
+}
+
+/* Process */
+.stax-split { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 76px); align-items: center; margin-top: 56px; }
+.stax-split__media { position: relative; aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-radius: 14px; background: #dfe3e7; box-shadow: var(--stax-shadow-soft); }
+.stax-split__media img {
+  position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover;
+  opacity: 0; transform: scale(1.045); transition: opacity 1s var(--ease), transform 2.4s var(--ease);
+}
+.stax-split__media img.is-on { opacity: 1; transform: scale(1); }
+.stax-split__media img[data-view="design"] { object-position: 50% 38%; }
+.stax-split__media img[data-view="grow"] { object-position: 50% 90%; }
+.stax-split__media img[data-view="grow"].is-on { transform: scale(1.18); }
+.stax-plate {
+  position: absolute; left: 18px; bottom: 18px; z-index: 2;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px 12px 14px; border-radius: 12px;
+  background: linear-gradient(158deg, rgb(252 253 253 / .86), rgb(240 243 246 / .7));
+  -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid rgb(255 255 255 / .8); box-shadow: inset 0 1px #fffffff2, var(--stax-shadow-soft);
+}
+.stax-plate__num { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--stax-ink-3); }
+.stax-plate__name { font-family: var(--stax-serif); font-size: 22px; line-height: 1; color: var(--stax-ink); min-width: 4.2em; }
+.stax-steps { display: flex; flex-direction: column; }
+.stax-step { position: relative; border-top: 1px solid var(--stax-line); }
+.stax-step:last-child { border-bottom: 1px solid var(--stax-line); }
+.stax-step button {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 12px; align-items: baseline;
+  width: 100%; padding: 22px 0; text-align: left; background: none; border: 0; cursor: pointer;
+}
+.stax-step__num { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--stax-ink-3); transition: color .4s; }
+.stax-step h3 { font-family: var(--stax-serif); font-weight: 400; font-size: clamp(21px, 2vw, 27px); line-height: 1.15; color: var(--stax-ink-2); transition: color .4s; }
+.stax-step p { grid-column: 2; max-width: 42ch; font-size: 14.5px; line-height: 1.55; color: var(--stax-ink-3); transition: color .4s; }
+.stax-step.is-on h3, .stax-step button:hover h3 { color: var(--stax-ink); }
+.stax-step.is-on p { color: var(--stax-ink-2); }
+.stax-step.is-on .stax-step__num { color: var(--stax-ink); }
+.stax-step__bar { position: absolute; left: 0; top: -1px; height: 1px; width: 100%; background: var(--stax-ink); transform: scaleX(0); transform-origin: 0 50%; }
+.stax-step.is-on .stax-step__bar { transform: scaleX(1); transition: transform .8s var(--ease); }
+.stax-steps.is-playing .stax-step.is-on .stax-step__bar { animation: stax-progress var(--dwell, 5s) linear both; transition: none; }
+@keyframes stax-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (max-width: 900px) { .stax-split { grid-template-columns: minmax(0, 1fr); } }
+
+/* Clôture */
+.stax-close { text-align: center; padding-block: clamp(96px, 15vh, 176px); }
+.stax-close__stack { position: relative; width: 88px; height: 46px; margin: 0 auto 40px; }
+.stax-close__stack i { position: absolute; width: 64px; height: 11px; border-radius: 4px; }
+.stax-close__stack i:nth-child(1) { top: 0; left: 0; background: linear-gradient(158deg, #fcfdfd, #e3e8ec); border: 1px solid #14181c14; box-shadow: inset 0 1px #fff, 0 12px 22px -12px #18243280; }
+.stax-close__stack i:nth-child(2) { top: 17px; left: 22px; background: linear-gradient(101deg, #f5f7f8, #ccd2d8 34%, #eef1f4 51%, #b4bbc3 76%, #eaeef1); border: 1px solid #ffffffb3; box-shadow: 0 12px 22px -12px #18243280; }
+.stax-close__stack i:nth-child(3) { top: 34px; left: 9px; background: linear-gradient(180deg, #2a3138, var(--stax-graphite)); box-shadow: inset 0 1px rgb(255 255 255 / .16), 0 12px 22px -12px #14181cb3; }
+.stax-close__statement { max-width: 20ch; margin-inline: auto; font-family: var(--stax-serif); font-weight: 400; font-size: clamp(30px, 4.6vw, 62px); line-height: 1.07; letter-spacing: -0.012em; color: var(--stax-ink); text-wrap: balance; }
+.stax-close__statement em { color: var(--stax-ink-2); }
+.stax-footer-cta { position: relative; display: inline-block; margin-top: 44px; padding-bottom: 10px; font-size: clamp(17px, 1.6vw, 21px); color: var(--stax-ink); text-decoration: none; }
+.stax-footer-cta::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: var(--stax-ink); transform: scaleX(.18); transform-origin: 0 50%; transition: transform .52s var(--ease); }
+.stax-footer-cta:hover::after, .stax-footer-cta:focus-visible::after { transform: scaleX(1); }
+.stax-mail { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 22px; font-size: 14px; color: var(--stax-ink-3); }
+.stax-mail span { user-select: all; color: var(--stax-ink-2); }
+.stax-copy { font-size: 12.5px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--stax-line); background: rgb(255 255 255 / .6); color: var(--stax-ink-2); cursor: pointer; transition: background .3s, color .3s; }
+.stax-copy:hover { background: #fff; color: var(--stax-ink); }
+
+/* Pied de page */
+.stax-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding-block: 28px 40px; border-top: 1px solid var(--stax-line); font-size: 13.5px; color: var(--stax-ink-2); }
+.stax-footer a { text-decoration: none; }
+.stax-footer a:hover { color: var(--stax-ink); }
+@media (max-width: 900px) { .stax-footer { flex-direction: column; gap: 10px; } }
+
+/* Apparition douce : le contenu reste visible, il glisse seulement en place */
+.rv-wait { transform: translateY(18px); }
+.rv { transition: transform 1.1s var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stax-layer__in { animation: none; }
+  .stax-band, .stax-scene, .stax-knob, .stax-panel__photo { transform: none !important; }
+  .rv-wait { transform: none; }
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#industries">Skip to content</a>
+
+<header class="stax-navbar" id="navbar">
+  <div class="stax-shell">
+    <nav class="stax-nav" aria-label="Main">
+      <a class="stax-wordmark" href="#top">StaX</a>
+      <div class="stax-nav__links">
+        <a href="#industries">Industries</a>
+        <a href="#services">Services</a>
+        <a href="#process">Process</a>
+        <a class="stax-nav-cta" href="#contact">Start Your Project</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div id="top">
+  <section class="stax-hero" id="hero" aria-labelledby="hero-title">
+    <div class="stax-hero__glow"></div>
+    <div class="stax-hero__light"></div>
+    <div class="stax-stage-wrap">
+      <div class="stax-fit" id="fit">
+        <div class="stax-stage" id="stage" style="--mx: -12; --my: 7;">
+          <div class="stax-scene" id="scene" style="--sry: 2.3; --srx: 1.4;">
+
+            <div class="stax-band" data-band="far">
+              <div class="stax-layer l-slabL" aria-hidden="true"><div class="stax-layer__in m-frost"><span class="stax-fill" style="inset:16% 12%;background:linear-gradient(160deg, rgba(176,192,208,.32), rgba(255,255,255,.46))"></span></div></div>
+              <div class="stax-layer l-slabR" aria-hidden="true"><div class="stax-layer__in m-frost"><span class="stax-fill" style="inset:20% 16%;background:linear-gradient(200deg, rgba(255,255,255,.5), rgba(176,192,208,.28))"></span></div></div>
+              <div class="stax-layer l-base3" aria-hidden="true"><div class="stax-layer__in m-frost"><div class="stax-words"><span>Design</span><span>Develop</span><span>Launch</span><span>Scale</span></div></div></div>
+              <div class="stax-layer l-base2" aria-hidden="true"><div class="stax-layer__in m-aluminium"></div></div>
+              <div class="stax-layer l-base1" aria-hidden="true"><div class="stax-layer__in m-glass"></div></div>
+            </div>
+
+            <div class="stax-band" data-band="mid">
+              <div class="stax-layer l-backC" aria-hidden="true"><div class="stax-layer__in m-glass"></div></div>
+              <div class="stax-layer l-ind" aria-hidden="true">
+                <div class="stax-layer__in m-frost">
+                  <div class="stax-ind">
+                    <div class="stax-plate-micro">Industries</div>
+                    <ul class="stax-ind__list" id="ind-list">
+                      <li class="is-on"><span>Architects</span><span class="stax-ind__dot"></span></li>
+                      <li><span>Restaurants</span><span class="stax-ind__dot"></span></li>
+                      <li><span>Hotels</span><span class="stax-ind__dot"></span></li>
+                      <li><span>Lawyers</span><span class="stax-ind__dot"></span></li>
+                      <li><span>Artisans</span><span class="stax-ind__dot"></span></li>
+                    </ul>
+                    <div class="stax-ind__thumb"><img src="assets/villa.jpg" alt="" width="1200" height="1600"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stax-layer l-proc" aria-hidden="true">
+                <div class="stax-layer__in m-white">
+                  <div class="stax-proc">
+                    <div>
+                      <div class="stax-plate-micro">Studio process</div>
+                      <div class="stax-proc__steps">
+                        <div class="stax-proc__step"><span class="stax-proc__tick"></span>Design</div>
+                        <div class="stax-proc__step"><span class="stax-proc__tick"></span>Build</div>
+                        <div class="stax-proc__step"><span class="stax-proc__tick"></span>Launch</div>
+                        <div class="stax-proc__step"><span class="stax-proc__tick"></span>Grow</div>
+                      </div>
+                    </div>
+                    <div class="stax-proc__row"><span class="stax-plate-num">01</span><span class="stax-plate-micro">StaX</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stax-band" data-band="core">
+              <div class="stax-layer l-main">
+                <div class="stax-layer__in m-white m-edge-ring">
+                  <div class="stax-panel">
+                    <img class="stax-panel__photo" src="assets/villa.jpg" alt="A modern villa of white concrete and glass above a calm sea" width="1200" height="1600" fetchpriority="high">
+                    <div class="stax-panel__sheet"></div>
+                    <div class="stax-panel__sheen"></div>
+                    <div class="stax-panel__inner">
+                      <div class="stax-panel__head">
+                        <span class="stax-panel__logo" aria-hidden="true">StaX</span>
+                        <span class="stax-plate-micro">Website design studio</span>
+                      </div>
+                      <div class="stax-panel__copy">
+                        <h1 class="stax-panel__h1" id="hero-title">Custom Websites for <i>Ambitious</i> Businesses</h1>
+                        <p class="stax-panel__sub">Strategy. Design. Development. All in one place.</p>
+                        <a class="stax-cta" href="#contact">Start Your Project<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stax-band" data-band="front">
+              <div class="stax-layer l-div" aria-hidden="true"><div class="stax-layer__in m-glass"></div></div>
+              <div class="stax-layer l-dining" aria-hidden="true">
+                <div class="stax-layer__in m-white">
+                  <div class="stax-dining">
+                    <div class="stax-dining__title">A Website Built Around Your Business</div>
+                    <div class="stax-dining__thumb"><img src="assets/interior.jpg" alt="" width="1600" height="1200"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stax-layer l-coast" aria-hidden="true">
+                <div class="stax-layer__in m-frost">
+                  <div class="stax-coast">
+                    <div class="stax-coast__thumb"><img src="assets/coast.jpg" alt="" width="1600" height="900"></div>
+                    <div class="stax-coast__title">More Than a Website.<br><i>A Stronger Future.</i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stax-layer l-sv1" aria-hidden="true">
+                <div class="stax-layer__in m-white">
+                  <div class="stax-sv">
+                    <div class="stax-sv__top"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></svg><span class="stax-plate-num">01</span></div>
+                    <div><div class="stax-sv__title">Strategic Design</div><div class="stax-sv__line"></div><div class="stax-sv__body">Structure and art direction, decided before code.</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stax-layer l-sv2" aria-hidden="true">
+                <div class="stax-layer__in m-white">
+                  <div class="stax-sv">
+                    <div class="stax-sv__top"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M93.31,70,28,128l65.27,58a8,8,0,1,1-10.62,12l-72-64a8,8,0,0,1,0-12l72-64A8,8,0,1,1,93.31,70Zm152,52-72-64a8,8,0,0,0-10.62,12L228,128l-65.27,58a8,8,0,1,0,10.62,12l72-64a8,8,0,0,0,0-12Z"/></svg><span class="stax-plate-num">02</span></div>
+                    <div><div class="stax-sv__title">Custom Development</div><div class="stax-sv__line"></div><div class="stax-sv__body">Hand-built front ends, fast by default.</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="stax-layer l-sv3" aria-hidden="true">
+                <div class="stax-layer__in m-white">
+                  <div class="stax-sv">
+                    <div class="stax-sv__top"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M240,56v64a8,8,0,0,1-16,0V75.31l-82.34,82.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,212.69,64H168a8,8,0,0,1,0-16h64A8,8,0,0,1,240,56Z"/></svg><span class="stax-plate-num">03</span></div>
+                    <div><div class="stax-sv__title">Lasting Impact</div><div class="stax-sv__line"></div><div class="stax-sv__body">Managed, measured and improved after launch.</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stax-band" data-band="near">
+              <div class="stax-layer l-knob" aria-hidden="true"><div class="stax-layer__in"><span class="stax-knob-ring"></span><div class="stax-knob"></div></div></div>
+              <div class="stax-layer l-edge" aria-hidden="true"><div class="stax-layer__in"><div class="stax-edge"></div></div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="stax-section" id="industries" aria-labelledby="industries-title">
+      <div class="stax-shell">
+        <p class="stax-eyebrow">Industries</p>
+        <h2 class="stax-h2 rv" id="industries-title">We build for businesses whose name is <em>on the door.</em></h2>
+        <p class="stax-lede rv">Five industries, one method. Every project starts with the same question: what does your customer need to believe before they pick up the phone?</p>
+        <div class="stax-grid">
+          <article class="stax-grid__cell rv">
+            <div class="stax-grid__top"><h3>Architects</h3><span class="stax-grid__num">01</span></div>
+            <p>Portfolios that read like the buildings behind them.</p>
+            <div class="stax-grid__pages" aria-label="Pages the site leads with"><span>Projects</span><span>Studio</span><span>Press</span></div>
+          </article>
+          <article class="stax-grid__cell rv">
+            <div class="stax-grid__top"><h3>Restaurants</h3><span class="stax-grid__num">02</span></div>
+            <p>Menu, hours and reservations on a single page.</p>
+            <div class="stax-grid__pages" aria-label="Pages the site leads with"><span>Menu</span><span>Hours</span><span>Book a table</span></div>
+          </article>
+          <article class="stax-grid__cell rv">
+            <div class="stax-grid__top"><h3>Hotels</h3><span class="stax-grid__num">03</span></div>
+            <p>Room galleries that sell the stay, not the bed.</p>
+            <div class="stax-grid__pages" aria-label="Pages the site leads with"><span>Rooms</span><span>Gallery</span><span>Direct booking</span></div>
+          </article>
+          <article class="stax-grid__cell rv">
+            <div class="stax-grid__top"><h3>Lawyers</h3><span class="stax-grid__num">04</span></div>
+            <p>Practice areas and results, presented as authority rather than advertising.</p>
+            <div class="stax-grid__pages" aria-label="Pages the site leads with"><span>Practice areas</span><span>Results</span><span>Consultation</span></div>
+          </article>
+          <article class="stax-grid__cell rv">
+            <div class="stax-grid__top"><h3>Artisans</h3><span class="stax-grid__num">05</span></div>
+            <p>Your materials, your process, the pace of the work.</p>
+            <div class="stax-grid__pages" aria-label="Pages the site leads with"><span>Materials</span><span>Process</span><span>Commissions</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stax-section" id="services" aria-labelledby="services-title">
+      <div class="stax-shell">
+        <p class="stax-eyebrow">Services</p>
+        <h2 class="stax-h2 rv" id="services-title">Three disciplines, one studio, <em>no handovers.</em></h2>
+        <div class="stax-rows">
+          <a class="stax-row rv" href="#contact">
+            <span class="stax-row__num">01</span>
+            <span class="stax-row__title"><span class="stax-row__icon"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></svg></span>Strategic Design</span>
+            <span class="stax-row__body">Positioning, site structure, photography direction and page design agreed before the first line of code. You see the whole site in wireframe before it gets expensive to change.</span>
+            <span class="stax-row__go"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></svg></span>
+          </a>
+          <a class="stax-row rv" href="#contact">
+            <span class="stax-row__num">02</span>
+            <span class="stax-row__title"><span class="stax-row__icon"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M93.31,70,28,128l65.27,58a8,8,0,1,1-10.62,12l-72-64a8,8,0,0,1,0-12l72-64A8,8,0,1,1,93.31,70Zm152,52-72-64a8,8,0,0,0-10.62,12L228,128l-65.27,58a8,8,0,1,0,10.62,12l72-64a8,8,0,0,0,0-12Z"/></svg></span>Custom Development</span>
+            <span class="stax-row__body">A hand-built front end with content editing where you actually need it. No page builders, no plugin stack, no update treadmill.</span>
+            <span class="stax-row__go"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></svg></span>
+          </a>
+          <a class="stax-row rv" href="#contact">
+            <span class="stax-row__num">03</span>
+            <span class="stax-row__title"><span class="stax-row__icon"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M240,56v64a8,8,0,0,1-16,0V75.31l-82.34,82.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,212.69,64H168a8,8,0,0,1,0-16h64A8,8,0,0,1,240,56Z"/></svg></span>Lasting Impact</span>
+            <span class="stax-row__body">Analytics, enquiries and search visibility measured from launch day, with a review each quarter against the numbers that decide your year.</span>
+            <span class="stax-row__go"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></svg></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="stax-section" id="process" aria-labelledby="process-title">
+      <div class="stax-shell">
+        <p class="stax-eyebrow">Process</p>
+        <h2 class="stax-h2 rv" id="process-title">Design. Build. Launch. <em>Grow.</em></h2>
+        <div class="stax-split">
+          <figure class="stax-split__media rv" id="process-media">
+            <img data-view="design" class="is-on" src="assets/villa.jpg" alt="A villa of white concrete and glass cantilevered above the sea" width="1200" height="1600" loading="lazy" decoding="async">
+            <img data-view="build" src="assets/interior.jpg" alt="A villa dining room in pale oak and glass, opening onto a stone terrace and the sea" width="1600" height="1200" loading="lazy" decoding="async">
+            <img data-view="launch" src="assets/coast.jpg" alt="A calm sea meeting a pale limestone coastline" width="1600" height="900" loading="lazy" decoding="async">
+            <img data-view="grow" src="assets/villa.jpg" alt="Open sea below the villa terrace" width="1200" height="1600" loading="lazy" decoding="async">
+            <figcaption class="stax-plate" aria-live="polite"><span class="stax-plate__num" id="plate-num">01 / 04</span><span class="stax-plate__name" id="plate-name">Design</span></figcaption>
+          </figure>
+          <ol class="stax-steps" id="steps" style="--dwell: 5s;">
+            <li class="stax-step is-on" data-view="design"><span class="stax-step__bar"></span><button type="button" aria-controls="process-media" aria-pressed="true"><span class="stax-step__num">01</span><h3>Design</h3><p>Two weeks of structure, wireframes and art direction.</p></button></li>
+            <li class="stax-step" data-view="build"><span class="stax-step__bar"></span><button type="button" aria-controls="process-media" aria-pressed="false"><span class="stax-step__num">02</span><h3>Build</h3><p>Hand-built pages, content managed where it counts.</p></button></li>
+            <li class="stax-step" data-view="launch"><span class="stax-step__bar"></span><button type="button" aria-controls="process-media" aria-pressed="false"><span class="stax-step__num">03</span><h3>Launch</h3><p>Migration, redirects, analytics and a quiet release.</p></button></li>
+            <li class="stax-step" data-view="grow"><span class="stax-step__bar"></span><button type="button" aria-controls="process-media" aria-pressed="false"><span class="stax-step__num">04</span><h3>Grow</h3><p>Quarterly reviews against the numbers that matter to you.</p></button></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="stax-section stax-close" id="contact" aria-labelledby="contact-title">
+      <div class="stax-shell">
+        <div class="stax-close__stack" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h2 class="stax-close__statement rv" id="contact-title">A website is the one part of your business you control <em>completely.</em></h2>
+        <a class="stax-footer-cta" href="mailto:studio@stax.studio">Start Your Project</a>
+        <div class="stax-mail"><span id="mail">studio@stax.studio</span><button class="stax-copy" type="button" id="copy">Copy address</button></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="stax-shell">
+    <div class="stax-footer">
+      <span>StaX. Website design and development studio.</span>
+      <a href="mailto:studio@stax.studio">studio@stax.studio</a>
+      <span>Copyright 2026 StaX</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  document.documentElement.lang = 'en';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = matchMedia('(hover: none)').matches;
+
+  /* Navigation : verre dépoli dès que la page défile */
+  const navbar = $('#navbar');
+  const onNav = () => navbar.classList.toggle('is-scrolled', window.scrollY > 24);
+  window.addEventListener('scroll', onNav, { passive: true });
+  onNav();
+
+  /* ---------------------------------------------------------------------
+     La pile : parallaxe au pointeur, lumière qui suit, déploiement au
+     défilement. Tout passe par des variables CSS, lissées à chaque image.
+     --------------------------------------------------------------------- */
+  const hero = $('#hero'), fit = $('#fit'), stage = $('#stage'), scene = $('#scene');
+  const glassLayers = $$('.stax-layer__in', stage).filter((el) => /\bm-/.test(el.className));
+  const cur = { mx: -12, my: 7, u: 0, lx: .3, ly: .2 };
+  const tgt = { mx: -12, my: 7, u: 0, lx: .3, ly: .2 };
+  let pointerAt = 0, running = false, heroVisible = true, t0 = performance.now();
+
+  const apply = () => {
+    // Lectures d'abord (positions des plaques), écritures ensuite.
+    const hr = hero.getBoundingClientRect();
+    const rects = glassLayers.map((el) => el.getBoundingClientRect());
+    const sx = hr.left + cur.lx * hr.width, sy = hr.top + cur.ly * hr.height;
+    stage.style.setProperty('--mx', cur.mx.toFixed(2));
+    stage.style.setProperty('--my', cur.my.toFixed(2));
+    stage.style.setProperty('--u', cur.u.toFixed(3));
+    scene.style.setProperty('--sry', (-cur.mx * 0.19).toFixed(3));
+    scene.style.setProperty('--srx', (cur.my * 0.2).toFixed(3));
+    hero.style.setProperty('--lx', (cur.lx * 100).toFixed(1) + '%');
+    hero.style.setProperty('--ly', (cur.ly * 100).toFixed(1) + '%');
+    // La lumière de chaque plaque, calculée depuis la position de la source.
+    rects.forEach((r, i) => {
+      if (!r.width) return;
+      const hx = Math.max(-60, Math.min(160, ((sx - r.left) / r.width) * 100));
+      const hy = Math.max(-60, Math.min(160, ((sy - r.top) / r.height) * 100));
+      glassLayers[i].style.setProperty('--hx', hx.toFixed(1) + '%');
+      glassLayers[i].style.setProperty('--hy', hy.toFixed(1) + '%');
+    });
+  };
+
+  const frame = (now) => {
+    const idle = now - pointerAt > 2600;
+    if (idle && !reduce) {
+      const t = (now - t0) / 1000;
+      tgt.mx = -10 + Math.sin(t * 0.32) * 9;
+      tgt.my = 6 + Math.cos(t * 0.27) * 5;
+      tgt.lx = 0.32 + Math.sin(t * 0.21) * 0.18;
+      tgt.ly = 0.22 + Math.cos(t * 0.17) * 0.1;
+    }
+    const e = 0.075;
+    let moving = false;
+    for (const k of ['mx', 'my', 'u', 'lx', 'ly']) {
+      const d = tgt[k] - cur[k];
+      if (Math.abs(d) > 0.0005) moving = true;
+      cur[k] += d * (k === 'u' ? 0.16 : e);
+    }
+    apply();
+    if (heroVisible && (moving || !reduce)) requestAnimationFrame(frame);
+    else running = false;
+  };
+  const kick = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
+
+  if (!reduce) {
+    hero.addEventListener('pointermove', (ev) => {
+      if (ev.pointerType === 'touch') return;
+      const r = fit.getBoundingClientRect(), h = hero.getBoundingClientRect();
+      const nx = (ev.clientX - r.left) / r.width, ny = (ev.clientY - r.top) / r.height;
+      tgt.mx = Math.max(-1, Math.min(1, (nx - 0.5) * 2)) * 20;
+      tgt.my = Math.max(-1, Math.min(1, (ny - 0.5) * 2)) * 12;
+      tgt.lx = (ev.clientX - h.left) / h.width;
+      tgt.ly = (ev.clientY - h.top) / h.height;
+      pointerAt = performance.now();
+      kick();
+    });
+    const onScroll = () => {
+      tgt.u = Math.max(0, Math.min(1, window.scrollY / (hero.offsetHeight * 0.85)));
+      kick();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    new IntersectionObserver(([en]) => { heroVisible = en.isIntersecting; if (heroVisible) kick(); }).observe(hero);
+    kick();
+  } else {
+    apply();
+  }
+  window.addEventListener('resize', () => { if (!running) apply(); });
+
+  /* Carte « Industries » : un point parcourt la liste */
+  const inds = $$('#ind-list li');
+  if (!reduce && inds.length) {
+    let i = 0;
+    setInterval(() => {
+      if (!heroVisible || document.hidden) return;
+      inds[i].classList.remove('is-on');
+      i = (i + 1) % inds.length;
+      inds[i].classList.add('is-on');
+    }, 2200);
+  }
+
+  /* Apparition douce : le texte est déjà lisible, il glisse en place */
+  const rvs = $$('.rv');
+  if (!reduce && 'IntersectionObserver' in window) {
+    const vh = window.innerHeight;
+    rvs.forEach((el) => { if (el.getBoundingClientRect().top > vh) el.classList.add('rv-wait'); });
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        const el = en.target;
+        const sibs = el.parentElement ? $$(':scope > .rv', el.parentElement) : [el];
+        el.style.transitionDelay = Math.min(sibs.indexOf(el), 5) * 70 + 'ms';
+        el.classList.remove('rv-wait');
+        io.unobserve(el);
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    rvs.forEach((el) => io.observe(el));
+  }
+
+  /* Process : l'image suit l'étape, lecture automatique à l'écran */
+  const steps = $$('#steps .stax-step');
+  const stepList = $('#steps');
+  const media = $('#process-media');
+  const imgs = $$('img', media);
+  const plateNum = $('#plate-num'), plateName = $('#plate-name');
+  const dwell = 5000;
+  let active = 0, timer = 0, playing = false, inView = false, userTook = false;
+  const show = (n) => {
+    active = n;
+    steps.forEach((s, i) => {
+      s.classList.toggle('is-on', i === n);
+      $('button', s).setAttribute('aria-pressed', String(i === n));
+    });
+    const view = steps[n].dataset.view;
+    imgs.forEach((im) => im.classList.toggle('is-on', im.dataset.view === view));
+    plateNum.textContent = String(n + 1).padStart(2, '0') + ' / 04';
+    plateName.textContent = $('h3', steps[n]).textContent;
+    // relance la barre de progression
+    steps[n].querySelector('.stax-step__bar').style.animation = 'none';
+    void steps[n].offsetWidth;
+    steps[n].querySelector('.stax-step__bar').style.animation = '';
+  };
+  const play = () => {
+    clearInterval(timer);
+    playing = !reduce && inView && !userTook;
+    stepList.classList.toggle('is-playing', playing);
+    if (playing) timer = setInterval(() => show((active + 1) % steps.length), dwell);
+  };
+  steps.forEach((s, i) => {
+    const b = $('button', s);
+    b.addEventListener('click', () => { userTook = true; show(i); play(); });
+    b.addEventListener('mouseenter', () => { if (!coarse) { userTook = true; show(i); play(); } });
+    b.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+      ev.preventDefault();
+      const n = (i + (ev.key === 'ArrowDown' ? 1 : steps.length - 1)) % steps.length;
+      $('button', steps[n]).focus();
+      userTook = true; show(n); play();
+    });
+  });
+  new IntersectionObserver(([en]) => { inView = en.isIntersecting; play(); }, { threshold: 0.35 }).observe(media);
+
+  /* Copier l'adresse */
+  const copy = $('#copy');
+  copy.addEventListener('click', () => {
+    const done = () => { copy.textContent = 'Copied'; setTimeout(() => (copy.textContent = 'Copy address'), 2000); };
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents($('#mail'));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      copy.textContent = 'Selected';
+    };
+    try { navigator.clipboard.writeText('studio@stax.studio').then(done, fallback); } catch (err) { fallback(); }
+  });
+})();
+</script>
+</body>
+</html>
