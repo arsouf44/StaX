@@ -101,9 +101,9 @@ test.describe('Site public', () => {
   }) => {
     await page.goto('/');
     const heading = page.getByRole('heading', { level: 1 });
-    await expect(heading).toContainText('Nous créons votre site.');
-    await expect(heading).toContainText('Vous le gérez ensuite.');
+    await expect(heading).toContainText('Un site fait à la main');
     const body = (await page.locator('body').textContent()) ?? '';
+    expect(body).toContain('Nous créons votre site. Vous le gérez ensuite.');
     expect(body).toContain('Pas de modèle à personnaliser');
     expect(body).toContain('Vous publiez, et c’est réellement en ligne');
   });
