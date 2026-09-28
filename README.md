@@ -28,7 +28,7 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 
 > **Nemasus s’appelait StaX.** Tout a été renommé — marque, paquets
 > `@nemasus/*`, variables `NEMASUS_*`, contrat `nemasus.manifest.json`,
-> textes stockés en base (migration 0056). Restent volontairement sous
+> textes stockés en base (migration 0057). Restent volontairement sous
 > l’ancien nom, parce qu’ils sont gravés dans les migrations déjà appliquées ou
 > dans les lignes de la base, et jamais montrés aux clients : les valeurs
 > internes `'stax'` (auteur « équipe »), `stax_purchase`, `stax_publish`,
@@ -133,7 +133,7 @@ GitHub (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 
 ```bash
 pnpm verify                # format + lint + typecheck + tests
-scripts/db-test.sh         # 529 assertions SQL (échoue au premier échec)
+scripts/db-test.sh         # 567 assertions SQL (échoue au premier échec)
 pnpm build:cf              # build Cloudflare des deux applications
 ```
 
@@ -169,7 +169,7 @@ packages/
   emails/          Modèles et interface d’envoi indépendante du fournisseur
   analytics/       Mesure d’audience sans cookie
   ui/              Système de design, primitives, icônes, mouvement
-supabase/migrations/   56 migrations SQL versionnées (jamais réécrites)
+supabase/migrations/   57 migrations SQL versionnées (jamais réécrites)
 tests/                 unitaires, intégration, sécurité, SQL, E2E
 ```
 

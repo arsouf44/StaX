@@ -249,19 +249,37 @@ export const SITE_SCRIPT = String.raw`
     empty.hidden = true;
     bodyEl.hidden = false;
     if (checkout) checkout.hidden = false;
-    var rows = state.items
-      .map(function (item) {
-        return (
-          '<div class="price-row"><div><p><strong>' + item.name + '</strong></p>' +
-          '<p class="price-meta">Quantité : ' + item.quantity + '</p></div>' +
-          '<span class="dots"></span><span class="price-amt">' + item.lineTotal + '</span></div>'
-        );
-      })
-      .join('');
-    bodyEl.innerHTML =
-      '<div class="price-list">' + rows + '</div>' +
-      '<p class="price-row"><strong>Total</strong><span class="dots"></span>' +
-      '<span class="price-amt">' + state.total + '</span></p>';
+    /*
+     * Construit element par element, textes poses par textContent : le nom
+     * d'un produit est saisi dans l'espace client et ne doit jamais etre lu
+     * comme du HTML (un nom « <img src=x onerror=…> » reste un nom).
+     */
+    var el = function (tag, className, text) {
+      var node = d.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = String(text);
+      return node;
+    };
+    var list = el('div', 'price-list');
+    state.items.forEach(function (item) {
+      var row = el('div', 'price-row');
+      var info = el('div');
+      var title = el('p');
+      title.appendChild(el('strong', '', item.name));
+      info.appendChild(title);
+      info.appendChild(el('p', 'price-meta', 'Quantité : ' + item.quantity));
+      row.appendChild(info);
+      row.appendChild(el('span', 'dots'));
+      row.appendChild(el('span', 'price-amt', item.lineTotal));
+      list.appendChild(row);
+    });
+    var total = el('p', 'price-row');
+    total.appendChild(el('strong', '', 'Total'));
+    total.appendChild(el('span', 'dots'));
+    total.appendChild(el('span', 'price-amt', state.total));
+    while (bodyEl.firstChild) bodyEl.removeChild(bodyEl.firstChild);
+    bodyEl.appendChild(list);
+    bodyEl.appendChild(total);
   };
 
   var refreshCart = function () {

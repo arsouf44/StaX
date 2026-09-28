@@ -144,7 +144,7 @@ ses coordonnées et qu'il peut s'y opposer en répondant « STOP ».
 ---
 
 Côté technique : table `site_proposals` et fonctions `app.*_site_proposal`
-(migrations 0054 et 0056 pour l'effacement sur opposition), `lib/proposals.ts`, `/admin/propositions`, `/recuperer`,
+(migrations 0054 et 0057 pour l'effacement sur opposition), `lib/proposals.ts`, `/admin/propositions`, `/recuperer`,
 `/app` (tableau de bord du prospect), webhook Stripe → `completePaidProposal`,
 reprise par `/api/cron/sites`. Preuves : `tests/sql/rls.test.sql`
 (« Propositions de site »), `tests/unit/proposals.test.ts`,

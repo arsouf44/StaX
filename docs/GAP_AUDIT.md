@@ -13,8 +13,11 @@ remplace § 1 et § 2 là où ils se contredisent) · Branche :
 `claude/clever-maxwell-syg8wd`
 Mise à jour : 2026-09-26 (**vente par téléphone**, messagerie de l’équipe,
 pannes de lancement — § 13) · Branche : `claude/upbeat-goldberg-rfm9uz`
+Mise à jour : 2026-09-27 (**audit de sécurité**, migration 0056 — § 14) ·
+Branche : `claude/upbeat-goldberg-rfm9uz`
 Mise à jour : 2026-09-28 (**StaX devient Nemasus**, revue juridique de toutes
-les pages — § 14) · Branche : `claude/relaxed-allen-29o1o2`
+les pages, déploiement Cloudflare, migration 0057 — § 15) · Branche :
+`claude/relaxed-allen-29o1o2`
 
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
@@ -481,11 +484,36 @@ en mots simples, pastille des réponses non lues.
 
 ---
 
-## 14. Nemasus et revue juridique — état au 2026-09-28
+## 14. Audit de sécurité du 2026-09-27
+
+Tout le code, la base et la configuration Supabase ont été repassés, avec une
+question : **qu'est-ce qu'un client, un prospect, un robot ou un voleur de mot
+de passe peut faire en appelant directement l'API, sans passer par l'écran ?**
+Détail, gravité et preuves : [security.md § 12 à 16](./security.md#16-audit-du-2026-09-27--ce-qui-a-été-trouvé-et-corrigé).
+
+| Vérifié | Résultat |
+|---|---|
+| 145 fonctions exportées par les 44 fichiers d'actions serveur : identité et droits contrôlés | toutes contrôlées |
+| 10 routes (webhooks, tâche de fond, aperçu, retour Stripe) : signature, secret, session | conformes |
+| 65 fonctions de la base appelables par l'API : balayage par un intrus (130 appels) | rien modifié, rien divulgué |
+| Schéma interne `app` exposé par l'API ? (sondé sur le projet réel) | non |
+| Injection SQL, HTML, commandes dans la messagerie | texte inerte, prouvé en base et dans un vrai navigateur |
+| Dépendances de production (`pnpm audit --prod`) | aucune vulnérabilité connue |
+| Secrets dans le dépôt | aucun |
+
+Trouvé et corrigé (migration **0056** + application) : double facteur de
+l'équipe non exigé par la base (**haute**), SVG accepté dans le stockage
+public (**haute**), champs système de la messagerie falsifiables et aucun
+plafond d'envoi, redirection ouverte par tabulation, adresse IP falsifiable
+sur Vercel, filtre de recherche admin, panier des sites en HTML, en-têtes
+d'e-mail et CSV ; et deux bugs de l'assistance (catégorie « Autre chose »
+refusée par la base, ticket non relancé à la réponse du client).
+
+## 15. Nemasus et revue juridique — état au 2026-09-28
 
 Renommage complet (marque, logo, paquets `@nemasus/*`, variables `NEMASUS_*`
 avec repli sur `STAX_*`, contrat `nemasus.manifest.json`, textes stockés en
-base par la migration 0056). Ce qui reste sous l’ancien nom et pourquoi : voir
+base par la migration 0057). Ce qui reste sous l’ancien nom et pourquoi : voir
 l’encadré en tête du README.
 
 Défauts trouvés en relisant les pages contre le code et la production :
@@ -498,7 +526,7 @@ Défauts trouvés en relisant les pages contre le code et la production :
 | 4 | Inscription : « J’accepte les CGV et la politique de confidentialité » | CGU jamais acceptées alors qu’elles disent l’être ; « accepter » une politique de confidentialité est une confusion relevée par la CNIL | Case « J’accepte les CGU », version des CGU conservée ; confidentialité en simple information |
 | 5 | E-mail de proposition sans information du prospect ni moyen de s’opposer ; aucun moyen d’effacer ses coordonnées avant 3 ans | RGPD art. 13 et 21 | Mention dans chaque e-mail (« STOP ») ; `app.erase_site_proposal_contact` + bouton, 4 assertions SQL |
 | 6 | Prospection B2B fondée sur le « consentement » dans la politique de confidentialité | Base légale inadaptée | Intérêt légitime, source des données (art. 14), liste d’opposition, registre § A9 |
-| 7 | Sous-traitants publiés sans Resend ; Cloudflare dit « Union européenne » et limité à la diffusion | Liste art. 28 incomplète et inexacte | Liste corrigée en base (0056), registre et politique alignés |
+| 7 | Sous-traitants publiés sans Resend ; Cloudflare dit « Union européenne » et limité à la diffusion | Liste art. 28 incomplète et inexacte | Liste corrigée en base (0057), registre et politique alignés |
 | 8 | Exemples fictifs sur de vrais noms de domaine (`restaurant-dupont.fr`…) | Confusion avec une entreprise réelle | Domaines réservés `.example` |
 | 9 | CGV « références » (sans accord) contredisant la page Réalisations (accord explicite) | Clause contredite par l’offre publiée | Références avec accord ; mention « Site réalisé par Nemasus » retirable |
 
@@ -515,10 +543,20 @@ déploiement à blanc, puis pages servies par `wrangler dev` (moteur workerd).
 Non corrigeables depuis le dépôt (voir [LANCEMENT.md](./LANCEMENT.md)) :
 offre Workers Paid (le Worker dépasse 3 Mo compressé), secrets du Worker,
 Supabase en offre gratuite (pas de sauvegardes, alors que les CGV et la page
-Infrastructure en annoncent) ; migration 0056 à appliquer ; relecture par un
-avocat.
+Infrastructure en annoncent) ; relecture par un avocat. La migration 0057 est
+appliquée en production (2026-09-28).
 
 ## Ce qui reste non terminé, sans détour
+
+00. ~~Migration 0056 (durcissement de sécurité) à appliquer en production~~ —
+   **fait** : 56 migrations tracées dans `app.schema_migrations`, empreinte du
+   fichier identique, aucune dérive. Après application, l'analyseur Supabase ne
+   signale rien de nouveau (65 fonctions `security definer` exposées, inchangé),
+   le seau `site-media` n'accepte plus le SVG et le compte propriétaire n'est
+   pas verrouillé (vérifié). **Reste à faire, côté propriétaire** : activer le
+   double facteur du compte propriétaire et passer `mfa_enforced = true` sur les
+   comptes de l'équipe ([LANCEMENT.md](./LANCEMENT.md), étape 8), et activer la
+   protection contre les mots de passe compromis dans Supabase.
 
 0. ~~Migrations 0054 et 0055 à appliquer sur le projet Supabase réel~~ —
    **fait le 2026-09-26**, tracées dans `app.schema_migrations` avec

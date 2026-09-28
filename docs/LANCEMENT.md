@@ -23,9 +23,13 @@ permanence ce qui manque encore.
 | Maintenance mensuelle qui démarre à la livraison, résiliable en ligne | ✅ | [stripe.md](./stripe.md) |
 | Mot de passe oublié, confirmation d'inscription, invitations de collaborateurs | ✅ | corrigés (voir [GAP_AUDIT.md § 13](./GAP_AUDIT.md)) |
 
-Preuves : 529 assertions SQL, 343 tests unitaires et d'intégration, tests
-navigateur (ordinateur + téléphone) et parcours complets contre une vraie pile,
-dont le parcours « vente par téléphone » de bout en bout.
+Preuves : 567 assertions SQL, 365 tests unitaires et d'intégration, 66 tests
+navigateur (ordinateur + téléphone), 31 parcours complets contre une vraie
+pile, dont la vente par téléphone de bout en bout et une simulation
+d'intrusion (deux clients étrangers et un visiteur anonyme).
+
+**Sécurité :** audit complet du 2026-09-27 — voir
+[security.md § 16](./security.md#16-audit-du-2026-09-27--ce-qui-a-été-trouvé-et-corrigé).
 
 ---
 
@@ -60,29 +64,22 @@ Le code, les textes, les e-mails et les documents juridiques disent
 
 ---
 
-## Étape 1 — Base de données
+## Étape 1 — Base de données : ✅ fait (0054 à 0057)
 
-**À faire : appliquer la migration 0056** (renommage Nemasus, sous-traitants,
-effacement des coordonnées d'un prospect qui s'oppose) :
-
-```
-DATABASE_URL="postgresql://…" pnpm db:migrate
-```
-
-Elle est testée contre une base neuve (529 assertions SQL) ; elle réécrit les
-libellés « StaX » stockés en base (offres, messages d'erreur, notifications),
-renomme les tâches planifiées (`nemasus-site-operations`,
-`nemasus-retention`) et complète la liste publique des sous-traitants
-(Cloudflare héberge la plateforme ; Resend ajouté). Déployez le code en même
-temps : les deux vont ensemble.
-
-Déjà fait le 2026-09-26 : les migrations **0054** (propositions) et **0055**
-(messagerie, invitations) sont appliquées sur le projet Supabase de production
-(nommé « StaX » dans le tableau de bord), chacune dans une transaction,
-et inscrites dans `app.schema_migrations` avec l'empreinte de leur fichier
+Les migrations **0054** (propositions), **0055** (messagerie, invitations),
+**0056** (durcissement de sécurité, 2026-09-27) et **0057** (renommage Nemasus,
+sous-traitants, effacement des coordonnées d'un prospect qui s'oppose,
+2026-09-28) sont appliquées sur le projet Supabase de production (nommé
+« StaX » dans le tableau de bord), chacune dans une transaction, et inscrites
+dans `app.schema_migrations` avec l'empreinte de leur fichier
 (`pnpm db:migrate` les voit comme passées). La production a été comparée au
-dépôt : corps des 37 fonctions concernées, colonnes, contraintes, index et
-règles de sécurité **identiques**.
+dépôt : fonctions, colonnes, contraintes, index et règles de sécurité
+**identiques**.
+
+La 0057 a réécrit les libellés « StaX » stockés en base (offres, messages
+d'erreur, notifications), renommé les tâches planifiées
+(`nemasus-site-operations`, `nemasus-retention`) et complété la liste publique
+des sous-traitants (Cloudflare héberge la plateforme ; Resend ajouté).
 
 Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 
@@ -196,12 +193,32 @@ Cloudflare **Turnstile** : `NEXT_PUBLIC_TURNSTILE_SITE_KEY`,
 `TURNSTILE_SECRET_KEY`. Sans lui, les formulaires restent protégés par la
 limitation de débit et le champ piège, mais moins bien.
 
-## Étape 8 — Comptes de l'équipe
+La limitation de débit lit l'adresse IP du visiteur dans l'en-tête que
+Cloudflare Workers pose lui-même (`cf-connecting-ip`), détecté
+automatiquement : rien à configurer. `NEMASUS_CLIENT_IP_HEADER` ne sert que si
+un autre mandataire est placé devant la plateforme.
+
+## Étape 8 — Comptes de l'équipe (et double facteur : bloquant)
 
 `pnpm admin:bootstrap` (voir [admin-bootstrap.md](./admin-bootstrap.md)),
 puis connexion, **double facteur**, changement du mot de passe. Chaque
 personne de l'équipe a son propre compte ; le rôle `platform_admin` suffit pour
 envoyer des propositions et livrer.
+
+**À faire maintenant sur le compte propriétaire existant.** Le 2026-09-27, le
+seul compte de l'équipe en production (`platform_owner`) avait
+`mfa_enforced = false` : **son mot de passe seul ouvre le back-office, donc les
+données de tous les clients.** Depuis la migration 0056, la base exige le
+second facteur de tout compte qui porte `mfa_enforced` — encore faut-il le
+porter :
+
+1. connectez-vous, ouvrez **Mot de passe et sécurité** (`/app/securite`) → **Activer la
+   double authentification** (application Google Authenticator, 1Password…) ;
+2. puis, dans Supabase → *SQL Editor* :
+   `update public.profiles set mfa_enforced = true where platform_role is not null;`
+
+**Vérifier :** déconnectez-vous, reconnectez-vous : le code à 6 chiffres est
+demandé avant l'administration.
 
 ## Étape 9 — Répétition générale (1 heure, avant le premier client)
 

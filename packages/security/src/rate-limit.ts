@@ -95,6 +95,18 @@ export const RATE_LIMITS = {
     max: 200,
     message: 'Trop de fichiers envoyés. Réessayez dans une heure.',
   },
+  /**
+   * Messages d'un client (discussion, tickets, reponse a une validation).
+   * La base pose un second plafond (10 par minute, 60 par heure) pour qui
+   * appellerait l'API directement.
+   */
+  conversation: {
+    bucket: 'conversation.message',
+    windowSeconds: 600,
+    max: 30,
+    message:
+      'Vous avez envoyé beaucoup de messages en peu de temps. Patientez quelques minutes : nous lisons tout.',
+  },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;

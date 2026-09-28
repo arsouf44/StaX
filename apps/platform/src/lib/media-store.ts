@@ -6,7 +6,12 @@ import {
   mediaPublicUrl,
   unwrapMaybe,
 } from '@nemasus/database';
-import { safeFileName, tenantStoragePath } from '@nemasus/security';
+import {
+  SNIFF_HEADER_BYTES,
+  safeFileName,
+  sniffMediaType,
+  tenantStoragePath,
+} from '@nemasus/security';
 import { guardAction } from '~/lib/action-guard';
 import type { WorkspaceContext } from '~/lib/workspace';
 
@@ -26,13 +31,17 @@ import type { WorkspaceContext } from '~/lib/workspace';
 
 export const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
+/**
+ * Formats acceptes. Le SVG n'en fait PAS partie : c'est un document qui peut
+ * contenir du script, et le seau de stockage est public. La regle est celle
+ * de `@nemasus/security` (REJECTED_ALWAYS) et du seau lui-meme (migration 0056).
+ */
 export const ACCEPTED_MEDIA = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
   'image/avif',
   'image/gif',
-  'image/svg+xml',
   'application/pdf',
   'video/mp4',
   'video/webm',
@@ -69,12 +78,30 @@ export async function storeMediaFile(
     };
   }
 
-  if (!ACCEPTED_MEDIA.has(file.type) || (options.imagesOnly && !file.type.startsWith('image/'))) {
+  if (file.type === 'image/svg+xml' || /\.svgz?$/i.test(file.name)) {
+    return {
+      ok: false,
+      message:
+        'Le format SVG n’est pas accepté : il peut contenir du code. Exportez votre logo en PNG (fond transparent possible) et envoyez-le à nouveau.',
+    };
+  }
+
+  // Le type retenu est celui que le fichier EST (ses premiers octets), pas
+  // celui qu'annonce le navigateur : une page HTML renommee `photo.png`, ou
+  // envoyee par une requete forgee, n'est reconnue comme aucun format.
+  const mimeType = sniffMediaType(
+    new Uint8Array(await file.slice(0, SNIFF_HEADER_BYTES).arrayBuffer()),
+  );
+  if (
+    !mimeType ||
+    !ACCEPTED_MEDIA.has(mimeType) ||
+    (options.imagesOnly && !mimeType.startsWith('image/'))
+  ) {
     return {
       ok: false,
       message: options.imagesOnly
-        ? 'Choisissez une image (JPEG, PNG, WebP, AVIF, GIF ou SVG).'
-        : 'Ce type de fichier n’est pas accepté. Formats possibles : JPEG, PNG, WebP, AVIF, GIF, SVG, PDF, MP4 et WebM.',
+        ? 'Choisissez une image (JPEG, PNG, WebP, AVIF ou GIF).'
+        : 'Ce type de fichier n’est pas accepté. Formats possibles : JPEG, PNG, WebP, AVIF, GIF, PDF, MP4 et WebM.',
     };
   }
 
@@ -96,7 +123,7 @@ export async function storeMediaFile(
   const storage = createUserClient(accessToken).storage.from('site-media');
 
   const { error: uploadError } = await storage.upload(storagePath, file, {
-    contentType: file.type,
+    contentType: mimeType,
     cacheControl: '31536000',
     upsert: false,
   });
@@ -118,7 +145,7 @@ export async function storeMediaFile(
         storage_bucket: 'site-media',
         storage_path: storagePath,
         file_name: fileName,
-        mime_type: file.type,
+        mime_type: mimeType,
         size_bytes: file.size,
         alt_text: alt === '' ? null : alt,
         uploaded_by: userId,

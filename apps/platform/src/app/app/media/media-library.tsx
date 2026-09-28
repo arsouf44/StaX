@@ -155,7 +155,7 @@ export function MediaLibrary({
                 type="file"
                 name="file"
                 required
-                accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml,application/pdf,video/mp4,video/webm"
+                accept="image/jpeg,image/png,image/webp,image/avif,image/gif,application/pdf,video/mp4,video/webm"
               />
             </Field>
 

@@ -31,6 +31,11 @@ const suffix = uniqueSuffix();
 const COMPANY = `Boulangerie Soleil ${suffix}`;
 const PROSPECT_EMAIL = `prospect-${suffix}@exemple.test`;
 const PROSPECT_PASSWORD = randomPassword();
+/** HTML actif, injection SQL et marque de direction (U+202E) dans un seul message. */
+const HOSTILE_MESSAGE =
+  '<img src=x onerror="window.__nemasusXss=1"> Robert\'); DROP TABLE projects; -- facture\u202Efdp.exe';
+const HOSTILE_VISIBLE =
+  '<img src=x onerror="window.__nemasusXss=1"> Robert\'); DROP TABLE projects; -- facturefdp.exe';
 
 let siteId: string;
 let infra: SiteInfrastructure;
@@ -202,6 +207,24 @@ test('le prospect récupère son site, le voit, ne peut rien modifier, et écrit
     await page.getByRole('button', { name: 'Envoyer' }).click();
     await expect(page.getByText('Message envoyé.')).toBeVisible();
   });
+
+  await test.step('un message piégé reste du texte, jamais exécuté', async () => {
+    let dialogs = 0;
+    page.on('dialog', (dialog) => {
+      dialogs += 1;
+      void dialog.dismiss();
+    });
+    await page.getByLabel('Votre message').fill(HOSTILE_MESSAGE);
+    await page.getByRole('button', { name: 'Envoyer' }).click();
+    // Affiché tel quel (échappé), marque de direction retirée…
+    await expect(page.getByText(HOSTILE_VISIBLE).first()).toBeVisible();
+    // …et rien n'a été interprété : ni balise créée, ni script exécuté.
+    await expect(page.locator('img[src="x"]')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => (window as { __nemasusXss?: number }).__nemasusXss),
+    ).toBeUndefined();
+    expect(dialogs).toBe(0);
+  });
   await context.close();
 });
 
@@ -214,6 +237,12 @@ test('l’équipe lit le message et répond', async ({ browser }) => {
   await expect(row).toContainText('À répondre');
   await row.click();
   await expect(page.getByText('Pouvez-vous changer la photo d’accueil ?')).toBeVisible();
+  // Le message piégé du prospect, côté équipe : du texte, rien d'exécuté.
+  await expect(page.getByText(HOSTILE_VISIBLE).first()).toBeVisible();
+  await expect(page.locator('img[src="x"]')).toHaveCount(0);
+  expect(
+    await page.evaluate(() => (window as { __nemasusXss?: number }).__nemasusXss),
+  ).toBeUndefined();
   await page.getByLabel('Votre réponse').fill('C’est fait, regardez votre site !');
   await page.getByRole('button', { name: 'Répondre' }).click();
   await expect(page.getByText(/Réponse envoyée/)).toBeVisible();

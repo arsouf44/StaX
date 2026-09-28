@@ -1,5 +1,5 @@
 -- =============================================================================
---  Nemasus — 0056 · La marque StaX devient Nemasus
+--  Nemasus — 0057 · La marque StaX devient Nemasus
 --
 --  Les migrations passées ne sont jamais réécrites (leur empreinte est
 --  vérifiée par `pnpm db:migrate`) : cette migration porte le renommage en

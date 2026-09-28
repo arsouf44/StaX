@@ -178,3 +178,71 @@ export function validateUpload(input: UploadValidationInput): UploadValidationRe
 
 /** Quantite d'octets a lire pour verifier une signature. */
 export const MAGIC_HEADER_BYTES = 16;
+
+function startsWith(header: Uint8Array, bytes: readonly number[], offset = 0): boolean {
+  return bytes.every((byte, index) => header[offset + index] === byte);
+}
+
+function ascii(header: Uint8Array, offset: number, length: number): string {
+  return String.fromCharCode(...header.slice(offset, offset + length));
+}
+
+/**
+ * Type REEL d'un fichier, lu dans ses premiers octets (32 suffisent).
+ *
+ * Le type annonce par le navigateur vient de l'extension, et une requete
+ * forgee annonce ce qu'elle veut : un document HTML declare `image/png`. On
+ * range donc le fichier sous le type qu'il EST, et on refuse ce qui n'est
+ * aucun des formats acceptes — SVG et HTML compris, puisqu'ils n'ont pas de
+ * signature binaire.
+ */
+export function sniffMediaType(header: Uint8Array): string | null {
+  if (startsWith(header, [0xff, 0xd8, 0xff])) return 'image/jpeg';
+  if (startsWith(header, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return 'image/png';
+  if (ascii(header, 0, 6) === 'GIF87a' || ascii(header, 0, 6) === 'GIF89a') return 'image/gif';
+  if (ascii(header, 0, 4) === 'RIFF' && ascii(header, 8, 4) === 'WEBP') return 'image/webp';
+  if (ascii(header, 0, 5) === '%PDF-') return 'application/pdf';
+  // EBML : WebM, mais aussi Matroska (.mkv), que les navigateurs ne lisent
+  // pas tous. Le type de document « webm » figure dans l'en-tete.
+  if (startsWith(header, [0x1a, 0x45, 0xdf, 0xa3])) {
+    return ascii(header, 0, header.length).includes('webm') ? 'video/webm' : null;
+  }
+  if (ascii(header, 4, 4) === 'ftyp') return isoMediaType(header);
+  return null;
+}
+
+const AVIF_BRANDS = new Set(['avif', 'avis']);
+const MP4_BRANDS = new Set([
+  'isom',
+  'iso2',
+  'iso3',
+  'iso4',
+  'iso5',
+  'iso6',
+  'mp41',
+  'mp42',
+  'avc1',
+  'dash',
+  'M4V ',
+  'mmp4',
+  'MSNV',
+]);
+
+/**
+ * Fichiers ISO (boite `ftyp`) : AVIF, MP4 — mais aussi HEIC (photos d'iPhone),
+ * QuickTime ou audio M4A, qu'un navigateur n'affiche pas comme une image ou
+ * une video du site. On lit la marque principale et les marques compatibles.
+ */
+function isoMediaType(header: Uint8Array): string | null {
+  const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+  const boxSize = header.length >= 4 ? view.getUint32(0) : 0;
+  const end = Math.min(boxSize, header.length);
+  const brands = [ascii(header, 8, 4)];
+  for (let offset = 16; offset + 4 <= end; offset += 4) brands.push(ascii(header, offset, 4));
+  if (brands.some((brand) => AVIF_BRANDS.has(brand))) return 'image/avif';
+  if (MP4_BRANDS.has(brands[0] ?? '')) return 'video/mp4';
+  return null;
+}
+
+/** Octets a lire pour `sniffMediaType`. */
+export const SNIFF_HEADER_BYTES = 64;
