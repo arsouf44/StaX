@@ -4,7 +4,7 @@ Deux applications, un seul dépôt, un seul pipeline.
 
 | Application | Cible | Rôle |
 | --- | --- | --- |
-| `apps/platform` | Worker Cloudflare (OpenNext) ou Vercel ([vercel.md](./vercel.md)) | Site public, espace client, back-office, webhooks, tâche de fond |
+| `apps/platform` | Worker Cloudflare `nemasus` (OpenNext, Workers Builds — [cloudflare.md § 0](./cloudflare.md)) | Site public, espace client, back-office, webhooks, tâche de fond |
 | `apps/site-runtime` | Worker Cloudflare | API des sites ; sites de l’ancien moteur |
 
 Les **sites clients** ne sont pas déployés ici : chacun a son dépôt GitHub et
@@ -186,14 +186,12 @@ déploiement Pages / Workers Builds. Détails : [cloudflare.md](./cloudflare.md)
 déploiements, délai de 45 minutes, aperçus, surveillance HTTPS des sites
 livrés. Sans secret valide, la route répond **401**.
 
-**Qui l’appelle.** Le plan Hobby de Vercel n’accepte qu’une tâche planifiée
-par jour : `apps/platform/vercel.json` déclare donc un passage **quotidien**
-de secours (4 h UTC, Vercel envoie `CRON_SECRET`). La cadence de 5 minutes est
-assurée par **Supabase** : `pg_cron` exécute `app.trigger_site_operations()`
-(migration 0053), qui appelle la route avec `pg_net`. L’adresse de la
+**Qui l’appelle.** **Supabase** : `pg_cron` exécute
+`app.trigger_site_operations()` toutes les 5 minutes (migrations 0053 et
+0056), qui appelle la route avec `pg_net`. L’adresse de la
 plateforme et le secret sont lus dans Supabase Vault ; tant qu’ils sont
 absents, rien n’est envoyé. À faire une fois, dans l’éditeur SQL de Supabase,
-avec **la même valeur** que `CRON_SECRET` sur Vercel :
+avec **la même valeur** que le secret `CRON_SECRET` du Worker :
 
 ```sql
 select vault.create_secret('https://votre-domaine.fr', 'nemasus_platform_url');
@@ -203,9 +201,7 @@ select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');
 Pour changer une valeur : `select vault.update_secret(id, 'nouvelle valeur')`
 (l’`id` se lit dans `vault.secrets`). Pour vérifier les appels :
 `select status_code, created from net._http_response order by created desc limit 5;`
-(200 attendu). Sur un plan Vercel Pro, la cadence peut aussi être déclarée
-directement dans `vercel.json` (`*/5 * * * *`). Sur Cloudflare Workers, un
-*Cron Trigger* fait de même.
+(200 attendu).
 
 Vérifier ensuite *Administration → Santé* : l’application GitHub, l’API
 Cloudflare des sites et les tâches de fond ne doivent plus figurer parmi les

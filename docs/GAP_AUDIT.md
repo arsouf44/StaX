@@ -492,20 +492,31 @@ Défauts trouvés en relisant les pages contre le code et la production :
 
 | # | Défaut | Risque | Correction |
 |---|---|---|---|
-| 1 | Mentions légales : hébergeur déclaré « Cloudflare et Supabase » alors que la plateforme tourne sur **Vercel** | Mention obligatoire inexacte (LCEN art. 6 III) | Vercel Inc. (adresse, téléphone) par défaut ; Supabase et Cloudflare nommés pour les données et les sites clients |
-| 2 | Téléphone de l’hébergeur jamais renseigné : « [A CONFIGURER] » en production | Mention obligatoire manquante | Valeur publiée par Vercel, vérifiée à la source |
+| 1 | Mentions légales : hébergeur décrit « Cloudflare (diffusion) et Supabase » sans téléphone, avec l’adresse d’un bureau de Supabase au lieu de celle de la société contractante | Mention obligatoire inexacte (LCEN art. 6 III) | Cloudflare, Inc. (adresse, téléphone) pour la plateforme et les sites ; Supabase Pte. Ltd. nommé pour les données |
+| 2 | Téléphone de l’hébergeur jamais renseigné : « [A CONFIGURER] » en production | Mention obligatoire manquante | Valeur publiée par Cloudflare, vérifiée à la source |
 | 3 | Bandeau cookies annonçant une mesure d’audience « activée par défaut » que le site ne fait pas | Information inexacte | Bandeau retiré (aucun traceur soumis à consentement) ; politique cookies réécrite, cookies réels nommés |
 | 4 | Inscription : « J’accepte les CGV et la politique de confidentialité » | CGU jamais acceptées alors qu’elles disent l’être ; « accepter » une politique de confidentialité est une confusion relevée par la CNIL | Case « J’accepte les CGU », version des CGU conservée ; confidentialité en simple information |
 | 5 | E-mail de proposition sans information du prospect ni moyen de s’opposer ; aucun moyen d’effacer ses coordonnées avant 3 ans | RGPD art. 13 et 21 | Mention dans chaque e-mail (« STOP ») ; `app.erase_site_proposal_contact` + bouton, 4 assertions SQL |
 | 6 | Prospection B2B fondée sur le « consentement » dans la politique de confidentialité | Base légale inadaptée | Intérêt légitime, source des données (art. 14), liste d’opposition, registre § A9 |
-| 7 | Sous-traitants publiés sans Vercel ni Resend ; Cloudflare dit « Union européenne » | Liste art. 28 incomplète et inexacte | Liste corrigée en base (0056), registre et politique alignés |
+| 7 | Sous-traitants publiés sans Resend ; Cloudflare dit « Union européenne » et limité à la diffusion | Liste art. 28 incomplète et inexacte | Liste corrigée en base (0056), registre et politique alignés |
 | 8 | Exemples fictifs sur de vrais noms de domaine (`restaurant-dupont.fr`…) | Confusion avec une entreprise réelle | Domaines réservés `.example` |
 | 9 | CGV « références » (sans accord) contredisant la page Réalisations (accord explicite) | Clause contredite par l’offre publiée | Références avec accord ; mention « Site réalisé par Nemasus » retirable |
 
+**Déploiement Cloudflare (2026-09-28).** La plateforme revient sur Cloudflare
+Workers. Le déploiement échouait : Workers Builds lance `npx wrangler deploy`
+à la racine, où `wrangler` n’était pas installé et où aucune configuration
+n’existait ; `pnpm run build` ne produisait d’ailleurs pas le Worker
+(`next build` seul). Corrigé : `wrangler` à la racine, `wrangler.jsonc` racine
+pointant sur la sortie OpenNext, `pnpm run build` = build Cloudflare, et
+configuration publique relue à l’exécution (le build n’a besoin d’aucune
+variable). Vérifié sur une copie propre : installation figée, build,
+déploiement à blanc, puis pages servies par `wrangler dev` (moteur workerd).
+
 Non corrigeables depuis le dépôt (voir [LANCEMENT.md](./LANCEMENT.md)) :
-Vercel en offre *Hobby* (usage commercial interdit) et Supabase en offre
-gratuite (pas de sauvegardes, alors que les CGV et la page Infrastructure en
-annoncent) ; migration 0056 à appliquer ; relecture par un avocat.
+offre Workers Paid (le Worker dépasse 3 Mo compressé), secrets du Worker,
+Supabase en offre gratuite (pas de sauvegardes, alors que les CGV et la page
+Infrastructure en annoncent) ; migration 0056 à appliquer ; relecture par un
+avocat.
 
 ## Ce qui reste non terminé, sans détour
 

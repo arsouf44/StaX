@@ -11,7 +11,7 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Prerequis :
  *   pnpm e2e:stack start          # base, authentification, API
- *   pnpm build                    # build de production
+ *   pnpm build:platform           # build de production (next build)
  *   pnpm test:e2e:stack           # demarre plateforme + sites, puis les tests
  *
  * Les parcours partagent une base : ils s executent l un apres l autre.

@@ -11,10 +11,12 @@ précédentes : aucune migration existante n’a été réécrite. 0052 applique
 durcissements relevés par les conseillers Supabase sur la base réelle (journal
 d’audit réservé à sa propre organisation, calcul du prix fermé aux visiteurs
 anonymes, index des clés étrangères du modèle actuel). 0053 planifie la tâche
-de fond des sites toutes les 5 minutes par `pg_cron` + `pg_net` (le plan Hobby
-de Vercel n’autorise qu’un passage par jour).
+de fond des sites toutes les 5 minutes par `pg_cron` + `pg_net`. 0056 porte le
+renommage Nemasus (textes stockés, tâches planifiées, sous-traitants) et
+l’effacement des coordonnées d’un prospect qui s’y oppose.
 
-**Projet Supabase de production** : les 56 migrations y sont appliquées et
+**Projet Supabase de production** : les migrations 0001 à 0055 y sont appliquées
+(0056 reste à appliquer, voir `docs/LANCEMENT.md`) et
 tracées dans `app.schema_migrations` avec l’empreinte de chaque fichier ; le
 schéma a été comparé à une base locale construite depuis le dépôt (tables,
 politiques, contraintes, index, fonctions, droits d’exécution : identiques).

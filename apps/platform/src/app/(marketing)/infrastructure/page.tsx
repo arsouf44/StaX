@@ -35,12 +35,12 @@ const LAYERS = [
   },
   {
     name: 'Plateforme',
-    provider: 'Vercel',
-    role: 'Exécute le site Nemasus, votre espace client et l’éditeur, en France, dans la région de Paris : au plus près de la base de données qui conserve vos informations.',
+    provider: 'Cloudflare Workers',
+    role: 'Exécute le site Nemasus, votre espace client et l’éditeur sur le réseau de Cloudflare, placé automatiquement au plus près de la base de données qui conserve vos informations.',
     facts: [
-      'Exécution dans la région de Paris',
-      'Chaque mise à jour de la plateforme est un déploiement distinct, activé d’un seul coup',
+      'Chaque mise à jour de la plateforme est une version distincte, activée d’un seul coup',
       'Secrets et clés conservés côté serveur, jamais dans le navigateur',
+      'Protection réseau et HTTPS de bout en bout',
     ],
   },
   {

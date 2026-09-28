@@ -10,11 +10,11 @@ renseigné, et ce qui se passe si ça ne l’est pas.
 
 Le dépôt contient les seules informations **publiques** de l’éditeur, que la
 loi impose d’afficher : dénomination (LallianSe), nom commercial (Nemasus),
-forme, siège, SIREN, SIRET, RCS, TVA, ainsi que l’hébergeur de la plateforme
-(Vercel Inc.). Elles sont lues dans `packages/config/src/legal.ts` et
-remplaçables par variable d’environnement. Le capital, le directeur de la
-publication et les adresses de contact n’ont **aucune** valeur par défaut :
-ils viennent de l’environnement. Une valeur absente affiche un marqueur
+forme, capital (3 000 €), siège, SIREN, SIRET, RCS, TVA, directrice de la
+publication (Julie Rachline Gomez), adresse de contact et RGPD
+(`nemasus@lallianse.com`), ainsi que l’hébergeur (Cloudflare, Inc.). Elles
+sont lues dans `packages/config/src/legal.ts` et remplaçables par variable
+d’environnement si elles changent. Une valeur absente affiche un marqueur
 explicite :
 
 ```

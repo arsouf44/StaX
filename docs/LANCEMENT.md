@@ -23,7 +23,7 @@ permanence ce qui manque encore.
 | Maintenance mensuelle qui démarre à la livraison, résiliable en ligne | ✅ | [stripe.md](./stripe.md) |
 | Mot de passe oublié, confirmation d'inscription, invitations de collaborateurs | ✅ | corrigés (voir [GAP_AUDIT.md § 13](./GAP_AUDIT.md)) |
 
-Preuves : 529 assertions SQL, 337 tests unitaires et d'intégration, tests
+Preuves : 529 assertions SQL, 343 tests unitaires et d'intégration, tests
 navigateur (ordinateur + téléphone) et parcours complets contre une vraie pile,
 dont le parcours « vente par téléphone » de bout en bout.
 
@@ -35,11 +35,10 @@ Le code, les textes, les e-mails et les documents juridiques disent
 « Nemasus ». Ce qui reste à faire est **hors du dépôt** :
 
 1. **Nom de domaine.** Achetez `nemasus.fr` (et, par précaution, `nemasus.com`)
-   — ou le domaine de votre choix. Renseignez-le dans Vercel
-   (`NEXT_PUBLIC_PLATFORM_URL`, `PLATFORM_URL`) et prévoyez le sous-domaine des
-   sites (`NEXT_PUBLIC_SITES_DOMAIN`, par exemple `sites.nemasus.fr`). Les
-   valeurs `nemasus.fr` écrites dans le code ne sont que des exemples et des
-   valeurs de repli.
+   — ou le domaine de votre choix —, de préférence chez Cloudflare
+   (*Domain Registration*) pour le rattacher au Worker en un clic. Voir
+   l'étape 3. Les valeurs `nemasus.fr` écrites dans le code ne sont que des
+   exemples et des valeurs de repli.
 2. **Marque.** Vérifiez sur [data.inpi.fr](https://data.inpi.fr) que
    « Nemasus » n'est pas déjà déposé pour des services informatiques
    (classes 35, 42) puis déposez la marque à l'INPI (≈ 190 € pour une classe,
@@ -51,10 +50,9 @@ Le code, les textes, les e-mails et les documents juridiques disent
 4. **Comptes des prestataires** : renommez l'application GitHub, le compte
    Stripe (*Paramètres → Informations publiques* : nom, libellé sur relevé
    bancaire « NEMASUS »), l'expéditeur des e-mails (`EMAIL_FROM=Nemasus <…>`),
-   le projet Supabase (nommé « StaX » dans le tableau de bord) et le projet
-   Vercel. Les Workers Cloudflare s'appellent désormais `nemasus-platform` et
-   `nemasus-sites` : un déploiement crée ces nouveaux noms, supprimez ensuite
-   les anciens `stax-*`.
+   le projet Supabase (nommé « StaX » dans le tableau de bord) et le Worker
+   Cloudflare `stax` → `nemasus` (étape 3). Si un ancien projet Vercel est
+   encore relié au dépôt, déconnectez-le : il n'est plus utilisé.
 5. **Variables d'environnement** (facultatif) : `STAX_SECRET_KEY` et
    `STAX_ENV` peuvent être renommées `NEMASUS_SECRET_KEY` et `NEMASUS_ENV` **en
    gardant exactement la même valeur**. L'ancien nom reste lu tant que le
@@ -74,8 +72,9 @@ DATABASE_URL="postgresql://…" pnpm db:migrate
 Elle est testée contre une base neuve (529 assertions SQL) ; elle réécrit les
 libellés « StaX » stockés en base (offres, messages d'erreur, notifications),
 renomme les tâches planifiées (`nemasus-site-operations`,
-`nemasus-retention`) et complète la liste publique des sous-traitants (Vercel,
-Resend). Déployez le code en même temps : les deux vont ensemble.
+`nemasus-retention`) et complète la liste publique des sous-traitants
+(Cloudflare héberge la plateforme ; Resend ajouté). Déployez le code en même
+temps : les deux vont ensemble.
 
 Déjà fait le 2026-09-26 : les migrations **0054** (propositions) et **0055**
 (messagerie, invitations) sont appliquées sur le projet Supabase de production
@@ -87,46 +86,48 @@ règles de sécurité **identiques**.
 
 Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 
-## Étape 2 — Identité légale de la société (bloquant)
+## Étape 2 — Identité légale de la société : ✅ faite
 
-Sans ces valeurs, la production refuse de démarrer (c'est volontaire :
-publier un site commercial sans mentions légales est une infraction).
+Tout est renseigné dans `packages/config/src/legal.ts` (valeurs publiques,
+remplaçables par variable d'environnement si elles changent) : LallianSe, SAS
+au capital de 3 000 €, siège, SIREN, SIRET, RCS, TVA ; nom commercial
+Nemasus ; directrice de la publication Julie Rachline Gomez ; contact et
+demandes RGPD `nemasus@lallianse.com` ; hébergeur Cloudflare, Inc. (adresse et
+téléphone). `pnpm legal:check` ne signale plus rien.
 
-Déjà renseignées dans le code (valeurs publiques, modifiables par variable) :
-dénomination (LallianSe), nom commercial (Nemasus), forme (SAS), siège, SIREN,
-SIRET, RCS, TVA, et l'hébergeur de la plateforme (Vercel Inc., adresse et
-téléphone). **Il en manque quatre**, à mettre dans **Vercel → Settings →
-Environment Variables** :
+Facultatif : `SUPPORT_PHONE` (recommandé, affiché aux clients),
+`LEGAL_MEDIATOR` (voir étape 10).
 
-```
-LEGAL_CAPITAL        montant exact du Kbis, ex. « 1 000 € »
-LEGAL_DIRECTOR       directeur de la publication (le président de la SAS)
-LEGAL_DPO_CONTACT    adresse pour les demandes RGPD, ex. rgpd@nemasus.fr
-SUPPORT_EMAIL        adresse de contact publique, ex. bonjour@nemasus.fr
-```
+`nemasus@lallianse.com` a **deux rôles** : l'adresse affichée aux clients, et
+la boîte qui reçoit toutes les alertes de l'équipe. Elle doit être lue.
 
-Facultatives : `SUPPORT_PHONE` (recommandé), `LEGAL_MEDIATOR` (voir étape 10).
+## Étape 3 — Cloudflare : mettre la plateforme en ligne (bloquant)
 
-`SUPPORT_EMAIL` a **deux rôles** : l'adresse affichée aux clients, et la boîte
-qui reçoit toutes les alertes de l'équipe. Mettez une boîte que vous lisez.
+Le détail est dans [cloudflare.md § 0](./cloudflare.md). En bref, dans
+*Workers & Pages → Worker `stax`* :
 
-**Vérifier :** `pnpm legal:check` (avec ces variables) ne signale rien ; les
-pages `/mentions-legales` et `/cgv` n'affichent plus de `[À CONFIGURER]`.
+1. **Offre Workers Paid** (5 $/mois) : le Worker dépasse la limite de taille
+   de l'offre gratuite ; sans elle, le déploiement est refusé.
+2. **Settings → Build** : build `pnpm run build`, déploiement
+   `npx wrangler deploy`, racine `/` — ce sont déjà vos réglages : le dépôt
+   s'y conforme désormais. Renommez le Worker en `nemasus` (*Settings →
+   General*).
+3. **Settings → Variables and Secrets** : les secrets
+   `SUPABASE_SERVICE_ROLE_KEY` et `NEMASUS_SECRET_KEY`, puis `PLATFORM_URL`
+   et `SITES_DOMAIN`. Les valeurs publiques de Supabase sont déjà dans
+   `wrangler.jsonc`.
+4. **Settings → Domains & Routes** : le domaine de la plateforme.
+5. **Relancer le build** (*Deployments → Retry*), puis vérifier `/tarifs`,
+   `/mentions-legales`, `/inscription` et `/admin/sante`.
 
-## Étape 3 — Passer les hébergeurs en offre payante (bloquant)
+**Supabase Pro** (≈ 25 $/mois) : l'offre gratuite n'a **pas de sauvegardes
+automatiques** et un projet inactif peut être **mis en pause**. Or la page
+Infrastructure et les CGV (article 10) annoncent des sauvegardes : elles
+doivent exister le jour du premier client.
 
-- **Vercel Pro** (≈ 20 $/mois) : l'offre gratuite *Hobby* est réservée par les
-  conditions de Vercel à un usage **personnel et non commercial**. Vendre des
-  sites depuis une plateforme en Hobby vous expose à une coupure du compte.
-  Une fois en Pro, `vercel.json` peut aussi planifier la tâche de fond plus
-  souvent.
-- **Supabase Pro** (≈ 25 $/mois) : l'offre gratuite n'a **pas de sauvegardes
-  automatiques** et un projet inactif peut être **mis en pause**. Or la page
-  Infrastructure et les CGV (article 10) annoncent des sauvegardes : elles
-  doivent exister le jour du premier client.
-- **Acceptez les accords de traitement (DPA)** de chaque prestataire (Vercel,
-  Supabase, Cloudflare, GitHub, Resend ; Stripe l'inclut) et gardez-en une
-  copie : la page `/sous-traitants` et le registre y renvoient.
+**Acceptez les accords de traitement (DPA)** de chaque prestataire
+(Cloudflare, Supabase, GitHub, Resend ; Stripe l'inclut) et gardez-en une
+copie : la page `/sous-traitants` et le registre y renvoient.
 
 ## Étape 4 — E-mails (sans eux, le produit paraît cassé)
 
@@ -134,13 +135,15 @@ Deux choses distinctes, toutes deux nécessaires :
 
 1. **E-mails de Nemasus** (propositions, livraison, réponses de l'équipe,
    alertes). Créez un compte **Resend** (ou Postmark), vérifiez votre domaine
-   d'envoi (enregistrements SPF et DKIM chez votre registrar), puis dans Vercel :
+   d'envoi (enregistrements SPF et DKIM chez votre registrar), puis dans les
+   variables du Worker (étape 3) :
    ```
    EMAIL_PROVIDER=resend
-   EMAIL_API_KEY=re_…
-   EMAIL_FROM=Nemasus <bonjour@votre-domaine.fr>
-   EMAIL_REPLY_TO=bonjour@votre-domaine.fr
+   EMAIL_API_KEY=re_…                          (type Secret)
+   EMAIL_FROM=Nemasus <nemasus@lallianse.com>
+   EMAIL_REPLY_TO=nemasus@lallianse.com
    ```
+   Le domaine d'envoi à vérifier chez Resend est donc `lallianse.com`.
 2. **E-mails de connexion** (confirmation d'inscription, mot de passe
    oublié), envoyés par Supabase. Dans **Supabase → Authentication** :
    - *SMTP Settings* : activez un SMTP personnalisé (Resend fournit des
@@ -158,7 +161,7 @@ jusqu'au bout.
 ## Étape 5 — Stripe (encaisser)
 
 1. Activez le compte Stripe (identité, IBAN).
-2. Clés **live** dans Vercel : `STRIPE_SECRET_KEY`.
+2. Clé **live** en secret du Worker : `STRIPE_SECRET_KEY`.
 3. **Développeurs → Webhooks → Ajouter un point de terminaison** :
    `https://votre-domaine/api/webhooks/stripe`, événements
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,

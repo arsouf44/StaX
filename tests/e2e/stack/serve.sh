@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Demarre la plateforme (build de production) et le moteur des sites clients
-# contre la pile locale. A lancer apres `stack.sh start` et `pnpm build`.
+# contre la pile locale. A lancer apres `stack.sh start` et `pnpm build:platform`.
 #
 #   plateforme      http://127.0.0.1:3100
 #   sites clients   http://127.0.0.1:3101   (nom d'hote *.sites.nemasus.test)

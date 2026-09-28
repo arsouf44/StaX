@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "pnpm --filter @nemasus/platform dev",
     "dev:site": "pnpm --filter @nemasus/site-runtime dev",
-    "build": "pnpm -r --sequential build",
+    "build": "pnpm build:cf",
+    "build:next": "pnpm -r --sequential build",
     "build:platform": "pnpm --filter @nemasus/platform build",
     "build:cf": "pnpm --filter @nemasus/platform build:cf && pnpm --filter @nemasus/site-runtime build",
     "lint": "eslint . --max-warnings=0",
@@ -56,6 +57,7 @@
     "tsx": "4.21.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.70.0",
-    "vitest": "3.2.7"
+    "vitest": "3.2.7",
+    "wrangler": "4.132.0"
   }
 }

@@ -89,20 +89,14 @@ function publicContact(): string {
 }
 
 /**
- * Prestataires techniques nommés dans les mentions légales, en plus de
- * l'hébergeur de la plateforme (configurable). Ce sont des informations
- * publiées par ces sociétés elles-mêmes, pas des données de Nemasus.
+ * Prestataire de la base de données, nommé dans les mentions légales en plus
+ * de l'hébergeur (configurable). Informations publiées par cette société
+ * elle-même, pas des données de Nemasus.
  */
 const DATA_HOST = {
   name: 'Supabase Pte. Ltd.',
   address: '65 Chulia Street #38-02/03, OCBC Centre, Singapour 049513',
   location: 'région de Paris (France)',
-} as const;
-
-const SITES_HOST = {
-  name: 'Cloudflare, Inc.',
-  address: '101 Townsend Street, San Francisco, CA 94107, États-Unis',
-  phone: '+1 650 319 8930',
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -156,14 +150,11 @@ export function buildLegalNotice(): LegalDocument {
             { term: 'Téléphone', description: legalValue('LEGAL_HOST_PHONE') },
           ]),
           p(
-            'Les pages et l’espace client sont exécutés dans la région de Paris (France). Les ' +
-              `données applicatives (comptes, contenus, messages, réservations) sont stockées par ` +
-              `${DATA_HOST.name}, ${DATA_HOST.address}, dans la ${DATA_HOST.location}.`,
-          ),
-          p(
-            `Les sites de nos clients sont diffusés par ${SITES_HOST.name}, ` +
-              `${SITES_HOST.address}, téléphone ${SITES_HOST.phone}. La liste complète de nos ` +
-              'sous-traitants, avec leur localisation, est publiée sur la page « Sous-traitants ».',
+            'Le même prestataire héberge et diffuse les sites de nos clients. Les données ' +
+              'applicatives (comptes, contenus, messages, réservations) sont stockées par ' +
+              `${DATA_HOST.name}, ${DATA_HOST.address}, dans la ${DATA_HOST.location}. La liste ` +
+              'complète de nos sous-traitants, avec leur localisation, est publiée sur la page ' +
+              '« Sous-traitants ».',
           ),
         ],
       },
@@ -270,16 +261,28 @@ export function buildLegalNotice(): LegalDocument {
       {
         id: 'mediation',
         title: 'Médiation',
-        blocks: [
-          p(
-            'Nos offres sont réservées aux professionnels et aux associations. Si un litige ' +
-              'devait néanmoins nous opposer à un consommateur, celui-ci pourrait recourir ' +
-              'gratuitement au médiateur de la consommation désigné ci-dessous, conformément à ' +
-              'l’article L.612-1 du Code de la consommation, après avoir tenté de résoudre le ' +
-              'litige directement auprès de nous par une réclamation écrite.',
-          ),
-          defs([{ term: 'Médiateur désigné', description: legalValue('LEGAL_MEDIATOR') }]),
-        ],
+        // Le mediateur n'est affiche que s'il est designe : un marqueur
+        // « [A CONFIGURER] » n'a rien a faire sur une page publique, et les
+        // offres ne sont pas proposees aux consommateurs.
+        blocks: isLegalValueConfigured('LEGAL_MEDIATOR')
+          ? [
+              p(
+                'Nos offres sont réservées aux professionnels et aux associations. Si un litige ' +
+                  'devait néanmoins nous opposer à un consommateur, celui-ci pourrait recourir ' +
+                  'gratuitement au médiateur de la consommation désigné ci-dessous, conformément ' +
+                  'à l’article L.612-1 du Code de la consommation, après avoir tenté de résoudre ' +
+                  'le litige directement auprès de nous par une réclamation écrite.',
+              ),
+              defs([{ term: 'Médiateur désigné', description: legalValue('LEGAL_MEDIATOR') }]),
+            ]
+          : [
+              p(
+                'Nos offres sont réservées aux professionnels et aux associations ; elles ne sont ' +
+                  'pas proposées aux consommateurs. Toute réclamation peut nous être adressée par ' +
+                  `écrit à ${legalValue('SUPPORT_EMAIL')} : nous y répondons dans un délai d’un ` +
+                  'mois.',
+              ),
+            ],
       },
     ],
   };
@@ -1819,11 +1822,11 @@ export function buildPrivacyPolicy(): LegalDocument {
           ),
           p(
             'Elles sont accessibles au personnel habilité et aux sous-traitants techniques ' +
-              'strictement nécessaires au fonctionnement du service : hébergement et exécution de ' +
-              'la plateforme (Vercel), base de données et fichiers (Supabase), diffusion des sites ' +
-              '(Cloudflare), code source des sites (GitHub), envoi des e-mails transactionnels ' +
-              '(Resend). La liste complète et à jour, avec la localisation et les garanties de ' +
-              'chacun, est publiée sur la page « Sous-traitants ».',
+              'strictement nécessaires au fonctionnement du service : hébergement de la ' +
+              'plateforme et des sites (Cloudflare), base de données et fichiers (Supabase), code ' +
+              'source des sites (GitHub), envoi des e-mails transactionnels (Resend). La liste ' +
+              'complète et à jour, avec la localisation et les garanties de chacun, est publiée ' +
+              'sur la page « Sous-traitants ».',
           ),
           p(
             'Les paiements sont traités par Stripe, qui agit en qualité de responsable de ' +
@@ -1848,9 +1851,10 @@ export function buildPrivacyPolicy(): LegalDocument {
         blocks: [
           p(
             'La base de données et les fichiers de la plateforme sont hébergés en France (région ' +
-              'de Paris), et la plateforme s’exécute dans cette même région. Certains prestataires ' +
-              '— diffusion des sites clients, hébergement du code source, envoi des e-mails — sont ' +
-              'des sociétés établies hors de l’Union européenne, principalement aux États-Unis.',
+              'de Paris). La plateforme et les sites sont servis par le réseau mondial de ' +
+              'Cloudflare ; certains prestataires — hébergement et diffusion, code source des ' +
+              'sites, envoi des e-mails — sont des sociétés établies hors de l’Union européenne, ' +
+              'principalement aux États-Unis.',
           ),
           p(
             'Ces transferts sont encadrés par les clauses contractuelles types adoptées par la ' +

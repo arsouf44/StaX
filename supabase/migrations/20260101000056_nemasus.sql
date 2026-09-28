@@ -16,7 +16,8 @@
 --  4. Tâche de fond : secrets Vault `nemasus_platform_url` et
 --     `nemasus_cron_secret` (les anciens noms `stax_*` restent lus tant
 --     qu'ils existent) ; tâches pg_cron renommées.
---  5. Sous-traitants : la liste publique dit exactement qui traite quoi, où.
+--  5. Sous-traitants : la liste publique dit exactement qui traite quoi, où
+--     (Cloudflare héberge la plateforme et les sites ; Resend ajouté).
 --
 --  Restent volontairement inchangés, car stockés dans les lignes et les
 --  contraintes : les valeurs internes 'stax' (auteur d'un message ou d'une
@@ -198,9 +199,10 @@ $$;
 --  5. Sous-traitants
 -- -----------------------------------------------------------------------------
 update public.subprocessors
-   set purpose = 'Hébergement et diffusion de chaque site client sur son propre projet (Pages ou '
-                 || 'Workers), CDN, protection réseau, certificats TLS et vérification anti-robot '
-                 || 'des formulaires (Turnstile).',
+   set purpose = 'Hébergement et exécution de la plateforme Nemasus (site public, espace client, '
+                 || 'administration) ; hébergement et diffusion de chaque site client sur son propre '
+                 || 'projet ; CDN, protection réseau, certificats TLS et vérification anti-robot des '
+                 || 'formulaires (Turnstile).',
        location = 'États-Unis (société) — réseau mondial, traitement au plus près du visiteur',
        transfer_safeguards = 'Clauses contractuelles types de la Commission européenne '
                              || '(Data Processing Addendum Cloudflare).',
@@ -230,17 +232,6 @@ update public.subprocessors
                              || '(Data Protection Agreement GitHub).',
        updated_at = now()
  where name = 'GitHub, Inc.';
-
-insert into public.subprocessors
-  (name, purpose, location, transfer_safeguards, privacy_url, category, sort_order)
-select 'Vercel Inc.',
-       'Hébergement et exécution de la plateforme Nemasus : site public, espace client, '
-       || 'administration.',
-       'États-Unis (société) — exécution en Europe, à Paris (région cdg1)',
-       'Clauses contractuelles types de la Commission européenne (Data Processing Addendum Vercel).',
-       'https://vercel.com/legal/privacy-policy',
-       'infrastructure', 5
- where not exists (select 1 from public.subprocessors where name = 'Vercel Inc.');
 
 insert into public.subprocessors
   (name, purpose, location, transfer_safeguards, privacy_url, category, sort_order)

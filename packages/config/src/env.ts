@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { assertServerOnly, deployEnvironment, isProduction, readAllEnv, readEnv } from './runtime';
+import {
+  assertServerOnly,
+  deployEnvironment,
+  isBrowser,
+  isProduction,
+  readAllEnv,
+  readEnv,
+} from './runtime';
 
 /* -------------------------------------------------------------------------- */
 /*  Public configuration (safe to ship in a browser bundle)                    */
@@ -27,6 +34,22 @@ export type PublicEnv = z.infer<typeof publicSchema>;
 let publicCache: PublicEnv | null = null;
 
 /**
+ * Sur un Worker Cloudflare, la configuration arrive a l'EXECUTION, pas au
+ * build : Next remplace `process.env.NEXT_PUBLIC_*` par la valeur connue au
+ * moment du build, c'est-a-dire `undefined` si le build n'en avait pas. Cote
+ * serveur, la valeur est alors relue a l'execution, sous son nom public ou son
+ * equivalent serveur (`SUPABASE_URL`…). Dans le navigateur, rien a relire.
+ */
+function atRuntime(...keys: string[]): string | undefined {
+  if (isBrowser()) return undefined;
+  for (const key of keys) {
+    const value = readEnv(key);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/**
  * Public configuration. Next.js inlines `process.env.NEXT_PUBLIC_*` at build time,
  * so the literal member accesses below are required — a dynamic lookup would be
  * replaced by `undefined` in the client bundle.
@@ -34,12 +57,25 @@ let publicCache: PublicEnv | null = null;
 export function publicEnv(): PublicEnv {
   if (publicCache) return publicCache;
   const raw = {
-    NEXT_PUBLIC_PLATFORM_URL: process.env.NEXT_PUBLIC_PLATFORM_URL,
-    NEXT_PUBLIC_SITES_DOMAIN: process.env.NEXT_PUBLIC_SITES_DOMAIN,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-    NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
+    NEXT_PUBLIC_PLATFORM_URL:
+      process.env.NEXT_PUBLIC_PLATFORM_URL || atRuntime('NEXT_PUBLIC_PLATFORM_URL', 'PLATFORM_URL'),
+    NEXT_PUBLIC_SITES_DOMAIN:
+      process.env.NEXT_PUBLIC_SITES_DOMAIN || atRuntime('NEXT_PUBLIC_SITES_DOMAIN', 'SITES_DOMAIN'),
+    NEXT_PUBLIC_SUPABASE_URL:
+      process.env.NEXT_PUBLIC_SUPABASE_URL || atRuntime('NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL'),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      atRuntime(
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        'SUPABASE_ANON_KEY',
+        'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+        'SUPABASE_PUBLISHABLE_KEY',
+      ),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY:
+      process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
+      atRuntime('NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SITE_KEY'),
+    NEXT_PUBLIC_DEFAULT_LOCALE:
+      process.env.NEXT_PUBLIC_DEFAULT_LOCALE || atRuntime('NEXT_PUBLIC_DEFAULT_LOCALE'),
   };
   const cleaned = Object.fromEntries(
     Object.entries(raw).filter(([, value]) => value !== undefined && value !== ''),
@@ -52,8 +88,11 @@ export function publicEnv(): PublicEnv {
         .join(' | ')}`,
     );
   }
-  publicCache = parsed.data;
-  return publicCache;
+  // Pas de cache tant que la configuration n'est pas arrivee : une lecture
+  // faite avant l'installation des variables du Worker ne doit pas figer les
+  // valeurs de repli locales pour toute la vie de l'isolat.
+  if (cleaned['NEXT_PUBLIC_SUPABASE_URL'] !== undefined) publicCache = parsed.data;
+  return parsed.data;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -149,7 +188,7 @@ function developmentFallbacks(): Record<string, string> {
  * L'URL du projet et la cle publique sont les MEMES valeurs cote serveur et
  * cote navigateur : un deploiement qui ne declare que `NEXT_PUBLIC_SUPABASE_URL`
  * ne doit pas voir tout le code serveur s'arreter pour autant. Les integrations
- * Supabase (Vercel notamment) nomment aussi la cle de service
+ * Supabase nomment aussi la cle de service
  * `SUPABASE_SECRET_KEY`. Aucun alias ne rend public un secret : on ne va
  * jamais chercher la cle de service dans une variable `NEXT_PUBLIC_*`.
  */

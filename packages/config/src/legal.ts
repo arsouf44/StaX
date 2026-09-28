@@ -31,9 +31,10 @@ export interface LegalField {
    * them out of the repository would not protect anything — it would only mean
    * the site cannot render its own mandatory notices.
    *
-   * Values that are NOT public knowledge, or that a deployment may legitimately
-   * change (share capital, publication director, support contacts), have no
-   * default: they must be provided at deployment time.
+   * The share capital, the publication director and the public contact address
+   * are published on the same pages for the same reason; they were provided by
+   * the company (2026-09-28) and can still be overridden by an environment
+   * variable if they change.
    */
   defaultValue?: string;
 }
@@ -87,6 +88,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Capital social',
     required: true,
     placeholder: '[A CONFIGURER — capital social]',
+    defaultValue: '3 000 €',
     hint: 'Obligatoire pour une société de capitaux (article R.123-237 du Code de commerce). Montant exact figurant sur le Kbis, par exemple « 10 000 € ».',
   },
   {
@@ -134,6 +136,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Directeur de la publication',
     required: true,
     placeholder: '[A CONFIGURER — directeur de la publication]',
+    defaultValue: 'Julie Rachline Gomez',
     hint: 'Personne physique responsable au sens de la loi du 21 juin 2004 (LCEN). Pour une SAS, le président, sauf désignation expresse.',
   },
   {
@@ -141,15 +144,15 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — hebergeur]',
-    defaultValue: 'Vercel Inc.',
-    hint: 'Raison sociale du prestataire qui héberge la plateforme (article 6 III de la LCEN). Les données et les sites des clients ont leurs propres prestataires, nommés dans les mentions légales.',
+    defaultValue: 'Cloudflare, Inc.',
+    hint: 'Raison sociale du prestataire qui héberge la plateforme et les sites des clients (article 6 III de la LCEN). La base de données a son propre prestataire, nommé dans les mentions légales.',
   },
   {
     key: 'LEGAL_HOST_ADDRESS',
     label: 'Adresse de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — adresse de l’hebergeur]',
-    defaultValue: '440 N Barranca Ave #4133, Covina, CA 91723, États-Unis',
+    defaultValue: '101 Townsend Street, San Francisco, CA 94107, États-Unis',
     hint: 'Adresse postale de l’hébergeur, telle qu’il la publie.',
   },
   {
@@ -157,7 +160,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Téléphone de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — telephone de l’hebergeur]',
-    defaultValue: '+1 559 288 7060',
+    defaultValue: '+1 650 319 8930',
     hint: 'Exigé par l’article 6 III de la LCEN (modifié par la loi du 21 mai 2024) : numéro de téléphone du prestataire d’hébergement, tel qu’il le publie.',
   },
   {
@@ -165,6 +168,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Contact données personnelles',
     required: true,
     placeholder: '[A CONFIGURER — contact RGPD]',
+    defaultValue: 'nemasus@lallianse.com',
     hint: 'Adresse de contact pour l’exercice des droits RGPD.',
   },
   {
@@ -179,6 +183,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'E-mail de support',
     required: true,
     placeholder: '[A CONFIGURER — email de support]',
+    defaultValue: 'nemasus@lallianse.com',
     hint: 'Adresse de contact affichee publiquement.',
   },
   {

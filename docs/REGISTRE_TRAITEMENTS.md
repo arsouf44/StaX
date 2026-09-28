@@ -73,7 +73,7 @@ transaction.
 | **Données** | Contenus fournis par le client, images, coordonnées professionnelles publiées |
 | **Tables** | `sites`, `site_pages`, `page_blocks`, `site_versions`, `media`, `team_members` |
 | **Conservation** | Durée du contrat + 90 jours de rétention technique |
-| **Destinataires** | Cloudflare (hébergement edge), Supabase (base et stockage) |
+| **Destinataires** | Cloudflare (hébergement de la plateforme et des sites), Supabase (base et stockage), GitHub (code des sites) |
 
 Le contenu publié relève de la responsabilité éditoriale du client. Quand ce
 contenu comporte des données personnelles (photo d'un salarié, coordonnées d'un
@@ -226,9 +226,8 @@ Obligations tenues au titre de l'article 28 :
 
 | Prestataire | Rôle | Localisation | Garanties |
 | --- | --- | --- | --- |
-| Vercel Inc. | Exécution de la plateforme (site public, espace client, administration) | Société américaine ; exécution à Paris (`cdg1`) | Clauses contractuelles types + DPA Vercel |
 | Supabase Pte. Ltd. | Base PostgreSQL, authentification, stockage | Paris (`eu-west-3`) ; société à Singapour | Données dans l'UE ; accès support encadrés par les CCT (DPA Supabase) |
-| Cloudflare, Inc. | Diffusion des sites clients, CDN, TLS, anti-robot (Turnstile) | Société américaine ; réseau mondial | Clauses contractuelles types + DPA Cloudflare |
+| Cloudflare, Inc. | Hébergement et exécution de la plateforme ; hébergement et diffusion des sites clients ; CDN, TLS, anti-robot (Turnstile) | Société américaine ; réseau mondial | Clauses contractuelles types + DPA Cloudflare |
 | GitHub, Inc. | Code source et contenus publiés des sites clients | États-Unis | Clauses contractuelles types + DPA GitHub |
 | Plus Five Five, Inc. (Resend) | E-mails transactionnels | États-Unis | Clauses contractuelles types + DPA Resend |
 | Stripe Payments Europe, Ltd. | Paiement et facturation | Irlande (UE) | Responsable autonome pour la lutte anti-fraude |
@@ -241,8 +240,7 @@ l'état du jour de la compilation.
 
 ## D. Transferts hors Union européenne
 
-La base de données, les fichiers et l'exécution de la plateforme sont en France
-(région de Paris). Des transferts hors de l'Union existent néanmoins, et sont
+La base de données et les fichiers sont en France (région de Paris). Des transferts hors de l'Union existent néanmoins, et sont
 encadrés par les clauses contractuelles types de la Commission européenne
 intégrées aux DPA des prestataires (et, pour ceux qui y sont certifiés, par le
 cadre UE–États-Unis) :
@@ -251,10 +249,10 @@ cadre UE–États-Unis) :
   (textes, noms d'entreprise, parfois des noms de personnes) ;
 - **Resend** achemine les e-mails transactionnels (adresse du destinataire,
   contenu du message) ;
-- **Cloudflare** diffuse les sites depuis le point de présence le plus proche du
-  visiteur, qui peut être hors de l'Union ;
-- **Vercel** et **Supabase**, sociétés établies hors de l'Union, peuvent accéder
-  aux données pour leur support ou leur sécurité.
+- **Cloudflare** exécute la plateforme et diffuse les sites sur son réseau
+  mondial, depuis des points de présence qui peuvent être hors de l'Union ;
+- **Supabase**, société établie hors de l'Union, peut accéder aux données pour
+  son support ou sa sécurité.
 
 ---
 

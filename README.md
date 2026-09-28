@@ -35,7 +35,7 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 > `stax_preview`…, les colonnes `last_stax_commit_sha`, `purchased_by_stax`,
 > `dns_managed_by_stax`, le paramètre `stax.retention_purge` et le slug interne
 > `stax-plateforme`. Une variable encore nommée `STAX_*` (par exemple
-> `STAX_SECRET_KEY` sur Vercel) reste lue tant que `NEMASUS_*` n’est pas
+> `STAX_SECRET_KEY`) reste lue tant que `NEMASUS_*` n’est pas
 > définie : rien ne casse au renommage.
 
 > **Avant le premier client :** [docs/LANCEMENT.md](./docs/LANCEMENT.md) liste,
@@ -139,11 +139,11 @@ pnpm build:cf              # build Cloudflare des deux applications
 
 ### Où tourne quoi
 
-| Application         | Cible                     | Note                                                                                                                                                  |
-| ------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/platform`     | **Vercel**                | `vercel.json` à la racine. Voir [vercel.md](./docs/vercel.md)                                                                                         |
-| `apps/site-runtime` | Cloudflare Worker         | API des sites et sites de l’ancien moteur. **Pas d'équivalent Vercel en l'état** — la dernière section de [vercel.md](./docs/vercel.md) pose le choix |
-| Chaque site client  | **son** projet Cloudflare | Construit depuis **son** dépôt GitHub ; voir [site-delivery.md](./docs/site-delivery.md)                                                              |
+| Application         | Cible                             | Note                                                                                                                                        |
+| ------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/platform`     | **Cloudflare Worker** `nemasus`   | Workers Builds : `pnpm run build` puis `npx wrangler deploy` à la racine (`wrangler.jsonc`). Voir [cloudflare.md § 0](./docs/cloudflare.md) |
+| `apps/site-runtime` | Cloudflare Worker `nemasus-sites` | API des sites et sites de l’ancien moteur ; second projet Workers Builds                                                                    |
+| Chaque site client  | **son** projet Cloudflare         | Construit depuis **son** dépôt GitHub ; voir [site-delivery.md](./docs/site-delivery.md)                                                    |
 
 ---
 
@@ -185,7 +185,6 @@ Documentation détaillée dans [`docs/`](./docs) :
 | [editable-site-contract.md](./docs/editable-site-contract.md) | Contrat `nemasus.manifest.json` et fichier de contenu              |
 | [database.md](./docs/database.md)                             | Schéma, RLS, fonctions, invariants                                 |
 | [security.md](./docs/security.md)                             | Modèle de menace et défenses                                       |
-| [vercel.md](./docs/vercel.md)                                 | **Plateforme sur Vercel** — variables, symptômes, vérifications    |
 | [deployment.md](./docs/deployment.md)                         | Mise en production, étape par étape                                |
 | [cloudflare.md](./docs/cloudflare.md)                         | Projets Cloudflare des sites, jeton, webhook ; Workers de Nemasus  |
 | [supabase.md](./docs/supabase.md)                             | Projet, rôles, sauvegardes                                         |
@@ -247,8 +246,8 @@ Documentation détaillée dans [`docs/`](./docs) :
 | Types (strict, `noUncheckedIndexedAccess`) | `pnpm typecheck`      | ✅   |
 | Tests unitaires et d’intégration           | `pnpm test`           | ✅   |
 | Assertions de sécurité SQL                 | `scripts/db-test.sh`  | ✅   |
-| Build production                           | `pnpm build`          | ✅   |
-| Build Cloudflare                           | `pnpm build:cf`       | ✅   |
+| Build production                           | `pnpm build:platform` | ✅   |
+| Build Cloudflare (= `pnpm build`)          | `pnpm build:cf`       | ✅   |
 | Parcours navigateur                        | `pnpm test:e2e`       | ✅   |
 | Parcours complets contre une vraie pile    | `pnpm test:e2e:stack` | ✅   |
 
@@ -271,7 +270,7 @@ savoir.
 
 ```bash
 pnpm e2e:stack start       # base, authentification, API, stockage
-pnpm build                 # build de production
+pnpm build:platform        # build de production (next build)
 pnpm test:e2e:stack        # démarre plateforme + sites, puis les parcours
 ```
 
