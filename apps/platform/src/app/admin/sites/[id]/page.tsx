@@ -1,11 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveBusiness } from '@stax/business';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { formatMoney } from '@stax/payments';
-import { hasPlatformRole } from '@stax/auth';
-import { Alert, Badge, DescriptionList, Panel, Stat, StatusPill, type StatusTone } from '@stax/ui';
+import { resolveBusiness } from '@nemasus/business';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { formatMoney } from '@nemasus/payments';
+import { hasPlatformRole } from '@nemasus/auth';
+import {
+  Alert,
+  Badge,
+  DescriptionList,
+  Panel,
+  Stat,
+  StatusPill,
+  type StatusTone,
+} from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 import { SiteAdminActions, type ActivationCodeView, type AdminVersionView } from './site-actions';
 import { InterveneForm } from './intervene-form';

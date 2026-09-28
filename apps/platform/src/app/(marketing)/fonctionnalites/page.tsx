@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
-import type { PlanSlug } from '@stax/types';
+import type { PlanSlug } from '@nemasus/types';
 import Link from 'next/link';
-import { Container, Reveal, Section, SectionHeading, ButtonLink, Badge } from '@stax/ui';
+import { Container, Reveal, Section, SectionHeading, ButtonLink, Badge } from '@nemasus/ui';
 import { FEATURE_PAGES } from '~/content/features';
 
 export const metadata: Metadata = {
   title: 'Fonctionnalités',
   description:
     'Éditeur de contenu, domaines, formulaires, messages, statistiques, référencement, ' +
-    'paiements, réservations, vente en ligne : tout ce que fait la plateforme StaX.',
+    'paiements, réservations, vente en ligne : tout ce que fait la plateforme Nemasus.',
   alternates: { canonical: '/fonctionnalites' },
 };
 

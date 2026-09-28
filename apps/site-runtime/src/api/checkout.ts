@@ -1,7 +1,7 @@
-import { createServiceClient, unwrapMaybe } from '@stax/database';
-import { createConnectCheckoutSession } from '@stax/payments';
-import { SALES_TERMS_PATH } from '@stax/site-engine';
-import { hmacHex, randomToken } from '@stax/security';
+import { createServiceClient, unwrapMaybe } from '@nemasus/database';
+import { createConnectCheckoutSession } from '@nemasus/payments';
+import { SALES_TERMS_PATH } from '@nemasus/site-engine';
+import { hmacHex, randomToken } from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import { siteOrigin } from '../context';
 import { clearedCartCookie, readCart } from './cart';
@@ -16,7 +16,7 @@ import type { ResolvedSite } from '../resolve';
  * stock et fige les montants, en une seule transaction. Le navigateur ne peut
  * donc influencer QUE ce qui est commande, jamais ce qui est paye.
  *
- * L'argent ne transite jamais par StaX : le paiement est cree sur le compte
+ * L'argent ne transite jamais par Nemasus : le paiement est cree sur le compte
  * Stripe connecte du commercant, et l'acheteur paie sur une page hebergee par
  * Stripe. Aucun numero de carte n'atteint notre infrastructure.
  *
@@ -107,7 +107,7 @@ export async function handleCheckout(request: Request, site: ResolvedSite): Prom
   });
 
   if (error) {
-    console.error('[stax:checkout] commande impossible', error.code, error.message);
+    console.error('[nemasus:checkout] commande impossible', error.code, error.message);
     return refuse(
       'Votre commande n’a pas pu être enregistrée. Réessayez dans un instant.',
       503,
@@ -185,15 +185,15 @@ export async function handleCheckout(request: Request, site: ResolvedSite): Prom
       cancelUrl: `${origin}/panier?paiement=annule`,
       ...(email ? { customerEmail: email } : {}),
       metadata: {
-        stax_site_id: site.siteId,
-        stax_kind: 'shop_order',
-        stax_order_id: result.orderId ?? '',
+        nemasus_site_id: site.siteId,
+        nemasus_kind: 'shop_order',
+        nemasus_order_id: result.orderId ?? '',
       },
     });
 
     return jsonResponse({ ok: true, paid: false, url: session.url }, 200, cleared);
   } catch (caught) {
-    console.error('[stax:checkout] session Stripe impossible', caught);
+    console.error('[nemasus:checkout] session Stripe impossible', caught);
 
     // La commande reste enregistree : elle sera liberee automatiquement si
     // personne ne paie, et le commercant la voit en attente entre-temps.

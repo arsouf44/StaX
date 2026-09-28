@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList } from '@stax/database';
-import { Badge, EmptyState, Icon, Panel, PermissionDenied } from '@stax/ui';
+import { unwrapList } from '@nemasus/database';
+import { Badge, EmptyState, Icon, Panel, PermissionDenied } from '@nemasus/ui';
 import { FilterTabs } from '~/components/app/filter-tabs';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';

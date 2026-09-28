@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Icon, Logo } from '@stax/ui';
+import { Icon, Logo } from '@nemasus/ui';
 import { getAdminContext } from '~/lib/admin';
 import { AdminNav } from '~/components/admin/admin-nav';
 import { AdminSearch } from '~/components/admin/admin-search';
@@ -8,7 +8,7 @@ import { AdminSearch } from '~/components/admin/admin-search';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: { default: 'Administration', template: '%s — Administration StaX' },
+  title: { default: 'Administration', template: '%s — Administration Nemasus' },
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -32,7 +32,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[110rem] items-center gap-4 px-4 py-3 sm:px-6">
-          <Link href="/admin" aria-label="Administration StaX" className="flex items-center gap-2">
+          <Link
+            href="/admin"
+            aria-label="Administration Nemasus"
+            className="flex items-center gap-2"
+          >
             <Logo size={22} showWordmark={false} />
             <span className="kicker !text-[var(--ink)]">Administration</span>
           </Link>

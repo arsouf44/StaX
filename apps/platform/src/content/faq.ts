@@ -1,4 +1,4 @@
-import { refundPolicyConfig } from '@stax/config';
+import { refundPolicyConfig } from '@nemasus/config';
 /**
  * Questions frequentes.
  *
@@ -81,7 +81,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'tarifs',
     question: 'Prenez-vous une commission sur mes ventes ?',
     answer:
-      'Non. Les paiements encaissés sur votre site passent par votre propre compte Stripe, ouvert à votre nom. StaX n’est pas dans ce circuit financier et ne prélève aucune commission. Seuls les frais bancaires de Stripe s’appliquent, facturés directement par Stripe.',
+      'Non. Les paiements encaissés sur votre site passent par votre propre compte Stripe, ouvert à votre nom. Nemasus n’est pas dans ce circuit financier et ne prélève aucune commission. Seuls les frais bancaires de Stripe s’appliquent, facturés directement par Stripe.',
   },
   {
     category: 'tarifs',
@@ -99,7 +99,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'technique',
     question: 'Que se passe-t-il quand je clique sur « Publier » ?',
     answer:
-      'Vos modifications sont vérifiées, enregistrées dans le code de votre site, puis déployées par Cloudflare. StaX n’affiche « Publié » qu’une fois ce déploiement confirmé. Si quelque chose échoue, la version précédente reste en ligne et l’erreur vous est clairement indiquée. Chaque publication devient une version datée, que vous pouvez restaurer.',
+      'Vos modifications sont vérifiées, enregistrées dans le code de votre site, puis déployées par Cloudflare. Nemasus n’affiche « Publié » qu’une fois ce déploiement confirmé. Si quelque chose échoue, la version précédente reste en ligne et l’erreur vous est clairement indiquée. Chaque publication devient une version datée, que vous pouvez restaurer.',
   },
   {
     category: 'technique',

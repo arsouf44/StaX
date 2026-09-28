@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { formatMaintenance, formatMoney } from '@stax/payments';
-import { Alert, ButtonLink, Panel } from '@stax/ui';
+import { formatMaintenance, formatMoney } from '@nemasus/payments';
+import { Alert, ButtonLink, Panel } from '@nemasus/ui';
 import { OrderSteps } from '~/components/order/order-steps';
 import { deliveryWeeksLabel, getPlans } from '~/lib/catalog';
 import { readOrderDraft } from '~/lib/order-draft';
@@ -26,7 +26,7 @@ export default async function OrderPlanPage() {
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
         Chaque offre comprend la conception et le développement de votre site par notre équipe et sa
         mise en ligne sur votre domaine. Vous ne payez maintenant que la création : la maintenance
-        mensuelle commence à la livraison, et vous modifiez ensuite vos contenus depuis StaX.
+        mensuelle commence à la livraison, et vous modifiez ensuite vos contenus depuis Nemasus.
       </p>
 
       {purchasable.length === 0 ? (

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { ButtonLink, Container, Logo, Panel } from '@stax/ui';
-import { hasPlatformRole } from '@stax/auth';
+import { ButtonLink, Container, Logo, Panel } from '@nemasus/ui';
+import { hasPlatformRole } from '@nemasus/auth';
 import { ExitBar } from './exit-bar';
 import { getSession } from '~/lib/session';
-import { createUserClient, listMemberships } from '@stax/database';
+import { createUserClient, listMemberships } from '@nemasus/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +76,7 @@ export default async function WelcomePage() {
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   {internal
-                    ? 'Compte interne StaX : choisissez n’importe quelle offre et n’importe quel métier. Aucun paiement ne vous sera demandé. Le site est ensuite construit par l’équipe StaX, puis confié à ce compte depuis l’administration.'
+                    ? 'Compte interne Nemasus : choisissez n’importe quelle offre et n’importe quel métier. Aucun paiement ne vous sera demandé. Le site est ensuite construit par l’équipe Nemasus, puis confié à ce compte depuis l’administration.'
                     : 'Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez tout modifier ensuite.'}
                 </p>
                 <ButtonLink href="/commander" className="mt-4">

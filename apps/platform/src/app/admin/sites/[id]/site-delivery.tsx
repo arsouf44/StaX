@@ -12,7 +12,7 @@ import {
   Select,
   StatusPill,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import type { ActionState } from '~/lib/form-state';
 import { deliverSiteAction, openSiteEditorAction, withdrawSiteAction } from './actions';
 
@@ -33,7 +33,7 @@ const ROLE_LABELS: Record<string, string> = {
 /**
  * Construction du site, puis attribution au client.
  *
- * Tant que le site n'est pas confie, seule l'equipe StaX le modifie (verifie
+ * Tant que le site n'est pas confie, seule l'equipe Nemasus le modifie (verifie
  * en base par `app.site_can`). Le confier ouvre l'acces au client — et
  * uniquement a ce moment-la. L'equipe garde la main dans tous les cas.
  */
@@ -88,7 +88,7 @@ export function SiteDelivery({
               </>
             ) : (
               <>
-                <StatusPill tone="accent">En construction chez StaX</StatusPill>
+                <StatusPill tone="accent">En construction chez Nemasus</StatusPill>
                 <span className="text-[var(--foreground-muted)]">
                   le client ne le voit pas encore
                 </span>
@@ -174,7 +174,7 @@ export function SiteDelivery({
               hint={
                 clients.length > 0
                   ? 'Facultatif : le site est confié aux clients déjà rattachés ci-dessus.'
-                  : 'Le client doit avoir un compte StaX avec cette adresse.'
+                  : 'Le client doit avoir un compte Nemasus avec cette adresse.'
               }
             >
               <Input

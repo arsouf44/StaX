@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
+import { unwrapList } from '@nemasus/database';
 import { requireAdminRole } from '~/lib/admin';
 import { ContentReportPanel, type ContentReportView } from './report-panel';
 

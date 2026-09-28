@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { readEnv } from '@stax/config';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { CONNECT_STATUS_HELP, CONNECT_STATUS_LABELS, formatMoney } from '@stax/payments';
+import { readEnv } from '@nemasus/config';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { CONNECT_STATUS_HELP, CONNECT_STATUS_LABELS, formatMoney } from '@nemasus/payments';
 import {
   EmptyState,
   Icon,
@@ -15,8 +15,8 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { ModulePage } from '~/components/app/module-page';
 import { getWorkspace } from '~/lib/workspace';
 import { ConnectPanel, type ConnectView } from './connect-panel';
@@ -140,7 +140,7 @@ export default async function PaymentsPage({
       module={['payments', 'donations']}
       feature="online_payments"
       title="Mes paiements"
-      description="L’argent encaissé sur votre site va directement sur votre compte bancaire. StaX ne prélève aucune commission sur vos ventes."
+      description="L’argent encaissé sur votre site va directement sur votre compte bancaire. Nemasus ne prélève aucune commission sur vos ventes."
     >
       <div className="space-y-8">
         <ConnectPanel view={view} />
@@ -214,7 +214,7 @@ export default async function PaymentsPage({
         </section>
 
         <Panel level={1} padding="lg">
-          <h2 className="text-sm font-medium">Ce que StaX ne fait pas</h2>
+          <h2 className="text-sm font-medium">Ce que Nemasus ne fait pas</h2>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
             <li>
               Nous ne stockons aucun numéro de carte : la saisie se fait sur les pages sécurisées de

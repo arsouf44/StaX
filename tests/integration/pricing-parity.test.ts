@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from 'pg';
-import { computeOrderPricing, type PricingPlanInput } from '@stax/payments';
+import { computeOrderPricing, type PricingPlanInput } from '@nemasus/payments';
 
 /**
  * Parite SQL / TypeScript.
@@ -12,7 +12,7 @@ import { computeOrderPricing, type PricingPlanInput } from '@stax/payments';
  * Ce test compare les deux implementations sur tout le catalogue.
  */
 
-const DATABASE_URL = process.env.STAX_TEST_DATABASE_URL;
+const DATABASE_URL = process.env.NEMASUS_TEST_DATABASE_URL;
 const describeIfDb = DATABASE_URL ? describe : describe.skip;
 
 describeIfDb('parite du calcul tarifaire SQL / TypeScript', () => {

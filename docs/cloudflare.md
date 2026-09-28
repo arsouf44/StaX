@@ -4,10 +4,10 @@ Cloudflare joue deux rôles, à ne pas confondre :
 
 1. **Chaque site client a son propre projet Cloudflare** (Pages, ou Worker
    avec Workers Builds), relié à **son** dépôt GitHub. C’est ce projet qui
-   construit et sert le site. StaX ne déploie pas à sa place : il **lit l’état
+   construit et sert le site. Nemasus ne déploie pas à sa place : il **lit l’état
    réel** des déploiements pour savoir, sans le supposer, si une version est
    en ligne.
-2. **StaX a ses propres Workers** : la plateforme (si elle n’est pas sur
+2. **Nemasus a ses propres Workers** : la plateforme (si elle n’est pas sur
    Vercel) et `apps/site-runtime`, qui porte l’API des sites et l’ancien
    moteur.
 
@@ -25,23 +25,23 @@ projet web :
 - **Pages** : *Workers & Pages → Create → Pages → Connect to Git*, dépôt du
   site, branche de production (souvent `main`), commande de build du
   framework. Les aperçus sont construits sur les autres branches, dont
-  `stax-preview`.
+  `nemasus-preview`.
 - **Worker + Workers Builds** : *Workers & Pages → Create → Import a
   repository*. Relever l’identifiant du déclencheur de build si l’équipe veut
-  pouvoir relancer un build depuis StaX.
+  pouvoir relancer un build depuis Nemasus.
 
-Le domaine du client est ajouté **au projet** (Pages : StaX peut le faire
+Le domaine du client est ajouté **au projet** (Pages : Nemasus peut le faire
 depuis *Infrastructure & livraison* ; Worker : domaine personnalisé ajouté
-dans Cloudflare puis vérifié par StaX). Le client pointe son DNS vers
+dans Cloudflare puis vérifié par Nemasus). Le client pointe son DNS vers
 l’adresse du projet (`<projet>.pages.dev`, ou la cible indiquée par
-Cloudflare) ; StaX relit l’état du domaine et du certificat auprès de
+Cloudflare) ; Nemasus relit l’état du domaine et du certificat auprès de
 Cloudflare (`site_domains.status` : `pending` → `verifying` → `active`), puis
 vérifie lui-même la réponse HTTPS avant la livraison.
 
-### Rattachement dans StaX
+### Rattachement dans Nemasus
 
 *Administration → Site → Infrastructure & livraison → Hébergement* : compte
-Cloudflare, nom du projet. StaX **lit le projet chez Cloudflare** (existence,
+Cloudflare, nom du projet. Nemasus **lit le projet chez Cloudflare** (existence,
 branche de production, URL, dernier déploiement) avant de l’enregistrer
 (`app.connect_site_hosting`, réservé à l’équipe, audité). Un projet ne sert
 qu’un site.
@@ -65,12 +65,12 @@ navigateur (vérifié par `tests/security/external-sites.test.ts`).
 `CLOUDFLARE_SITES_ACCOUNT_ID` : compte proposé par défaut à l’équipe (non
 secret). `CLOUDFLARE_API_BASE_URL` : facultatif (tests).
 
-## 3. Ce que StaX lit
+## 3. Ce que Nemasus lit
 
 | Donnée | Source | Usage |
 | --- | --- | --- |
 | Déploiements de production (commit, état, étape, erreur, URL) | Pages : `…/pages/projects/<p>/deployments` ; Workers : builds | passer une version à `published` ou `failed` |
-| Déploiements d’aperçu (branche `stax-preview`) | idem | afficher l’aperçu réel dans l’éditeur |
+| Déploiements d’aperçu (branche `nemasus-preview`) | idem | afficher l’aperçu réel dans l’éditeur |
 | Journal d’un déploiement échoué | `…/deployments/<id>/history/logs` | message clair à l’équipe |
 | Domaines du projet | `…/pages/projects/<p>/domains` | état du domaine et du certificat |
 
@@ -97,7 +97,7 @@ status* (et/ou *Workers Builds*) vers cette destination.
 
 - Cloudflare transmet le secret dans l’en-tête `cf-webhook-auth` : comparé à
   temps constant, **401** sinon, sans lire le corps.
-- La notification n’est qu’un **signal** : StaX relit les déploiements du
+- La notification n’est qu’un **signal** : Nemasus relit les déploiements du
   projet auprès de l’API. Une notification forgée, même avec le bon secret, ne
   peut pas faire passer une version pour publiée.
 
@@ -113,12 +113,12 @@ depuis son historique : cela crée une nouvelle version et un nouveau commit.
 
 ---
 
-## 6. Les Workers de StaX
+## 6. Les Workers de Nemasus
 
 | Worker | Nom | Sert |
 | --- | --- | --- |
-| `apps/platform` | `stax-platform` | `stax.fr`, `www.stax.fr` (si la plateforme n’est pas sur Vercel) |
-| `apps/site-runtime` | `stax-sites` | API des sites ; sites de l’ancien moteur (`*.sites.stax.fr`, domaines rattachés) |
+| `apps/platform` | `nemasus-platform` | `nemasus.fr`, `www.nemasus.fr` (si la plateforme n’est pas sur Vercel) |
+| `apps/site-runtime` | `nemasus-sites` | API des sites ; sites de l’ancien moteur (`*.sites.nemasus.fr`, domaines rattachés) |
 
 `compatibility_date` : `2026-09-01`. Indicateurs : `nodejs_compat`,
 `global_fetch_strictly_public`. Ce dernier interdit à un Worker d’atteindre
@@ -137,12 +137,12 @@ chaque opération. Le **rendu** d’un site ne dépend jamais de cette API.
 ### Ancien moteur
 
 Les sites construits avant le modèle actuel (`architecture = 'legacy_engine'`)
-restent servis par `stax-sites`, tenant résolu par le nom d’hôte :
+restent servis par `nemasus-sites`, tenant résolu par le nom d’hôte :
 
 ```
-*.sites.stax.fr             → stax-sites
-preview.sites.stax.fr       → stax-sites   (aperçus privés, jamais indexés)
-<domaine rattaché>          → stax-sites   (Cloudflare for SaaS)
+*.sites.nemasus.fr             → nemasus-sites
+preview.sites.nemasus.fr       → nemasus-sites   (aperçus privés, jamais indexés)
+<domaine rattaché>          → nemasus-sites   (Cloudflare for SaaS)
 ```
 
 | Ressource | Politique de cache |
@@ -160,10 +160,10 @@ version apparaît à l’expiration du cache (une minute).
 
 ## Ce que Cloudflare ne fait pas ici
 
-- **Pas de déploiement déclenché « à l’aveugle ».** StaX écrit un commit ;
-  c’est l’intégration Git du projet qui construit. StaX n’envoie jamais de
+- **Pas de déploiement déclenché « à l’aveugle ».** Nemasus écrit un commit ;
+  c’est l’intégration Git du projet qui construit. Nemasus n’envoie jamais de
   fichiers de build directement.
-- **Pas de Workers KV pour les données de StaX.** La source de vérité est
+- **Pas de Workers KV pour les données de Nemasus.** La source de vérité est
   PostgreSQL.
 - **Pas de R2 pour la médiathèque.** Elle est dans Supabase Storage ; les
   images publiées sont copiées **dans le dépôt du site** et servies par son

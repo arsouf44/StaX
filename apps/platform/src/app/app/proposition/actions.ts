@@ -1,14 +1,14 @@
 'use server';
 
 import { redirect, unstable_rethrow } from 'next/navigation';
-import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
+import { tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
 import {
   createCheckoutSession,
   ensureStripeCustomer,
   isStripeConfigured,
   retrieveCheckoutSession,
-} from '@stax/payments';
-import { uuidSchema } from '@stax/validation';
+} from '@nemasus/payments';
+import { uuidSchema } from '@nemasus/validation';
 import { TERMS_VERSION } from '~/content/legal';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
@@ -174,7 +174,7 @@ export async function startProposalCheckoutAction(
   } catch (checkoutError) {
     // `redirect()` lève une exception de contrôle : elle doit remonter telle quelle.
     unstable_rethrow(checkoutError);
-    console.error('[stax:proposal-checkout]', checkoutError);
+    console.error('[nemasus:proposal-checkout]', checkoutError);
     return {
       status: 'error',
       message:

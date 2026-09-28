@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList } from '@stax/database';
-import { formatMaintenance, formatMoney, SUBSCRIPTION_STATUS_LABELS } from '@stax/payments';
-import { refundPolicyConfig } from '@stax/config';
+import { unwrapList } from '@nemasus/database';
+import { formatMaintenance, formatMoney, SUBSCRIPTION_STATUS_LABELS } from '@nemasus/payments';
+import { refundPolicyConfig } from '@nemasus/config';
 import {
   Alert,
   EmptyState,
@@ -17,8 +17,8 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 

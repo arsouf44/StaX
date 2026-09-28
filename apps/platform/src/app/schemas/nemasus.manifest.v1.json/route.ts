@@ -1,4 +1,4 @@
-import { manifestJsonSchema } from '@stax/site-contract';
+import { manifestJsonSchema } from '@nemasus/site-contract';
 
 /** Schema JSON du contrat d'edition, pour l'editeur du developpeur. */
 export const dynamic = 'force-static';

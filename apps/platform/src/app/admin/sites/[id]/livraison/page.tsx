@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { hasPlatformRole } from '@stax/auth';
-import { unwrapList, unwrapMaybe } from '@stax/database';
+import { hasPlatformRole } from '@nemasus/auth';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
 import {
   cloudflareSitesConfigured,
   defaultCloudflareAccountId,
   githubAppConfigured,
   githubAppInstallUrl,
-} from '@stax/infrastructure';
-import { CONTRACT_VERSION, MANIFEST_SCHEMA_URL } from '@stax/site-contract';
-import { PROJECT_STATUS_LABELS, formatMoney } from '@stax/payments';
-import { Alert, Badge, DescriptionList, Panel, StatusPill, type StatusTone } from '@stax/ui';
+} from '@nemasus/infrastructure';
+import { CONTRACT_VERSION, MANIFEST_SCHEMA_URL } from '@nemasus/site-contract';
+import { PROJECT_STATUS_LABELS, formatMoney } from '@nemasus/payments';
+import { Alert, Badge, DescriptionList, Panel, StatusPill, type StatusTone } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 import {
   HOSTING_COLUMNS,
@@ -49,11 +49,11 @@ export const dynamic = 'force-dynamic';
 /**
  * Projet > Infrastructure & livraison.
  *
- * Le site de chaque client est concu et developpe en dehors de StaX, dans son
+ * Le site de chaque client est concu et developpe en dehors de Nemasus, dans son
  * propre depot GitHub, et deploye par son propre projet Cloudflare. Cette page
  * est l'endroit ou l'equipe :
  *   1. rattache le depot et le projet (verifies aupres des API, jamais saisis) ;
- *   2. importe le contrat d'edition (`stax.manifest.json`) et le contenu initial ;
+ *   2. importe le contrat d'edition (`nemasus.manifest.json`) et le contenu initial ;
  *   3. rattache et verifie le domaine ;
  *   4. deroule la checklist de livraison (controles reels + attestations) ;
  *   5. livre le site au client — ce qui ouvre son editeur et demarre la
@@ -120,7 +120,7 @@ const CHECK_TONES: Record<string, StatusTone> = {
 
 const SYNC_LABELS: Record<string, { tone: StatusTone; label: string }> = {
   in_sync: { tone: 'success', label: 'À jour' },
-  developer_changes: { tone: 'warning', label: 'Commits hors StaX' },
+  developer_changes: { tone: 'warning', label: 'Commits hors Nemasus' },
   error: { tone: 'danger', label: 'Erreur' },
   unknown: { tone: 'neutral', label: 'Non vérifié' },
 };
@@ -391,8 +391,8 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
       <div className="space-y-6">
         <Breadcrumbs site={site} />
         <Alert tone="info" title="Site historique">
-          Ce site est servi par l’ancien moteur de rendu de StaX. Il n’a ni dépôt GitHub ni projet
-          Cloudflare propres ; sa gestion reste sur sa fiche.
+          Ce site est servi par l’ancien moteur de rendu de Nemasus. Il n’a ni dépôt GitHub ni
+          projet Cloudflare propres ; sa gestion reste sur sa fiche.
         </Alert>
       </div>
     );
@@ -414,8 +414,8 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
         </div>
         <p className="mt-1.5 max-w-3xl text-sm text-[var(--foreground-muted)]">
           Le site de {site.organizations?.name ?? 'ce client'} est développé dans son propre dépôt,
-          déployé par son propre projet Cloudflare, puis rattaché à StaX. Le client en prend la main
-          à la livraison : StaX devient alors le panneau de gestion de son site.
+          déployé par son propre projet Cloudflare, puis rattaché à Nemasus. Le client en prend la
+          main à la livraison : Nemasus devient alors le panneau de gestion de son site.
         </p>
       </div>
 
@@ -522,7 +522,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
                     ),
                   },
                   {
-                    term: 'Dernière publication StaX',
+                    term: 'Dernière publication Nemasus',
                     description: (
                       <span className="font-mono">{shortSha(repository.last_stax_commit_sha)}</span>
                     ),
@@ -545,7 +545,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
               ) : null}
               {repository.sync_status === 'developer_changes' ? (
                 <Alert tone="warning" className="mt-3">
-                  Des commits ont été poussés hors de StaX depuis la dernière publication. Si le
+                  Des commits ont été poussés hors de Nemasus depuis la dernière publication. Si le
                   contrat d’édition a changé, réimportez le manifeste avant la prochaine
                   publication.
                 </Alert>
@@ -584,7 +584,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
                     rel="noopener noreferrer"
                     className="underline underline-offset-4"
                   >
-                    Installer l’application GitHub StaX
+                    Installer l’application GitHub Nemasus
                   </a>
                 ) : null}
               </div>
@@ -777,7 +777,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
                   <p className="mt-1 text-xs text-[var(--muted)]">
                     {domain.served_by === 'cloudflare_project'
                       ? `CNAME vers ${domain.dns_target ?? 'le projet Cloudflare'}`
-                      : 'Servi par l’ancien moteur StaX'}
+                      : 'Servi par l’ancien moteur Nemasus'}
                   </p>
                   {domain.last_error ? (
                     <p className="mt-1 text-xs text-[var(--danger)]">{domain.last_error}</p>
@@ -796,10 +796,10 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
           ) : null}
         </Panel>
 
-        {/* StaX : contrat d'edition */}
+        {/* Nemasus : contrat d'edition */}
         <Panel level={1} padding="lg" data-testid="panel-contract">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-medium">StaX · contrat d’édition</h2>
+            <h2 className="text-sm font-medium">Nemasus · contrat d’édition</h2>
             {activeManifest ? (
               <StatusPill tone="success">Manifest valide</StatusPill>
             ) : (
@@ -811,7 +811,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
             items={[
               {
                 term: 'Version de contrat',
-                description: `v${activeManifest?.contract_version ?? CONTRACT_VERSION} (StaX lit la v${CONTRACT_VERSION})`,
+                description: `v${activeManifest?.contract_version ?? CONTRACT_VERSION} (Nemasus lit la v${CONTRACT_VERSION})`,
               },
               {
                 term: 'Commit du manifeste',
@@ -843,7 +843,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    stax.manifest.v1.json
+                    nemasus.manifest.v1.json
                   </a>
                 ),
               },
@@ -1034,7 +1034,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
                     ) : null}
                     <span className="text-xs text-[var(--muted)]">
                       {when(release.published_at ?? release.created_at)} ·{' '}
-                      {release.actor_kind === 'member' ? 'client' : 'StaX'}
+                      {release.actor_kind === 'member' ? 'client' : 'Nemasus'}
                     </span>
                   </div>
                   {release.error_message ? (

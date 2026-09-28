@@ -16,9 +16,9 @@ import {
 } from './support/external-site';
 
 /**
- * Compte interne StaX : une commande Ultra Premium sans aucun paiement, qui
- * suit ensuite EXACTEMENT le parcours d'un client : StaX developpe le site hors
- * de StaX (depot GitHub, projet Cloudflare), le rattache, puis le livre a ce
+ * Compte interne Nemasus : une commande Ultra Premium sans aucun paiement, qui
+ * suit ensuite EXACTEMENT le parcours d'un client : Nemasus developpe le site hors
+ * de Nemasus (depot GitHub, projet Cloudflare), le rattache, puis le livre a ce
  * compte, qui ne peut le modifier qu'a partir de ce moment. L'equipe garde la
  * main.
  *
@@ -30,7 +30,7 @@ import {
 
 test.describe.configure({ mode: 'serial' });
 
-const INTERNAL_EMAIL = process.env.STAX_E2E_INTERNAL_EMAIL ?? 'a.gomez@macrobot-ai.com';
+const INTERNAL_EMAIL = process.env.NEMASUS_E2E_INTERNAL_EMAIL ?? 'a.gomez@macrobot-ai.com';
 const suffix = uniqueSuffix();
 const PROJECT_SLUG = `resto-${suffix}`;
 const TITLE = `La vraie cuisine lyonnaise ${suffix}`;
@@ -59,7 +59,7 @@ async function login(page: Page): Promise<void> {
   await page.waitForURL(/\/(app|bienvenue)/);
 }
 
-test('compte interne : commande sans paiement, site construit par StaX puis confié', async ({
+test('compte interne : commande sans paiement, site construit par Nemasus puis confié', async ({
   page,
   browser,
 }) => {
@@ -97,19 +97,19 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
 
     await page.waitForURL(/\/commander\/adresse/);
     // Domaine choisi plus tard : le site sera d'abord en ligne sur l'adresse
-    // technique de son projet Cloudflare, aucun sous-domaine StaX a saisir.
+    // technique de son projet Cloudflare, aucun sous-domaine Nemasus a saisir.
     await page.locator('label', { has: page.locator('input[value="subdomain_only"]') }).click();
     await expect(page.locator('[name="subdomain"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Continuer' }).click();
     await page.waitForURL(/\/commander\/recapitulatif/);
   });
 
-  await test.step('récapitulatif : aucun paiement, et StaX construit le site', async () => {
+  await test.step('récapitulatif : aucun paiement, et Nemasus construit le site', async () => {
     const main = page.locator('main');
-    await expect(main).toContainText('Compte interne StaX');
+    await expect(main).toContainText('Compte interne Nemasus');
     await expect(main).toContainText('Aucun paiement');
     await expect(main).toContainText('0,00 €');
-    await expect(main).toContainText('développe le site hors de StaX');
+    await expect(main).toContainText('développe le site hors de Nemasus');
     await expect(main).toContainText('Communiquée à la mise en ligne');
     await expect(main).toContainText('que lorsque l’administration le lui livre');
     await expect(main).not.toContainText(/créé tout de suite|avant de régler|après le paiement/);
@@ -166,12 +166,12 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     await expect(page.getByTestId('visual-editor')).toHaveCount(0);
   });
 
-  // L'administration : une personne de l'equipe StaX, dans son propre navigateur.
+  // L'administration : une personne de l'equipe Nemasus, dans son propre navigateur.
   const staff = await createStaffAccount('platform_owner');
   const staffContext = await browser.newContext();
   const admin = await staffContext.newPage();
 
-  await test.step('StaX rattache le site développé hors de StaX', async () => {
+  await test.step('Nemasus rattache le site développé hors de Nemasus', async () => {
     const staffDb = await userClient(staff.email, staff.password);
     const infra = await createSiteInfrastructure(serviceClient(), {
       slug: PROJECT_SLUG,
@@ -184,7 +184,7 @@ test('compte interne : commande sans paiement, site construit par StaX puis conf
     expect(JSON.stringify(live.content)).toContain(TITLE);
   });
 
-  await test.step('StaX livre le site au compte interne, depuis l’administration', async () => {
+  await test.step('Nemasus livre le site au compte interne, depuis l’administration', async () => {
     await resetRateLimits();
     await admin.goto('/connexion');
     await admin
@@ -263,7 +263,7 @@ test('le privilège interne est vérifié par la base, pas par l’interface', a
     p_business_type: 'restaurant',
     p_organization_name: 'Tentative',
     p_template: { pages: [] },
-    p_hostname: `tentative-${suffix}.sites.stax.test`,
+    p_hostname: `tentative-${suffix}.sites.nemasus.test`,
     p_details: {},
   });
   expect(attempt.error).not.toBeNull();

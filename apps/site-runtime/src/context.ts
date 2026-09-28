@@ -1,7 +1,7 @@
-import { readEnv, siteHostIdentity } from '@stax/config';
-import { resolveBusiness } from '@stax/business';
-import { mediaPublicUrl } from '@stax/database';
-import { generateNonce, issueCsrfToken } from '@stax/security';
+import { readEnv, siteHostIdentity } from '@nemasus/config';
+import { resolveBusiness } from '@nemasus/business';
+import { mediaPublicUrl } from '@nemasus/database';
+import { generateNonce, issueCsrfToken } from '@nemasus/security';
 import {
   emptySiteData,
   normalizePath,
@@ -9,8 +9,8 @@ import {
   resolveTheme,
   type RenderContext,
   type RenderablePage,
-} from '@stax/site-engine';
-import { loadSiteData, requiredCollections } from '@stax/site-data';
+} from '@nemasus/site-engine';
+import { loadSiteData, requiredCollections } from '@nemasus/site-data';
 import type { ResolvedSite } from './resolve';
 
 /**

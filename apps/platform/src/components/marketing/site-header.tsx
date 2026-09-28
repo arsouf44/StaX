@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ButtonLink, Sheet, Wordmark, cn } from '@stax/ui';
+import { ButtonLink, Sheet, Wordmark, cn } from '@nemasus/ui';
 import { COMPANY_LINKS, PRIMARY_NAV, RESOURCE_LINKS } from '~/lib/navigation';
 
 /**
  * En-tete du site public.
  *
- * Le mot StaX a gauche, cinq liens a droite, puis l action principale
+ * Le mot Nemasus a gauche, cinq liens a droite, puis l action principale
  * soulignee. Transparent en haut de page, l en-tete devient une bande de verre
  * depoli des que la page defile. Sous 900 px, les liens passent dans un
  * panneau lateral qui reprend aussi les ressources et l entreprise.
@@ -45,7 +45,7 @@ export function SiteHeader() {
       )}
     >
       <div className="shell flex h-[68px] items-center justify-between gap-6 max-[720px]:h-[58px]">
-        <Link href="/" aria-label="StaX, accueil" className="shrink-0">
+        <Link href="/" aria-label="Nemasus, accueil" className="shrink-0">
           <Wordmark size={23} />
         </Link>
 

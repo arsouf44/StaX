@@ -1,5 +1,5 @@
-import type { AppError } from '@stax/types';
-import { appError } from '@stax/types';
+import type { AppError } from '@nemasus/types';
+import { appError } from '@nemasus/types';
 
 /**
  * Limitation de debit.

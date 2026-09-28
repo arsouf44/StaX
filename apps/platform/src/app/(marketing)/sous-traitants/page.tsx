@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Alert, EmptyState, Table, TableWrapper, TBody, TD, TH, THead, TR } from '@stax/ui';
+import { Alert, EmptyState, Table, TableWrapper, TBody, TD, TH, THead, TR } from '@nemasus/ui';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
 import { getSubprocessors } from '~/lib/catalog';
@@ -48,10 +48,10 @@ export default async function SubprocessorsPage() {
             description="Aucune entrée n’est actuellement enregistrée dans le registre."
           />
         ) : (
-          <TableWrapper label="Sous-traitants de StaX">
+          <TableWrapper label="Sous-traitants de Nemasus">
             <Table>
               <caption className="sr-only">
-                Prestataires techniques traitant des données pour le compte de StaX, avec leur
+                Prestataires techniques traitant des données pour le compte de Nemasus, avec leur
                 finalité, la localisation des données et les garanties de transfert applicables.
               </caption>
               <THead>

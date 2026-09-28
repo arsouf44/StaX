@@ -6,7 +6,7 @@ import type {
   QuoteStatus,
   SiteStatus,
   SubscriptionStatus,
-} from '@stax/types';
+} from '@nemasus/types';
 
 /**
  * Machines a etats du produit. Les memes regles sont appliquees par des
@@ -165,7 +165,7 @@ export const PROJECT_TIMELINE: ReadonlyArray<{
     key: 'delivered',
     label: 'Livraison',
     description:
-      'Nous vous confions votre site : vous le gérez depuis StaX, la maintenance mensuelle commence.',
+      'Nous vous confions votre site : vous le gérez depuis Nemasus, la maintenance mensuelle commence.',
     statuses: ['delivered', 'maintenance'],
   },
 ];

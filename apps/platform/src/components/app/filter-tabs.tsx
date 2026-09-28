@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 
 /**
  * Onglets de filtrage rendus par des LIENS.

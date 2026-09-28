@@ -1,5 +1,5 @@
 /**
- * Approvisionnement du compte interne StaX (commandes sans paiement).
+ * Approvisionnement du compte interne Nemasus (commandes sans paiement).
  *
  * ============================== SECURITE ==================================
  *
@@ -29,8 +29,8 @@
  * ==========================================================================
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { assertServerOnly, readEnv } from '@stax/config';
-import { loadRootEnv } from '@stax/config/dotenv';
+import { assertServerOnly, readEnv } from '@nemasus/config';
+import { loadRootEnv } from '@nemasus/config/dotenv';
 
 assertServerOnly('scripts/bootstrap-internal-owner');
 loadRootEnv(import.meta.dirname);
@@ -40,7 +40,7 @@ function say(message: string): void {
 }
 
 function fail(message: string): never {
-  process.stderr.write(`\n[StaX] ${message}\n\n`);
+  process.stderr.write(`\n[Nemasus] ${message}\n\n`);
   process.exit(1);
 }
 

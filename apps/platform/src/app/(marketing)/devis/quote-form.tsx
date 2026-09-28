@@ -12,7 +12,7 @@ import {
   Input,
   Select,
   Textarea,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { TurnstileField } from '~/components/auth/turnstile-field';
 import { IDLE_STATE as LEAD_IDLE } from '~/lib/form-state';
 import { sendQuoteRequestAction, type LeadState } from '../contact/actions';

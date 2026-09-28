@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { featureAccess, loadFeatureSnapshot, unwrapList } from '@stax/database';
-import { domainProvider } from '@stax/infrastructure';
-import { ButtonLink, Icon, Panel } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { featureAccess, loadFeatureSnapshot, unwrapList } from '@nemasus/database';
+import { domainProvider } from '@nemasus/infrastructure';
+import { ButtonLink, Icon, Panel } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { DomainManager, type DomainView } from './domain-manager';
@@ -78,7 +78,7 @@ export default async function DomainPage() {
   }
 
   // Site independant : son domaine est relie a SON projet Cloudflare par
-  // l'equipe StaX (la base refuse qu'un client le rattache lui-meme). Le
+  // l'equipe Nemasus (la base refuse qu'un client le rattache lui-meme). Le
   // client voit l'etat reel, et sait a qui s'adresser.
   if (site.architecture === 'external_repository') {
     const external = unwrapList<{
@@ -196,7 +196,7 @@ export default async function DomainPage() {
     return {
       id: row.id,
       hostname: row.hostname,
-      statusLabel: isPlatform ? 'Fournie par StaX' : view.label,
+      statusLabel: isPlatform ? 'Fournie par Nemasus' : view.label,
       statusTone: isPlatform ? 'info' : view.tone,
       statusHelp: isPlatform
         ? 'Adresse technique toujours active. Elle sert de secours : votre site reste joignable même si votre domaine pose problème.'
@@ -241,7 +241,7 @@ export default async function DomainPage() {
                 Le domaine personnalisé n’est pas inclus dans votre offre
               </h2>
               <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-                Votre site est en ligne à son adresse StaX
+                Votre site est en ligne à son adresse Nemasus
                 {domains[0] ? ` (${domains[0].hostname})` : ''} et fonctionne parfaitement. Un nom
                 de domaine à votre nom renforce la confiance de vos visiteurs.
               </p>

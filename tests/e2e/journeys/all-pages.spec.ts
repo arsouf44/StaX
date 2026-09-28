@@ -11,8 +11,8 @@ import {
  * Toutes les pages, avec chaque profil : aucune ne doit repondre une erreur.
  *
  * Une page qui plante affiche « Cette page n’a pas pu s’afficher » : ce test
- * les ouvre toutes, une a une, pour l'equipe StaX, pour un client dont le site
- * (developpe hors de StaX, rattache puis livre) est confie et pour un client
+ * les ouvre toutes, une a une, pour l'equipe Nemasus, pour un client dont le site
+ * (developpe hors de Nemasus, rattache puis livre) est confie et pour un client
  * dont le site est encore en construction. Il
  * suffit d'une requete mal formee (colonne renommee, jointure ambigue) pour
  * qu'un ecran entier tombe ; c'est ici qu'on le voit, pas en production.
@@ -20,7 +20,7 @@ import {
 
 test.describe.configure({ mode: 'serial' });
 
-const BASE = process.env.STAX_CRAWL_BASE_URL ?? 'http://127.0.0.1:3100';
+const BASE = process.env.NEMASUS_CRAWL_BASE_URL ?? 'http://127.0.0.1:3100';
 const ERROR_TEXT = 'Cette page n’a pas pu s’afficher';
 
 const PUBLIC_PAGES = [
@@ -109,7 +109,7 @@ const CLIENT_PAGES = [
   '/app/editeur',
   '/app/entreprise',
   '/app/equipe',
-  '/app/equipe-stax',
+  '/app/equipe-nemasus',
   '/app/evenements',
   '/app/facturation',
   '/app/forms',

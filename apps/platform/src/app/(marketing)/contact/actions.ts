@@ -1,19 +1,19 @@
 'use server';
 
-import { isLegalValueConfigured, legalValue } from '@stax/config';
-import { tryCreateServiceClient } from '@stax/database';
-import { scoreSubmission } from '@stax/security';
+import { isLegalValueConfigured, legalValue } from '@nemasus/config';
+import { tryCreateServiceClient } from '@nemasus/database';
+import { scoreSubmission } from '@nemasus/security';
 import {
   contactFormSchema,
   fieldErrors,
   formDataToObject,
   quoteBriefSchema,
-} from '@stax/validation';
+} from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { alertTeamOfLead } from '~/lib/team-alerts';
 
 /**
- * Demandes entrantes du site StaX.
+ * Demandes entrantes du site Nemasus.
  *
  * Deux garde-fous imposes a chaque envoi : la garde commune (limitation de
  * debit sur empreinte d IP, champ piege, Turnstile) et un score anti-pourriel.

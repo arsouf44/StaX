@@ -1,5 +1,5 @@
 -- =============================================================================
---  StaX — Tests d'isolation multi-tenant et de RBAC
+--  Nemasus — Tests d'isolation multi-tenant et de RBAC
 --
 --  Ces tests s'executent contre une base reelle ayant recu toutes les
 --  migrations. Chaque assertion qui echoue leve une exception : le script
@@ -73,7 +73,7 @@ begin
   insert into auth.users (email) values ('bob@tenant-b.test')    returning id into v_bob;
   insert into auth.users (email) values ('eve@tenant-a.test')    returning id into v_eve;
   insert into auth.users (email) values ('viewer@tenant-a.test') returning id into v_viewer;
-  insert into auth.users (email) values ('staff@stax.test')      returning id into v_staff;
+  insert into auth.users (email) values ('staff@nemasus.test')      returning id into v_staff;
 
   update public.profiles set platform_role = 'platform_admin' where id = v_staff;
 
@@ -565,7 +565,7 @@ begin
   insert into organization_feature_overrides (organization_id, feature_key, enabled, reason)
   values (org_b, 'online_payments', true, 'Geste commercial contractualise');
   perform t.assert(app.has_feature(org_b, 'online_payments'),
-    'Une derogation accordee par StaX prend effet');
+    'Une derogation accordee par Nemasus prend effet');
 
   -- Derogation expiree
   update organization_feature_overrides set expires_at = now() - interval '1 day'
@@ -1888,7 +1888,7 @@ begin
   -- Compte interne, attribue par l'approvisionnement serveur (sans jeton
   -- utilisateur : c'est la cle de service qui agit).
   perform set_config('request.jwt.claims', null, true);
-  insert into auth.users (email) values ('interne@stax.test') returning id into v_internal;
+  insert into auth.users (email) values ('interne@nemasus.test') returning id into v_internal;
   update public.profiles
      set account_type = 'internal', billing_exempt = true, unlimited_sites = true, all_features = true
    where id = v_internal;
@@ -2088,9 +2088,9 @@ end;
 $$;
 
 -- -----------------------------------------------------------------------------
---  Equipe StaX : acces au site d'un client UNIQUEMENT en session d'assistance
+--  Equipe Nemasus : acces au site d'un client UNIQUEMENT en session d'assistance
 -- -----------------------------------------------------------------------------
-\echo '--- Intervention de l equipe StaX ---'
+\echo '--- Intervention de l equipe Nemasus ---'
 do $$
 declare
   org_a    uuid := (select v from t.fixtures where k='org_a');
@@ -2100,7 +2100,7 @@ declare
   v_session uuid;
   v_blocks jsonb;
 begin
-  insert into auth.users (email) values ('support@stax.test') returning id into v_support;
+  insert into auth.users (email) values ('support@nemasus.test') returning id into v_support;
   update public.profiles set platform_role = 'support' where id = v_support;
 
   select coalesce(jsonb_agg(jsonb_build_object('id', id, 'type', type, 'props', props)
@@ -2127,7 +2127,7 @@ begin
   perform t.assert(
     (select actor_kind from public.editor_revisions
       where page_id = page_a order by created_at desc, seq desc limit 1) = 'stax',
-    'La modification est attribuee a l''equipe StaX, visible par le client');
+    'La modification est attribuee a l''equipe Nemasus, visible par le client');
   perform t.assert(not app.org_can(org_a, 'billing.manage') ,
     'La session n''accorde aucun droit financier (contexte sans jeton)');
 
@@ -2236,7 +2236,7 @@ begin
   perform t.assert(t.count_as(alice, 'select 1 from public.content_reports') = 0,
     'Le commercant ne lit pas les signalements (ni l''identite de leurs auteurs)');
   perform t.assert(t.count_as(staff, 'select 1 from public.content_reports') >= 2,
-    'L''equipe StaX lit les signalements');
+    'L''equipe Nemasus lit les signalements');
 
   select id into v_report from public.content_reports where category = 'defamation' limit 1;
   perform t.assert(t.denied_as(alice, format(
@@ -2260,7 +2260,7 @@ begin
 end;
 $$;
 
-\echo '--- Site construit par StaX, puis confie au client ---'
+\echo '--- Site construit par Nemasus, puis confie au client ---'
 do $$
 declare
   alice uuid := (select v from t.fixtures where k='alice');
@@ -2316,10 +2316,10 @@ begin
     format('select public.deliver_site(%L)', v_site)),
     'Le client ne peut pas declencher l''attribution');
 
-  -- L'equipe StaX, elle, travaille sur le site en construction.
+  -- L'equipe Nemasus, elle, travaille sur le site en construction.
   perform t.assert(not t.denied_as(staff,
     format('update public.site_pages set title = ''Accueil — Chez Alice'' where id = %L', v_page)),
-    'L''equipe StaX modifie le site en construction');
+    'L''equipe Nemasus modifie le site en construction');
 
   perform set_config('request.jwt.claims',
                      json_build_object('sub', staff, 'role', 'authenticated')::text, true);
@@ -2349,7 +2349,7 @@ begin
     'Une fois le site confie, le client le modifie');
   perform t.assert(not t.denied_as(staff,
     format('update public.site_pages set title = ''Bienvenue chez Alice'' where id = %L', v_page)),
-    'L''equipe StaX garde la main apres l''attribution');
+    'L''equipe Nemasus garde la main apres l''attribution');
 
   perform set_config('request.jwt.claims',
                      json_build_object('sub', staff, 'role', 'authenticated')::text, true);
@@ -2530,8 +2530,8 @@ begin
   insert into auth.users (email) values ('claire@client-x.test') returning id into claire;
   insert into t.fixtures (k, v) values ('claire', claire) on conflict (k) do update set v = excluded.v;
 
-  -- Installation de l'application GitHub StaX, connue du serveur.
-  perform public.upsert_github_installation(1001, 'stax-sites', 5001, 'Organization', 'selected', false);
+  -- Installation de l'application GitHub Nemasus, connue du serveur.
+  perform public.upsert_github_installation(1001, 'nemasus-sites', 5001, 'Organization', 'selected', false);
 
   -- Deux sites, deux organisations clientes.
   v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
@@ -2545,12 +2545,12 @@ begin
     on conflict (k) do update set v = excluded.v;
 
   perform t.assert((select architecture from public.sites where id = v_site_x) = 'external_repository',
-    'Un nouveau site est un projet independant, jamais genere par StaX');
+    'Un nouveau site est un projet independant, jamais genere par Nemasus');
 
   -- 1. Rattachement du depot : reserve a l'administration, jamais au client.
   v_repo_x := format('public.connect_site_repository(%L::uuid, 1001, 9001, %L, 5001, %L, %L, %L, %L, %L)',
-    v_site_x, 'stax-sites', 'atelier-x', 'stax-sites/atelier-x',
-    'https://github.com/stax-sites/atelier-x', 'main', 'main');
+    v_site_x, 'nemasus-sites', 'atelier-x', 'nemasus-sites/atelier-x',
+    'https://github.com/nemasus-sites/atelier-x', 'main', 'main');
   perform t.assert(t.denied_as(claire, 'select ' || v_repo_x),
     'Un client ne peut pas rattacher un depot GitHub');
 
@@ -2559,8 +2559,8 @@ begin
 
   v_result := t.json_as(staff, format(
     'public.connect_site_repository(%L::uuid, 1001, 9001, %L, 5001, %L, %L, %L, %L, %L)',
-    v_site_y, 'stax-sites', 'atelier-x', 'stax-sites/atelier-x',
-    'https://github.com/stax-sites/atelier-x', 'main', 'main'));
+    v_site_y, 'nemasus-sites', 'atelier-x', 'nemasus-sites/atelier-x',
+    'https://github.com/nemasus-sites/atelier-x', 'main', 'main'));
   perform t.assert(v_result ->> 'code' = 'repository_already_attached',
     'Le depot d''une autre organisation ne peut pas etre rattache');
 
@@ -2569,7 +2569,7 @@ begin
     v_site_y, 'pirate', 'studio-y', 'pirate/studio-y', 'https://github.com/pirate/studio-y',
     'main', 'main'));
   perform t.assert(v_result ->> 'code' = 'installation_unknown',
-    'Un depot hors de l''application GitHub StaX est refuse');
+    'Un depot hors de l''application GitHub Nemasus est refuse');
 
   v_result := t.json_as(staff, format(
     'public.connect_site_repository(%L::uuid, 1001, 9003, %L, 777, %L, %L, %L, %L, %L)',
@@ -2594,7 +2594,7 @@ begin
   -- 3. Contrat d'edition et contenu initial (version 1, deploiement verifie).
   v_result := t.json_as(staff, format(
     'public.record_site_manifest(%L::uuid, %L, %L, 1, %L::jsonb, %L, %L, %L::jsonb, %L::jsonb, %L::jsonb, true)',
-    v_site_x, sha1, 'stax.manifest.json', '{"contract":1,"site":{"name":"Atelier X"}}',
+    v_site_x, sha1, 'nemasus.manifest.json', '{"contract":1,"site":{"name":"Atelier X"}}',
     'hash-manifest', 'valid', '[]', '[]', '{"pages":3,"locales":1,"forms":1,"collections":0}'));
   v_manifest := (v_result ->> 'manifestId')::uuid;
   perform t.assert((v_result ->> 'active')::boolean, 'Un manifeste valide devient le contrat actif');
@@ -2613,12 +2613,12 @@ begin
   v_v1 := (v_result ->> 'releaseId')::uuid;
   perform t.assert(v_v1 is not null, 'Le contenu initial devient la version 1, adossee a son commit');
 
-  -- L'equipe StaX travaille sur le projet AVANT la livraison.
+  -- L'equipe Nemasus travaille sur le projet AVANT la livraison.
   v_rev := (select revision from public.site_content_drafts where site_id = v_site_x);
   v_result := t.json_as(staff, format('public.save_site_draft(%L::uuid, %L::jsonb, %s)',
     v_site_x, '{"pages":{"home":{"hero":{"title":"Bienvenue a l''atelier"}}}}', v_rev));
   perform t.assert((v_result ->> 'ok')::boolean,
-    'L''equipe StaX modifie le brouillon avant la livraison');
+    'L''equipe Nemasus modifie le brouillon avant la livraison');
 
   perform t.assert(
     (select production_release_id from public.sites where id = v_site_x) = v_v1
@@ -2652,7 +2652,7 @@ begin
     'Une attestation manuelle exige une description de ce qui a ete verifie');
 
   perform t.json_as(staff, format('public.attest_delivery_check(%L::uuid, %L, true, %L)',
-    v_site_x, 'forms', 'Formulaire de contact envoye et recu dans la messagerie StaX'));
+    v_site_x, 'forms', 'Formulaire de contact envoye et recu dans la messagerie Nemasus'));
   perform t.json_as(staff, format('public.attest_delivery_check(%L::uuid, %L, true, %L)',
     v_site_x, 'responsive', 'Verifie sur iPhone 15, Pixel 8, iPad et ordinateur 1440 px'));
 
@@ -2722,7 +2722,7 @@ begin
   v_result := public.claim_site_release(v_v2);
   perform t.assert((v_result ->> 'ok')::boolean, 'Le serveur prend la version en charge');
   v_result := public.record_release_commit(v_v2, sha1, sha2,
-    'https://github.com/stax-sites/atelier-x/commit/' || sha2, 'main');
+    'https://github.com/nemasus-sites/atelier-x/commit/' || sha2, 'main');
   v_dep := (v_result ->> 'deploymentId')::uuid;
   v_hosting := (select hosting_id from public.site_deployments where id = v_dep);
   perform t.assert((select status from public.site_releases where id = v_v2) = 'deploying'
@@ -2921,7 +2921,7 @@ begin
   v_site_y := (v_result ->> 'siteId')::uuid;
   v_result := t.json_as(staff, format(
     'public.record_site_manifest(%L::uuid, %L, %L, 1, %L::jsonb, %L, %L, %L::jsonb, %L::jsonb, %L::jsonb, true)',
-    v_site_y, sha6, 'stax.manifest.json', '{"contract":1,"site":{"name":"Cabinet Z"}}',
+    v_site_y, sha6, 'nemasus.manifest.json', '{"contract":1,"site":{"name":"Cabinet Z"}}',
     'hash-z', 'valid', '[]', '[]',
     '{"pages":3,"locales":2,"forms":1,"collections":0,"advancedForms":false,"modules":["contact","booking"]}'));
   v_result := t.json_as(staff, format('public.delivery_readiness(%L::uuid)', v_site_y));
@@ -3052,9 +3052,9 @@ declare
 begin
   perform set_config('request.jwt.claims', null, true);
   -- Essentiel : 2 comptes collaborateurs. Claire occupe le premier ; l'equipe
-  -- StaX, membre de l'organisation, ne compte pas.
+  -- Nemasus, membre de l'organisation, ne compte pas.
   perform t.assert(app.usage_count(v_org_x, 'max_team_members') = 1,
-    'L''equipe StaX ne consomme pas le quota de collaborateurs du client');
+    'L''equipe Nemasus ne consomme pas le quota de collaborateurs du client');
   perform t.assert(not t.denied_as(claire, format(
     'insert into public.organization_invitations (organization_id, email, role, token_hash, expires_at) '
     'values (%L, ''dora@client-x.test'', ''editor'', ''h1'', now() + interval ''7 days'')', v_org_x)),
@@ -3172,7 +3172,7 @@ begin
   perform t.assert(not t.denied_as(staff, format(
     'select public.write_audit(''site.domain_attached'', %L::uuid, %L::uuid, ''site'', ''x'', ''{}''::jsonb)',
     v_org_b, v_site_b)),
-    'L''equipe StaX ecrit dans le journal de toute organisation');
+    'L''equipe Nemasus ecrit dans le journal de toute organisation');
   perform set_config('request.jwt.claims', null, true);
 
   perform t.assert(not has_function_privilege('anon', 'public.compute_order_pricing(uuid, text)', 'execute'),
@@ -3227,7 +3227,7 @@ begin
   insert into auth.users (email) values ('dora@prospect.test') returning id into dora;
   insert into t.fixtures (k, v) values ('dora', dora) on conflict (k) do update set v = excluded.v;
 
-  -- Le site est construit hors de StaX, rattache, deploye.
+  -- Le site est construit hors de Nemasus, rattache, deploye.
   v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
     'Boulangerie Z', 'restaurant', v_essentiel, 'Nantes'));
   v_org := (v_result ->> 'organizationId')::uuid; v_site := (v_result ->> 'siteId')::uuid;
@@ -3235,14 +3235,14 @@ begin
     on conflict (k) do update set v = excluded.v;
   perform t.json_as(staff, format(
     'public.connect_site_repository(%L::uuid, 1001, 9101, %L, 5001, %L, %L, %L, %L, %L)',
-    v_site, 'stax-sites', 'boulangerie-z', 'stax-sites/boulangerie-z',
-    'https://github.com/stax-sites/boulangerie-z', 'main', 'main'));
+    v_site, 'nemasus-sites', 'boulangerie-z', 'nemasus-sites/boulangerie-z',
+    'https://github.com/nemasus-sites/boulangerie-z', 'main', 'main'));
   perform t.json_as(staff, format('public.connect_site_hosting(%L::uuid, %L, %L, %L, %L, %L, %L)',
     v_site, 'cloudflare_pages', v_account, 'boulangerie-z', 'proj-boulangerie-z', 'main',
     'https://boulangerie-z.pages.dev'));
   v_result := t.json_as(staff, format(
     'public.record_site_manifest(%L::uuid, %L, %L, 1, %L::jsonb, %L, %L, %L::jsonb, %L::jsonb, %L::jsonb, true)',
-    v_site, sha, 'stax.manifest.json', '{"contract":1,"site":{"name":"Boulangerie Z"}}',
+    v_site, sha, 'nemasus.manifest.json', '{"contract":1,"site":{"name":"Boulangerie Z"}}',
     'hash-manifest-z', 'valid', '[]', '[]', '{"pages":3,"locales":1,"forms":1,"collections":0}'));
   v_manifest := (v_result ->> 'manifestId')::uuid;
   perform t.json_as(staff, format(
@@ -3470,6 +3470,14 @@ begin
   perform t.assert(v_result ->> 'code' in ('not_found', 'withdrawn'),
     'Une proposition retiree ne se paie plus');
 
+  -- Opposition du prospect (0056) : effacement immediat, sur une proposition retiree.
+  perform t.assert(t.denied_as(erwan, format('select public.erase_site_proposal_contact(%L::uuid)', v_prop)),
+    'Le client n''efface pas les coordonnees d''une proposition');
+  perform t.assert(not has_function_privilege('anon', 'public.erase_site_proposal_contact(uuid)', 'execute'),
+    'Effacement ferme aux visiteurs');
+
+  -- (Le cas « effacement a la demande » est verifie ci-dessous, sur une autre proposition.)
+
   -- Conservation : trois ans après le dernier échange, le prospect est anonymisé.
   perform set_config('request.jwt.claims', null, true);
   update public.site_proposals
@@ -3484,6 +3492,30 @@ begin
        from public.site_proposals where id = v_prop),
     'Proposition non conclue : le prospect est anonymise apres trois ans');
 
+  -- Effacement a la demande : refuse tant que la proposition n'est pas retiree.
+  perform set_config('request.jwt.claims', null, true);
+  insert into public.site_proposals
+    (reference, site_id, organization_id, plan_id, plan_slug, plan_version, plan_name,
+     setup_price_cents, maintenance_price_cents, billing_interval, vat_rate_bps, vat_cents,
+     total_cents, prospect_email, prospect_name, prospect_phone, company_name, code_hash,
+     code_hint, expires_at, created_by)
+  values ('PRO-TEST2', v_site, v_org, v_premium, 'premium', 1, 'Premium', 55000, 1400, 'month',
+          2000, 11000, 66000, 'stop@prospect.test', 'Yann Stop', '0600000000', 'Garage Stop',
+          repeat('f6', 32), 'STP1', now() + interval '14 days', staff)
+  returning id into v_prop;
+  v_result := t.json_as(staff, format('public.erase_site_proposal_contact(%L::uuid)', v_prop));
+  perform t.assert(v_result ->> 'code' = 'not_withdrawn'
+                   and (select prospect_email from public.site_proposals where id = v_prop) = 'stop@prospect.test',
+    'Une proposition en cours ne s''efface pas : la retirer d''abord');
+  v_result := t.json_as(staff, format('public.withdraw_site_proposal(%L::uuid, %L)', v_prop, 'STOP'));
+  v_result := t.json_as(staff, format('public.erase_site_proposal_contact(%L::uuid)', v_prop));
+  perform t.assert(
+    (v_result ->> 'ok')::boolean
+    and (select prospect_email like 'efface-%@anonymise.invalid' and prospect_name is null
+                and prospect_phone is null and company_name = 'Coordonnées effacées'
+           from public.site_proposals where id = v_prop),
+    'Opposition du prospect : ses coordonnees sont effacees de la proposition retiree');
+
   perform t.assert(not has_function_privilege('authenticated', 'public.complete_paid_proposal(uuid)', 'execute')
                    and not has_function_privilege('anon', 'public.claim_site_proposal(text)', 'execute')
                    and not has_function_privilege('authenticated', 'public.proposals_awaiting_delivery(int)', 'execute'),
@@ -3494,7 +3526,7 @@ $$;
 -- -----------------------------------------------------------------------------
 --  Discussion client / equipe et invitations (0055)
 -- -----------------------------------------------------------------------------
-\echo '--- Discussion client / equipe StaX et invitations (0055) ---'
+\echo '--- Discussion client / equipe Nemasus et invitations (0055) ---'
 do $$
 declare
   staff    uuid := (select v from t.fixtures where k='staff');
@@ -3514,7 +3546,7 @@ begin
   perform t.assert(t.denied_as(claire, format(
     'insert into project_messages (project_id, author_id, author_side, body) values (%L, %L, ''stax'', ''Faux message'')',
     v_project, claire)),
-    'Un client ne peut pas ecrire au nom de l''equipe StaX');
+    'Un client ne peut pas ecrire au nom de l''equipe Nemasus');
   perform t.assert(not t.denied_as(claire, format(
     'insert into project_messages (project_id, author_id, author_side, body) values (%L, %L, ''client'', ''Bonjour, une petite modification ?'')',
     v_project, claire)),

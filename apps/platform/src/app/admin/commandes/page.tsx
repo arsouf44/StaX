@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
-import { formatMaintenance, formatMoney, ORDER_STATUS_LABELS } from '@stax/payments';
+import { unwrapList } from '@nemasus/database';
+import { formatMaintenance, formatMoney, ORDER_STATUS_LABELS } from '@nemasus/payments';
 import {
   EmptyState,
   Icon,
@@ -12,8 +12,8 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { FilterTabs } from '~/components/app/filter-tabs';
 import { PageHeader } from '~/components/app/page-header';
 import { getAdminContext } from '~/lib/admin';

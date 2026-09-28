@@ -1,8 +1,8 @@
-import { readEnv, siteHostIdentity } from '@stax/config';
-import { resolveBusiness } from '@stax/business';
-import { mediaPublicUrl } from '@stax/database';
-import { generateNonce, issueCsrfToken } from '@stax/security';
-import { loadSiteData, requiredCollections } from '@stax/site-data';
+import { readEnv, siteHostIdentity } from '@nemasus/config';
+import { resolveBusiness } from '@nemasus/business';
+import { mediaPublicUrl } from '@nemasus/database';
+import { generateNonce, issueCsrfToken } from '@nemasus/security';
+import { loadSiteData, requiredCollections } from '@nemasus/site-data';
 import {
   draftStateToSnapshot,
   normalizePath,
@@ -14,7 +14,7 @@ import {
   resolveTheme,
   type ParsedBlock,
   type RenderContext,
-} from '@stax/site-engine';
+} from '@nemasus/site-engine';
 import { getWorkspace } from '~/lib/workspace';
 import { loadPageBlocks } from '../data';
 
@@ -243,7 +243,7 @@ export async function GET(request: Request): Promise<Response> {
 
   const origin = site.primaryHostname
     ? `https://${site.primaryHostname}`
-    : (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://stax.fr');
+    : (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://nemasus.fr');
 
   const context: RenderContext = {
     origin,

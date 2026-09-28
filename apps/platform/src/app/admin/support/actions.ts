@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { unwrapMaybe } from '@stax/database';
-import { sendEmail, teamReplyEmail } from '@stax/emails';
-import { uuidSchema } from '@stax/validation';
+import { unwrapMaybe } from '@nemasus/database';
+import { sendEmail, teamReplyEmail } from '@nemasus/emails';
+import { uuidSchema } from '@nemasus/validation';
 import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';

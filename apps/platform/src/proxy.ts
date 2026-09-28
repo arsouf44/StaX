@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { isProduction, readEnv } from '@stax/config';
-import { buildContentSecurityPolicy, generateNonce } from '@stax/security';
+import { isProduction, readEnv } from '@nemasus/config';
+import { buildContentSecurityPolicy, generateNonce } from '@nemasus/security';
 
 /**
  * Politique de securite du contenu, par requete.
@@ -50,7 +50,7 @@ export default function proxy(request: NextRequest) {
   headers.set('content-security-policy', csp);
   // Chemin demande, pour les mises en page (qui ne le recoivent pas) et pour
   // revenir a la bonne page apres connexion.
-  headers.set('x-stax-pathname', request.nextUrl.pathname);
+  headers.set('x-nemasus-pathname', request.nextUrl.pathname);
 
   const response = NextResponse.next({ request: { headers } });
   response.headers.set('content-security-policy', csp);

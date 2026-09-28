@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { Alert, Button, Dialog, Icon, Spinner } from '@stax/ui';
+import { Alert, Button, Dialog, Icon, Spinner } from '@nemasus/ui';
 import { checkPublicationAction, publishAction } from './actions';
 import type { PublicationReport, PublishOutcome } from './types';
 

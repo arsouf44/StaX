@@ -1,19 +1,19 @@
-import { createServiceClient } from '@stax/database';
+import { createServiceClient } from '@nemasus/database';
 import {
   redactEventPayload,
   summarizeAccount,
   verifyWebhook,
   WebhookVerificationError,
   type Stripe,
-} from '@stax/payments';
+} from '@nemasus/payments';
 
 /**
  * Webhook Stripe Connect.
  *
  * Il concerne les encaissements realises SUR LES SITES DES CLIENTS, pas les
- * revenus de StaX. Deux consequences directes :
+ * revenus de Nemasus. Deux consequences directes :
  *
- *  - l argent ne transite jamais par un compte StaX : il va directement sur le
+ *  - l argent ne transite jamais par un compte Nemasus : il va directement sur le
  *    compte Stripe du client, ouvert a son nom ;
  *  - l evenement porte un `account` : c est lui qui identifie le client
  *    concerne. On ne fait JAMAIS confiance a un identifiant present dans la
@@ -76,7 +76,7 @@ export async function POST(request: Request): Promise<Response> {
       p_status: 'failed',
       p_error: message,
     });
-    console.error('[stax:webhook:connect]', event.type, message);
+    console.error('[nemasus:webhook:connect]', event.type, message);
   }
 
   return Response.json({ received: true });
@@ -95,7 +95,7 @@ async function handleConnectEvent(
     case 'account.updated': {
       const snapshot = summarizeAccount(event.data.object as Stripe.Account);
       // Le compte est retrouve par son identifiant Stripe, qui a ete enregistre
-      // au moment ou StaX l a cree pour ce client : la correspondance ne vient
+      // au moment ou Nemasus l a cree pour ce client : la correspondance ne vient
       // jamais de la charge utile.
       const { error } = await db
         .from('connected_accounts')
@@ -151,7 +151,7 @@ async function handleConnectEvent(
  * du navigateur apres Stripe ne prouve rien : il peut etre forge, rejoue, ou
  * ne jamais arriver. Seul cet evenement signe fait foi.
  *
- * StaX ne prend aucune commission : `application_fee_cents` vaut zero.
+ * Nemasus ne prend aucune commission : `application_fee_cents` vaut zero.
  */
 async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: string): Promise<void> {
   const object = event.data.object as Stripe.PaymentIntent | Stripe.Checkout.Session;
@@ -175,8 +175,8 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
   // Une commande de boutique : la base verifie que le montant encaisse est
   // EXACTEMENT celui fige a la commande, et refuse de payer sinon. Elle est
   // idempotente : un rejeu de l evenement ne cree pas un second paiement.
-  if (metadata['stax_kind'] === 'shop_order') {
-    const orderId = metadata['stax_order_id'] ?? metadata['stax_reference_id'] ?? null;
+  if (metadata['nemasus_kind'] === 'shop_order') {
+    const orderId = metadata['nemasus_order_id'] ?? metadata['nemasus_reference_id'] ?? null;
     if (!orderId) return;
 
     const { data, error } = await db.rpc('mark_shop_order_paid', {
@@ -207,7 +207,7 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
 
   // Un don : la ligne a ete ecrite AVANT l appel a Stripe, avec son propre
   // identifiant. On la confirme plutot que d en creer une seconde.
-  if (metadata['stax_kind'] === 'donation' && metadata['stax_reference_id']) {
+  if (metadata['nemasus_kind'] === 'donation' && metadata['nemasus_reference_id']) {
     const { error } = await db
       .from('payments')
       .update({
@@ -217,7 +217,7 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
         stripe_payment_intent_id: paymentIntentId,
         succeeded_at: new Date().toISOString(),
       })
-      .eq('id', metadata['stax_reference_id'])
+      .eq('id', metadata['nemasus_reference_id'])
       .eq('organization_id', account.organization_id)
       .eq('status', 'pending');
     if (error) throw new Error(error.message);

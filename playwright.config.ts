@@ -27,7 +27,7 @@ export default defineConfig({
   use: {
     // Navigateur deja installe sur la machine (meme variable que
     // playwright.stack.config.ts) ; a defaut, celui de Playwright.
-    launchOptions: { executablePath: process.env.STAX_E2E_CHROMIUM || undefined },
+    launchOptions: { executablePath: process.env.NEMASUS_E2E_CHROMIUM || undefined },
     baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100',
     locale: 'fr-FR',
     timezoneId: 'Europe/Paris',
@@ -45,7 +45,7 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: 'pnpm --filter @stax/platform exec next start -p 3100',
+        command: 'pnpm --filter @nemasus/platform exec next start -p 3100',
         url: 'http://127.0.0.1:3100',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
@@ -61,7 +61,7 @@ export default defineConfig({
            * Aucune valeur reelle n'entre ici, et rien n'est lu depuis
            * l'environnement : ces cles ne valent que pour ce processus.
            */
-          STAX_SECRET_KEY: randomBytes(48).toString('base64'),
+          NEMASUS_SECRET_KEY: randomBytes(48).toString('base64'),
           /*
            * Supabase pointe volontairement vers un port ferme. L'appel echoue
            * au reseau, ce qui est exactement le cas que les tests doivent

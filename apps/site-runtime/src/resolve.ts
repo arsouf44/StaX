@@ -1,12 +1,12 @@
-import { readEnv } from '@stax/config';
-import { createServiceClient, unwrapMaybe } from '@stax/database';
-import { resolveHostname, type ResolvedHostname } from '@stax/security';
+import { readEnv } from '@nemasus/config';
+import { createServiceClient, unwrapMaybe } from '@nemasus/database';
+import { resolveHostname, type ResolvedHostname } from '@nemasus/security';
 import {
   parseSnapshot,
   parseSiteSettings,
   type ParsedSnapshot,
   type SiteSettingsView,
-} from '@stax/site-engine';
+} from '@nemasus/site-engine';
 
 /**
  * Resolution du tenant.
@@ -27,7 +27,7 @@ export interface ResolvedSite {
   siteStatus: string;
   domainStatus: string;
   versionId: string | null;
-  /** Numero de la version servie, expose dans l en-tete `X-StaX-Version`. */
+  /** Numero de la version servie, expose dans l en-tete `X-Nemasus-Version`. */
   versionNumber: number | null;
   contentHash: string | null;
   snapshot: ParsedSnapshot;
@@ -65,12 +65,12 @@ interface ResolveRow {
 
 function hostnameConfig() {
   return {
-    platformHost: (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://stax.fr').replace(
+    platformHost: (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://nemasus.fr').replace(
       /^https?:\/\//,
       '',
     ),
-    sitesDomain: readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.stax.fr',
-    previewDomain: readEnv('NEXT_PUBLIC_PREVIEW_DOMAIN') ?? 'preview.sites.stax.fr',
+    sitesDomain: readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.nemasus.fr',
+    previewDomain: readEnv('NEXT_PUBLIC_PREVIEW_DOMAIN') ?? 'preview.sites.nemasus.fr',
   };
 }
 

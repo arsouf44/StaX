@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 import { AuthCard } from '~/components/auth/auth-card';
 import { getSession, safeRedirectTarget } from '~/lib/session';
 import { SignInForm } from './sign-in-form';
@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Connexion',
-  description: 'Accédez à votre espace StaX pour gérer votre site, vos messages et vos contenus.',
+  description:
+    'Accédez à votre espace Nemasus pour gérer votre site, vos messages et vos contenus.',
   robots: { index: false, follow: false },
 };
 

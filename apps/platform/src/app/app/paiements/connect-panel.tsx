@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Panel, StatusPill } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { Alert, Button, Panel, StatusPill } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {
   connectExistingStripeAction,
@@ -205,7 +205,7 @@ export function ConnectPanel({ view }: { view: ConnectView }) {
 const OWNERSHIP_POINTS = [
   {
     title: 'Votre argent',
-    text: 'Les paiements de vos clients arrivent sur votre compte bancaire. StaX ne touche jamais cet argent et ne prend aucune commission.',
+    text: 'Les paiements de vos clients arrivent sur votre compte bancaire. Nemasus ne touche jamais cet argent et ne prend aucune commission.',
   },
   {
     title: 'Votre compte',
@@ -213,6 +213,6 @@ const OWNERSHIP_POINTS = [
   },
   {
     title: 'Votre liberté',
-    text: 'Remboursements, factures, relevés : tout se gère chez Stripe. Vous pouvez déconnecter StaX à tout moment.',
+    text: 'Remboursements, factures, relevés : tout se gère chez Stripe. Vous pouvez déconnecter Nemasus à tout moment.',
   },
 ];

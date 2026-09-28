@@ -1,14 +1,14 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { platformUrl, readEnv } from '@stax/config';
-import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
+import { platformUrl, readEnv } from '@nemasus/config';
+import { tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
 import {
   connectOAuthUrl,
   createConnectedAccount,
   createLoginLink,
   createOnboardingLink,
-} from '@stax/payments';
+} from '@nemasus/payments';
 import { signConnectState } from '~/lib/stripe-connect-state';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
@@ -18,7 +18,7 @@ import { getWorkspace } from '~/lib/workspace';
  * Activation de l'encaissement sur le site d'un client.
  *
  * Un compte Stripe connecte est cree AU NOM de l'organisation, jamais au nom de
- * StaX : l'argent va directement sur le compte bancaire du professionnel, sans
+ * Nemasus : l'argent va directement sur le compte bancaire du professionnel, sans
  * transiter par nous.
  *
  * L'ecriture dans `connected_accounts` utilise la cle de service, parce que la
@@ -27,7 +27,7 @@ import { getWorkspace } from '~/lib/workspace';
  * ICI, avant, et l'organisation vient de la session — jamais du formulaire.
  *
  * Aucune donnee KYC (piece d'identite, IBAN, chiffre d'affaires) ne transite
- * par StaX : elle est saisie sur les pages hebergees par Stripe.
+ * par Nemasus : elle est saisie sur les pages hebergees par Stripe.
  */
 
 async function requireBillingManager() {
@@ -90,7 +90,10 @@ export async function startConnectOnboardingAction(
       });
 
       if (error) {
-        console.error('[stax:connect] compte cree chez Stripe mais non enregistre', error.message);
+        console.error(
+          '[nemasus:connect] compte cree chez Stripe mais non enregistre',
+          error.message,
+        );
         return {
           status: 'error',
           message:
@@ -101,7 +104,7 @@ export async function startConnectOnboardingAction(
 
     link = await createOnboardingLink(stripeAccountId);
   } catch (error) {
-    console.error('[stax:connect] onboarding indisponible', error);
+    console.error('[nemasus:connect] onboarding indisponible', error);
     return {
       status: 'error',
       message:
@@ -147,7 +150,7 @@ export async function openStripeDashboardAction(
   try {
     link = await createLoginLink(account.stripe_account_id);
   } catch (error) {
-    console.error('[stax:connect] lien de connexion indisponible', error);
+    console.error('[nemasus:connect] lien de connexion indisponible', error);
     return {
       status: 'error',
       message: 'Stripe est momentanément injoignable. Réessayez dans quelques minutes.',
@@ -159,8 +162,8 @@ export async function openStripeDashboardAction(
 
 /**
  * « J'ai deja un compte Stripe » : le client se connecte chez Stripe et
- * autorise StaX a creer des paiements sur SON compte. Rien n'est ouvert au nom
- * de StaX, et aucun justificatif n'est a refournir.
+ * autorise Nemasus a creer des paiements sur SON compte. Rien n'est ouvert au nom
+ * de Nemasus, et aucun justificatif n'est a refournir.
  */
 export async function connectExistingStripeAction(
   _previous: ActionState,

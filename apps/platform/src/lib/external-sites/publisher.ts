@@ -1,5 +1,5 @@
 import 'server-only';
-import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
+import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
 import {
   CloudflareError,
   deploymentLog,
@@ -13,7 +13,7 @@ import {
   RepositoryClient,
   type FileToWrite,
   type ProviderDeployment,
-} from '@stax/infrastructure';
+} from '@nemasus/infrastructure';
 import {
   buildContentBundle,
   collectMediaIds,
@@ -21,7 +21,7 @@ import {
   mediaRepoPath,
   validateContent,
   type SiteManifest,
-} from '@stax/site-contract';
+} from '@nemasus/site-contract';
 import {
   downloadMedia,
   HOSTING_COLUMNS,
@@ -189,7 +189,7 @@ export async function processRelease(db: Db, releaseId: string): Promise<StepOut
       release.id,
       'configuration',
       'github_not_configured',
-      'L’application GitHub de StaX n’est pas configurée : la publication ne peut pas être écrite dans le dépôt du site.',
+      'L’application GitHub de Nemasus n’est pas configurée : la publication ne peut pas être écrite dans le dépôt du site.',
     );
   }
 
@@ -353,7 +353,7 @@ export async function processRelease(db: Db, releaseId: string): Promise<StepOut
     p_branch: commit.branch,
   });
   if (error || !(data as { ok?: boolean } | null)?.ok) {
-    console.error('[stax:publish] commit ecrit mais non enregistre', release.id, error?.message);
+    console.error('[nemasus:publish] commit ecrit mais non enregistre', release.id, error?.message);
     return { status: 'committed', commitSha: commit.commitSha };
   }
 
@@ -399,7 +399,7 @@ export async function syncHostingDeployments(db: Db, hosting: HostingRow): Promi
     return { status: 'failed', stage: 'cloudflare', message };
   }
 
-  // Commits attendus par StaX (versions et apercus en cours) : pour eux, un
+  // Commits attendus par Nemasus (versions et apercus en cours) : pour eux, un
   // echec est explique avec l'extrait du journal de build.
   const pending = new Set<string>();
   for (const row of unwrapList<{ commit_sha: string | null }>(
@@ -464,7 +464,7 @@ async function syncReleaseDeployment(db: Db, release: ReleaseRow): Promise<StepO
         release.id,
         'timeout',
         'deployment_timeout',
-        `Cloudflare n’a pas confirmé le déploiement de ce commit en ${DEPLOYMENT_TIMEOUT_MINUTES} minutes. La version précédente reste affichée ; l’équipe StaX vérifie le projet.`,
+        `Cloudflare n’a pas confirmé le déploiement de ce commit en ${DEPLOYMENT_TIMEOUT_MINUTES} minutes. La version précédente reste affichée ; l’équipe Nemasus vérifie le projet.`,
       );
     }
   }
@@ -506,7 +506,7 @@ export async function processPreview(db: Db, deploymentId: string): Promise<Step
 
   if (!githubAppConfigured()) {
     return fail(
-      'L’application GitHub de StaX n’est pas configurée : l’aperçu ne peut pas être construit.',
+      'L’application GitHub de Nemasus n’est pas configurée : l’aperçu ne peut pas être construit.',
     );
   }
   const repository = unwrapMaybe<RepositoryRow>(

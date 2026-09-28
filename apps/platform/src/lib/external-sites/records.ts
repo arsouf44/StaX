@@ -1,12 +1,12 @@
 import 'server-only';
-import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
-import type { HostingTarget, RepositoryRef } from '@stax/infrastructure';
+import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
+import type { HostingTarget, RepositoryRef } from '@nemasus/infrastructure';
 import {
   mediaFileName,
   parseManifest,
   type MediaDescriptor,
   type SiteManifest,
-} from '@stax/site-contract';
+} from '@nemasus/site-contract';
 
 /**
  * Lecture des enregistrements d'un site developpe independamment : son
@@ -179,7 +179,7 @@ export interface MediaFileRow {
   height: number | null;
 }
 
-/** Taille maximale d'un fichier depose dans un depot par StaX. */
+/** Taille maximale d'un fichier depose dans un depot par Nemasus. */
 export const MAX_REPOSITORY_MEDIA_BYTES = 20 * 1024 * 1024;
 
 export async function loadMediaFiles(

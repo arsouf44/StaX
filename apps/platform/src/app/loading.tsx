@@ -1,4 +1,4 @@
-import { Container, Skeleton } from '@stax/ui';
+import { Container, Skeleton } from '@nemasus/ui';
 
 /**
  * Etat de chargement global.

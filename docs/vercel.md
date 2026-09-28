@@ -53,7 +53,7 @@ ajoutez après, **redéployez** (Deployments → ⋯ → Redeploy, sans le cache
 | Variable absente | Symptôme exact |
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | « Le catalogue tarifaire est momentanément indisponible » — la page s'affiche, vide |
-| `STAX_SECRET_KEY` | **Tous** les formulaires refusent de s'exécuter : inscription, contact, devis, activation |
+| `NEMASUS_SECRET_KEY` | **Tous** les formulaires refusent de s'exécuter : inscription, contact, devis, activation |
 | `SUPABASE_SERVICE_ROLE_KEY` | Contact, devis et activation annoncent une indisponibilité ; la limitation de débit cesse d'être appliquée ; les webhooks Stripe échouent ; l'ouverture de l'éditeur depuis l'administration (sessions de construction et d'assistance) est refusée avec un message |
 
 **Aucune page ne plante pour autant** : chaque écran qui dépend d'une variable
@@ -72,7 +72,7 @@ aussi les noms posés par l'intégration Supabase de Vercel :
 ### Obligatoires
 
 ```
-STAX_ENV=production
+NEMASUS_ENV=production
 NEXT_PUBLIC_PLATFORM_URL=https://votre-domaine
 PLATFORM_URL=https://votre-domaine
 
@@ -81,10 +81,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<clé anon>
 SUPABASE_URL=https://<ref>.supabase.co
 SUPABASE_ANON_KEY=<clé anon>
 SUPABASE_SERVICE_ROLE_KEY=<clé secrète>      # jamais préfixée NEXT_PUBLIC_
-STAX_SECRET_KEY=<openssl rand -base64 48>
+NEMASUS_SECRET_KEY=<openssl rand -base64 48>
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` et `STAX_SECRET_KEY` sont des **secrets**. Ils ne
+`SUPABASE_SERVICE_ROLE_KEY` et `NEMASUS_SECRET_KEY` sont des **secrets**. Ils ne
 doivent exister que dans les variables Vercel, jamais dans le dépôt. La clé de
 service contourne la Row Level Security : quiconque l'obtient lit toute la base.
 

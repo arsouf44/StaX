@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { BOOKING_TRANSITIONS } from '@stax/business';
-import { unwrapMaybe } from '@stax/database';
-import { bookingStatusUpdateSchema } from '@stax/validation';
+import { BOOKING_TRANSITIONS } from '@nemasus/business';
+import { unwrapMaybe } from '@nemasus/database';
+import { bookingStatusUpdateSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace } from '~/lib/workspace';

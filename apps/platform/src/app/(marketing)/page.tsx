@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import type { PlanView } from '@stax/database';
-import { formatMoney, maintenancePeriodLabel } from '@stax/payments';
-import { ButtonLink, Reveal } from '@stax/ui';
+import type { PlanView } from '@nemasus/database';
+import { formatMoney, maintenancePeriodLabel } from '@nemasus/payments';
+import { ButtonLink, Reveal } from '@nemasus/ui';
 import { StudioArtSprite } from '~/components/marketing/studio-art';
 import { ProcessShowcase } from '~/components/marketing/process-showcase';
 import { deliveryWeeksLabel, entryPriceLabel, getPlans } from '~/lib/catalog';
@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Nous créons votre site. Vous le gérez ensuite.',
     description:
-      'StaX conçoit et développe le site de votre entreprise, le met en ligne sur votre domaine ' +
+      'Nemasus conçoit et développe le site de votre entreprise, le met en ligne sur votre domaine ' +
       'et vous le livre. Vous modifiez ensuite vos contenus et publiez quand vous voulez.' +
       (entry ? ` ${entry}.` : ''),
     alternates: { canonical: '/' },
@@ -100,7 +100,7 @@ function heroFacts(plans: PlanView[]): Array<{ label: string; value: string }> {
   }
   facts.push(
     { label: 'Mise en ligne', value: 'Votre domaine, en HTTPS' },
-    { label: 'Après la livraison', value: 'Éditeur StaX inclus' },
+    { label: 'Après la livraison', value: 'Éditeur Nemasus inclus' },
   );
   return facts;
 }
@@ -394,7 +394,7 @@ const SERVICES = [
   },
   {
     title: 'Suivi',
-    body: 'À la livraison, l’éditeur StaX s’ouvre : vous modifiez textes, photos et horaires. Vous publiez, et c’est réellement en ligne. Hébergement, sauvegardes et surveillance sont compris dans la maintenance.',
+    body: 'À la livraison, l’éditeur Nemasus s’ouvre : vous modifiez textes, photos et horaires. Vous publiez, et c’est réellement en ligne. Hébergement, sauvegardes et surveillance sont compris dans la maintenance.',
     href: '/fonctionnalites/editeur',
     icon: 'M240,56v64a8,8,0,0,1-16,0V75.31l-82.34,82.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,212.69,64H168a8,8,0,0,1,0-16h64A8,8,0,0,1,240,56Z',
   },

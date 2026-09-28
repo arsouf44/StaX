@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient } from '@stax/database';
-import { uuidSchema } from '@stax/validation';
+import { createUserClient } from '@nemasus/database';
+import { uuidSchema } from '@nemasus/validation';
 import { requireSession } from '~/lib/session';
 
 /**

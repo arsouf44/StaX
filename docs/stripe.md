@@ -1,6 +1,6 @@
 # Stripe — paiements de la plateforme
 
-Ce document couvre les revenus de StaX. Les encaissements réalisés **sur les
+Ce document couvre les revenus de Nemasus. Les encaissements réalisés **sur les
 sites des clients** sont décrits dans [stripe-connect.md](./stripe-connect.md).
 
 ---
@@ -43,7 +43,7 @@ COMMANDE
 5. Webhook signé             → app.apply_order_paid()
 6. La commande devient « payée », le site et le projet sont créés
 
-… conception, développement hors de StaX, vérifications …
+… conception, développement hors de Nemasus, vérifications …
 
 LIVRAISON
 7. L’équipe livre le site    → app.deliver_site() (checklist complète)

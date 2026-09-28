@@ -1,5 +1,5 @@
-import { createServiceClient, unwrap, unwrapList } from '@stax/database';
-import { hmacHex, randomToken, visitorHash } from '@stax/security';
+import { createServiceClient, unwrap, unwrapList } from '@nemasus/database';
+import { hmacHex, randomToken, visitorHash } from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import { clientIp, field, guardPublicWrite, intField, refuse } from './shared';
 import type { ResolvedSite } from '../resolve';

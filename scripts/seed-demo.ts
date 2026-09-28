@@ -18,10 +18,10 @@
  * ==========================================================================
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { assertServerOnly, deployEnvironment, readEnv } from '@stax/config';
-import { loadRootEnv } from '@stax/config/dotenv';
-import { resolveBusiness } from '@stax/business';
-import { createBlock } from '@stax/site-engine';
+import { assertServerOnly, deployEnvironment, readEnv } from '@nemasus/config';
+import { loadRootEnv } from '@nemasus/config/dotenv';
+import { resolveBusiness } from '@nemasus/business';
+import { createBlock } from '@nemasus/site-engine';
 
 /**
  * Les variables viennent de `.env.local` a la racine du depot (copie de
@@ -37,14 +37,14 @@ function say(message: string): void {
 }
 
 function fail(message: string): never {
-  process.stderr.write(`\n[StaX] ${message}\n\n`);
+  process.stderr.write(`\n[Nemasus] ${message}\n\n`);
   process.exit(1);
 }
 
-if (deployEnvironment() === 'production' && readEnv('STAX_ALLOW_DEMO_SEED') !== 'true') {
+if (deployEnvironment() === 'production' && readEnv('NEMASUS_ALLOW_DEMO_SEED') !== 'true') {
   fail(
     'Refus de creer des donnees de demonstration en production.\n' +
-      'Si c’est reellement voulu (vitrine publique), definissez STAX_ALLOW_DEMO_SEED=true.',
+      'Si c’est reellement voulu (vitrine publique), definissez NEMASUS_ALLOW_DEMO_SEED=true.',
   );
 }
 
@@ -92,7 +92,7 @@ const DEMOS: DemoSite[] = [
       business_name: 'La Table de Démonstration',
       tagline: 'Cuisine de saison, produits du marché',
       description:
-        'Établissement fictif créé pour illustrer les possibilités de la plateforme StaX. ' +
+        'Établissement fictif créé pour illustrer les possibilités de la plateforme Nemasus. ' +
         'Aucune réservation ne sera honorée.',
       email: 'demo@exemple.test',
       phone: '00 00 00 00 00',
@@ -135,7 +135,7 @@ const DEMOS: DemoSite[] = [
       business_name: 'Atelier de Démonstration',
       tagline: 'Coupe, couleur et conseil',
       description:
-        'Salon fictif créé pour illustrer la plateforme StaX. Aucun rendez-vous ne sera honoré.',
+        'Salon fictif créé pour illustrer la plateforme Nemasus. Aucun rendez-vous ne sera honoré.',
       email: 'demo@exemple.test',
       phone: '00 00 00 00 00',
       address_line1: '2 avenue de l’Exemple',
@@ -175,7 +175,7 @@ const DEMOS: DemoSite[] = [
       business_name: 'Démonstration Plomberie',
       tagline: 'Dépannage, installation, rénovation',
       description:
-        'Entreprise fictive créée pour illustrer la plateforme StaX. Aucune intervention ne sera réalisée.',
+        'Entreprise fictive créée pour illustrer la plateforme Nemasus. Aucune intervention ne sera réalisée.',
       email: 'demo@exemple.test',
       phone: '00 00 00 00 00',
       address_line1: '3 impasse du Modèle',
@@ -317,7 +317,7 @@ async function seedDemo(demo: DemoSite): Promise<void> {
   await db.from('site_domains').upsert(
     {
       site_id: siteId,
-      hostname: `${demo.slug}.${readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.stax.fr'}`,
+      hostname: `${demo.slug}.${readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.nemasus.fr'}`,
       kind: 'subdomain',
       status: 'active',
       is_primary: true,

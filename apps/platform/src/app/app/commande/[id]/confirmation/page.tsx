@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { unwrapMaybe } from '@stax/database';
-import { formatMaintenance, formatMoney } from '@stax/payments';
-import { Alert, ButtonLink, Panel, StatusPill } from '@stax/ui';
+import { unwrapMaybe } from '@nemasus/database';
+import { formatMaintenance, formatMoney } from '@nemasus/payments';
+import { Alert, ButtonLink, Panel, StatusPill } from '@nemasus/ui';
 import { AutoRefresh } from '~/components/app/auto-refresh';
 import { getWorkspace } from '~/lib/workspace';
 import { loadClientProposal } from '../../../proposition/proposal-dashboard';

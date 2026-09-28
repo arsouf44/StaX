@@ -1,6 +1,6 @@
 import 'server-only';
-import { unwrapMaybe, type Db } from '@stax/database';
-import { isStripeConfigured, startMaintenanceSubscription } from '@stax/payments';
+import { unwrapMaybe, type Db } from '@nemasus/database';
+import { isStripeConfigured, startMaintenanceSubscription } from '@nemasus/payments';
 
 /**
  * Demarrage de la maintenance MENSUELLE, le jour de la livraison.
@@ -96,7 +96,7 @@ export async function startMaintenanceAtDelivery(
       paymentIntentId: order.stripe_payment_intent_id,
       plan: {
         planSlug: order.plan_slug ?? 'maintenance',
-        planName: plan?.name ?? order.plan_slug ?? 'StaX',
+        planName: plan?.name ?? order.plan_slug ?? 'Nemasus',
         maintenancePriceCents: order.maintenance_price_cents,
         currency: (order.currency || 'EUR').toUpperCase() as 'EUR',
         vatRateBps: order.vat_rate_bps,

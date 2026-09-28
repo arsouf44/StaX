@@ -1,4 +1,4 @@
-import { hmacHex, randomToken, timingSafeEqual } from '@stax/security';
+import { hmacHex, randomToken, timingSafeEqual } from '@nemasus/security';
 
 /**
  * Session d'un client du site.
@@ -13,7 +13,7 @@ import { hmacHex, randomToken, timingSafeEqual } from '@stax/security';
  * usage unique. Le cookie est donc le seul secret, et il est de courte duree.
  */
 
-const COOKIE_NAME = '__stax_customer';
+const COOKIE_NAME = '__nemasus_customer';
 /** Trente jours : assez pour ne pas relancer un e-mail a chaque visite. */
 const SESSION_DAYS = 30;
 

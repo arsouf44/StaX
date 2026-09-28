@@ -5,7 +5,7 @@ import {
   assertRefundTransition,
   canTransitionRefund,
   computeRefundEligibility,
-} from '@stax/payments';
+} from '@nemasus/payments';
 
 const GO_LIVE = new Date('2026-03-01T10:00:00Z');
 

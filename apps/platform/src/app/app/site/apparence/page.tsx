@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { unwrapMaybe } from '@stax/database';
-import { Panel } from '@stax/ui';
+import { unwrapMaybe } from '@nemasus/database';
+import { Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { SettingsForm, type SettingsGroup } from '~/components/app/settings-form';
 import { getWorkspace } from '~/lib/workspace';

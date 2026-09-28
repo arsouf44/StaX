@@ -2,14 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient } from '@stax/database';
+import { createUserClient } from '@nemasus/database';
 import {
   boundedText,
   checkboxSchema,
   fieldErrors,
   formDataToObject,
   phoneSchema,
-} from '@stax/validation';
+} from '@nemasus/validation';
 import { requireSession } from '~/lib/session';
 import type { ActionState } from '~/lib/form-state';
 

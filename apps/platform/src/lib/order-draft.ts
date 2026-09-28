@@ -1,7 +1,7 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
-import { hmacHex, timingSafeEqual } from '@stax/security';
+import { hmacHex, timingSafeEqual } from '@nemasus/security';
 
 /**
  * Brouillon de commande.
@@ -21,7 +21,7 @@ import { hmacHex, timingSafeEqual } from '@stax/security';
  *    inexistante ou un contenu hors bornes.
  */
 
-const COOKIE_NAME = '__stax_order';
+const COOKIE_NAME = '__nemasus_order';
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
 export const orderDraftSchema = z

@@ -1,5 +1,5 @@
-import { visitorHash } from '@stax/security';
-import type { UUID } from '@stax/types';
+import { visitorHash } from '@nemasus/security';
+import type { UUID } from '@nemasus/types';
 
 /**
  * Statistiques respectueuses de la vie privee.

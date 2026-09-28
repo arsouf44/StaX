@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { legalValue, readEnv } from '@stax/config';
-import { Container, Panel, Section, SectionHeading } from '@stax/ui';
+import { legalValue, readEnv } from '@nemasus/config';
+import { Container, Panel, Section, SectionHeading } from '@nemasus/ui';
 import { ContactForm } from './contact-form';
 
 export const dynamic = 'force-dynamic';

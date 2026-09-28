@@ -1,10 +1,10 @@
 /**
- * Le parcours d'un projet StaX, tel qu'il se deroule reellement.
+ * Le parcours d'un projet Nemasus, tel qu'il se deroule reellement.
  *
  * Une seule source pour la page d'accueil et « Comment ça marche » : deux
  * versions du meme parcours finiraient par se contredire. Chaque etape
  * correspond a une phase reelle du dossier (voir `PROJECT_TIMELINE` dans
- * `@stax/payments`) et a ce que l'equipe fait vraiment : aucun modele, aucun
+ * `@nemasus/payments`) et a ce que l'equipe fait vraiment : aucun modele, aucun
  * generateur, un projet independant par site.
  */
 
@@ -42,7 +42,7 @@ export const PROCESS_STEPS: readonly ProcessStep[] = [
   {
     title: 'Livraison',
     description:
-      'Votre site est déjà en ligne lorsque nous vous ouvrons l’éditeur StaX. La maintenance mensuelle commence à ce moment-là, et pas avant.',
+      'Votre site est déjà en ligne lorsque nous vous ouvrons l’éditeur Nemasus. La maintenance mensuelle commence à ce moment-là, et pas avant.',
     detail: 'Début de la maintenance',
   },
   {
@@ -55,7 +55,7 @@ export const PROCESS_STEPS: readonly ProcessStep[] = [
 
 /**
  * Le principe, en sept points : ce que le visiteur doit avoir compris avant de
- * commander. Personne ne construit son site soi-meme chez StaX.
+ * commander. Personne ne construit son site soi-meme chez Nemasus.
  */
 export const PRINCIPLE_POINTS: ReadonlyArray<{ title: string; description: string }> = [
   {
@@ -84,13 +84,13 @@ export const PRINCIPLE_POINTS: ReadonlyArray<{ title: string; description: strin
       'Votre site est en ligne quand nous vous le livrons. C’est à ce moment que l’éditeur s’ouvre et que la maintenance mensuelle commence.',
   },
   {
-    title: 'Vous modifiez son contenu depuis StaX',
+    title: 'Vous modifiez son contenu depuis Nemasus',
     description:
       'Textes, images, horaires, informations : tout ce que votre site prévoit de modifiable. Le design et la structure restent protégés ; un changement plus profond, nous nous en chargeons, sur devis si nécessaire.',
   },
   {
     title: 'Vous publiez, et c’est réellement en ligne',
     description:
-      'Quand vous cliquez sur « Publier », vos modifications sont enregistrées dans le code de votre site puis déployées. StaX n’affiche « Publié » qu’une fois le déploiement confirmé.',
+      'Quand vous cliquez sur « Publier », vos modifications sont enregistrées dans le code de votre site puis déployées. Nemasus n’affiche « Publié » qu’une fois le déploiement confirmé.',
   },
 ];

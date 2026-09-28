@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
-import { Icon, Spinner } from '@stax/ui';
-import type { AdminSearchResult } from '@stax/database';
+import { Icon, Spinner } from '@nemasus/ui';
+import type { AdminSearchResult } from '@nemasus/database';
 import { adminSearchAction } from '~/app/admin/actions';
 
 /**

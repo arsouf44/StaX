@@ -1,4 +1,4 @@
-import { serializeJsonLd } from '@stax/security';
+import { serializeJsonLd } from '@nemasus/security';
 import type { SiteSettingsView } from './snapshot';
 
 /**

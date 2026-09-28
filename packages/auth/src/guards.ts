@@ -1,5 +1,5 @@
-import type { OrgCapability, PlatformRole, Profile, UUID } from '@stax/types';
-import { appError, type AppError } from '@stax/types';
+import type { OrgCapability, PlatformRole, Profile, UUID } from '@nemasus/types';
+import { appError, type AppError } from '@nemasus/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**

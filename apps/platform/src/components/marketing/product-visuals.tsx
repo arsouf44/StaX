@@ -1,4 +1,4 @@
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 
 /**
  * Representations du produit.
@@ -157,7 +157,7 @@ export function DashboardMock({ className }: { className?: string }) {
           <p className="text-[10px] text-[#4b545c]">Site en ligne</p>
           <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2c7659]">
             <span className="size-1.5 rounded-full bg-[#2c7659]" />
-            restaurant-dupont.fr
+            restaurant-dupont.example
           </p>
         </div>
       </aside>
@@ -419,7 +419,9 @@ export function EditorMock({ className }: { className?: string }) {
         </div>
 
         <div className="p-4">
-          <p className="text-[9px] text-[#5e676f]">Aperçu de votre site — restaurant-dupont.fr</p>
+          <p className="text-[9px] text-[#5e676f]">
+            Aperçu de votre site — restaurant-dupont.example
+          </p>
           <div className="mt-2 border border-[rgb(20_24_28/0.14)] p-4">
             <div className="outline-1 outline-offset-4 outline-[#2f5f86] outline-dashed">
               <p className="text-[9px] text-[#2f5f86]">Titre · modifiable</p>
@@ -689,7 +691,7 @@ export function PaymentPanel({ className }: { className?: string }) {
         Versé sur votre compte
       </div>
       <p className="mt-2.5 border-t border-[var(--border)] pt-2.5 text-[9px] leading-relaxed text-[var(--muted)]">
-        Encaissé sur votre propre compte Stripe. StaX ne prélève aucune commission.
+        Encaissé sur votre propre compte Stripe. Nemasus ne prélève aucune commission.
       </p>
     </div>
   );

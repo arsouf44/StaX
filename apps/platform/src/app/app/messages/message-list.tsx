@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Badge, Button, Icon, Panel, Textarea } from '@stax/ui';
+import { Alert, Badge, Button, Icon, Panel, Textarea } from '@nemasus/ui';
 import type { SubmissionView } from './page';
 import {
   saveInternalNoteAction,

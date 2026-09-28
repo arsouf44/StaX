@@ -4,13 +4,13 @@ import type { EmailMessage } from './provider';
 /**
  * Messages adresses aux VISITEURS d'un site client.
  *
- * Ils ne sont pas signes StaX, et c'est essentiel : le destinataire est le
+ * Ils ne sont pas signes Nemasus, et c'est essentiel : le destinataire est le
  * client d'une boulangerie ou d'un salon, pas le notre. Recevoir un message
  * signe par une plateforme dont il n'a jamais entendu parler serait au mieux
  * deroutant, au pire pris pour une tentative d'hameconnage.
  *
  * Le nom affiche, l'adresse de reponse et le lien de bas de page viennent donc
- * du commercant. StaX n'apparait nulle part.
+ * du commercant. Nemasus n'apparait nulle part.
  */
 
 export interface TenantEmailContext {

@@ -1,4 +1,4 @@
-import type { ContentDocument, SiteManifest } from '@stax/site-contract';
+import type { ContentDocument, SiteManifest } from '@nemasus/site-contract';
 
 /**
  * Donnees de l'editeur d'un site independant, telles qu'elles partent vers le

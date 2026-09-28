@@ -1,17 +1,13 @@
 import type { CSSProperties, SVGProps } from 'react';
 
 /**
- * Identite StaX.
+ * Identite Nemasus.
  *
- * La marque est un X construit en quatre dalles isometriques, separees par un
- * vide central. Deux lectures se superposent :
- *  - le X du nom ;
- *  - une pile de couches, qui evoque l infrastructure sur laquelle reposent
- *    les sites des clients.
- *
- * Le degre de luminosite decroit du haut vers le bas : la profondeur nait de
- * la lumiere, pas d une ombre portee. Le vide central reste lisible jusqu a
- * 16 px, ce qui permet d utiliser la meme forme en favicon.
+ * La marque est un N trace en trois traits, separes par deux vides : les deux
+ * jambages et la diagonale qui les relie. Le trait de gauche est le plus
+ * lumineux, la lumiere decroit vers la droite : la profondeur nait de la
+ * lumiere, pas d une ombre portee. Les vides restent lisibles jusqu a 16 px,
+ * ce qui permet d utiliser la meme forme en favicon.
  */
 
 export interface LogoProps extends Omit<SVGProps<SVGSVGElement>, 'children'> {
@@ -22,16 +18,16 @@ export interface LogoProps extends Omit<SVGProps<SVGSVGElement>, 'children'> {
 }
 
 const SLABS = [
-  // Diagonale descendante : la plus lumineuse en haut a gauche.
-  { d: 'M6 6 L13.4 13.4', opacity: 1 },
-  { d: 'M18.6 18.6 L26 26', opacity: 0.55 },
-  // Diagonale montante.
-  { d: 'M26 6 L18.6 13.4', opacity: 0.8 },
-  { d: 'M13.4 18.6 L6 26', opacity: 0.35 },
+  // Jambage gauche : le plus lumineux.
+  { d: 'M8 25 L8 7', opacity: 1 },
+  // Diagonale, detachee des deux jambages par un vide.
+  { d: 'M12 11.5 L20 20.5', opacity: 0.7 },
+  // Jambage droit.
+  { d: 'M24 25 L24 7', opacity: 0.45 },
 ] as const;
 
 export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoProps) {
-  const gradientId = `stax-mark-${tone}`;
+  const gradientId = `nemasus-mark-${tone}`;
   const stroke =
     tone === 'mono' ? 'currentColor' : tone === 'accent' ? 'var(--accent)' : `url(#${gradientId})`;
 
@@ -52,10 +48,10 @@ export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoP
         <defs>
           <linearGradient
             id={gradientId}
-            x1="6"
-            y1="6"
-            x2="26"
-            y2="26"
+            x1="8"
+            y1="7"
+            x2="24"
+            y2="25"
             gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="var(--foreground)" />
@@ -81,15 +77,13 @@ export function LogoMark({ size = 32, tone = 'duotone', title, ...props }: LogoP
 export interface WordmarkProps {
   size?: number;
   className?: string;
-  /** Met le X final dans le bleu de la mer. */
-  highlightX?: boolean;
 }
 
 /**
- * Le mot StaX, en EB Garamond : c est a lui seul le logo des en-tetes, aucune
+ * Le mot Nemasus, en EB Garamond : c est a lui seul le logo des en-tetes, aucune
  * marque graphique a cote.
  */
-export function Wordmark({ size = 30, className, highlightX = false }: WordmarkProps) {
+export function Wordmark({ size = 30, className }: WordmarkProps) {
   const style: CSSProperties = {
     fontFamily: 'var(--font-serif)',
     fontSize: size,
@@ -101,8 +95,7 @@ export function Wordmark({ size = 30, className, highlightX = false }: WordmarkP
   };
   return (
     <span className={className} style={style}>
-      Sta
-      <span style={highlightX ? { color: 'var(--accent)' } : undefined}>X</span>
+      Nemasus
     </span>
   );
 }
@@ -126,7 +119,7 @@ export function Logo({
   className,
   showWordmark = true,
   tone = 'duotone',
-  label = 'StaX',
+  label = 'Nemasus',
 }: LogoProps2) {
   if (!showWordmark) {
     return (
@@ -149,11 +142,10 @@ export function Logo({
  */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
 <rect width="32" height="32" rx="7" fill="#1D2328"/>
-<g stroke-width="5" stroke-linecap="round">
-<path d="M8 9 L14 15" stroke="#F4F6F8"/>
-<path d="M18 17 L24 23" stroke="#F4F6F8" stroke-opacity="0.55"/>
-<path d="M24 9 L18 15" stroke="#F4F6F8" stroke-opacity="0.8"/>
-<path d="M14 17 L8 23" stroke="#9FB7CB"/>
+<g stroke-width="4.5" stroke-linecap="round">
+<path d="M9.5 23.5 L9.5 8.5" stroke="#F4F6F8"/>
+<path d="M13.4 13 L18.6 19" stroke="#F4F6F8" stroke-opacity="0.8"/>
+<path d="M22.5 23.5 L22.5 8.5" stroke="#9FB7CB"/>
 </g>
 </svg>`;
 
@@ -166,7 +158,7 @@ export function faviconDataUri(): string {
  * documents, exports. Une seule source, jamais de valeur recopiee.
  */
 export const BRAND = {
-  name: 'StaX',
+  name: 'Nemasus',
   /** Positionnement, utilise dans les metadonnees et les partages. */
   tagline: 'Nous créons votre site. Vous le gérez ensuite.',
   colors: {

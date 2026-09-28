@@ -78,7 +78,7 @@ test.beforeAll(async () => {
   if (created.error) throw new Error(created.error.message);
   siteId = (created.data as { siteId: string }).siteId;
 
-  // Le site est développé hors de StaX, rattaché, et sa checklist est faite.
+  // Le site est développé hors de Nemasus, rattaché, et sa checklist est faite.
   infra = await createSiteInfrastructure(serviceClient(), {
     slug: `soleil-${suffix}`,
     siteName: COMPANY,
@@ -248,7 +248,7 @@ test('paiement confirmé : le site est livré automatiquement', async ({ browser
         id: `cs_e2e_proposal_${suffix}`,
         object: 'checkout.session',
         client_reference_id: orderId,
-        metadata: { stax_order_id: orderId },
+        metadata: { nemasus_order_id: orderId },
         payment_status: 'paid',
         payment_intent: `pi_e2e_proposal_${suffix}`,
         customer: null,

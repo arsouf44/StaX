@@ -1,6 +1,6 @@
 # Registre des activités de traitement (RGPD art. 30)
 
-Ce registre est tenu par **LallianSe SAS**, éditrice de StaX. Il décrit ce que
+Ce registre est tenu par **LallianSe SAS**, éditrice de Nemasus. Il décrit ce que
 le code fait **réellement** : chaque finalité renvoie aux tables et aux
 fichiers qui la mettent en œuvre, et se vérifie en les lisant.
 
@@ -24,7 +24,7 @@ mention obligatoire manque.
 
 ---
 
-## A. StaX comme **responsable de traitement**
+## A. Nemasus comme **responsable de traitement**
 
 Traitements effectués pour notre propre compte : nos clients, nos ventes, notre
 plateforme.
@@ -41,7 +41,7 @@ plateforme.
 | **Conservation** | Durée du contrat, puis 3 ans à compter du dernier contact |
 | **Destinataires** | Supabase (hébergement et authentification) |
 
-Le mot de passe n'est jamais stocké par StaX : l'authentification est déléguée à
+Le mot de passe n'est jamais stocké par Nemasus : l'authentification est déléguée à
 Supabase, qui conserve un dérivé. Les codes d'activation ne sont stockés que
 sous forme d'empreinte HMAC (`activation_codes.code_hash`) : un code perdu se
 remplace, il ne se retrouve pas.
@@ -58,7 +58,7 @@ remplace, il ne se retrouve pas.
 | **Conservation** | **10 ans** pour les pièces comptables (art. L123-22 du code de commerce) |
 | **Destinataires** | Stripe Payments Europe Ltd (paiement) |
 
-**Aucune donnée bancaire n'est traitée par StaX.** Numéros de carte, CVC et
+**Aucune donnée bancaire n'est traitée par Nemasus.** Numéros de carte, CVC et
 cryptogrammes ne transitent jamais par notre infrastructure : le paiement a lieu
 sur une page hébergée par Stripe. Nous ne conservons qu'un identifiant de
 transaction.
@@ -77,7 +77,7 @@ transaction.
 
 Le contenu publié relève de la responsabilité éditoriale du client. Quand ce
 contenu comporte des données personnelles (photo d'un salarié, coordonnées d'un
-membre de l'équipe), **le client en est responsable de traitement** et StaX
+membre de l'équipe), **le client en est responsable de traitement** et Nemasus
 sous-traitant : voir la section B.
 
 ### A4 — Assistance et relation client
@@ -91,7 +91,7 @@ sous-traitant : voir la section B.
 | **Conservation** | 3 ans à compter de la clôture |
 
 La discussion « Écrire à l'équipe » (`project_messages`) est lue par l'équipe
-depuis `/admin/messages` ; le côté de l'auteur (client ou StaX) est imposé par
+depuis `/admin/messages` ; le côté de l'auteur (client ou Nemasus) est imposé par
 la base (0055). Une copie de chaque réponse de l'équipe part par e-mail au
 responsable du compte client.
 
@@ -143,7 +143,7 @@ et cette propriété doit être préservée à chaque évolution.
 | **Conservation** | 1 an après la décision (purge `app.apply_retention()`) |
 
 L'identité de l'auteur n'est pas communiquée à l'éditeur du site, sauf
-obligation légale. Seule l'équipe StaX lit les signalements (RLS), et seule
+obligation légale. Seule l'équipe Nemasus lit les signalements (RLS), et seule
 l'administration de la plateforme peut décider.
 
 ### A8 — Propositions de site (vente par téléphone)
@@ -155,7 +155,7 @@ l'administration de la plateforme peut décider.
 | **Personnes** | Contacts professionnels des entreprises prospectées |
 | **Données** | Nom de l'entreprise, nom, e-mail et téléphone professionnels du contact, offre et prix proposés, notes internes de l'équipe, dates d'envoi, de récupération et de paiement, nombre de saisies du code |
 | **Tables** | `site_proposals`, `audit_logs`, `email_log` (empreinte du destinataire) |
-| **Conservation** | Non conclue (expirée ou retirée) : coordonnées **anonymisées 3 ans** après le dernier échange (`app.apply_retention()`, 0054). Conclue : comme A1 et A2 |
+| **Conservation** | Non conclue (expirée ou retirée) : coordonnées **anonymisées 3 ans** après le dernier échange (`app.apply_retention()`, 0054). Opposition du prospect (« STOP ») : proposition retirée puis coordonnées **effacées immédiatement** (`app.erase_site_proposal_contact`, 0056, bouton « Effacer les coordonnées » dans `/admin/propositions`). Conclue : comme A1 et A2 |
 
 Le code personnel n'est stocké que sous forme d'empreinte HMAC ; il ne vaut
 qu'avec l'adresse e-mail destinataire. Le prospect ne lit jamais la table
@@ -163,15 +163,36 @@ qu'avec l'adresse e-mail destinataire. Le prospect ne lit jamais la table
 démarchage téléphonique d'entreprises n'est pas soumis à Bloctel ; l'e-mail de
 proposition n'est envoyé qu'après un appel concluant, jamais en masse.
 
+Chaque e-mail de proposition porte l'information due au prospect (article 13) :
+qui traite ses coordonnées, pourquoi, et comment s'opposer (répondre « STOP »).
+
+### A9 — Prospection commerciale auprès des professionnels
+
+| | |
+| --- | --- |
+| **Finalité** | Faire connaître l'offre aux entreprises susceptibles d'en avoir besoin : appel téléphonique, puis e-mail portant sur leur activité professionnelle |
+| **Base légale** | Intérêt légitime (art. 6.1.f) — prospection B2B admise par la CNIL, avec droit d'opposition simple et gratuit |
+| **Personnes** | Dirigeants et contacts professionnels d'entreprises |
+| **Données** | Nom de l'entreprise, nom du dirigeant ou du contact, téléphone et e-mail professionnels, adresse de l'établissement, secteur |
+| **Source** | Sources publiques : registres des entreprises, annuaires professionnels, fiches d'établissement, sites des entreprises (information de l'article 14 donnée au premier contact) |
+| **Conservation** | 3 ans après le dernier contact émanant du prospect ; liste d'opposition : 3 ans |
+
+**Règles tenues par l'équipe** (voir `docs/vente-par-telephone.md`) : on ne
+démarche que des numéros et adresses **professionnels**, pour une offre en
+rapport avec l'activité de l'entreprise ; l'opposition exprimée à l'oral ou par
+écrit est enregistrée et respectée ; aucun e-mail n'est envoyé en masse. Les
+fichiers de prospection tenus hors de la plateforme (tableur de l'équipe)
+relèvent de ce même traitement et des mêmes durées.
+
 Toutes les durées de conservation de ce registre sont **appliquées** par
 `app.apply_retention()` (migration 0039), planifiée chaque jour : voir
 `docs/supabase.md`.
 
 ---
 
-## B. StaX comme **sous-traitant** (art. 28)
+## B. Nemasus comme **sous-traitant** (art. 28)
 
-Pour les données que ses clients collectent via leur site, StaX agit **sur
+Pour les données que ses clients collectent via leur site, Nemasus agit **sur
 instruction** du client, qui en est responsable de traitement.
 
 | Traitement | Données | Tables | Conservation |
@@ -185,7 +206,7 @@ instruction** du client, qui en est responsable de traitement.
 Obligations tenues au titre de l'article 28 :
 
 - **traitement sur instruction documentée** : le client configure ses
-  formulaires et ses durées ; StaX n'exploite jamais ces données pour son compte ;
+  formulaires et ses durées ; Nemasus n'exploite jamais ces données pour son compte ;
 - **confidentialité** : accès limité au personnel habilité, sessions
   d'assistance tracées ;
 - **sécurité** (art. 32) : isolation par RLS PostgreSQL, chiffrement en transit
@@ -205,8 +226,11 @@ Obligations tenues au titre de l'article 28 :
 
 | Prestataire | Rôle | Localisation | Garanties |
 | --- | --- | --- | --- |
-| Cloudflare, Inc. | Hébergement edge, CDN, TLS | UE (traitement edge mondial) | Clauses contractuelles types + DPA |
-| Supabase, Inc. | Base PostgreSQL, authentification, stockage | UE (région configurable) | Clauses contractuelles types + DPA |
+| Vercel Inc. | Exécution de la plateforme (site public, espace client, administration) | Société américaine ; exécution à Paris (`cdg1`) | Clauses contractuelles types + DPA Vercel |
+| Supabase Pte. Ltd. | Base PostgreSQL, authentification, stockage | Paris (`eu-west-3`) ; société à Singapour | Données dans l'UE ; accès support encadrés par les CCT (DPA Supabase) |
+| Cloudflare, Inc. | Diffusion des sites clients, CDN, TLS, anti-robot (Turnstile) | Société américaine ; réseau mondial | Clauses contractuelles types + DPA Cloudflare |
+| GitHub, Inc. | Code source et contenus publiés des sites clients | États-Unis | Clauses contractuelles types + DPA GitHub |
+| Plus Five Five, Inc. (Resend) | E-mails transactionnels | États-Unis | Clauses contractuelles types + DPA Resend |
 | Stripe Payments Europe, Ltd. | Paiement et facturation | Irlande (UE) | Responsable autonome pour la lutte anti-fraude |
 
 La liste qui fait foi est celle de la table `subprocessors`, publiée sur
@@ -217,10 +241,20 @@ l'état du jour de la compilation.
 
 ## D. Transferts hors Union européenne
 
-Aucun transfert n'est organisé hors de l'Union. Le traitement edge de Cloudflare
-peut faire transiter une requête par un point de présence hors UE ; il est
-couvert par les clauses contractuelles types. Les données au repos restent dans
-l'Union.
+La base de données, les fichiers et l'exécution de la plateforme sont en France
+(région de Paris). Des transferts hors de l'Union existent néanmoins, et sont
+encadrés par les clauses contractuelles types de la Commission européenne
+intégrées aux DPA des prestataires (et, pour ceux qui y sont certifiés, par le
+cadre UE–États-Unis) :
+
+- **GitHub** conserve le code source des sites clients et les contenus publiés
+  (textes, noms d'entreprise, parfois des noms de personnes) ;
+- **Resend** achemine les e-mails transactionnels (adresse du destinataire,
+  contenu du message) ;
+- **Cloudflare** diffuse les sites depuis le point de présence le plus proche du
+  visiteur, qui peut être hors de l'Union ;
+- **Vercel** et **Supabase**, sociétés établies hors de l'Union, peuvent accéder
+  aux données pour leur support ou leur sécurité.
 
 ---
 
@@ -261,7 +295,7 @@ complexe, la personne étant informée de la prolongation et de son motif.
 
 - **Les sites clients ont leur propre registre à tenir.** Un client qui collecte
   des données via son site est responsable de traitement : ce registre-ci ne le
-  remplace pas, et StaX ne le tient pas à sa place.
+  remplace pas, et Nemasus ne le tient pas à sa place.
 - **La désignation d'un DPO est à réévaluer** dès que le suivi devient
   systématique ou à grande échelle (art. 37.1.b).
 - **Aucune analyse d'impact (AIPD) n'a été conduite** : aucun traitement n'entre

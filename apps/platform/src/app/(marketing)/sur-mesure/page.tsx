@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@stax/ui';
+import { ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@nemasus/ui';
 import { CreationTimeline } from '~/components/marketing/diagrams';
 
 export const metadata: Metadata = {
   title: 'Projets sur mesure',
   description:
     'Application sur mesure, intégrations, reprise de données, volumétries importantes : ' +
-    'StaX étudie votre besoin et établit un devis détaillé, ligne par ligne.',
+    'Nemasus étudie votre besoin et établit un devis détaillé, ligne par ligne.',
   alternates: { canonical: '/sur-mesure' },
 };
 
@@ -58,7 +58,7 @@ const PROCESS = [
   {
     title: 'Vous acceptez, le projet démarre',
     description:
-      'L’acceptation du devis ouvre automatiquement votre projet et votre espace client. Vous suivez ensuite l’avancement comme pour toute commande StaX.',
+      'L’acceptation du devis ouvre automatiquement votre projet et votre espace client. Vous suivez ensuite l’avancement comme pour toute commande Nemasus.',
   },
 ];
 

@@ -1,4 +1,4 @@
-import { escapeHtml } from '@stax/security';
+import { escapeHtml } from '@nemasus/security';
 
 /**
  * Production de HTML sans DOM.
@@ -12,7 +12,7 @@ import { escapeHtml } from '@stax/security';
  * chaque echappatoire visible a la relecture et cherchable dans le depot.
  */
 
-const RAW = Symbol('stax.raw');
+const RAW = Symbol('nemasus.raw');
 
 export interface RawHtml {
   readonly [RAW]: true;

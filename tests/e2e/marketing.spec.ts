@@ -11,7 +11,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Site public', () => {
   test('la page d’accueil s’affiche avec un titre et une proposition claire', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/StaX/);
+    await expect(page).toHaveTitle(/Nemasus/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 

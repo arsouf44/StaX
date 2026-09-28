@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import { Alert, Button, Field, Input, Panel, Switch } from '@stax/ui';
+import { Alert, Button, Field, Input, Panel, Switch } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { claimInvoiceAction } from './actions';
 

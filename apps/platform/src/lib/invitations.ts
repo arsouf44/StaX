@@ -1,5 +1,5 @@
 import 'server-only';
-import { hmacHex } from '@stax/security';
+import { hmacHex } from '@nemasus/security';
 
 /**
  * Empreinte du jeton d'invitation, telle qu'elle est stockée en base

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { readEnv } from '@stax/config';
-import { Container, Panel, Section, SectionHeading } from '@stax/ui';
+import { readEnv } from '@nemasus/config';
+import { Container, Panel, Section, SectionHeading } from '@nemasus/ui';
 import { QuoteForm } from './quote-form';
 
 export const dynamic = 'force-dynamic';

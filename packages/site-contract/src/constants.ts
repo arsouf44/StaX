@@ -1,23 +1,23 @@
 /**
- * Constantes du contrat d'edition StaX.
+ * Constantes du contrat d'edition Nemasus.
  *
  * Le contrat est VERSIONNE : un site declare la version qu'il respecte
- * (`"contract": 1`), et StaX refuse un manifeste d'une version qu'il ne sait
+ * (`"contract": 1`), et Nemasus refuse un manifeste d'une version qu'il ne sait
  * pas lire plutot que de l'interpreter de travers.
  */
 
-/** Version du contrat que cette version de StaX sait lire et produire. */
+/** Version du contrat que cette version de Nemasus sait lire et produire. */
 export const CONTRACT_VERSION = 1 as const;
 
 /** Nom du fichier de contrat, a la racine du depot par defaut. */
-export const DEFAULT_MANIFEST_PATH = 'stax.manifest.json';
+export const DEFAULT_MANIFEST_PATH = 'nemasus.manifest.json';
 
-/** Branche technique sur laquelle StaX pousse les apercus (jamais la production). */
-export const DEFAULT_PREVIEW_BRANCH = 'stax-preview';
+/** Branche technique sur laquelle Nemasus pousse les apercus (jamais la production). */
+export const DEFAULT_PREVIEW_BRANCH = 'nemasus-preview';
 
 /** Schemas publics, pour l'autocompletion dans l'editeur du developpeur. */
-export const MANIFEST_SCHEMA_URL = 'https://stax.fr/schemas/stax.manifest.v1.json';
-export const CONTENT_SCHEMA_URL = 'https://stax.fr/schemas/stax.content.v1.json';
+export const MANIFEST_SCHEMA_URL = 'https://nemasus.fr/schemas/nemasus.manifest.v1.json';
+export const CONTENT_SCHEMA_URL = 'https://nemasus.fr/schemas/nemasus.content.v1.json';
 
 /**
  * Bornes du contrat. Elles protegent la plateforme (taille des documents,
@@ -44,13 +44,13 @@ export const CONTRACT_LIMITS = {
   richTextMax: 50_000,
 } as const;
 
-/** Commit ecrit par StaX : prefixe convenu, reconnaissable dans l'historique. */
-export const COMMIT_PREFIX = 'stax:';
+/** Commit ecrit par Nemasus : prefixe convenu, reconnaissable dans l'historique. */
+export const COMMIT_PREFIX = 'nemasus:';
 
 /** Marqueurs (trailers Git) qui rendent chaque commit tracable et idempotent. */
 export const COMMIT_TRAILERS = {
-  release: 'Stax-Release',
-  site: 'Stax-Site',
-  version: 'Stax-Version',
-  preview: 'Stax-Preview',
+  release: 'Nemasus-Release',
+  site: 'Nemasus-Site',
+  version: 'Nemasus-Version',
+  preview: 'Nemasus-Preview',
 } as const;

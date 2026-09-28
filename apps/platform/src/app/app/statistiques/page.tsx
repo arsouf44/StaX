@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList } from '@stax/database';
-import { formatMoney } from '@stax/payments';
+import { unwrapList } from '@nemasus/database';
+import { formatMoney } from '@nemasus/payments';
 import {
   EmptyState,
   Icon,
@@ -15,7 +15,7 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 

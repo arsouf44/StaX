@@ -4,7 +4,7 @@ import { Client } from 'pg';
 /**
  * Parcours critiques, bout en bout, contre une vraie base.
  *
- *   COMMANDE -> PAIEMENT -> CONSTRUCTION HORS DE STAX -> DEPOT GITHUB ->
+ *   COMMANDE -> PAIEMENT -> CONSTRUCTION HORS DE NEMASUS -> DEPOT GITHUB ->
  *   PROJET CLOUDFLARE -> VERIFICATIONS -> LIVRAISON -> BROUILLON DU CLIENT ->
  *   PUBLIER -> COMMIT GITHUB -> DEPLOIEMENT CLOUDFLARE -> EN LIGNE
  *
@@ -22,7 +22,7 @@ import { Client } from 'pg';
  * Sans base configuree, ils sont SAUTES — jamais passes en silence.
  */
 
-const DATABASE_URL = process.env.STAX_TEST_DATABASE_URL;
+const DATABASE_URL = process.env.NEMASUS_TEST_DATABASE_URL;
 const describeIfDb = DATABASE_URL ? describe : describe.skip;
 
 type Json = Record<string, unknown>;
@@ -80,7 +80,7 @@ describeIfDb('parcours critiques', () => {
       ).rows[0]!.id;
 
     ids.user = await newUser(`parcours-${ids.suffix}@client.test`);
-    ids.staff = await newUser(`equipe-${ids.suffix}@stax.test`);
+    ids.staff = await newUser(`equipe-${ids.suffix}@nemasus.test`);
     ids.stranger = await newUser(`intrus-${ids.suffix}@ailleurs.test`);
     await db.query(`update public.profiles set platform_role = 'platform_admin' where id = $1`, [
       ids.staff,
@@ -98,10 +98,10 @@ describeIfDb('parcours critiques', () => {
     );
     ids.plan = plan.rows[0]!.id;
 
-    // L'application GitHub StaX est installee sur le compte des depots.
+    // L'application GitHub Nemasus est installee sur le compte des depots.
     await db.query(
       `select public.upsert_github_installation($1, $2, $3, 'Organization', 'selected', false)`,
-      [ids.installation, `stax-sites-${ids.suffix}`, ids.githubAccount],
+      [ids.installation, `nemasus-sites-${ids.suffix}`, ids.githubAccount],
     );
   });
 
@@ -297,7 +297,13 @@ describeIfDb('parcours critiques', () => {
         ids.user,
         `select public.connect_site_repository($1::uuid, $2, $3, $4, $5, 'x', $4 || '/x',
                                                'https://github.com/' || $4 || '/x', 'main', 'main')`,
-        [ids.site, ids.installation, ids.repository, `stax-sites-${ids.suffix}`, ids.githubAccount],
+        [
+          ids.site,
+          ids.installation,
+          ids.repository,
+          `nemasus-sites-${ids.suffix}`,
+          ids.githubAccount,
+        ],
       ),
     ).rejects.toThrow();
 
@@ -313,7 +319,7 @@ describeIfDb('parcours critiques', () => {
   });
 
   it('5. l’équipe rattache le dépôt et le projet Cloudflare du site, jamais ceux d’un autre', async () => {
-    const owner = `stax-sites-${ids.suffix}`;
+    const owner = `nemasus-sites-${ids.suffix}`;
     const repo = await callAs(
       ids.staff,
       `public.connect_site_repository($1::uuid, $2, $3, $4, $5, $6, $7, $8, 'main', 'main')`,
@@ -387,7 +393,7 @@ describeIfDb('parcours critiques', () => {
   it('6. le contrat d’édition et le contenu initial reposent sur un déploiement vérifié', async () => {
     const manifest = await callAs(
       ids.staff,
-      `public.record_site_manifest($1::uuid, $2, 'stax.manifest.json', 1, $3::jsonb, $4, 'valid',
+      `public.record_site_manifest($1::uuid, $2, 'nemasus.manifest.json', 1, $3::jsonb, $4, 'valid',
                                    '[]'::jsonb, '[]'::jsonb, $5::jsonb, true)`,
       [
         ids.site,
@@ -454,7 +460,7 @@ describeIfDb('parcours critiques', () => {
 
     await callAs(ids.staff, `public.attest_delivery_check($1::uuid, 'forms', true, $2)`, [
       ids.site,
-      'Formulaire de contact envoyé et reçu dans la messagerie StaX',
+      'Formulaire de contact envoyé et reçu dans la messagerie Nemasus',
     ]);
     await callAs(ids.staff, `public.attest_delivery_check($1::uuid, 'responsive', true, $2)`, [
       ids.site,
@@ -541,7 +547,7 @@ describeIfDb('parcours critiques', () => {
       ids.v2,
       sha('1'),
       sha('2'),
-      `https://github.com/stax/parcours/commit/${sha('2')}`,
+      `https://github.com/nemasus/parcours/commit/${sha('2')}`,
     ]);
     expect(await releaseStatus(ids.v2)).toBe('deploying');
     expect(await production()).toBe(ids.v1);
@@ -593,7 +599,7 @@ describeIfDb('parcours critiques', () => {
       cloudflareFailure,
       sha('2'),
       sha('4'),
-      `https://github.com/stax/parcours/commit/${sha('4')}`,
+      `https://github.com/nemasus/parcours/commit/${sha('4')}`,
     ]);
     await callAsServer(
       `public.record_site_deployment($1::uuid, $2, 'production', 'failure', $3, 'main',
@@ -644,7 +650,7 @@ describeIfDb('parcours critiques', () => {
       restored,
       sha('4'),
       sha('5'),
-      `https://github.com/stax/parcours/commit/${sha('5')}`,
+      `https://github.com/nemasus/parcours/commit/${sha('5')}`,
     ]);
     await callAsServer(
       `public.record_site_deployment($1::uuid, $2, 'production', 'success', $3, 'main')`,

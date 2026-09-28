@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { FORM_KIND_LABELS } from '@stax/business';
-import { unwrapList } from '@stax/database';
-import { Panel } from '@stax/ui';
+import { FORM_KIND_LABELS } from '@nemasus/business';
+import { unwrapList } from '@nemasus/database';
+import { Panel } from '@nemasus/ui';
 import { ModulePage } from '~/components/app/module-page';
 import { getWorkspace } from '~/lib/workspace';
 import { FormManager, type FormView } from './form-manager';

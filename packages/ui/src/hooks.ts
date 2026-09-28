@@ -83,10 +83,10 @@ export function useLocalStorageValue(key: string): string | null {
         if (event.key === key || event.key === null) onChange();
       };
       window.addEventListener('storage', handler);
-      window.addEventListener('stax:storage', onChange);
+      window.addEventListener('nemasus:storage', onChange);
       return () => {
         window.removeEventListener('storage', handler);
-        window.removeEventListener('stax:storage', onChange);
+        window.removeEventListener('nemasus:storage', onChange);
       };
     },
     [key],
@@ -111,5 +111,5 @@ export function writeLocalStorage(key: string, value: string): void {
   } catch {
     // Stockage refuse : le choix ne vaut que pour cette session.
   }
-  window.dispatchEvent(new Event('stax:storage'));
+  window.dispatchEvent(new Event('nemasus:storage'));
 }

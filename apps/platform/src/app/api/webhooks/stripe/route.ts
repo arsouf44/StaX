@@ -1,6 +1,6 @@
-import { platformUrl } from '@stax/config';
-import { createServiceClient } from '@stax/database';
-import { renewalReminderEmail, sendEmail } from '@stax/emails';
+import { platformUrl } from '@nemasus/config';
+import { createServiceClient } from '@nemasus/database';
+import { renewalReminderEmail, sendEmail } from '@nemasus/emails';
 import {
   formatMoney,
   redactEventPayload,
@@ -8,7 +8,7 @@ import {
   verifyWebhook,
   WebhookVerificationError,
   type Stripe,
-} from '@stax/payments';
+} from '@nemasus/payments';
 import { completePaidProposal } from '~/lib/proposals';
 
 /**
@@ -106,7 +106,7 @@ export async function POST(request: Request): Promise<Response> {
       p_status: 'failed',
       p_error: message,
     });
-    console.error('[stax:webhook]', event.type, message);
+    console.error('[nemasus:webhook]', event.type, message);
     // L evenement est conserve avec son motif d echec et sera rejoue par la
     // tache de fond. On ne fait pas boucler Stripe dessus.
     return ok({ received: true, deferred: true });
@@ -174,7 +174,7 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
     return;
   }
 
-  const orderId = session.client_reference_id ?? session.metadata?.stax_order_id ?? null;
+  const orderId = session.client_reference_id ?? session.metadata?.nemasus_order_id ?? null;
   if (!orderId) throw new Error('Session de paiement sans commande associee.');
 
   const { data, error } = await db.rpc('apply_order_paid', {
@@ -193,7 +193,7 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
     throw new Error(`Commande non appliquee : ${result?.code ?? 'inconnu'}`);
   }
 
-  // Aucun site modele n est prepare au paiement : l equipe StaX concoit et
+  // Aucun site modele n est prepare au paiement : l equipe Nemasus concoit et
   // developpe le site individuellement, puis le livre au client depuis
   // l administration (`app.deliver_site`). Le client suit son projet d ici la.
   // Exception : un site PROPOSE apres un appel, deja pret (voir plus bas).
@@ -209,7 +209,7 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
       // Sans consequence sur la commande, deja payee : a la livraison, la carte
       // du paiement initial est reprise directement.
       console.error(
-        '[stax:webhook] carte par defaut non enregistree',
+        '[nemasus:webhook] carte par defaut non enregistree',
         rememberError instanceof Error ? rememberError.message : rememberError,
       );
     }
@@ -223,7 +223,7 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
     await completePaidProposal(db, orderId);
   } catch (deliveryError) {
     console.error(
-      '[stax:webhook] livraison automatique differee',
+      '[nemasus:webhook] livraison automatique differee',
       deliveryError instanceof Error ? deliveryError.message : deliveryError,
     );
   }
@@ -244,13 +244,16 @@ async function onCheckoutCompleted(db: Db, session: Stripe.Checkout.Session): Pr
       p_price_id: null,
     });
     if (subscriptionError) {
-      console.error('[stax:webhook] abonnement anterieur non rattache', subscriptionError.message);
+      console.error(
+        '[nemasus:webhook] abonnement anterieur non rattache',
+        subscriptionError.message,
+      );
     }
   }
 }
 
 async function onCheckoutExpired(db: Db, session: Stripe.Checkout.Session): Promise<void> {
-  const orderId = session.client_reference_id ?? session.metadata?.stax_order_id ?? null;
+  const orderId = session.client_reference_id ?? session.metadata?.nemasus_order_id ?? null;
   if (!orderId) return;
   // Une session expiree ne annule pas la commande : le client peut relancer le
   // paiement. On la repasse simplement en brouillon.
@@ -270,7 +273,7 @@ async function onSubscriptionEvent(db: Db, subscription: Stripe.Subscription): P
     p_period_start: toIso(item?.current_period_start),
     p_period_end: toIso(item?.current_period_end),
     p_cancel_at_period_end: subscription.cancel_at_period_end ?? false,
-    p_order_id: subscription.metadata?.stax_order_id ?? null,
+    p_order_id: subscription.metadata?.nemasus_order_id ?? null,
     p_price_id: item?.price?.id ?? null,
   });
   if (error) throw new Error(error.message);

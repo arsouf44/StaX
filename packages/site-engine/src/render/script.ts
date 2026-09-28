@@ -18,7 +18,7 @@ export const SITE_SCRIPT = String.raw`
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* --- En-tete : etat au defilement ------------------------------------- */
-  var header = d.querySelector('[data-stax-header]');
+  var header = d.querySelector('[data-nemasus-header]');
   if (header) {
     var onScroll = function () {
       header.classList.toggle('hdr-solid', window.scrollY > 8);
@@ -28,7 +28,7 @@ export const SITE_SCRIPT = String.raw`
   }
 
   /* --- Menu mobile ------------------------------------------------------- */
-  var toggle = d.querySelector('[data-stax-nav-toggle]');
+  var toggle = d.querySelector('[data-nemasus-nav-toggle]');
   var mobile = d.getElementById('nav-mobile');
   if (toggle && mobile) {
     toggle.addEventListener('click', function () {
@@ -70,14 +70,14 @@ export const SITE_SCRIPT = String.raw`
   }
 
   /* --- Contenus integres : charges seulement a la demande ---------------- */
-  var embedButtons = d.querySelectorAll('[data-stax-embed-load]');
+  var embedButtons = d.querySelectorAll('[data-nemasus-embed-load]');
   for (var e = 0; e < embedButtons.length; e += 1) {
     embedButtons[e].addEventListener('click', function (event) {
-      var box = event.currentTarget.closest('[data-stax-embed]');
+      var box = event.currentTarget.closest('[data-nemasus-embed]');
       if (!box) return;
       var frame = d.createElement('iframe');
-      frame.src = box.getAttribute('data-stax-embed');
-      frame.title = box.getAttribute('data-stax-embed-title') || 'Contenu intégré';
+      frame.src = box.getAttribute('data-nemasus-embed');
+      frame.title = box.getAttribute('data-nemasus-embed-title') || 'Contenu intégré';
       frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation allow-forms');
       frame.setAttribute('allow', 'accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen');
@@ -89,7 +89,7 @@ export const SITE_SCRIPT = String.raw`
   }
 
   /* --- Onglets (carte de restaurant) ------------------------------------- */
-  d.querySelectorAll('[data-stax-tabs]').forEach(function (root) {
+  d.querySelectorAll('[data-nemasus-tabs]').forEach(function (root) {
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[role="tab"]'));
     var select = function (tab) {
       tabs.forEach(function (other) {
@@ -118,7 +118,7 @@ export const SITE_SCRIPT = String.raw`
 
   /* --- Envoi asynchrone des formulaires ---------------------------------- */
   var setStatus = function (form, tone, message) {
-    var box = form.querySelector('[data-stax-status]');
+    var box = form.querySelector('[data-nemasus-status]');
     if (!box) return;
     box.textContent = message;
     box.setAttribute('data-tone', tone);
@@ -168,7 +168,7 @@ export const SITE_SCRIPT = String.raw`
     return payload;
   };
 
-  d.querySelectorAll('form[data-stax-form]').forEach(function (form) {
+  d.querySelectorAll('form[data-nemasus-form]').forEach(function (form) {
     form.addEventListener('submit', function (event) {
       if (!form.checkValidity()) return; /* Le navigateur affiche ses messages. */
       event.preventDefault();
@@ -180,9 +180,9 @@ export const SITE_SCRIPT = String.raw`
   });
 
   /* --- Reservation : creneaux reels demandes au serveur ------------------- */
-  d.querySelectorAll('form[data-stax-booking]').forEach(function (form) {
+  d.querySelectorAll('form[data-nemasus-booking]').forEach(function (form) {
     var date = form.querySelector('input[name="date"]');
-    var slots = form.querySelector('[data-stax-slots]');
+    var slots = form.querySelector('[data-nemasus-slots]');
     var service = form.querySelector('[name="bookingServiceId"]');
 
     var load = function () {
@@ -231,14 +231,14 @@ export const SITE_SCRIPT = String.raw`
    * formulaire, il n a donc pas de champ cache ou le trouver. Sans ce jeton le
    * serveur refuse l ecriture, et le bouton resterait sans effet.
    */
-  var siteToken = (d.body && d.body.getAttribute('data-stax-token')) || '';
-  var cart = d.querySelector('[data-stax-cart]');
-  var checkout = cart ? cart.querySelector('form[data-stax-checkout]') : null;
+  var siteToken = (d.body && d.body.getAttribute('data-nemasus-token')) || '';
+  var cart = d.querySelector('[data-nemasus-cart]');
+  var checkout = cart ? cart.querySelector('form[data-nemasus-checkout]') : null;
 
   var renderCart = function (state) {
     if (!cart) return;
-    var empty = cart.querySelector('[data-stax-cart-empty]');
-    var bodyEl = cart.querySelector('[data-stax-cart-body]');
+    var empty = cart.querySelector('[data-nemasus-cart-empty]');
+    var bodyEl = cart.querySelector('[data-nemasus-cart-body]');
     if (!bodyEl || !empty) return;
     if (!state || !state.items || state.items.length === 0) {
       empty.hidden = false;
@@ -273,7 +273,7 @@ export const SITE_SCRIPT = String.raw`
   };
   refreshCart();
 
-  d.querySelectorAll('[data-stax-add-to-cart]').forEach(function (button) {
+  d.querySelectorAll('[data-nemasus-add-to-cart]').forEach(function (button) {
     var label = button.textContent;
     button.addEventListener('click', function () {
       button.disabled = true;
@@ -282,7 +282,7 @@ export const SITE_SCRIPT = String.raw`
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({
-          productId: button.getAttribute('data-stax-add-to-cart'),
+          productId: button.getAttribute('data-nemasus-add-to-cart'),
           quantity: 1,
           _token: siteToken,
         }),
@@ -302,7 +302,7 @@ export const SITE_SCRIPT = String.raw`
   if (checkout) {
     /* L adresse n est demandee que si elle sert : personne ne remplit un champ
        inutile de bonne grace, et un champ obligatoire hors sujet fait renoncer. */
-    var addressBox = checkout.querySelector('[data-stax-checkout-address]');
+    var addressBox = checkout.querySelector('[data-nemasus-checkout-address]');
     var addressLine = checkout.querySelector('[name="addressLine1"]');
     var syncAddress = function () {
       var choice = checkout.querySelector('[name="fulfillment"]:checked');
@@ -331,7 +331,7 @@ export const SITE_SCRIPT = String.raw`
   }
 
   /* --- Espace client du site ---------------------------------------------- */
-  d.querySelectorAll('form[data-stax-customer-login]').forEach(function (form) {
+  d.querySelectorAll('form[data-nemasus-customer-login]').forEach(function (form) {
     form.addEventListener('submit', function (event) {
       if (!form.checkValidity()) return;
       event.preventDefault();
@@ -344,7 +344,7 @@ export const SITE_SCRIPT = String.raw`
     });
   });
 
-  d.querySelectorAll('form[data-stax-customer-logout]').forEach(function (form) {
+  d.querySelectorAll('form[data-nemasus-customer-logout]').forEach(function (form) {
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       submitJson(form, '/api/compte/deconnexion', serialize(form), function (body) {
@@ -356,7 +356,7 @@ export const SITE_SCRIPT = String.raw`
   /* --- Mesure d audience sans cookie -------------------------------------- */
   /* Jamais dans un apercu : le client qui relit son site n est pas un
      visiteur, et l apercu n est pas servi par le moteur des sites. */
-  if (navigator.sendBeacon && !d.documentElement.hasAttribute('data-stax-preview')) {
+  if (navigator.sendBeacon && !d.documentElement.hasAttribute('data-nemasus-preview')) {
     try {
       navigator.sendBeacon(
         '/api/collect',

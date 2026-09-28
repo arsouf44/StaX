@@ -1,4 +1,4 @@
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 import { getStripe, getWebhookCryptoProvider, type Stripe } from './stripe-client';
 
 /**

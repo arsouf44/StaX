@@ -6,7 +6,7 @@
  * `fetch`, qui est installe une fois par requete via `setEnvSource`.
  */
 export interface WorkerEnv {
-  STAX_ENV?: string;
+  NEMASUS_ENV?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   SUPABASE_ANON_KEY?: string;

@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, EmptyState, Icon, Panel, StatusPill } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { Alert, EmptyState, Icon, Panel, StatusPill } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { updateBookingStatusAction } from './actions';
 

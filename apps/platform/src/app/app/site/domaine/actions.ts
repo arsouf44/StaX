@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { hasFeature, unwrapList, unwrapMaybe } from '@stax/database';
-import { domainProvider } from '@stax/infrastructure';
-import { hostnameSchema, uuidSchema } from '@stax/validation';
+import { hasFeature, unwrapList, unwrapMaybe } from '@nemasus/database';
+import { domainProvider } from '@nemasus/infrastructure';
+import { hostnameSchema, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
@@ -182,7 +182,7 @@ export async function attachDomainAction(
         .eq('id', created.id)
         .eq('site_id', siteId);
     } catch (providerError) {
-      console.error('[stax:domains] rattachement impossible', providerError);
+      console.error('[nemasus:domains] rattachement impossible', providerError);
     }
   }
 
@@ -248,7 +248,7 @@ export async function verifyDomainAction(
   try {
     outcome = await provider.check(domain.hostname, domain.cf_hostname_id);
   } catch (error) {
-    console.error('[stax:domains] verification impossible', error);
+    console.error('[nemasus:domains] verification impossible', error);
     return {
       status: 'error',
       message: 'La vérification n’a pas pu aboutir. Réessayez dans quelques minutes.',
@@ -366,19 +366,19 @@ export async function detachDomainAction(
 
   if (!domain) return { status: 'error', message: 'Ce domaine est introuvable.' };
 
-  // L'adresse technique fournie par StaX reste toujours joignable : c'est elle
+  // L'adresse technique fournie par Nemasus reste toujours joignable : c'est elle
   // qui garantit qu'un site ne devienne jamais totalement inaccessible.
   if (domain.kind === 'platform_subdomain') {
     return {
       status: 'error',
-      message: 'L’adresse fournie par StaX ne peut pas être retirée : elle sert de secours.',
+      message: 'L’adresse fournie par Nemasus ne peut pas être retirée : elle sert de secours.',
     };
   }
 
   try {
     await domainProvider().detach(domain.cf_hostname_id);
   } catch (error) {
-    console.error('[stax:domains] detachement fournisseur impossible', error);
+    console.error('[nemasus:domains] detachement fournisseur impossible', error);
   }
 
   // Le domaine est DETACHE, pas supprime : l'historique reste consultable et
@@ -400,7 +400,7 @@ export async function detachDomainAction(
   return {
     status: 'success',
     message: domain.is_primary
-      ? `${domain.hostname} est retiré. Votre site reste joignable à son adresse StaX.`
+      ? `${domain.hostname} est retiré. Votre site reste joignable à son adresse Nemasus.`
       : `${domain.hostname} est retiré.`,
   };
 }

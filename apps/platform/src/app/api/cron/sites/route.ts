@@ -1,5 +1,5 @@
-import { tryCreateServiceClient } from '@stax/database';
-import { verifyCronSecret } from '@stax/infrastructure';
+import { tryCreateServiceClient } from '@nemasus/database';
+import { verifyCronSecret } from '@nemasus/infrastructure';
 import { runSiteOperations } from '~/lib/external-sites/operations';
 import { retryProposalDeliveries } from '~/lib/proposals';
 

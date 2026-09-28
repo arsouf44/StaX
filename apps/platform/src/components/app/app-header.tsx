@@ -13,9 +13,9 @@ import {
   Logo,
   StatusPill,
   type StatusTone,
-} from '@stax/ui';
-import type { Workspace } from '@stax/database';
-import { ROLE_LABELS } from '@stax/business';
+} from '@nemasus/ui';
+import type { Workspace } from '@nemasus/database';
+import { ROLE_LABELS } from '@nemasus/business';
 import { signOutAction, switchOrganizationAction, switchSiteAction } from '~/app/app/actions';
 
 /**
@@ -47,7 +47,7 @@ export function AppHeader({ workspace }: { workspace: Workspace }) {
 
   return (
     <div className="mx-auto flex w-full max-w-[100rem] items-center gap-2 px-4 py-3 sm:px-6 lg:px-8">
-      <Link href="/app" aria-label="StaX — tableau de bord" className="shrink-0">
+      <Link href="/app" aria-label="Nemasus — tableau de bord" className="shrink-0">
         <Logo size={24} />
       </Link>
 

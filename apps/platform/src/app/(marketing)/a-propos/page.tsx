@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { legalValue } from '@stax/config';
-import { ButtonLink, Container, Panel, Section, SectionHeading } from '@stax/ui';
+import { legalValue } from '@nemasus/config';
+import { ButtonLink, Container, Panel, Section, SectionHeading } from '@nemasus/ui';
 
 export const metadata: Metadata = {
   title: 'À propos',
   description:
-    'Pourquoi StaX existe : rendre accessible aux petites entreprises un site professionnel ' +
+    'Pourquoi Nemasus existe : rendre accessible aux petites entreprises un site professionnel ' +
     'bien construit, bien hébergé et réellement maintenu.',
   alternates: { canonical: '/a-propos' },
 };
@@ -47,12 +47,12 @@ export default function AboutPage() {
           <SectionHeading
             as="h1"
             eyebrow="À propos"
-            title="Pourquoi StaX existe"
+            title="Pourquoi Nemasus existe"
             description="Beaucoup de petites entreprises n’ont pas de site, ou en ont un qui ne leur sert plus : mal référencé, impossible à modifier, abandonné par son prestataire. Souvent parce qu’un site correct coûte cher, et qu’un site bon marché finit par coûter du temps."
           />
           <div className="measure mt-10 space-y-5 text-base leading-relaxed text-[var(--foreground-muted)]">
             <p>
-              StaX prend le problème à l’envers : plutôt que de vendre un outil et de laisser le
+              Nemasus prend le problème à l’envers : plutôt que de vendre un outil et de laisser le
               professionnel se débrouiller, nous construisons le site, nous l’hébergeons, nous le
               maintenons — et nous lui donnons les clés de son contenu.
             </p>
@@ -62,7 +62,7 @@ export default function AboutPage() {
               les mêmes besoins qu’un plombier, et les traiter pareil donne de mauvais sites.
             </p>
             <p>
-              Concrètement, un site StaX est construit sur un moteur multi-tenant : une seule
+              Concrètement, un site Nemasus est construit sur un moteur multi-tenant : une seule
               infrastructure sert tous les sites, chacun strictement isolé des autres. C’est ce qui
               permet un prix accessible sans sacrifier la qualité technique.
             </p>
@@ -95,7 +95,7 @@ export default function AboutPage() {
           <Panel level={1} padding="lg">
             <h2 className="text-base font-medium">L’éditeur</h2>
             <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-              StaX est édité par {company}. Les informations légales complètes — forme juridique,
+              Nemasus est édité par {company}. Les informations légales complètes — forme juridique,
               siège, immatriculation, directeur de la publication et hébergeur — figurent dans les{' '}
               <a href="/mentions-legales" className="underline underline-offset-4">
                 mentions légales

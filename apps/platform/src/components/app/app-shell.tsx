@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useId, type ReactNode } from 'react';
-import { Icon, cn, useLocalStorageValue, writeLocalStorage } from '@stax/ui';
-import type { NavGroup } from '@stax/business';
+import { Icon, cn, useLocalStorageValue, writeLocalStorage } from '@nemasus/ui';
+import type { NavGroup } from '@nemasus/business';
 
 /**
  * Cadre de l espace client.
@@ -30,7 +30,7 @@ export function AppShell({ groups, header, children, badges = {} }: AppShellProp
   const drawerId = useId();
   // L etat du tiroir est deliberement per-appareil : un telephone et un
   // ordinateur n ont pas les memes contraintes de place.
-  const open = useLocalStorageValue('stax.nav.open') === 'true';
+  const open = useLocalStorageValue('nemasus.nav.open') === 'true';
 
   const isActive = (href: string) =>
     href === '/app' ? pathname === '/app' : pathname.startsWith(href);
@@ -48,7 +48,7 @@ export function AppShell({ groups, header, children, badges = {} }: AppShellProp
           type="button"
           aria-expanded={open}
           aria-controls={drawerId}
-          onClick={() => writeLocalStorage('stax.nav.open', open ? 'false' : 'true')}
+          onClick={() => writeLocalStorage('nemasus.nav.open', open ? 'false' : 'true')}
           className="my-4 inline-flex items-center gap-2 self-start rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-2 text-sm lg:hidden"
         >
           <Icon name="menu" />

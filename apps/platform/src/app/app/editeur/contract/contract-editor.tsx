@@ -16,7 +16,7 @@ import {
   Switch,
   cn,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { EditorGuide } from '~/components/app/editor-guide';
 import {
   PAGE_SEO_FIELD,
@@ -34,7 +34,7 @@ import {
   type FieldDefinition,
   type SiteManifest,
   type ValueIssue,
-} from '@stax/site-contract';
+} from '@nemasus/site-contract';
 import {
   contractPreviewStatusAction,
   publishContractAction,
@@ -1173,7 +1173,7 @@ function ReleaseBanner({ release }: { release: ReleaseView }) {
       >
         Votre site en ligne n’a pas changé : la version précédente reste affichée.
         {release.error ? ` ${release.error}` : ''} Vous pouvez republier dès que possible ; l’équipe
-        StaX est prévenue.
+        Nemasus est prévenue.
       </Alert>
     );
   }

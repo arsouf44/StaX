@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient, tryCreateServiceClient, unwrapMaybe, type Db } from '@stax/database';
-import { retryDeployment, type InstallationRepository } from '@stax/infrastructure';
-import { emailSchema, uuidSchema } from '@stax/validation';
+import { createUserClient, tryCreateServiceClient, unwrapMaybe, type Db } from '@nemasus/database';
+import { retryDeployment, type InstallationRepository } from '@nemasus/infrastructure';
+import { emailSchema, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import {
@@ -144,7 +144,7 @@ const connectRepositorySchema = z
       .trim()
       .regex(/^(?!\/)[A-Za-z0-9._/-]{1,200}\.json$/)
       .refine((value) => !value.includes('..'), 'Chemin invalide.')
-      .default('stax.manifest.json'),
+      .default('nemasus.manifest.json'),
   })
   .strict();
 
@@ -531,7 +531,7 @@ const CHECK_LABELS: Record<string, string> = {
 
 const DELIVERY_ERRORS: Record<string, string> = {
   no_account:
-    'Aucun compte StaX n’utilise cette adresse. Le client doit d’abord créer son compte (ou utiliser un code d’activation).',
+    'Aucun compte Nemasus n’utilise cette adresse. Le client doit d’abord créer son compte (ou utiliser un code d’activation).',
   no_client: 'Ce site n’a encore aucun client rattaché : indiquez l’adresse de son compte.',
   not_found: 'Ce site est introuvable.',
   archived: 'Ce site est archivé.',
@@ -565,7 +565,7 @@ export async function deliverExternalSiteAction(payload: unknown): Promise<Actio
   // La maintenance mensuelle commence ICI, a la livraison.
   const maintenance = await startMaintenanceAtDelivery(access.service, parsed.data.siteId);
   await sendDeliveryEmails(access.service, parsed.data.siteId).catch((mailError: unknown) => {
-    console.error('[stax:delivery] e-mail de livraison', mailError);
+    console.error('[nemasus:delivery] e-mail de livraison', mailError);
   });
   refresh(parsed.data.siteId);
   revalidatePath('/admin/sites');

@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, Input, Panel, Select, Textarea } from '@stax/ui';
+import { Alert, Button, Field, Input, Panel, Select, Textarea } from '@nemasus/ui';
 import { createProposalAction, type ProposalActionState } from './actions';
 
 export interface ProposalSiteChoice {

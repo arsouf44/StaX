@@ -1,5 +1,5 @@
-import { createServiceClient, unwrapMaybe } from '@stax/database';
-import { createConnectCheckoutSession } from '@stax/payments';
+import { createServiceClient, unwrapMaybe } from '@nemasus/database';
+import { createConnectCheckoutSession } from '@nemasus/payments';
 import { jsonResponse } from '../responses';
 import { siteOrigin } from '../context';
 import { field, guardPublicWrite, intField, refuse } from './shared';
@@ -8,7 +8,7 @@ import type { ResolvedSite } from '../resolve';
 /**
  * Dons ponctuels sur le site d'un client.
  *
- * L'argent ne transite JAMAIS par StaX : le paiement est cree sur le compte
+ * L'argent ne transite JAMAIS par Nemasus : le paiement est cree sur le compte
  * Stripe connecte de l'association, et le donateur paie sur une page hebergee
  * par Stripe. Aucun numero de carte n'atteint ni le site du client ni le notre.
  *
@@ -90,7 +90,7 @@ export async function handleDonation(request: Request, site: ResolvedSite): Prom
   });
 
   if (error) {
-    console.error('[stax:donations] enregistrement impossible', error.code, error.message);
+    console.error('[nemasus:donations] enregistrement impossible', error.code, error.message);
     return refuse('Votre don n’a pas pu être enregistré. Réessayez.', 503, 'unavailable');
   }
 
@@ -104,12 +104,12 @@ export async function handleDonation(request: Request, site: ResolvedSite): Prom
       successUrl: `${origin}/don-merci?ref=${reference}`,
       cancelUrl: `${origin}/?don=annule`,
       ...(donorEmail ? { customerEmail: donorEmail } : {}),
-      metadata: { stax_site_id: site.siteId, stax_kind: 'donation' },
+      metadata: { nemasus_site_id: site.siteId, nemasus_kind: 'donation' },
     });
 
     return jsonResponse({ ok: true, url: session.url });
   } catch (error) {
-    console.error('[stax:donations] session Stripe impossible', error);
+    console.error('[nemasus:donations] session Stripe impossible', error);
 
     // La tentative reste en base avec son echec : elle ne sera pas comptee
     // comme un don recu, et l'incident est visible.

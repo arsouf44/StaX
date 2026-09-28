@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { missingCapabilities } from '@stax/config';
-import { Alert, Container, Panel, Section, SectionHeading, StatusDot } from '@stax/ui';
+import { missingCapabilities } from '@nemasus/config';
+import { Alert, Container, Panel, Section, SectionHeading, StatusDot } from '@nemasus/ui';
 import { loadPublicHealth } from '~/lib/health';
 
 export const metadata: Metadata = {
   title: 'État des services',
   description:
-    'L’état réel des services StaX : application, base de données, paiements, e-mails, ' +
+    'L’état réel des services Nemasus : application, base de données, paiements, e-mails, ' +
     'vérification des domaines. Mesuré, pas déclaré.',
   alternates: { canonical: '/status' },
   robots: { index: true, follow: true },

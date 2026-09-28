@@ -14,7 +14,7 @@ import {
   Textarea,
   type StatusTone,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {
   assessBreachRiskAction,

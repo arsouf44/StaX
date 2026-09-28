@@ -1,11 +1,11 @@
 import 'server-only';
-import { isLegalValueConfigured, legalValue, readEnv } from '@stax/config';
-import type { Db } from '@stax/database';
-import { internalLeadEmail, sendEmail, staffAlertEmail } from '@stax/emails';
+import { isLegalValueConfigured, legalValue, readEnv } from '@nemasus/config';
+import type { Db } from '@nemasus/database';
+import { internalLeadEmail, sendEmail, staffAlertEmail } from '@nemasus/emails';
 import { absolutePlatformUrl } from './action-guard';
 
 /**
- * Alertes internes à l'équipe StaX.
+ * Alertes internes à l'équipe Nemasus.
  *
  * Un client qui écrit, un prospect qui récupère son site, un paiement reçu :
  * l'équipe doit le savoir sans avoir à surveiller l'administration. Les
@@ -47,7 +47,7 @@ export async function alertTeam(
       options,
     );
   } catch (error) {
-    console.error('[stax:team-alert]', error instanceof Error ? error.message : error);
+    console.error('[nemasus:team-alert]', error instanceof Error ? error.message : error);
   }
 }
 
@@ -74,6 +74,6 @@ export async function alertTeamOfLead(lead: {
     });
     await sendEmail({ ...message, replyTo: lead.email });
   } catch (error) {
-    console.error('[stax:team-alert] demande', error instanceof Error ? error.message : error);
+    console.error('[nemasus:team-alert] demande', error instanceof Error ? error.message : error);
   }
 }

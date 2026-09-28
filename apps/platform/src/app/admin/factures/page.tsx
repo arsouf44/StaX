@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
-import { formatMaintenance, formatMoney } from '@stax/payments';
+import { unwrapList } from '@nemasus/database';
+import { formatMaintenance, formatMoney } from '@nemasus/payments';
 import { AdminTable } from '~/components/admin/admin-table';
 import { requireAdminRole } from '~/lib/admin';
 import { IssueInvoiceForm, type PlanChoice } from './issue-form';

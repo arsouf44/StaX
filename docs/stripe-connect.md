@@ -2,8 +2,8 @@
 
 ## Le principe
 
-Quand un visiteur paie sur le site d’un client StaX, **l’argent ne transite
-jamais par un compte StaX**. Il va directement sur le compte Stripe du client,
+Quand un visiteur paie sur le site d’un client Nemasus, **l’argent ne transite
+jamais par un compte Nemasus**. Il va directement sur le compte Stripe du client,
 ouvert à son nom.
 
 ```ts
@@ -17,7 +17,7 @@ commercial ne prétend le contraire.
 Conséquences pour le client :
 
 - il perçoit ses recettes directement, selon son calendrier de versement Stripe ;
-- il ne dépend pas de la solvabilité de StaX ;
+- il ne dépend pas de la solvabilité de Nemasus ;
 - il voit ses transactions dans son propre tableau de bord Stripe ;
 - il ne paie que les frais bancaires de Stripe, facturés par Stripe.
 
@@ -31,14 +31,14 @@ Comptes **Stripe complets, au nom du client** (propriétés `controller`
 | Propriété | Valeur | Conséquence |
 | --- | --- | --- |
 | `stripe_dashboard.type` | `full` | Le client a le tableau de bord Stripe complet et s’y connecte avec **ses propres identifiants** sur dashboard.stripe.com |
-| `fees.payer` | `account` | Les frais Stripe sont facturés au client par Stripe, pas à StaX |
-| `losses.payments` | `stripe` | Litiges et soldes négatifs relèvent de Stripe et du client : StaX n’en est pas garant |
-| `requirement_collection` | `stripe` | Stripe collecte lui-même les justificatifs : aucune donnée KYC ne transite par StaX |
+| `fees.payer` | `account` | Les frais Stripe sont facturés au client par Stripe, pas à Nemasus |
+| `losses.payments` | `stripe` | Litiges et soldes négatifs relèvent de Stripe et du client : Nemasus n’en est pas garant |
+| `requirement_collection` | `stripe` | Stripe collecte lui-même les justificatifs : aucune donnée KYC ne transite par Nemasus |
 
 Les paiements sont des **charges directes** sur ce compte (`Stripe-Account`) :
-l’argent ne transite jamais par un compte StaX, et la commission est nulle.
+l’argent ne transite jamais par un compte Nemasus, et la commission est nulle.
 
-Un compte « Express » aurait fait de StaX le payeur des frais et le
+Un compte « Express » aurait fait de Nemasus le payeur des frais et le
 responsable des pertes de chaque client, avec un tableau de bord réduit : il
 n’est plus utilisé. Un ancien compte Express éventuel reste accessible par un
 lien de connexion à usage unique.
@@ -68,7 +68,7 @@ lien de connexion à usage unique.
 4. connected_accounts + journal d’audit        → paiements ouverts si le compte est actif
 ```
 
-Aucun justificatif n’est à refournir, et le client peut retirer l’accès de StaX
+Aucun justificatif n’est à refournir, et le client peut retirer l’accès de Nemasus
 à tout moment depuis Stripe (`account.application.deauthorized` coupe alors
 l’encaissement sur son site).
 
@@ -91,7 +91,7 @@ seul reflète la décision de Stripe.
 L’événement Connect porte un champ `account`. **C’est lui, et lui seul, qui
 identifie le client concerné.** Aucun identifiant présent dans la charge utile
 n’est utilisé pour cette décision : la correspondance passe par
-`connected_accounts.stripe_account_id`, enregistré au moment où StaX a créé le
+`connected_accounts.stripe_account_id`, enregistré au moment où Nemasus a créé le
 compte pour ce client.
 
 ---
@@ -99,8 +99,8 @@ compte pour ce client.
 ## Ce que le client doit savoir
 
 - **Le compte est à son nom.** Il s’y connecte directement sur stripe.com, et
-  peut déconnecter StaX à tout moment ; son site cessera alors d’encaisser.
+  peut déconnecter Nemasus à tout moment ; son site cessera alors d’encaisser.
 - **Stripe peut demander des justificatifs** au-delà de certains seuils : c’est
-  une obligation réglementaire, pas une décision de StaX.
+  une obligation réglementaire, pas une décision de Nemasus.
 - **Les litiges sont gérés par le client**, dans son tableau de bord Stripe.
-  StaX n’est pas partie à la transaction.
+  Nemasus n’est pas partie à la transaction.

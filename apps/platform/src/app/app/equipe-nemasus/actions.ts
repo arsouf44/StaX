@@ -1,12 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { assignableRoles, ROLE_LABELS } from '@stax/business';
-import { tryCreateServiceClient, unwrapList, unwrapMaybe } from '@stax/database';
-import { sendEmail, teamInvitationEmail } from '@stax/emails';
-import { hmacHex, randomToken } from '@stax/security';
-import { inviteMemberSchema, updateMemberRoleSchema, uuidSchema } from '@stax/validation';
-import type { OrgRole } from '@stax/types';
+import { assignableRoles, ROLE_LABELS } from '@nemasus/business';
+import { tryCreateServiceClient, unwrapList, unwrapMaybe } from '@nemasus/database';
+import { sendEmail, teamInvitationEmail } from '@nemasus/emails';
+import { hmacHex, randomToken } from '@nemasus/security';
+import { inviteMemberSchema, updateMemberRoleSchema, uuidSchema } from '@nemasus/validation';
+import type { OrgRole } from '@nemasus/types';
 import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace } from '~/lib/workspace';
@@ -121,7 +121,7 @@ export async function inviteMemberAction(
     );
   } catch (mailError) {
     // L'invitation existe : on le dit plutot que de laisser croire a un echec.
-    console.error('[stax:invitations] e-mail non envoye', mailError);
+    console.error('[nemasus:invitations] e-mail non envoye', mailError);
     return {
       status: 'success',
       message:
@@ -129,7 +129,7 @@ export async function inviteMemberAction(
     };
   }
 
-  revalidatePath('/app/equipe-stax');
+  revalidatePath('/app/equipe-nemasus');
   return { status: 'success', message: `Invitation envoyée à ${email}.` };
 }
 
@@ -157,7 +157,7 @@ export async function revokeInvitationAction(
 
   if (error) return { status: 'error', message: 'Cette invitation n’a pas pu être annulée.' };
 
-  revalidatePath('/app/equipe-stax');
+  revalidatePath('/app/equipe-nemasus');
   return { status: 'success', message: 'Invitation annulée. Le lien ne fonctionne plus.' };
 }
 
@@ -240,7 +240,7 @@ export async function updateMemberRoleAction(
       metadata_safe: { from: member.role, to: parsed.data.role },
     });
 
-  revalidatePath('/app/equipe-stax');
+  revalidatePath('/app/equipe-nemasus');
   return { status: 'success', message: 'Accès mis à jour.' };
 }
 
@@ -317,6 +317,6 @@ export async function removeMemberAction(
       metadata_safe: { role: member.role },
     });
 
-  revalidatePath('/app/equipe-stax');
+  revalidatePath('/app/equipe-nemasus');
   return { status: 'success', message: 'Accès retiré.' };
 }

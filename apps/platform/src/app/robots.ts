@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { deployEnvironment, platformUrl } from '@stax/config';
+import { deployEnvironment, platformUrl } from '@nemasus/config';
 
 /**
  * Directives destinees aux robots.

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { platformUrl } from '@stax/config';
-import { createServiceClient, unwrapMaybe } from '@stax/database';
-import { completeConnectOAuth, retrieveAccount } from '@stax/payments';
+import { platformUrl } from '@nemasus/config';
+import { createServiceClient, unwrapMaybe } from '@nemasus/database';
+import { completeConnectOAuth, retrieveAccount } from '@nemasus/payments';
 import { verifyConnectState } from '~/lib/stripe-connect-state';
 import { getWorkspace } from '~/lib/workspace';
 
@@ -9,7 +9,7 @@ import { getWorkspace } from '~/lib/workspace';
  * Retour de Stripe apres « relier mon compte existant ».
  *
  * Trois verrous avant d'enregistrer quoi que ce soit :
- *  1. l'etat est signe par StaX, recent, et designe une organisation ;
+ *  1. l'etat est signe par Nemasus, recent, et designe une organisation ;
  *  2. la personne connectee est celle qui a lance la liaison ;
  *  3. elle a toujours le droit de gerer l'encaissement de cette organisation.
  *
@@ -54,7 +54,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     accountId = await completeConnectOAuth(code);
   } catch (error) {
-    console.error('[stax:connect] liaison refusee par Stripe', error);
+    console.error('[nemasus:connect] liaison refusee par Stripe', error);
     return back('echec');
   }
 
@@ -79,7 +79,7 @@ export async function GET(request: Request): Promise<Response> {
     .from('connected_accounts')
     .upsert(row, { onConflict: 'organization_id' });
   if (error) {
-    console.error('[stax:connect] compte relie mais non enregistre', error.message);
+    console.error('[nemasus:connect] compte relie mais non enregistre', error.message);
     return back('echec');
   }
 

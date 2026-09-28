@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '@stax/business';
-import { Badge, Panel } from '@stax/ui';
+import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '@nemasus/business';
+import { Badge, Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { ProfileForm } from './profile-form';

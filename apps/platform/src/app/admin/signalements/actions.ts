@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
-import { contentReportDecisionEmail, contentRestrictedEmail, sendEmail } from '@stax/emails';
-import { boundedText, uuidSchema } from '@stax/validation';
+import { tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
+import { contentReportDecisionEmail, contentRestrictedEmail, sendEmail } from '@nemasus/emails';
+import { boundedText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
@@ -92,7 +92,7 @@ export async function decideContentReportAction(payload: unknown): Promise<Actio
         service ? { db: service } : {},
       );
     } catch (mailError) {
-      console.error('[stax:signalements] decision non envoyee a l auteur', mailError);
+      console.error('[nemasus:signalements] decision non envoyee a l auteur', mailError);
       failures.push('l’auteur du signalement');
     }
   }
@@ -120,7 +120,7 @@ export async function decideContentReportAction(payload: unknown): Promise<Actio
           { db: service, organizationId: report.organization_id },
         );
       } catch (mailError) {
-        console.error('[stax:signalements] motifs non envoyes a l editeur', mailError);
+        console.error('[nemasus:signalements] motifs non envoyes a l editeur', mailError);
         failures.push('l’éditeur du site');
       }
     }

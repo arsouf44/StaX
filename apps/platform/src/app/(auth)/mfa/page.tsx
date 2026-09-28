@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { createSessionClient } from '@stax/auth';
+import { createSessionClient } from '@nemasus/auth';
 import { AuthCard } from '~/components/auth/auth-card';
 import { getSession, safeRedirectTarget } from '~/lib/session';
 import { MfaChallengeForm } from './mfa-challenge-form';

@@ -14,7 +14,7 @@ import {
   Textarea,
   type StatusTone,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import type { ActionState } from '~/lib/form-state';
 import { resolvePrivacyRequestAction, verifyRequesterIdentityAction } from './actions';
 

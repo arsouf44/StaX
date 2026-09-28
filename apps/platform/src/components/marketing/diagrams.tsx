@@ -1,4 +1,4 @@
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 
 /**
  * Schemas d architecture.
@@ -13,15 +13,15 @@ import { cn } from '@stax/ui';
 /* -------------------------------------------------------------------------- */
 
 const SITES = [
-  { host: 'restaurant-dupont.fr', project: 'restaurant-dupont', color: '#2f5f86' },
-  { host: 'atelier-camille.fr', project: 'atelier-camille', color: '#4f9a7a' },
-  { host: 'martin-plomberie.fr', project: 'martin-plomberie', color: '#c9956b' },
+  { host: 'restaurant-dupont.example', project: 'restaurant-dupont', color: '#2f5f86' },
+  { host: 'atelier-camille.example', project: 'atelier-camille', color: '#4f9a7a' },
+  { host: 'martin-plomberie.example', project: 'martin-plomberie', color: '#c9956b' },
 ];
 
 /**
  * Chaque site est un projet independant : son depot, son projet Cloudflare,
  * son domaine. Le domaine du client pointe vers SON deploiement — jamais vers
- * un rendu generique de StaX.
+ * un rendu generique de Nemasus.
  */
 export function DomainRoutingDiagram({ className }: { className?: string }) {
   return (
@@ -74,7 +74,7 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
               'Votre domaine pointe vers le projet Cloudflare de votre site',
               'Le certificat HTTPS est émis et renouvelé automatiquement',
               'Chaque publication devient un commit dans le dépôt de votre site',
-              'Cloudflare déploie ce commit ; StaX attend sa confirmation',
+              'Cloudflare déploie ce commit ; Nemasus attend sa confirmation',
             ].map((step, index) => (
               <li key={step} className="flex gap-2.5">
                 <span className="mt-px flex size-4 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] font-mono text-[9px] text-[var(--muted)]">
@@ -93,8 +93,8 @@ export function DomainRoutingDiagram({ className }: { className?: string }) {
             >
               <path d="M8 1a3.2 3.2 0 0 0-3.2 3.2V6H4.5A1.5 1.5 0 0 0 3 7.5v5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 6h-.3V4.2A3.2 3.2 0 0 0 8 1Zm1.8 5H6.2V4.2a1.8 1.8 0 1 1 3.6 0V6Z" />
             </svg>
-            StaX n’est pas sur le chemin de vos visiteurs : votre site s’affiche même si l’espace
-            StaX est momentanément indisponible.
+            Nemasus n’est pas sur le chemin de vos visiteurs : votre site s’affiche même si l’espace
+            Nemasus est momentanément indisponible.
           </p>
         </div>
       </div>
@@ -152,7 +152,7 @@ export function PaymentRoutingDiagram({ className }: { className?: string }) {
       <div className="mt-4 rounded-[var(--radius-md)] border border-dashed border-[var(--border-strong)] p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="border border-[var(--border)] px-2.5 py-1 font-bold text-[var(--ink)]">
-            StaX
+            Nemasus
           </span>
           <svg
             aria-hidden="true"
@@ -169,14 +169,14 @@ export function PaymentRoutingDiagram({ className }: { className?: string }) {
           </span>
         </div>
         <p className="mt-2.5 text-xs leading-relaxed text-[var(--muted)]">
-          Les encaissements de votre activité passent par votre propre compte Stripe connecté. StaX
-          ne les détient jamais et ne prélève aucune commission dessus. Vous ne payez à StaX que la
-          création du site, puis la maintenance mensuelle à partir de sa livraison.
+          Les encaissements de votre activité passent par votre propre compte Stripe connecté.
+          Nemasus ne les détient jamais et ne prélève aucune commission dessus. Vous ne payez à
+          Nemasus que la création du site, puis la maintenance mensuelle à partir de sa livraison.
         </p>
       </div>
       <figcaption className="sr-only">
         L’argent payé par vos clients va directement de leur moyen de paiement à votre compte
-        Stripe, puis à votre banque. StaX n’intervient pas dans ce flux.
+        Stripe, puis à votre banque. Nemasus n’intervient pas dans ce flux.
       </figcaption>
     </figure>
   );

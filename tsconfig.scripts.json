@@ -4,32 +4,32 @@
   "compilerOptions": {
     "types": ["node", "vitest/globals"],
     // `DOM` fournit les types web standards (BufferSource, Blob, fetch) que
-    // Node 22 implemente reellement et que @stax/security utilise.
+    // Node 22 implemente reellement et que @nemasus/security utilise.
     // `DOM.Iterable` y ajoute les iterateurs (`FormData.entries()`), sans
-    // lesquels @stax/validation ne se typecheck pas ici alors qu'il se
+    // lesquels @nemasus/validation ne se typecheck pas ici alors qu'il se
     // typecheck dans son propre paquet.
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     // Les scripts et les tests ne sont pas des paquets de l espace de travail :
-    // ils resolvent les modules @stax/* directement vers leurs sources, comme
+    // ils resolvent les modules @nemasus/* directement vers leurs sources, comme
     // le fait vitest.config.ts. Les deux listes doivent rester alignees.
     "paths": {
-      "@stax/types": ["./packages/types/src/index.ts"],
-      "@stax/config": ["./packages/config/src/index.ts"],
-      "@stax/config/*": ["./packages/config/src/*.ts"],
-      "@stax/validation": ["./packages/validation/src/index.ts"],
-      "@stax/payments": ["./packages/payments/src/index.ts"],
-      "@stax/payments/*": ["./packages/payments/src/*.ts"],
-      "@stax/business": ["./packages/business/src/index.ts"],
-      "@stax/security": ["./packages/security/src/index.ts"],
-      "@stax/site-engine": ["./packages/site-engine/src/index.ts"],
-      "@stax/site-contract": ["./packages/site-contract/src/index.ts"],
-      "@stax/infrastructure": ["./packages/infrastructure/src/index.ts"],
-      "@stax/database": ["./packages/database/src/index.ts"],
-      "@stax/analytics": ["./packages/analytics/src/index.ts"],
-      "@stax/emails": ["./packages/emails/src/index.ts"],
-      "@stax/ui": ["./packages/ui/src/index.ts"],
+      "@nemasus/types": ["./packages/types/src/index.ts"],
+      "@nemasus/config": ["./packages/config/src/index.ts"],
+      "@nemasus/config/*": ["./packages/config/src/*.ts"],
+      "@nemasus/validation": ["./packages/validation/src/index.ts"],
+      "@nemasus/payments": ["./packages/payments/src/index.ts"],
+      "@nemasus/payments/*": ["./packages/payments/src/*.ts"],
+      "@nemasus/business": ["./packages/business/src/index.ts"],
+      "@nemasus/security": ["./packages/security/src/index.ts"],
+      "@nemasus/site-engine": ["./packages/site-engine/src/index.ts"],
+      "@nemasus/site-contract": ["./packages/site-contract/src/index.ts"],
+      "@nemasus/infrastructure": ["./packages/infrastructure/src/index.ts"],
+      "@nemasus/database": ["./packages/database/src/index.ts"],
+      "@nemasus/analytics": ["./packages/analytics/src/index.ts"],
+      "@nemasus/emails": ["./packages/emails/src/index.ts"],
+      "@nemasus/ui": ["./packages/ui/src/index.ts"],
       "~/*": ["./apps/platform/src/*"],
       "server-only": ["./tests/fixtures/server-only.ts"]
     }

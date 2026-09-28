@@ -1,4 +1,4 @@
-import type { Cents, UUID } from '@stax/types';
+import type { Cents, UUID } from '@nemasus/types';
 
 /**
  * Agregation quotidienne.

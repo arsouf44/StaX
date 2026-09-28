@@ -3,8 +3,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { signOut } from '@stax/auth';
-import { createUserClient, listMemberships, listSites } from '@stax/database';
+import { signOut } from '@nemasus/auth';
+import { createUserClient, listMemberships, listSites } from '@nemasus/database';
 import { requireSession } from '~/lib/session';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 

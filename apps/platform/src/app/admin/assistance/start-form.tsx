@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, Input, Panel, Select, Textarea } from '@stax/ui';
+import { Alert, Button, Field, Input, Panel, Select, Textarea } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { startImpersonationAction } from './actions';
 

@@ -1,4 +1,4 @@
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 
 /**
  * Envoi d e-mails transactionnels.
@@ -39,7 +39,7 @@ export class ConsoleEmailProvider implements EmailProvider {
 
   async send(message: EmailMessage): Promise<EmailSendResult> {
     console.warn(
-      `[StaX][email:${message.template}] destinataire masqué, sujet : ${message.subject}`,
+      `[Nemasus][email:${message.template}] destinataire masqué, sujet : ${message.subject}`,
     );
     return { ok: true, providerMessageId: `console-${Date.now()}`, skipped: true };
   }
@@ -130,7 +130,7 @@ export function getEmailProvider(): EmailProvider {
   if (cached) return cached;
   const provider = readEnv('EMAIL_PROVIDER') ?? 'console';
   const apiKey = readEnv('EMAIL_API_KEY');
-  const from = readEnv('EMAIL_FROM') ?? 'StaX <bonjour@localhost>';
+  const from = readEnv('EMAIL_FROM') ?? 'Nemasus <bonjour@localhost>';
 
   if (provider === 'resend' && apiKey) {
     cached = new ResendEmailProvider(apiKey, from);

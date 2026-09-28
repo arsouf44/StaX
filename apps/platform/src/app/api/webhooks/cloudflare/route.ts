@@ -1,5 +1,5 @@
-import { tryCreateServiceClient, unwrapList } from '@stax/database';
-import { verifyCloudflareWebhook } from '@stax/infrastructure';
+import { tryCreateServiceClient, unwrapList } from '@nemasus/database';
+import { verifyCloudflareWebhook } from '@nemasus/infrastructure';
 import { syncHostingDeployments } from '~/lib/external-sites/publisher';
 import { HOSTING_COLUMNS, type HostingRow } from '~/lib/external-sites/records';
 
@@ -11,7 +11,7 @@ import { HOSTING_COLUMNS, type HostingRow } from '~/lib/external-sites/records';
  * `cf-webhook-auth`, compare a temps constant. Une notification non
  * authentifiee est refusee (401) sans etre lue.
  *
- * La notification n'est qu'un signal : StaX relit les deploiements du projet
+ * La notification n'est qu'un signal : Nemasus relit les deploiements du projet
  * concerne aupres de l'API Cloudflare, qui seule fait foi. Une notification
  * forgee — meme avec le bon secret — ne peut donc pas faire passer une
  * version pour publiee.

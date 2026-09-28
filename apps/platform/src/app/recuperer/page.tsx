@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ButtonLink, Container, Logo, Panel } from '@stax/ui';
+import { ButtonLink, Container, Logo, Panel } from '@nemasus/ui';
 import { normalizeProposalCode } from '~/lib/proposals';
 import { getSession } from '~/lib/session';
 import { ClaimForm } from './claim-form';

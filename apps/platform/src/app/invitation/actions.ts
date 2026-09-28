@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { createUserClient } from '@stax/database';
+import { createUserClient } from '@nemasus/database';
 import { guardAction } from '~/lib/action-guard';
 import { invitationTokenHash } from '~/lib/invitations';
 import type { ActionState } from '~/lib/form-state';

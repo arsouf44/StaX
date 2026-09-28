@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Checkbox, Field, FormErrorSummary, Input } from '@stax/ui';
+import { Alert, Button, Checkbox, Field, FormErrorSummary, Input } from '@nemasus/ui';
 import { PasswordField } from '~/components/auth/password-field';
 import { TurnstileField } from '~/components/auth/turnstile-field';
 import { IDLE_STATE } from '~/lib/form-state';
@@ -98,12 +98,8 @@ export function SignUpForm({
         label={
           <>
             J’accepte les{' '}
-            <Link href="/cgv" className="underline underline-offset-4" target="_blank">
-              conditions générales de vente
-            </Link>{' '}
-            et la{' '}
-            <Link href="/confidentialite" className="underline underline-offset-4" target="_blank">
-              politique de confidentialité
+            <Link href="/cgu" className="underline underline-offset-4" target="_blank">
+              conditions générales d’utilisation
             </Link>
             .
           </>
@@ -113,10 +109,19 @@ export function SignUpForm({
 
       <Checkbox
         name="marketingOptIn"
-        label="Je souhaite recevoir les actualités de StaX par e-mail. Désinscription en un clic."
+        label="Je souhaite recevoir les actualités de Nemasus par e-mail. Désinscription en un clic."
       />
 
       <TurnstileField siteKey={turnstileSiteKey} />
+
+      <p className="text-xs leading-relaxed text-[var(--muted)]">
+        Vos données servent à créer et gérer votre compte. Pour en savoir plus et exercer vos
+        droits, consultez notre{' '}
+        <Link href="/confidentialite" className="underline underline-offset-4" target="_blank">
+          politique de confidentialité
+        </Link>
+        .
+      </p>
 
       <SubmitButton />
     </form>

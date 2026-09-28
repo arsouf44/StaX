@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Alert, Button, ConfirmDialog } from '@stax/ui';
+import { Alert, Button, ConfirmDialog } from '@nemasus/ui';
 import type { ActionState } from '~/lib/form-state';
 import { disableMfaAction, revokeOtherSessionsAction } from './actions';
 

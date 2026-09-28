@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { createSessionClient } from '@stax/auth';
-import { fieldErrors, formDataToObject, passwordChangeSchema } from '@stax/validation';
+import { createSessionClient } from '@nemasus/auth';
+import { fieldErrors, formDataToObject, passwordChangeSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireSession } from '~/lib/session';
 import type { ActionState } from '~/lib/form-state';

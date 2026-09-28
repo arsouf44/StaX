@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { hashActivationCode } from '@stax/security';
-import { siteProposalEmail, teamReplyEmail } from '@stax/emails';
+import { hashActivationCode } from '@nemasus/security';
+import { siteProposalEmail, teamReplyEmail } from '@nemasus/emails';
 import {
   generateProposalCode,
   hashProposalCode,
@@ -85,7 +85,7 @@ describe('e-mails', () => {
       firstName: 'Marie',
       companyName: 'Boulangerie <Martin>',
       siteUrl: 'https://boulangerie-martin.pages.dev',
-      claimUrl: 'https://stax.example/recuperer?code=7K2M-9QXP-4HTA',
+      claimUrl: 'https://nemasus.example/recuperer?code=7K2M-9QXP-4HTA',
       code: '7K2M-9QXP-4HTA',
       planName: 'Premium',
       priceLabel: '550 € HT (660 € TTC)',
@@ -106,7 +106,7 @@ describe('e-mails', () => {
     const message = teamReplyEmail({
       to: 'marie@boulangerie.fr',
       excerpt: '<img src=x onerror=alert(1)>',
-      conversationUrl: 'https://stax.example/app/discussion',
+      conversationUrl: 'https://nemasus.example/app/discussion',
     });
     expect(message.html).not.toContain('<img');
   });

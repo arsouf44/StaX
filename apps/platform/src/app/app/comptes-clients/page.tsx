@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList } from '@stax/database';
-import { PermissionDenied } from '@stax/ui';
+import { unwrapList } from '@nemasus/database';
+import { PermissionDenied } from '@nemasus/ui';
 import { ModulePage } from '~/components/app/module-page';
 import { getWorkspace } from '~/lib/workspace';
 import { CustomerList, type CustomerView } from './customer-list';
@@ -16,7 +16,7 @@ const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeSt
  *
  * Ces donnees sont les votres : vous en etes responsable, vous les voyez, vous
  * les exportez et vous pouvez effacer un compte sur demande — sans passer par
- * StaX et sans outil technique.
+ * Nemasus et sans outil technique.
  */
 export default async function CustomerAccountsPage() {
   const { workspace, db } = await getWorkspace();

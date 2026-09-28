@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
+import { unwrapList } from '@nemasus/database';
 import {
   EmptyState,
   Icon,
@@ -12,7 +12,7 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 
@@ -47,7 +47,7 @@ const ACTION_LABELS: Record<string, string> = {
   'domain.detached': 'Nom de domaine retiré',
   'data.exported': 'Export de données',
   'data.deletion_requested': 'Suppression de données demandée',
-  'impersonation.started': 'Accès d’assistance ouvert par l’équipe StaX',
+  'impersonation.started': 'Accès d’assistance ouvert par l’équipe Nemasus',
   'impersonation.ended': 'Accès d’assistance refermé',
   'auth.password_changed': 'Mot de passe modifié',
   'auth.mfa_enabled': 'Double authentification activée',
@@ -56,7 +56,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 const ACTOR_LABELS: Record<string, string> = {
   user: 'Vous ou un collaborateur',
-  platform_staff: 'Équipe StaX',
+  platform_staff: 'Équipe Nemasus',
   system: 'Automatique',
   webhook: 'Service de paiement',
   anonymous: 'Visiteur',
@@ -123,7 +123,7 @@ export default async function ActivityPage() {
                     {row.actor_email ?? ACTOR_LABELS[row.actor_type] ?? row.actor_type}
                     {row.impersonated_by ? (
                       <span className="block text-xs text-[var(--warning)]">
-                        via un accès d’assistance StaX
+                        via un accès d’assistance Nemasus
                       </span>
                     ) : null}
                   </TD>

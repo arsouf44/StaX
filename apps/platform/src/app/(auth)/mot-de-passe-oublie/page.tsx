@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { readEnv } from '@stax/config';
-import { Alert } from '@stax/ui';
+import { readEnv } from '@nemasus/config';
+import { Alert } from '@nemasus/ui';
 import { AuthCard } from '~/components/auth/auth-card';
 import { ResetRequestForm } from './reset-request-form';
 

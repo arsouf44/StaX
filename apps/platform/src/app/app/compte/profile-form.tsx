@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Checkbox, Field, Input } from '@stax/ui';
+import { Alert, Button, Checkbox, Field, Input } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { updateProfileAction } from './actions';
 
@@ -66,7 +66,7 @@ export function ProfileForm({
       <Checkbox
         name="marketingOptIn"
         defaultChecked={marketingOptIn}
-        label="Je souhaite recevoir les actualités de StaX par e-mail."
+        label="Je souhaite recevoir les actualités de Nemasus par e-mail."
         description="Désinscription en un clic, depuis n’importe quel message."
       />
 

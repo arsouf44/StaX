@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createUserClient, unwrapMaybe } from '@stax/database';
-import { optionalText, uuidSchema } from '@stax/validation';
+import { createUserClient, unwrapMaybe } from '@nemasus/database';
+import { optionalText, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace } from '~/lib/workspace';

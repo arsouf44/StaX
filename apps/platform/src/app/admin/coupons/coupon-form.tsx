@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Dialog, Field, Input, Panel, Select, useToast } from '@stax/ui';
+import { Alert, Button, Dialog, Field, Input, Panel, Select, useToast } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { createCouponAction, deactivateCouponAction } from './actions';
 

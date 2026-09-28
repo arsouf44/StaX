@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { createSessionClient } from '@stax/auth';
-import { Alert, ButtonLink, Panel, StatusPill } from '@stax/ui';
+import { createSessionClient } from '@nemasus/auth';
+import { Alert, ButtonLink, Panel, StatusPill } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { PasswordChangeForm } from './password-change-form';

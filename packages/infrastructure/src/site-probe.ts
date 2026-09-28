@@ -1,4 +1,4 @@
-import { guardOutboundUrl, isPrivateHost } from '@stax/security';
+import { guardOutboundUrl, isPrivateHost } from '@nemasus/security';
 import type { ProviderDeployment } from './cloudflare-sites';
 
 /**
@@ -79,7 +79,7 @@ export async function probeUrl(
         redirect: 'manual',
         signal: controller.signal,
         headers: {
-          'user-agent': 'StaX-Verification/1.0 (+https://stax.fr)',
+          'user-agent': 'Nemasus-Verification/1.0 (+https://nemasus.fr)',
           accept: 'text/html,*/*',
         },
         cache: 'no-store',

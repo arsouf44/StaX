@@ -1,8 +1,8 @@
 'use server';
 
-import { tryCreateServiceClient } from '@stax/database';
-import { contentReportReceivedEmail, sendEmail } from '@stax/emails';
-import { contentReportSchema, fieldErrors, formDataToObject } from '@stax/validation';
+import { tryCreateServiceClient } from '@nemasus/database';
+import { contentReportReceivedEmail, sendEmail } from '@nemasus/emails';
+import { contentReportSchema, fieldErrors, formDataToObject } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 
 /**
@@ -87,7 +87,7 @@ export async function sendContentReportAction(
       );
     } catch (mailError) {
       // Le signalement est enregistre : l'echec de l'accuse ne l'annule pas.
-      console.error('[stax:signalements] accuse de reception non envoye', mailError);
+      console.error('[nemasus:signalements] accuse de reception non envoye', mailError);
     }
   }
 

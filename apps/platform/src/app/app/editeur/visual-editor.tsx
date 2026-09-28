@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Button, ConfirmDialog, Icon, cn, useToast } from '@stax/ui';
+import { Button, ConfirmDialog, Icon, cn, useToast } from '@nemasus/ui';
 import {
   commitPageAction,
   purgeTrashItemAction,
@@ -744,7 +744,7 @@ export function VisualEditor({
     >
       {staffMode ? (
         <div className="bg-[var(--warning)] px-4 py-1.5 text-center text-xs font-medium text-[#1a1200]">
-          Vous intervenez sur le site d’un client en tant qu’équipe StaX. Chaque modification est
+          Vous intervenez sur le site d’un client en tant qu’équipe Nemasus. Chaque modification est
           tracée et visible par le client dans son historique.
         </div>
       ) : null}

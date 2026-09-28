@@ -60,7 +60,7 @@ export const signUpSchema = z
     phone: optionalFromForm(phoneSchema),
     locale: localeSchema.default('fr'),
     acceptTerms: consentCheckbox(
-      'Vous devez accepter les conditions générales pour créer un compte.',
+      'Vous devez accepter les conditions générales d’utilisation pour créer un compte.',
     ),
     marketingOptIn: checkboxSchema,
     website: honeypotSchema,
@@ -143,7 +143,7 @@ export const activationCompleteSchema = z
     firstName: boundedText(1, 60, 'Le prenom'),
     lastName: boundedText(1, 60, 'Le nom'),
     password: passwordSchema,
-    acceptTerms: consentCheckbox('Vous devez accepter les conditions générales.'),
+    acceptTerms: consentCheckbox('Vous devez accepter les conditions générales d’utilisation.'),
   })
   .strict();
 

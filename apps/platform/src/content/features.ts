@@ -1,4 +1,4 @@
-import type { PlanSlug } from '@stax/types';
+import type { PlanSlug } from '@nemasus/types';
 
 /**
  * Pages de fonctionnalités.
@@ -54,7 +54,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     sections: [
       {
         title: 'Vous cliquez, vous modifiez',
-        body: 'L’éditeur affiche votre vrai site. Cliquez sur un texte, une image ou un bouton : StaX présente simplement les champs que votre site permet de modifier — un titre, un texte, une image à remplacer, le texte et le lien d’un bouton. Ni HTML, ni code, ni fichiers.',
+        body: 'L’éditeur affiche votre vrai site. Cliquez sur un texte, une image ou un bouton : Nemasus présente simplement les champs que votre site permet de modifier — un titre, un texte, une image à remplacer, le texte et le lien d’un bouton. Ni HTML, ni code, ni fichiers.',
         points: [
           'Aperçu de votre vrai site, sur ordinateur et sur mobile',
           'Des champs simples : texte, image, lien, horaires, listes',
@@ -64,7 +64,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Brouillon, aperçu, publication',
-        body: 'Ce que vous modifiez reste un brouillon : vos visiteurs continuent de voir la version en ligne. Quand vous cliquez sur « Publier », vos modifications sont enregistrées dans le code de votre site puis déployées. StaX n’affiche « Publié » qu’une fois le déploiement confirmé ; si quelque chose échoue, la version précédente reste en ligne et l’erreur vous est indiquée.',
+        body: 'Ce que vous modifiez reste un brouillon : vos visiteurs continuent de voir la version en ligne. Quand vous cliquez sur « Publier », vos modifications sont enregistrées dans le code de votre site puis déployées. Nemasus n’affiche « Publié » qu’une fois le déploiement confirmé ; si quelque chose échoue, la version précédente reste en ligne et l’erreur vous est indiquée.',
         points: [
           'Le brouillon n’affecte jamais la version publiée',
           'L’aperçu montre votre vrai site, pas une imitation',
@@ -156,7 +156,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Une notification immédiate',
-        body: 'Chaque demande déclenche un e-mail vers les adresses que vous choisissez, et apparaît dans votre boîte de réception StaX avec son statut de traitement.',
+        body: 'Chaque demande déclenche un e-mail vers les adresses que vous choisissez, et apparaît dans votre boîte de réception Nemasus avec son statut de traitement.',
       },
     ],
     related: ['messages', 'reservations'],
@@ -255,7 +255,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
     ],
     limits: [
-      'Nous ne promettons aucune position sur Google : personne ne peut honnêtement le garantir. Nous garantissons la qualité technique, qui en est la condition nécessaire.',
+      'Nous ne promettons aucune position sur Google : personne ne peut honnêtement le garantir. Nous soignons la qualité technique, qui en est la condition nécessaire.',
       'Le contenu éditorial reste déterminant. Nous vous accompagnons, mais un site qui n’évolue jamais progresse rarement.',
     ],
     related: ['analytics', 'domaines'],
@@ -266,7 +266,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     eyebrow: 'Encaissement',
     title: 'Encaissez sur votre propre compte',
     subtitle:
-      'Acomptes, commandes, dons. L’argent va directement de votre client à votre compte bancaire. StaX n’est pas dans ce circuit.',
+      'Acomptes, commandes, dons. L’argent va directement de votre client à votre compte bancaire. Nemasus n’est pas dans ce circuit.',
     visual: 'payments',
     requiredPlan: 'ultra-premium',
     sections: [
@@ -276,7 +276,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
         points: [
           'Compte ouvert à votre nom, pas au nôtre',
           'Virements automatiques vers votre banque',
-          'Aucune commission StaX sur vos encaissements',
+          'Aucune commission Nemasus sur vos encaissements',
         ],
       },
       {
@@ -285,7 +285,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Ce que vous payez',
-        body: 'À StaX : la création du site, puis la maintenance mensuelle à partir de sa livraison. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
+        body: 'À Nemasus : la création du site, puis la maintenance mensuelle à partir de sa livraison. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
       },
     ],
     limits: [
@@ -348,7 +348,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Le paiement va chez vous',
-        body: 'Comme pour toute transaction sur votre site, l’argent est encaissé sur votre propre compte Stripe. StaX ne prélève aucune commission.',
+        body: 'Comme pour toute transaction sur votre site, l’argent est encaissé sur votre propre compte Stripe. Nemasus ne prélève aucune commission.',
       },
     ],
     limits: [

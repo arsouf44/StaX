@@ -6,7 +6,7 @@ import {
   isCouponUsable,
   type CouponInput,
   type PricingPlanInput,
-} from '@stax/payments';
+} from '@nemasus/payments';
 
 /**
  * Les quatre offres chiffrees du catalogue, en centimes HORS TAXES.

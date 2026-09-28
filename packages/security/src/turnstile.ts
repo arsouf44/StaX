@@ -1,4 +1,4 @@
-import { hasCapability, readEnv } from '@stax/config';
+import { hasCapability, readEnv } from '@nemasus/config';
 
 /**
  * Cloudflare Turnstile.

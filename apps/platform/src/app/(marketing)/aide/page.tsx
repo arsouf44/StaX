@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ButtonLink, Container, Panel, Section, SectionHeading } from '@stax/ui';
+import { ButtonLink, Container, Panel, Section, SectionHeading } from '@nemasus/ui';
 
 export const metadata: Metadata = {
   title: 'Centre d’aide',
   description:
-    'Guides pratiques pour utiliser votre espace StaX : modifier votre site, gérer vos ' +
+    'Guides pratiques pour utiliser votre espace Nemasus : modifier votre site, gérer vos ' +
     'messages, connecter un domaine, encaisser des paiements.',
   alternates: { canonical: '/aide' },
 };

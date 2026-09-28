@@ -1,10 +1,10 @@
 import 'server-only';
-import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
+import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
 import {
   checkSiteHealth,
   cloudflareSitesConfigured,
   githubAppConfigured,
-} from '@stax/infrastructure';
+} from '@nemasus/infrastructure';
 import {
   expireStalePreviews,
   hostingsWithPendingWork,

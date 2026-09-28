@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { hasFeature, unwrapList, unwrapMaybe } from '@stax/database';
-import { fieldErrors, uuidSchema } from '@stax/validation';
+import { hasFeature, unwrapList, unwrapMaybe } from '@nemasus/database';
+import { fieldErrors, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import { buildSlug, parseCollectionForm, toDatabaseRow } from '~/lib/collection-io';
@@ -395,7 +395,7 @@ function databaseMessage(error: DatabaseError): string {
   if (error.code === '42501' || error.code === 'PGRST301') {
     return 'Vous n’avez pas les droits nécessaires pour cette modification.';
   }
-  console.error('[stax:collections] ecriture refusee', error.code, error.message);
+  console.error('[nemasus:collections] ecriture refusee', error.code, error.message);
   return 'L’enregistrement a échoué. Réessayez dans un instant.';
 }
 

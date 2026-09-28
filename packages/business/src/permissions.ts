@@ -1,4 +1,4 @@
-import type { OrgCapability, OrgRole } from '@stax/types';
+import type { OrgCapability, OrgRole } from '@nemasus/types';
 
 /**
  * Matrice RBAC — miroir EXACT de app.org_can() en PostgreSQL.

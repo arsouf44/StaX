@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Field, Input } from '@stax/ui';
-import { PASSWORD_MIN_LENGTH, passwordStrength } from '@stax/validation';
+import { Field, Input } from '@nemasus/ui';
+import { PASSWORD_MIN_LENGTH, passwordStrength } from '@nemasus/validation';
 
 /**
  * Champ mot de passe.

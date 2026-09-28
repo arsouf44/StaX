@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Alert, Button, Icon, Panel } from '@stax/ui';
+import { Alert, Button, Icon, Panel } from '@nemasus/ui';
 import { exportCollectionAction } from './actions';
 
 type Collection = 'messages' | 'contacts' | 'reservations' | 'commandes' | 'comptes';

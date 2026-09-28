@@ -1,13 +1,13 @@
 'use client';
 
-import { Button, useLocalStorageValue, writeLocalStorage } from '@stax/ui';
+import { Button, useLocalStorageValue, writeLocalStorage } from '@nemasus/ui';
 
 /**
  * Mode d'emploi de l'éditeur, en trois lignes, pour qui l'ouvre la première
  * fois. Masquable ; le choix est retenu sur cet appareil.
  */
 export function EditorGuide() {
-  const hidden = useLocalStorageValue('stax.editor-guide') === 'hidden';
+  const hidden = useLocalStorageValue('nemasus.editor-guide') === 'hidden';
   if (hidden) return null;
   return (
     <div
@@ -30,7 +30,7 @@ export function EditorGuide() {
       <Button
         size="sm"
         variant="ghost"
-        onClick={() => writeLocalStorage('stax.editor-guide', 'hidden')}
+        onClick={() => writeLocalStorage('nemasus.editor-guide', 'hidden')}
       >
         J’ai compris
       </Button>

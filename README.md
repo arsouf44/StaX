@@ -1,22 +1,22 @@
-# StaX
+# Nemasus
 
 **Nous créons votre site. Vous le gérez ensuite.**
 
-StaX vend, fait réaliser, livre et fait gérer des sites web professionnels.
+Nemasus vend, fait réaliser, livre et fait gérer des sites web professionnels.
 Une entreprise choisit son offre, paie, présente son activité ; l’équipe
-**conçoit et développe son site individuellement, hors de StaX** — dans son
+**conçoit et développe son site individuellement, hors de Nemasus** — dans son
 propre dépôt GitHub, déployé par son propre projet Cloudflare, sur son
-domaine. Le site est vérifié, rattaché à StaX, puis **livré** : le client
+domaine. Le site est vérifié, rattaché à Nemasus, puis **livré** : le client
 modifie alors lui-même son contenu (textes, photos, horaires, pages déclarées
 modifiables) et publie ; chaque publication est un vrai commit, un vrai
 déploiement, et n’est annoncée « en ligne » qu’une fois confirmée.
 
-StaX n’est **pas** un générateur de sites : aucun modèle, aucune structure
+Nemasus n’est **pas** un générateur de sites : aucun modèle, aucune structure
 choisie par l’offre, le métier ou un questionnaire.
 
 ```
-COMMANDE → DÉVELOPPEMENT HORS DE STAX → GITHUB → CLOUDFLARE → VÉRIFICATIONS
-→ RATTACHEMENT À STAX → LIVRAISON → BROUILLON DU CLIENT → PUBLIER
+COMMANDE → DÉVELOPPEMENT HORS DE NEMASUS → GITHUB → CLOUDFLARE → VÉRIFICATIONS
+→ RATTACHEMENT À NEMASUS → LIVRAISON → BROUILLON DU CLIENT → PUBLIER
 → COMMIT GITHUB → DÉPLOIEMENT CLOUDFLARE → EN LIGNE
 ```
 
@@ -25,6 +25,18 @@ site est construit et vérifié, puis proposé au prospect par e-mail avec un co
 personnel (14 jours). Il crée son compte, voit son site, écrit à l’équipe s’il
 le souhaite, paie — et le site lui est livré automatiquement. Voir
 [vente-par-telephone.md](./docs/vente-par-telephone.md).
+
+> **Nemasus s’appelait StaX.** Tout a été renommé — marque, paquets
+> `@nemasus/*`, variables `NEMASUS_*`, contrat `nemasus.manifest.json`,
+> textes stockés en base (migration 0056). Restent volontairement sous
+> l’ancien nom, parce qu’ils sont gravés dans les migrations déjà appliquées ou
+> dans les lignes de la base, et jamais montrés aux clients : les valeurs
+> internes `'stax'` (auteur « équipe »), `stax_purchase`, `stax_publish`,
+> `stax_preview`…, les colonnes `last_stax_commit_sha`, `purchased_by_stax`,
+> `dns_managed_by_stax`, le paramètre `stax.retention_purge` et le slug interne
+> `stax-plateforme`. Une variable encore nommée `STAX_*` (par exemple
+> `STAX_SECRET_KEY` sur Vercel) reste lue tant que `NEMASUS_*` n’est pas
+> définie : rien ne casse au renommage.
 
 > **Avant le premier client :** [docs/LANCEMENT.md](./docs/LANCEMENT.md) liste,
 > dans l’ordre, ce qu’il reste à configurer (base, identité légale, e-mails,
@@ -42,7 +54,7 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 | Suivi du projet par le client (7 étapes, validations)               | ✅   | `/app`, `app.set_project_phase`, `app.respond_to_project_review` |
 | Aucune édition avant la livraison (imposé par la base)              | ✅   | `app.site_content_access`                                        |
 | Rattacher un dépôt GitHub et un projet Cloudflare                   | ✅   | application GitHub, `admin/sites/[id]/livraison`                 |
-| Contrat d’édition `stax.manifest.json`                              | ✅   | `packages/site-contract`                                         |
+| Contrat d’édition `nemasus.manifest.json`                           | ✅   | `packages/site-contract`                                         |
 | Checklist de livraison, livraison auditée                           | ✅   | `app.delivery_readiness`, `app.deliver_site`                     |
 | Éditeur du client généré depuis le contrat, aperçu réel             | ✅   | `apps/platform/src/app/app/editeur/contract`                     |
 | Publier : commit GitHub + déploiement Cloudflare suivi              | ✅   | `lib/external-sites/publisher.ts`, `app.record_site_deployment`  |
@@ -57,8 +69,8 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 | Discussion client ↔ équipe, réponses par e-mail, alertes à l’équipe | ✅   | `/app/discussion`, `/admin/messages`, `lib/team-alerts.ts`       |
 | Invitations de collaborateurs, mot de passe oublié                  | ✅   | `/invitation`, `/auth/confirmation`                              |
 | Sites de l’ancien moteur : toujours servis, rien d’effacé           | ✅   | `apps/site-runtime`, `packages/site-engine`                      |
-| Comptes internes StaX : sites sans paiement                         | ✅   | `app.create_internal_order`, `pnpm internal:bootstrap`           |
-| Intervention de l’équipe StaX, tracée et visible du client          | ✅   | sessions d’assistance, `app.org_can`                             |
+| Comptes internes Nemasus : sites sans paiement                      | ✅   | `app.create_internal_order`, `pnpm internal:bootstrap`           |
+| Intervention de l’équipe Nemasus, tracée et visible du client       | ✅   | sessions d’assistance, `app.org_can`                             |
 | Boutique en ligne, du panier à l’encaissement                       | ✅   | `app.create_shop_order`, `/api/checkout`                         |
 | Comptes client sur les sites, sans mot de passe                     | ✅   | `site_customers` + `/compte`                                     |
 | Registre des violations de données (art. 33.5)                      | ✅   | `data_breaches` + `/admin/securite/violations`                   |
@@ -90,7 +102,7 @@ pnpm db:types              # régénère les types TypeScript
 # 4. Compte administrateur (secret fourni au moment de l’exécution)
 ADMIN_BOOTSTRAP_PASSWORD="$(openssl rand -base64 24)" pnpm admin:bootstrap
 
-# 4 bis. Compte interne StaX (sites sans paiement) — voir docs/admin-bootstrap.md
+# 4 bis. Compte interne Nemasus (sites sans paiement) — voir docs/admin-bootstrap.md
 INTERNAL_OWNER_EMAIL=… INTERNAL_OWNER_PASSWORD='…' pnpm internal:bootstrap
 
 # 5. Développement
@@ -108,7 +120,7 @@ GitHub (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 
 > **`.env.local` se trouve a la racine, pas dans `apps/platform`.**
 > Next.js ne lit nativement les fichiers `.env*` que dans le repertoire de
-> l'application, et les scripts `tsx` n'en lisent aucun. `@stax/config/dotenv`
+> l'application, et les scripts `tsx` n'en lisent aucun. `@nemasus/config/dotenv`
 > comble cet ecart : `next.config.ts` et chaque script chargent le `.env.local`
 > (puis le `.env`) de la racine avant toute autre chose. Une variable deja
 > definie — `VAR=... pnpm <script>`, secret Cloudflare, variable de CI — n'est
@@ -121,7 +133,7 @@ GitHub (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 
 ```bash
 pnpm verify                # format + lint + typecheck + tests
-scripts/db-test.sh         # 461 assertions SQL (échoue au premier échec)
+scripts/db-test.sh         # 529 assertions SQL (échoue au premier échec)
 pnpm build:cf              # build Cloudflare des deux applications
 ```
 
@@ -143,7 +155,7 @@ apps/
                    webhooks (Stripe, GitHub, Cloudflare), tâche de fond
   site-runtime/    Worker Cloudflare — API des sites ; sites de l’ancien moteur
 packages/
-  site-contract/   Contrat d’édition stax.manifest.json, fichier de contenu, pont d’aperçu
+  site-contract/   Contrat d’édition nemasus.manifest.json, fichier de contenu, pont d’aperçu
   infrastructure/  GitHub App, API Cloudflare, webhooks, sonde HTTPS (serveur uniquement)
   config/          Environnement, configuration légale, politiques commerciales
   types/           Types partagés, énumérations, Result<T>
@@ -157,7 +169,7 @@ packages/
   emails/          Modèles et interface d’envoi indépendante du fournisseur
   analytics/       Mesure d’audience sans cookie
   ui/              Système de design, primitives, icônes, mouvement
-supabase/migrations/   53 migrations SQL versionnées (jamais réécrites)
+supabase/migrations/   56 migrations SQL versionnées (jamais réécrites)
 tests/                 unitaires, intégration, sécurité, SQL, E2E
 ```
 
@@ -170,12 +182,12 @@ Documentation détaillée dans [`docs/`](./docs) :
 | [architecture.md](./docs/architecture.md)                     | Choix structurants et leurs raisons                                |
 | [site-delivery.md](./docs/site-delivery.md)                   | **Le cycle complet** : commande → livraison → publication          |
 | [github-integration.md](./docs/github-integration.md)         | Application GitHub : permissions, jetons, commits, webhook         |
-| [editable-site-contract.md](./docs/editable-site-contract.md) | Contrat `stax.manifest.json` et fichier de contenu                 |
+| [editable-site-contract.md](./docs/editable-site-contract.md) | Contrat `nemasus.manifest.json` et fichier de contenu              |
 | [database.md](./docs/database.md)                             | Schéma, RLS, fonctions, invariants                                 |
 | [security.md](./docs/security.md)                             | Modèle de menace et défenses                                       |
 | [vercel.md](./docs/vercel.md)                                 | **Plateforme sur Vercel** — variables, symptômes, vérifications    |
 | [deployment.md](./docs/deployment.md)                         | Mise en production, étape par étape                                |
-| [cloudflare.md](./docs/cloudflare.md)                         | Projets Cloudflare des sites, jeton, webhook ; Workers de StaX     |
+| [cloudflare.md](./docs/cloudflare.md)                         | Projets Cloudflare des sites, jeton, webhook ; Workers de Nemasus  |
 | [supabase.md](./docs/supabase.md)                             | Projet, rôles, sauvegardes                                         |
 | [stripe.md](./docs/stripe.md)                                 | Offres, paiement, maintenance mensuelle à la livraison             |
 | [stripe-connect.md](./docs/stripe-connect.md)                 | Encaissements des clients                                          |
@@ -241,7 +253,7 @@ Documentation détaillée dans [`docs/`](./docs) :
 | Parcours complets contre une vraie pile    | `pnpm test:e2e:stack` | ✅   |
 
 Les tests d’intégration et les assertions SQL ont besoin d’une base :
-`STAX_TEST_DATABASE_URL=… pnpm test`. **Sans elle, ils sont sautés, jamais
+`NEMASUS_TEST_DATABASE_URL=… pnpm test`. **Sans elle, ils sont sautés, jamais
 passés en silence** — un test vert sur une suite sautée est pire qu’un test
 rouge.
 
@@ -251,7 +263,7 @@ rouge.
 toutes les migrations, l’authentification Supabase (GoTrue), l’API PostgREST et
 un stockage de fichiers soumis à la même règle que la production. La plateforme
 tourne en build de production, le moteur des sites en Worker local
-(`*.sites.stax.test`). **GitHub et Cloudflare** y sont remplacés par des
+(`*.sites.nemasus.test`). **GitHub et Cloudflare** y sont remplacés par des
 émulateurs qui parlent les mêmes API (`tests/e2e/stack/providers.mjs` : jetons
 d’installation, API Git Data avec contrôle d’avance rapide, projets Pages,
 déploiements, échecs provoqués) : le code de production les appelle sans le
@@ -265,16 +277,16 @@ pnpm test:e2e:stack        # démarre plateforme + sites, puis les parcours
 
 Les parcours (`tests/e2e/journeys`) :
 
-- **cycle d’un site développé hors de StaX** (`external-site.spec.ts`) : avant
+- **cycle d’un site développé hors de Nemasus** (`external-site.spec.ts`) : avant
   la livraison, le client suit son projet sans éditeur ; l’équipe rattache le
   dépôt et le projet Cloudflare par l’interface, importe le contrat, la
   livraison est refusée tant que la checklist est incomplète, puis le site est
-  livré ; le client publie → commit `stax: publication client…` en avance
+  livré ; le client publie → commit `nemasus: publication client…` en avance
   rapide → déploiement → « Version 2 en ligne » ; un déploiement en échec n’est
   jamais annoncé publié et la version 2 reste servie ; restaurer la version 1
   la redéploie réellement ; une autre société ne voit rien ;
 - **compte interne** (`internal-account.spec.ts`) : commande Ultra Premium
-  sans paiement, site construit hors de StaX, rattaché puis confié au compte,
+  sans paiement, site construit hors de Nemasus, rattaché puis confié au compte,
   qui ne peut le modifier qu’à partir de ce moment ; le privilège est refusé à
   un client ordinaire par la base ;
 - **toutes les pages** (`all-pages.spec.ts`) : pages publiques, administration,

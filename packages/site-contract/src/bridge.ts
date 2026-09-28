@@ -1,37 +1,37 @@
 /**
  * Pont d'apercu : relie l'apercu REEL du site (son build Cloudflare, affiche
- * dans l'editeur StaX) aux champs du contrat d'edition.
+ * dans l'editeur Nemasus) aux champs du contrat d'edition.
  *
  * Le code du site marque les elements modifiables avec l'adresse de leur
  * champ :
  *
- *     <h1 data-stax="pages.accueil.hero.titre">…</h1>
+ *     <h1 data-nemasus="pages.accueil.hero.titre">…</h1>
  *
  * et, dans ses builds d'apercu seulement (quand le bundle porte
- * `stax.preview`), charge le script du pont :
+ * `nemasus.preview`), charge le script du pont :
  *
- *     <script src="https://app.stax.fr/bridge/v1.js" defer></script>
+ *     <script src="https://app.nemasus.fr/bridge/v1.js" defer></script>
  *
  * Dans l'editeur, un clic sur un element ouvre le champ correspondant ; une
  * saisie de texte s'affiche aussitot dans l'apercu, en attendant le build.
  *
- * Securite : le pont n'ecoute que l'origine de l'editeur StaX (inscrite dans
- * le script au moment ou StaX le sert), n'execute jamais de code recu, et ne
+ * Securite : le pont n'ecoute que l'origine de l'editeur Nemasus (inscrite dans
+ * le script au moment ou Nemasus le sert), n'execute jamais de code recu, et ne
  * fait que remplacer du texte ou des attributs d'image et de lien.
  */
 
 export const BRIDGE_VERSION = 1 as const;
-export const BRIDGE_ATTRIBUTE = 'data-stax';
+export const BRIDGE_ATTRIBUTE = 'data-nemasus';
 
 export type BridgeMessage =
-  | { source: 'stax-bridge'; version: 1; type: 'ready'; path: string; fields: string[] }
-  | { source: 'stax-bridge'; version: 1; type: 'select'; address: string };
+  | { source: 'nemasus-bridge'; version: 1; type: 'ready'; path: string; fields: string[] }
+  | { source: 'nemasus-bridge'; version: 1; type: 'select'; address: string };
 
 export type EditorMessage =
-  | { source: 'stax-editor'; version: 1; type: 'mode'; editing: boolean }
-  | { source: 'stax-editor'; version: 1; type: 'highlight'; address: string | null }
+  | { source: 'nemasus-editor'; version: 1; type: 'mode'; editing: boolean }
+  | { source: 'nemasus-editor'; version: 1; type: 'highlight'; address: string | null }
   | {
-      source: 'stax-editor';
+      source: 'nemasus-editor';
       version: 1;
       type: 'patch';
       address: string;
@@ -47,7 +47,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 /** Message recu d'un apercu : strictement valide, sinon ignore. */
 export function parseBridgeMessage(data: unknown): BridgeMessage | null {
-  if (!isRecord(data) || data['source'] !== 'stax-bridge' || data['version'] !== BRIDGE_VERSION) {
+  if (
+    !isRecord(data) ||
+    data['source'] !== 'nemasus-bridge' ||
+    data['version'] !== BRIDGE_VERSION
+  ) {
     return null;
   }
   if (data['type'] === 'ready') {
@@ -57,14 +61,14 @@ export function parseBridgeMessage(data: unknown): BridgeMessage | null {
           .filter((field): field is string => typeof field === 'string' && ADDRESS.test(field))
           .slice(0, 2000)
       : [];
-    return { source: 'stax-bridge', version: 1, type: 'ready', path, fields };
+    return { source: 'nemasus-bridge', version: 1, type: 'ready', path, fields };
   }
   if (
     data['type'] === 'select' &&
     typeof data['address'] === 'string' &&
     ADDRESS.test(data['address'])
   ) {
-    return { source: 'stax-bridge', version: 1, type: 'select', address: data['address'] };
+    return { source: 'nemasus-bridge', version: 1, type: 'select', address: data['address'] };
   }
   return null;
 }
@@ -74,7 +78,7 @@ export function editorMessage<T extends EditorMessage['type']>(
   payload: Omit<Extract<EditorMessage, { type: T }>, 'source' | 'version' | 'type'>,
 ): EditorMessage {
   return {
-    source: 'stax-editor',
+    source: 'nemasus-editor',
     version: BRIDGE_VERSION,
     type,
     ...payload,
@@ -82,12 +86,12 @@ export function editorMessage<T extends EditorMessage['type']>(
 }
 
 /**
- * Source du script du pont, servie par StaX a `/bridge/v1.js`.
- * `editorOrigin` : origine exacte de l'editeur (https://app.stax.fr).
+ * Source du script du pont, servie par Nemasus a `/bridge/v1.js`.
+ * `editorOrigin` : origine exacte de l'editeur (https://app.nemasus.fr).
  */
 export function bridgeScript(editorOrigin: string): string {
   const origin = JSON.stringify(new URL(editorOrigin).origin);
-  return `/* StaX — pont d'apercu v${BRIDGE_VERSION}. Actif uniquement dans l'editeur StaX. */
+  return `/* Nemasus — pont d'apercu v${BRIDGE_VERSION}. Actif uniquement dans l'editeur Nemasus. */
 (function () {
   'use strict';
   if (window.parent === window) return;
@@ -97,7 +101,7 @@ export function bridgeScript(editorOrigin: string): string {
   var selected = null;
 
   function post(message) {
-    message.source = 'stax-bridge';
+    message.source = 'nemasus-bridge';
     message.version = ${BRIDGE_VERSION};
     try { window.parent.postMessage(message, ORIGIN); } catch (e) { /* editeur ferme */ }
   }
@@ -186,7 +190,7 @@ export function bridgeScript(editorOrigin: string): string {
   window.addEventListener('message', function (event) {
     if (event.origin !== ORIGIN || event.source !== window.parent) return;
     var data = event.data;
-    if (!data || data.source !== 'stax-editor' || data.version !== ${BRIDGE_VERSION}) return;
+    if (!data || data.source !== 'nemasus-editor' || data.version !== ${BRIDGE_VERSION}) return;
     if (data.type === 'mode') {
       editing = data.editing === true;
       if (!editing) { place(box, null); place(focus, null); }

@@ -1,4 +1,4 @@
 {
-  "extends": "@stax/config/tsconfig/library",
+  "extends": "@nemasus/config/tsconfig/library",
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

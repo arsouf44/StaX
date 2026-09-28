@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { sendEmail, teamReplyEmail } from '@stax/emails';
-import { uuidSchema } from '@stax/validation';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { sendEmail, teamReplyEmail } from '@nemasus/emails';
+import { uuidSchema } from '@nemasus/validation';
 import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
@@ -13,7 +13,7 @@ import type { ActionState } from '~/lib/form-state';
  * Réponse de l'équipe à un client.
  *
  * Le message est écrit avec le JETON de la personne de l'équipe : la base
- * impose le côté « StaX » (0055) — il ne peut pas être choisi. Les
+ * impose le côté « Nemasus » (0055) — il ne peut pas être choisi. Les
  * responsables de l'entreprise cliente reçoivent la réponse par e-mail.
  */
 
@@ -54,12 +54,12 @@ export async function replyAsTeamAction(
     body: parsed.data.body,
   });
   if (error) {
-    console.error('[stax:admin-messages] reponse refusee', error.code, error.message);
+    console.error('[nemasus:admin-messages] reponse refusee', error.code, error.message);
     return { status: 'error', message: 'La réponse n’a pas pu être envoyée.' };
   }
   await db.rpc('mark_conversation_read', { p_project: project.id });
 
-  // Prévenir les responsables du compte client (pas l'équipe StaX elle-même).
+  // Prévenir les responsables du compte client (pas l'équipe Nemasus elle-même).
   const members = unwrapList<{
     role: string;
     profiles: { email: string; first_name: string | null; platform_role: string | null } | null;

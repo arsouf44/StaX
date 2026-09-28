@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next';
-import { loadRootEnv } from '@stax/config/dotenv';
+import { loadRootEnv } from '@nemasus/config/dotenv';
 
 /**
  * `.env.local` vit a la racine du depot, pas dans `apps/platform`.
@@ -64,7 +64,7 @@ const PUBLIC_CSP = [
 ].join('; ');
 
 /**
- * Configuration Next.js de la plateforme StaX.
+ * Configuration Next.js de la plateforme Nemasus.
  *
  * Cible : Cloudflare Workers via OpenNext. Les paquets de l espace de travail
  * sont compiles par Next (ils sont publies en TypeScript source), et les
@@ -76,19 +76,19 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   transpilePackages: [
-    '@stax/ui',
-    '@stax/types',
-    '@stax/config',
-    '@stax/validation',
-    '@stax/payments',
-    '@stax/business',
-    '@stax/security',
-    '@stax/site-engine',
-    '@stax/site-contract',
-    '@stax/database',
-    '@stax/auth',
-    '@stax/emails',
-    '@stax/analytics',
+    '@nemasus/ui',
+    '@nemasus/types',
+    '@nemasus/config',
+    '@nemasus/validation',
+    '@nemasus/payments',
+    '@nemasus/business',
+    '@nemasus/security',
+    '@nemasus/site-engine',
+    '@nemasus/site-contract',
+    '@nemasus/database',
+    '@nemasus/auth',
+    '@nemasus/emails',
+    '@nemasus/analytics',
   ],
 
   typescript: {
@@ -159,7 +159,7 @@ const nextConfig: NextConfig = {
       {
         // Polices des sites clients, auto-hebergees : l apercu de l editeur
         // est un document isole (origine opaque), qui les charge en CORS.
-        source: '/_stax/fonts/:file*',
+        source: '/_nemasus/fonts/:file*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import type { PlanSlug } from '@stax/types';
+import type { PlanSlug } from '@nemasus/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -12,7 +12,7 @@ import {
   Reveal,
   Section,
   SectionHeading,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { FEATURE_PAGES, getFeaturePage } from '~/content/features';
 import {
   BrowserFrame,
@@ -190,21 +190,21 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
 function FeatureVisual({ visual }: { visual: string }) {
   if (visual === 'editor') {
     return (
-      <BrowserFrame url="stax.fr/app/editeur">
+      <BrowserFrame url="nemasus.fr/app/editeur">
         <EditorMock />
       </BrowserFrame>
     );
   }
   if (visual === 'dashboard') {
     return (
-      <BrowserFrame url="stax.fr/app">
+      <BrowserFrame url="nemasus.fr/app">
         <DashboardMock />
       </BrowserFrame>
     );
   }
   if (visual === 'site') {
     return (
-      <BrowserFrame url="restaurant-dupont.fr">
+      <BrowserFrame url="restaurant-dupont.example">
         <SitePreview variant="restaurant" />
       </BrowserFrame>
     );

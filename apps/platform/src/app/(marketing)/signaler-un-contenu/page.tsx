@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { readEnv } from '@stax/config';
-import { Panel } from '@stax/ui';
+import { readEnv } from '@nemasus/config';
+import { Panel } from '@nemasus/ui';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
 import { ContentReportForm } from './report-form';

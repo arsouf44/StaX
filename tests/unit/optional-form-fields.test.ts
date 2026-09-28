@@ -6,7 +6,7 @@ import {
   profileSchema,
   quoteBriefSchema,
   signUpSchema,
-} from '@stax/validation';
+} from '@nemasus/validation';
 
 /**
  * Les champs facultatifs d'un formulaire HTML.

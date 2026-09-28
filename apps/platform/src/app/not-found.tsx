@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ButtonLink, Container, Logo } from '@stax/ui';
+import { ButtonLink, Container, Logo } from '@nemasus/ui';
 
 /**
  * Page introuvable.
@@ -12,7 +12,7 @@ export default function NotFound() {
     <div className="relative flex min-h-dvh flex-col">
       <header className="py-8">
         <Container size="default">
-          <Link href="/" aria-label="StaX — accueil" className="inline-flex">
+          <Link href="/" aria-label="Nemasus — accueil" className="inline-flex">
             <Logo />
           </Link>
         </Container>

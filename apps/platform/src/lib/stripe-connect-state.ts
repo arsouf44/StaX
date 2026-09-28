@@ -1,10 +1,10 @@
 import 'server-only';
-import { hmacHex, randomHex, timingSafeEqual } from '@stax/security';
+import { hmacHex, randomHex, timingSafeEqual } from '@nemasus/security';
 
 /**
  * Etat signe du parcours « relier mon compte Stripe existant ».
  *
- * Stripe renvoie le client vers StaX avec ce parametre intact. Il porte
+ * Stripe renvoie le client vers Nemasus avec ce parametre intact. Il porte
  * l'organisation et la personne qui ont lance la liaison, une echeance courte
  * et un alea, le tout signe : un lien de retour fabrique ou rejoue ne peut pas
  * rattacher un compte Stripe a l'organisation d'un autre.

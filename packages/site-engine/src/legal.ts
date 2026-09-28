@@ -56,7 +56,7 @@ export function missingLegalFields(identity: LegalIdentity): string[] {
 }
 
 /**
- * Hebergeur du site : StaX, qui le fournit au client. Ses coordonnees
+ * Hebergeur du site : Nemasus, qui le fournit au client. Ses coordonnees
  * viennent de la configuration du deploiement, jamais du code.
  */
 export interface HostIdentity {
@@ -69,7 +69,7 @@ export interface HostIdentity {
 }
 
 export const DEFAULT_HOST: HostIdentity = {
-  name: 'StaX',
+  name: 'Nemasus',
   address: null,
   phone: null,
   email: null,

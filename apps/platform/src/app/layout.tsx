@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { platformUrl, publicEnv } from '@stax/config';
-import { BRAND, faviconDataUri } from '@stax/ui/brand';
-import { ToastProvider } from '@stax/ui';
+import { platformUrl, publicEnv } from '@nemasus/config';
+import { BRAND, faviconDataUri } from '@nemasus/ui/brand';
+import { ToastProvider } from '@nemasus/ui';
 import './globals.css';
 
 /*
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: `%s — ${BRAND.name}`,
   },
   description:
-    'StaX conçoit, héberge et maintient le site professionnel de votre entreprise. ' +
+    'Nemasus conçoit, héberge et maintient le site professionnel de votre entreprise. ' +
     'Nous construisons le site, vous gardez la main sur vos contenus, ' +
     'vos messages et vos paiements.',
   applicationName: BRAND.name,

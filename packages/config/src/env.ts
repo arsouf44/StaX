@@ -6,9 +6,9 @@ import { assertServerOnly, deployEnvironment, isProduction, readAllEnv, readEnv 
 /* -------------------------------------------------------------------------- */
 
 const publicSchema = z.object({
-  /** Canonical origin of the platform application, e.g. https://stax.fr */
+  /** Canonical origin of the platform application, e.g. https://nemasus.fr */
   NEXT_PUBLIC_PLATFORM_URL: z.string().url().default('http://localhost:3000'),
-  /** Apex domain used to mint tenant subdomains, e.g. `sites.stax.fr`. */
+  /** Apex domain used to mint tenant subdomains, e.g. `sites.nemasus.fr`. */
   NEXT_PUBLIC_SITES_DOMAIN: z.string().min(3).default('sites.localhost'),
   /** Supabase project URL — public by design. */
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().default('http://127.0.0.1:54321'),
@@ -47,7 +47,7 @@ export function publicEnv(): PublicEnv {
   const parsed = publicSchema.safeParse(cleaned);
   if (!parsed.success) {
     throw new Error(
-      `[StaX] Configuration publique invalide : ${parsed.error.issues
+      `[Nemasus] Configuration publique invalide : ${parsed.error.issues
         .map((issue) => `${issue.path.join('.')} ${issue.message}`)
         .join(' | ')}`,
     );
@@ -110,7 +110,7 @@ const serverSchema = z.object({
 
   EMAIL_PROVIDER: z.enum(['console', 'resend', 'postmark']).default('console'),
   EMAIL_API_KEY: optionalSecret,
-  EMAIL_FROM: z.string().default('StaX <bonjour@localhost>'),
+  EMAIL_FROM: z.string().default('Nemasus <bonjour@localhost>'),
   EMAIL_REPLY_TO: z.string().optional(),
 
   ADMIN_EMAIL: z.string().email().optional(),
@@ -121,7 +121,7 @@ const serverSchema = z.object({
   ADMIN_BOOTSTRAP_PASSWORD: optionalSecret,
 
   /** 32+ byte secret used to HMAC activation codes, preview tokens and CSRF tokens. */
-  STAX_SECRET_KEY: z.string().min(32),
+  NEMASUS_SECRET_KEY: z.string().min(32),
 
   PLATFORM_URL: z.string().url().optional(),
   SITES_DOMAIN: z.string().optional(),
@@ -138,8 +138,8 @@ function developmentFallbacks(): Record<string, string> {
     SUPABASE_URL: 'http://127.0.0.1:54321',
     SUPABASE_ANON_KEY: 'local-development-anon-key',
     SUPABASE_SERVICE_ROLE_KEY: 'local-development-service-role-key',
-    STAX_SECRET_KEY: 'stax-development-only-secret-key-not-for-production-use',
-    EMAIL_FROM: 'StaX (dev) <bonjour@localhost>',
+    NEMASUS_SECRET_KEY: 'nemasus-development-only-secret-key-not-for-production-use',
+    EMAIL_FROM: 'Nemasus (dev) <bonjour@localhost>',
   };
 }
 
@@ -220,10 +220,10 @@ export function coreConfigurationProblems(): string[] {
         'ne fonctionnent pas.',
     );
   }
-  const secret = readEnv('STAX_SECRET_KEY');
+  const secret = readEnv('NEMASUS_SECRET_KEY');
   if (!secret || secret.length < 32) {
     problems.push(
-      'STAX_SECRET_KEY est absente ou trop courte (32 caractères minimum) : les formulaires ' +
+      'NEMASUS_SECRET_KEY est absente ou trop courte (32 caractères minimum) : les formulaires ' +
         'et les liens signés sont refusés.',
     );
   }
@@ -243,7 +243,7 @@ export function coreConfigurationProblems(): string[] {
 }
 
 export function serverEnv(): ServerEnv {
-  assertServerOnly('@stax/config/env#serverEnv');
+  assertServerOnly('@nemasus/config/env#serverEnv');
   if (serverCache) return serverCache;
 
   const source = withAliases(readAllEnv());
@@ -254,7 +254,7 @@ export function serverEnv(): ServerEnv {
   if (!parsed.success) {
     const missing = parsed.error.issues.map((issue) => issue.path.join('.')).join(', ');
     throw new Error(
-      `[StaX] Variables d'environnement serveur manquantes ou invalides : ${missing}. ` +
+      `[Nemasus] Variables d'environnement serveur manquantes ou invalides : ${missing}. ` +
         'Consultez .env.example et docs/deployment.md.',
     );
   }

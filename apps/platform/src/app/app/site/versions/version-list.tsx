@@ -11,7 +11,7 @@ import {
   StatusPill,
   useToast,
   type StatusTone,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import {
   cancelScheduledReleaseAction,
   releaseStatusAction,

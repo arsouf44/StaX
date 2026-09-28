@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Field, Icon, Input, Select, Switch, Textarea, cn } from '@stax/ui';
+import { Button, Checkbox, Field, Icon, Input, Select, Switch, Textarea, cn } from '@nemasus/ui';
 import {
   WEEK_DAYS,
   WEEK_DAY_LABELS,
@@ -14,7 +14,7 @@ import {
   type RichText,
   type SimpleFieldDefinition,
   type SiteManifest,
-} from '@stax/site-contract';
+} from '@nemasus/site-contract';
 import { MediaPicker } from '../field-editors';
 
 /**

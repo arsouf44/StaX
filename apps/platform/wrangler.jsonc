@@ -1,9 +1,9 @@
 {
-  // Configuration Cloudflare Workers de l application StaX.
+  // Configuration Cloudflare Workers de l application Nemasus.
   // Les secrets ne figurent JAMAIS ici : ils sont poses par
   // `wrangler secret put` ou par les secrets GitHub Actions.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "stax-platform",
+  "name": "nemasus-platform",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -17,13 +17,13 @@
   },
   "placement": { "mode": "smart" },
   "vars": {
-    "STAX_ENV": "development"
+    "NEMASUS_ENV": "development"
   },
   "env": {
     "preview": {
-      "name": "stax-platform-preview",
+      "name": "nemasus-platform-preview",
       "vars": {
-        "STAX_ENV": "preview"
+        "NEMASUS_ENV": "preview"
       },
       "assets": {
         "directory": ".open-next/assets",
@@ -32,9 +32,9 @@
       "observability": { "enabled": true }
     },
     "production": {
-      "name": "stax-platform",
+      "name": "nemasus-platform",
       "vars": {
-        "STAX_ENV": "production"
+        "NEMASUS_ENV": "production"
       },
       "assets": {
         "directory": ".open-next/assets",

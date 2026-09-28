@@ -1,7 +1,7 @@
 # Base de données
 
-PostgreSQL 15+ via Supabase. 53 migrations versionnées, 95 tables, 177
-politiques RLS, 461 assertions SQL exécutées à chaque modification
+PostgreSQL 15+ via Supabase. 56 migrations versionnées, 95 tables, 177
+politiques RLS, 529 assertions SQL exécutées à chaque modification
 (`tests/sql/rls.test.sql`).
 
 Les migrations 0042 à 0053 portent le modèle actuel : sites développés dans
@@ -14,7 +14,7 @@ anonymes, index des clés étrangères du modèle actuel). 0053 planifie la tâc
 de fond des sites toutes les 5 minutes par `pg_cron` + `pg_net` (le plan Hobby
 de Vercel n’autorise qu’un passage par jour).
 
-**Projet Supabase de production** : les 53 migrations y sont appliquées et
+**Projet Supabase de production** : les 56 migrations y sont appliquées et
 tracées dans `app.schema_migrations` avec l’empreinte de chaque fichier ; le
 schéma a été comparé à une base locale construite depuis le dépôt (tables,
 politiques, contraintes, index, fonctions, droits d’exécution : identiques).
@@ -162,7 +162,7 @@ son trafic. L’unicité est partielle : un domaine détaché redevient disponib
 pnpm db:migrate            # applique ce qui manque
 pnpm db:migrate --status   # liste sans rien appliquer
 pnpm db:types              # régénère les types TypeScript
-scripts/db-test.sh         # base jetable + migrations + 461 assertions
+scripts/db-test.sh         # base jetable + migrations + 529 assertions
 ```
 
 **Une migration appliquée ne se modifie jamais.** `db-migrate` enregistre

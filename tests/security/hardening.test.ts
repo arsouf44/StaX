@@ -24,7 +24,7 @@ import {
   tenantStoragePath,
   timingSafeEqual,
   validateUpload,
-} from '@stax/security';
+} from '@nemasus/security';
 
 const NUL = String.fromCharCode(0);
 const CRLF = String.fromCharCode(13, 10);
@@ -186,9 +186,9 @@ describe('injection de formule CSV', () => {
 
 describe('resolution du tenant par hostname', () => {
   const config = {
-    platformHost: 'stax.fr',
-    sitesDomain: 'sites.stax.fr',
-    previewDomain: 'preview.sites.stax.fr',
+    platformHost: 'nemasus.fr',
+    sitesDomain: 'sites.nemasus.fr',
+    previewDomain: 'preview.sites.nemasus.fr',
   };
 
   it('normalise l en-tete Host', () => {
@@ -199,11 +199,11 @@ describe('resolution du tenant par hostname', () => {
   });
 
   it('distingue plateforme, sous-domaine, apercu et domaine client', () => {
-    expect(resolveHostname('stax.fr', config).kind).toBe('platform');
-    expect(resolveHostname('www.stax.fr', config).kind).toBe('platform');
-    expect(resolveHostname('preview.sites.stax.fr', config).kind).toBe('preview');
+    expect(resolveHostname('nemasus.fr', config).kind).toBe('platform');
+    expect(resolveHostname('www.nemasus.fr', config).kind).toBe('platform');
+    expect(resolveHostname('preview.sites.nemasus.fr', config).kind).toBe('preview');
 
-    const tenant = resolveHostname('restaurant-dupont.sites.stax.fr', config);
+    const tenant = resolveHostname('restaurant-dupont.sites.nemasus.fr', config);
     expect(tenant.kind).toBe('platform-subdomain');
     expect(tenant.subdomain).toBe('restaurant-dupont');
 
@@ -211,8 +211,8 @@ describe('resolution du tenant par hostname', () => {
   });
 
   it('refuse un sous-domaine imbrique ou malforme', () => {
-    expect(resolveHostname('a.b.sites.stax.fr', config).kind).toBe('invalid');
-    expect(resolveHostname('-mauvais.sites.stax.fr', config).kind).toBe('invalid');
+    expect(resolveHostname('a.b.sites.nemasus.fr', config).kind).toBe('invalid');
+    expect(resolveHostname('-mauvais.sites.nemasus.fr', config).kind).toBe('invalid');
     expect(resolveHostname('', config).kind).toBe('invalid');
     expect(resolveHostname('pas-de-point', config).kind).toBe('invalid');
   });
@@ -232,17 +232,17 @@ describe('resolution du tenant par hostname', () => {
 
 describe('cle de cache edge', () => {
   it('isole chaque tenant et chaque version', () => {
-    const a = buildCacheKey({ hostname: 'a.sites.stax.fr', path: '/', contentHash: 'abc123ff' });
-    const b = buildCacheKey({ hostname: 'b.sites.stax.fr', path: '/', contentHash: 'abc123ff' });
-    const c = buildCacheKey({ hostname: 'a.sites.stax.fr', path: '/', contentHash: 'def456aa' });
+    const a = buildCacheKey({ hostname: 'a.sites.nemasus.fr', path: '/', contentHash: 'abc123ff' });
+    const b = buildCacheKey({ hostname: 'b.sites.nemasus.fr', path: '/', contentHash: 'abc123ff' });
+    const c = buildCacheKey({ hostname: 'a.sites.nemasus.fr', path: '/', contentHash: 'def456aa' });
     expect(a).not.toBe(b);
     expect(a).not.toBe(c);
-    expect(a).toContain('a.sites.stax.fr');
+    expect(a).toContain('a.sites.nemasus.fr');
   });
 
   it('refuse une empreinte forgee', () => {
     expect(() =>
-      buildCacheKey({ hostname: 'a.sites.stax.fr', path: '/', contentHash: '../../etc' }),
+      buildCacheKey({ hostname: 'a.sites.nemasus.fr', path: '/', contentHash: '../../etc' }),
     ).toThrow();
   });
 });

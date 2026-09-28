@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { listBusinesses, SECTORS } from '@stax/business';
+import { listBusinesses, SECTORS } from '@nemasus/business';
 import { OrderSteps } from '~/components/order/order-steps';
 import { readOrderDraft } from '~/lib/order-draft';
 import { BusinessChoice } from './business-choice';

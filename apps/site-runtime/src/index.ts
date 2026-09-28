@@ -1,6 +1,11 @@
-import { setEnvSource } from '@stax/config';
-import { CACHE_POLICIES, generateNonce } from '@stax/security';
-import { buildRobotsTxt, buildSitemapXml, normalizePath, renderDocument } from '@stax/site-engine';
+import { setEnvSource } from '@nemasus/config';
+import { CACHE_POLICIES, generateNonce } from '@nemasus/security';
+import {
+  buildRobotsTxt,
+  buildSitemapXml,
+  normalizePath,
+  renderDocument,
+} from '@nemasus/site-engine';
 import { buildPageContext, siteOrigin } from './context';
 import { resolveSite, type ResolvedSite, type ResolutionOutcome } from './resolve';
 import {
@@ -40,7 +45,7 @@ import type { WorkerEnv } from './env';
  */
 
 /** Chemins reserves au moteur : jamais servis comme page editoriale. */
-const RESERVED_PREFIXES = ['/api/', '/_stax/'];
+const RESERVED_PREFIXES = ['/api/', '/_nemasus/'];
 
 function isReserved(path: string): boolean {
   return RESERVED_PREFIXES.some((prefix) => path.startsWith(prefix));
@@ -155,8 +160,8 @@ async function handlePage(request: Request, site: ResolvedSite, path: string): P
     // permettent la purge par etiquette), et le support voit en un coup
     // d oeil quelle version un visiteur a recue.
     headers: {
-      ...(site.versionNumber !== null ? { 'x-stax-version': String(site.versionNumber) } : {}),
-      'cache-tag': `stax-site-${site.siteId}`,
+      ...(site.versionNumber !== null ? { 'x-nemasus-version': String(site.versionNumber) } : {}),
+      'cache-tag': `nemasus-site-${site.siteId}`,
     },
   });
 }
@@ -297,7 +302,7 @@ export default {
     } catch (error) {
       // Aucun detail technique ne sort vers le visiteur : le message serait au
       // mieux inutile, au pire une aide a l attaquant.
-      console.error('[stax:site-runtime] erreur non rattrapee', error);
+      console.error('[nemasus:site-runtime] erreur non rattrapee', error);
       return statusPage({
         status: 500,
         title: 'Une erreur est survenue',

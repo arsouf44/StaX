@@ -15,7 +15,7 @@
  * C est exactement le symptome qui a ete remonte en production.
  *
  * Ce module comble ce trou. Il est volontairement place dans un point d entree
- * separe (`@stax/config/dotenv`) : il importe `node:fs`, et ne doit donc
+ * separe (`@nemasus/config/dotenv`) : il importe `node:fs`, et ne doit donc
  * jamais etre embarque dans le bundle d un Worker Cloudflare, ou la
  * configuration arrive par les bindings.
  *

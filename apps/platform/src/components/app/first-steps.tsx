@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Button, Icon, Panel, useLocalStorageValue, writeLocalStorage } from '@stax/ui';
+import { Button, Icon, Panel, useLocalStorageValue, writeLocalStorage } from '@nemasus/ui';
 
 /**
  * « Vos premiers pas » : trois gestes, dans l'ordre où on les fait vraiment.

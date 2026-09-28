@@ -1,11 +1,11 @@
-import { isProduction } from '@stax/config';
+import { isProduction } from '@nemasus/config';
 import { randomToken } from './crypto';
 
 /**
  * En-tetes de securite HTTP.
  *
  * Deux profils distincts :
- *  - `platform` : l'application StaX (tableau de bord, administration) ;
+ *  - `platform` : l'application Nemasus (tableau de bord, administration) ;
  *  - `tenant-site` : les sites publics des clients, plus permissifs sur les
  *    images et les polices, mais tout aussi stricts sur les scripts.
  *

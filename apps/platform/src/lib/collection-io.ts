@@ -1,6 +1,6 @@
 import 'server-only';
-import { MoneyError, moneyInputValue, parseMoneyInput } from '@stax/payments';
-import { slugify } from '@stax/security';
+import { MoneyError, moneyInputValue, parseMoneyInput } from '@nemasus/payments';
+import { slugify } from '@nemasus/security';
 import type { CollectionDescriptor, CollectionField } from './collections';
 
 /**

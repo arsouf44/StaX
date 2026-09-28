@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient } from '@stax/database';
-import { boundedText, optionalText, uuidSchema } from '@stax/validation';
+import { createUserClient } from '@nemasus/database';
+import { boundedText, optionalText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
@@ -90,7 +90,7 @@ export async function createCouponAction(
     if (error.code === '23505') {
       return { status: 'error', message: 'Ce code existe déjà. Choisissez-en un autre.' };
     }
-    console.error('[stax:coupon] creation refusee', error.code, error.message);
+    console.error('[nemasus:coupon] creation refusee', error.code, error.message);
     return { status: 'error', message: 'Ce code n’a pas pu être créé.' };
   }
 

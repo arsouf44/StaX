@@ -12,7 +12,7 @@ export interface ResolvedHostname {
   kind: HostnameKind;
   /** Nom d'hote normalise : minuscules, sans port, sans point final. */
   hostname: string;
-  /** Sous-domaine du tenant, pour `client.sites.stax.fr`. */
+  /** Sous-domaine du tenant, pour `client.sites.nemasus.fr`. */
   subdomain: string | null;
   isPreview: boolean;
 }
@@ -43,11 +43,11 @@ export function isValidHostname(host: string): boolean {
 }
 
 export interface HostnameConfig {
-  /** Hote de l'application StaX, par exemple `stax.fr`. */
+  /** Hote de l'application Nemasus, par exemple `nemasus.fr`. */
   platformHost: string;
-  /** Domaine parent des sous-domaines clients, par exemple `sites.stax.fr`. */
+  /** Domaine parent des sous-domaines clients, par exemple `sites.nemasus.fr`. */
   sitesDomain: string;
-  /** Domaine des apercus, par exemple `preview.sites.stax.fr`. */
+  /** Domaine des apercus, par exemple `preview.sites.nemasus.fr`. */
   previewDomain: string;
 }
 
@@ -106,7 +106,7 @@ export function buildCacheKey(params: {
   if (!/^[0-9a-f]{8,128}$/.test(params.contentHash)) {
     throw new Error('Clé de cache : empreinte de version invalide.');
   }
-  return `https://cache.stax.internal/v1/${host}/${params.contentHash}/${locale}${path}`;
+  return `https://cache.nemasus.internal/v1/${host}/${params.contentHash}/${locale}${path}`;
 }
 
 /** Sous-domaine propose lors de la creation d'un site, a partir de son nom. */
@@ -156,6 +156,8 @@ export const RESERVED_SUBDOMAINS: ReadonlySet<string> = new Set([
   'webhooks',
   'cloudflare',
   'supabase',
+  'nemasus',
+  // Ancien nom de la marque : reste reserve.
   'stax',
   'security',
   'abuse',

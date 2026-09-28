@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { Button, ButtonLink } from '@stax/ui';
+import { Button, ButtonLink } from '@nemasus/ui';
 import { signOutAction } from '~/app/app/actions';
 
 /**

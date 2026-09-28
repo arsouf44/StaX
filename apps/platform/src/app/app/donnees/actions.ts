@@ -1,6 +1,6 @@
 'use server';
 
-import { createUserClient, toCsvExport } from '@stax/database';
+import { createUserClient, toCsvExport } from '@nemasus/database';
 import { requireSession } from '~/lib/session';
 
 /**

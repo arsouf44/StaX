@@ -11,13 +11,13 @@ import {
 } from '../../../../packages/site-contract/src/index';
 
 /**
- * Un site developpe HORS de StaX, tel que l'equipe le livre : un depot GitHub
+ * Un site developpe HORS de Nemasus, tel que l'equipe le livre : un depot GitHub
  * (manifeste + fichier de contenu que le site lit au build), un projet
  * Cloudflare Pages qui le deploie. Dans la pile de test, GitHub et Cloudflare
  * sont les faux fournisseurs de `tests/e2e/stack/providers.mjs`.
  */
 
-export const PROVIDERS_URL = process.env.STAX_E2E_PROVIDERS_URL ?? 'http://127.0.0.1:54350';
+export const PROVIDERS_URL = process.env.NEMASUS_E2E_PROVIDERS_URL ?? 'http://127.0.0.1:54350';
 export const CLOUDFLARE_ACCOUNT = '0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e';
 
 /** Contrat d'edition d'un site Premium : une langue, une page d'accueil, des coordonnees. */
@@ -26,9 +26,9 @@ export function e2eManifest(siteName: string): SiteManifest {
     contract: 1,
     site: { name: siteName, locales: ['fr'], defaultLocale: 'fr' },
     content: {
-      file: 'src/content/stax.content.json',
-      mediaDir: 'public/media/stax',
-      mediaUrl: '/media/stax',
+      file: 'src/content/nemasus.content.json',
+      mediaDir: 'public/media/nemasus',
+      mediaUrl: '/media/nemasus',
     },
     preview: { bridge: true },
     globals: [
@@ -122,7 +122,7 @@ export interface SiteInfrastructure {
 /**
  * Cree le depot et le projet Cloudflare du site chez les faux fournisseurs,
  * comme l'equipe les cree chez les vrais, puis declare l'installation de
- * l'application GitHub a StaX (ce que fait le webhook d'installation).
+ * l'application GitHub a Nemasus (ce que fait le webhook d'installation).
  */
 export async function createSiteInfrastructure(
   service: SupabaseClient,
@@ -132,7 +132,7 @@ export async function createSiteInfrastructure(
   const installationId = 700_000_000 + seed;
   const accountId = 800_000_000 + seed;
   const repositoryId = 900_000_000 + seed;
-  const accountLogin = `stax-sites-${options.slug}`;
+  const accountLogin = `nemasus-sites-${options.slug}`;
   const manifest = e2eManifest(options.siteName);
   const manifestText = JSON.stringify(manifest, null, 2);
   const content = e2eInitialContent(options.title);
@@ -151,7 +151,7 @@ export async function createSiteInfrastructure(
       repositoryId,
       name: `site-${options.slug}`,
       files: {
-        'stax.manifest.json': manifestText,
+        'nemasus.manifest.json': manifestText,
         [manifest.content.file]: bundle.json,
         'package.json': '{ "name": "site", "private": true }',
       },
@@ -228,7 +228,7 @@ export async function connectSiteInfrastructure(
     p_html_url: `https://github.com/${infra.repository}`,
     p_default_branch: 'main',
     p_production_branch: 'main',
-    p_manifest_path: 'stax.manifest.json',
+    p_manifest_path: 'nemasus.manifest.json',
     p_head_commit_sha: infra.head,
   });
   await call('connect_site_hosting', {
@@ -247,7 +247,7 @@ export async function connectSiteInfrastructure(
   const recorded = await call('record_site_manifest', {
     p_site: siteId,
     p_commit_sha: infra.head,
-    p_path: 'stax.manifest.json',
+    p_path: 'nemasus.manifest.json',
     p_contract_version: parsed.manifest.contract,
     p_manifest: parsed.manifest,
     p_manifest_hash: await sha256Hex(stableStringify(parsed.manifest)),
@@ -286,7 +286,7 @@ export async function completeDeliveryChecklist(
   infra: SiteInfrastructure,
 ): Promise<void> {
   for (const [key, note] of [
-    ['forms', 'Formulaire de contact envoyé depuis le site, reçu dans la messagerie StaX.'],
+    ['forms', 'Formulaire de contact envoyé depuis le site, reçu dans la messagerie Nemasus.'],
     ['responsive', 'Vérifié sur téléphone, tablette et écran de 1440 px.'],
   ] as const) {
     const { error } = await staff.rpc('attest_delivery_check', {
@@ -333,7 +333,7 @@ export function repositoryState(fullName: string): Promise<RepositoryState> {
  */
 export async function liveContent(
   project: string,
-  file = 'src/content/stax.content.json',
+  file = 'src/content/nemasus.content.json',
 ): Promise<{ commit: string; content: Record<string, unknown> | null }> {
   const live = await providers<{ commit: string; content: string | null }>(
     `/__fake/projects/${project}/live?file=${encodeURIComponent(file)}`,

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { legalValue } from '@stax/config';
-import { ButtonLink, Container, Logo, Panel } from '@stax/ui';
+import { legalValue } from '@nemasus/config';
+import { ButtonLink, Container, Logo, Panel } from '@nemasus/ui';
 
 export const dynamic = 'force-dynamic';
 

@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { clearEnvSource, resetEnvCache, setEnvSource } from '@stax/config';
+import { clearEnvSource, resetEnvCache, setEnvSource } from '@nemasus/config';
 import {
   createAppJwt,
   GitHubError,
@@ -14,14 +14,14 @@ import {
   verifyCronSecret,
   verifyGitHubSignature,
   workersBuildStatus,
-} from '@stax/infrastructure';
-import { bridgeScript } from '@stax/site-contract';
+} from '@nemasus/infrastructure';
+import { bridgeScript } from '@nemasus/site-contract';
 import { POST as githubWebhook } from '~/app/api/webhooks/github/route';
 import { POST as cloudflareWebhook } from '~/app/api/webhooks/cloudflare/route';
 import { GET as cronSites } from '~/app/api/cron/sites/route';
 
 /**
- * Sites independants : ce qui protege le lien entre StaX, GitHub et Cloudflare.
+ * Sites independants : ce qui protege le lien entre Nemasus, GitHub et Cloudflare.
  *
  *  - un webhook falsifie est refuse AVANT toute lecture, par la vraie route ;
  *  - le jeton GitHub est limite a UN depot et au strict necessaire ;
@@ -94,7 +94,7 @@ describe('webhook GitHub', () => {
   it('la route répond 401 à une livraison falsifiée, sans rien traiter', async () => {
     installEnv();
     const forged = await githubWebhook(
-      new Request('https://stax.test/api/webhooks/github', {
+      new Request('https://nemasus.test/api/webhooks/github', {
         method: 'POST',
         headers: {
           'x-hub-signature-256': sign(body, 'secret-de-l-attaquant-123'),
@@ -107,7 +107,7 @@ describe('webhook GitHub', () => {
     expect(forged.status).toBe(401);
 
     const unsigned = await githubWebhook(
-      new Request('https://stax.test/api/webhooks/github', { method: 'POST', body }),
+      new Request('https://nemasus.test/api/webhooks/github', { method: 'POST', body }),
     );
     expect(unsigned.status).toBe(401);
   });
@@ -115,7 +115,7 @@ describe('webhook GitHub', () => {
   it('la route laisse passer une livraison authentique jusqu’au traitement', async () => {
     installEnv();
     const genuine = await githubWebhook(
-      new Request('https://stax.test/api/webhooks/github', {
+      new Request('https://nemasus.test/api/webhooks/github', {
         method: 'POST',
         headers: {
           'x-hub-signature-256': sign(body),
@@ -148,7 +148,7 @@ describe('notifications Cloudflare et tâche de fond', () => {
     const payload = JSON.stringify({ data: { project_name: 'atelier-x' } });
     for (const header of [null, 'secret-devine-0123456789']) {
       const response = await cloudflareWebhook(
-        new Request('https://stax.test/api/webhooks/cloudflare', {
+        new Request('https://nemasus.test/api/webhooks/cloudflare', {
           method: 'POST',
           headers: header ? { 'cf-webhook-auth': header } : {},
           body: payload,
@@ -159,7 +159,7 @@ describe('notifications Cloudflare et tâche de fond', () => {
 
     for (const header of [null, 'Bearer mauvais-secret-0123456789', CRON_SECRET]) {
       const response = await cronSites(
-        new Request('https://stax.test/api/cron/sites', {
+        new Request('https://nemasus.test/api/cron/sites', {
           headers: header ? { authorization: header } : {},
         }),
       );
@@ -185,7 +185,7 @@ const NEW_COMMIT = 'c'.repeat(40);
 
 /**
  * Faux GitHub : repond aux appels de l'API Git Data et enregistre tout ce que
- * StaX lui envoie. `refUpdate` decide de la reponse a l'avance de branche.
+ * Nemasus lui envoie. `refUpdate` decide de la reponse a l'avance de branche.
  */
 function fakeGitHub(options: { refUpdate: (attempt: number) => number }) {
   const calls: Recorded[] = [];
@@ -283,7 +283,7 @@ describe('application GitHub', () => {
   it('demande un jeton limité à UN dépôt, avec les seules permissions utiles', async () => {
     const github = fakeGitHub({ refUpdate: () => 200 });
     await RepositoryClient.open(
-      { installationId: 7, repositoryId: 99, fullName: 'stax-sites/atelier-x' },
+      { installationId: 7, repositoryId: 99, fullName: 'nemasus-sites/atelier-x' },
       'write',
       github.fetchImpl,
     );
@@ -299,14 +299,14 @@ describe('application GitHub', () => {
   it('publie en avance rapide, jamais en force, sur la branche de production', async () => {
     const github = fakeGitHub({ refUpdate: () => 200 });
     const repo = await RepositoryClient.open(
-      { installationId: 7, repositoryId: 99, fullName: 'stax-sites/atelier-x' },
+      { installationId: 7, repositoryId: 99, fullName: 'nemasus-sites/atelier-x' },
       'write',
       github.fetchImpl,
     );
     const result = await repo.commitFiles({
       branch: 'main',
-      files: [{ path: 'content/stax.content.json', content: '{"pages":{}}' }],
-      message: 'stax: publication client v2',
+      files: [{ path: 'content/nemasus.content.json', content: '{"pages":{}}' }],
+      message: 'nemasus: publication client v2',
     });
     expect(result).toMatchObject({ commitSha: NEW_COMMIT, baseSha: HEAD, unchanged: false });
 
@@ -320,14 +320,14 @@ describe('application GitHub', () => {
   it('rejoue au-dessus du nouveau sommet si le développeur a poussé entre-temps', async () => {
     const github = fakeGitHub({ refUpdate: (attempt) => (attempt === 1 ? 422 : 200) });
     const repo = await RepositoryClient.open(
-      { installationId: 7, repositoryId: 99, fullName: 'stax-sites/atelier-x' },
+      { installationId: 7, repositoryId: 99, fullName: 'nemasus-sites/atelier-x' },
       'write',
       github.fetchImpl,
     );
     const result = await repo.commitFiles({
       branch: 'main',
-      files: [{ path: 'content/stax.content.json', content: '{"pages":{}}' }],
-      message: 'stax: publication client v3',
+      files: [{ path: 'content/nemasus.content.json', content: '{"pages":{}}' }],
+      message: 'nemasus: publication client v3',
     });
     expect(result.baseSha).toBe(RACED_HEAD);
     const commits = github.calls.filter(
@@ -340,15 +340,15 @@ describe('application GitHub', () => {
   it('un refus de GitHub est une erreur, jamais un commit réussi', async () => {
     const github = fakeGitHub({ refUpdate: () => 503 });
     const repo = await RepositoryClient.open(
-      { installationId: 7, repositoryId: 99, fullName: 'stax-sites/atelier-x' },
+      { installationId: 7, repositoryId: 99, fullName: 'nemasus-sites/atelier-x' },
       'write',
       github.fetchImpl,
     );
     await expect(
       repo.commitFiles({
         branch: 'main',
-        files: [{ path: 'content/stax.content.json', content: '{"pages":{}}' }],
-        message: 'stax: publication client v4',
+        files: [{ path: 'content/nemasus.content.json', content: '{"pages":{}}' }],
+        message: 'nemasus: publication client v4',
       }),
     ).rejects.toBeInstanceOf(GitHubError);
   });
@@ -441,9 +441,9 @@ describe('aucun secret GitHub, Cloudflare ou Stripe côté navigateur', () => {
       const relative = file.slice(ROOT.length);
       if (/process\.env\.(?!NEXT_PUBLIC_)/.test(source))
         offenders.push(`${relative} : process.env`);
-      if (/from ['"]@stax\/infrastructure['"]/.test(source))
-        offenders.push(`${relative} : @stax/infrastructure`);
-      if (/^import (?!type)[^;]*from ['"]@stax\/payments\/stripe-client['"]/m.test(source)) {
+      if (/from ['"]@nemasus\/infrastructure['"]/.test(source))
+        offenders.push(`${relative} : @nemasus/infrastructure`);
+      if (/^import (?!type)[^;]*from ['"]@nemasus\/payments\/stripe-client['"]/m.test(source)) {
         offenders.push(`${relative} : client Stripe serveur`);
       }
       for (const secret of SERVER_SECRETS) {
@@ -474,9 +474,9 @@ describe('aucun secret GitHub, Cloudflare ou Stripe côté navigateur', () => {
     expect(types).not.toMatch(/token|secret|privateKey|installationId|accountId/i);
   });
 
-  it('le script de pont publié ne parle qu’à l’origine de StaX, sans secret', () => {
-    const script = bridgeScript('https://stax.fr');
-    expect(script).toContain('https://stax.fr');
+  it('le script de pont publié ne parle qu’à l’origine de Nemasus, sans secret', () => {
+    const script = bridgeScript('https://nemasus.fr');
+    expect(script).toContain('https://nemasus.fr');
     expect(script).not.toMatch(/postMessage\([^)]*['"]\*['"]/);
     expect(script).not.toMatch(/token|secret/i);
   });

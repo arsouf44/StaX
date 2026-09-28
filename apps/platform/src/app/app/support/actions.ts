@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient, unwrapMaybe } from '@stax/database';
-import { boundedText, uuidSchema } from '@stax/validation';
+import { createUserClient, unwrapMaybe } from '@nemasus/database';
+import { boundedText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireSession } from '~/lib/session';
 import { alertTeam } from '~/lib/team-alerts';
@@ -14,7 +14,7 @@ import type { ActionState } from '~/lib/form-state';
  *
  * Le ticket est cree avec le jeton de la personne : la RLS le rattache a son
  * organisation. Le cote emetteur (`client`) et le statut initial sont imposes
- * ICI — un client ne peut ni se faire passer pour l equipe StaX, ni marquer son
+ * ICI — un client ne peut ni se faire passer pour l equipe Nemasus, ni marquer son
  * propre ticket comme resolu pour le faire disparaitre d une file.
  */
 

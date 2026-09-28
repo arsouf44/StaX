@@ -11,8 +11,8 @@
  *
  * Usage : pnpm legal:check
  */
-import { LEGAL_FIELDS, deployEnvironment, legalStatus, readEnv } from '@stax/config';
-import { loadRootEnv } from '@stax/config/dotenv';
+import { LEGAL_FIELDS, deployEnvironment, legalStatus, readEnv } from '@nemasus/config';
+import { loadRootEnv } from '@nemasus/config/dotenv';
 
 /**
  * Les variables viennent de `.env.local` a la racine du depot (copie de

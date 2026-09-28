@@ -1,5 +1,5 @@
-import { formatMoney } from '@stax/payments';
-import { featureAccess, loadFeatureSnapshot, unwrapList } from '@stax/database';
+import { formatMoney } from '@nemasus/payments';
+import { featureAccess, loadFeatureSnapshot, unwrapList } from '@nemasus/database';
 import { toFormValues } from '~/lib/collection-io';
 import { getCollection, type CollectionDescriptor, type CollectionId } from '~/lib/collections';
 import { getWorkspace } from '~/lib/workspace';

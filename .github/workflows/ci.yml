@@ -21,7 +21,7 @@ env:
   NEXT_PUBLIC_SITES_DOMAIN: sites.ci.invalid
   NEXT_PUBLIC_PREVIEW_DOMAIN: preview.sites.ci.invalid
   NEXT_PUBLIC_DEFAULT_LOCALE: fr
-  STAX_ENV: test
+  NEMASUS_ENV: test
 
 jobs:
   qualite:
@@ -104,7 +104,7 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          scripts/db-test.sh "postgresql://postgres@127.0.0.1:5432/postgres" stax_ci
+          scripts/db-test.sh "postgresql://postgres@127.0.0.1:5432/postgres" nemasus_ci
 
   build:
     name: Build production et Cloudflare

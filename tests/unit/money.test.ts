@@ -13,7 +13,7 @@ import {
   toMajorUnits,
   vatFromGross,
   vatFromNet,
-} from '@stax/payments';
+} from '@nemasus/payments';
 
 describe('arithmetique monetaire', () => {
   it('refuse les montants non entiers', () => {
@@ -64,7 +64,7 @@ describe('arithmetique monetaire', () => {
     const normalize = (value: string) => value.replace(/\u202f|\u00a0/g, ' ');
     expect(normalize(formatMoney(23999))).toBe('239,99 \u20ac');
     expect(normalize(formatMoney(1400, 'EUR', { hideDecimalsWhenRound: true }))).toBe('14 \u20ac');
-    // La maintenance StaX est MENSUELLE ; un ancien contrat annuel garde son libelle.
+    // La maintenance Nemasus est MENSUELLE ; un ancien contrat annuel garde son libelle.
     expect(normalize(formatMaintenance(1200))).toBe('12 \u20ac / mois');
     expect(normalize(formatMaintenance(1800, 'EUR', 'month'))).toBe('18 \u20ac / mois');
     expect(normalize(formatMaintenance(3200, 'EUR', 'year'))).toBe('32 \u20ac / an');

@@ -5,8 +5,8 @@ import {
   loadFeatureSnapshot,
   mediaPublicUrl,
   unwrapMaybe,
-} from '@stax/database';
-import { safeFileName, tenantStoragePath } from '@stax/security';
+} from '@nemasus/database';
+import { safeFileName, tenantStoragePath } from '@nemasus/security';
 import { guardAction } from '~/lib/action-guard';
 import type { WorkspaceContext } from '~/lib/workspace';
 
@@ -101,7 +101,7 @@ export async function storeMediaFile(
     upsert: false,
   });
   if (uploadError) {
-    console.error('[stax:media] envoi refuse', uploadError.message);
+    console.error('[nemasus:media] envoi refuse', uploadError.message);
     return {
       ok: false,
       message: 'L’envoi a échoué. Réessayez, et contactez-nous si le problème persiste.',

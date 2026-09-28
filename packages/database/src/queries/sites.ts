@@ -1,4 +1,4 @@
-import type { PageBlockRow, SitePage, SiteVersion, UUID } from '@stax/types';
+import type { PageBlockRow, SitePage, SiteVersion, UUID } from '@nemasus/types';
 import { type Db, unwrap, unwrapList, unwrapMaybe } from '../client';
 
 /**

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
-import { cloudflareSitesConfigured } from '@stax/infrastructure';
-import { emailSchema, optionalText, uuidSchema } from '@stax/validation';
+import { tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
+import { cloudflareSitesConfigured } from '@nemasus/infrastructure';
+import { emailSchema, optionalText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import { runDeliveryChecks } from '~/lib/external-sites/admin-flows';
@@ -145,7 +145,7 @@ export async function createProposalAction(
   });
 
   if (error) {
-    console.error('[stax:proposal] creation refusee', error.code, error.message);
+    console.error('[nemasus:proposal] creation refusee', error.code, error.message);
     return {
       status: 'error',
       message:
@@ -321,5 +321,41 @@ export async function withdrawProposalAction(payload: unknown): Promise<ActionSt
     message: result.accessRemoved
       ? 'Proposition retirée. Le prospect n’a plus accès à ce site ; son compte et le site restent.'
       : 'Proposition retirée. Le code ne fonctionne plus ; le site reste en place.',
+  };
+}
+
+const eraseSchema = z.object({ proposalId: uuidSchema }).strict();
+
+/**
+ * Opposition d'un prospect (« STOP » en reponse a l'e-mail, article 21 du
+ * RGPD) : ses coordonnees sont effacees de la proposition, qui doit avoir ete
+ * retiree d'abord.
+ */
+export async function eraseProposalContactAction(payload: unknown): Promise<ActionState> {
+  const { session, db } = await requireAdminRole('platform_admin');
+  const parsed = eraseSchema.safeParse(payload);
+  if (!parsed.success) return { status: 'error', message: 'Demande refusée.' };
+
+  const guard = await guardAction({ limit: 'adminSensitive', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
+
+  const { data, error } = await db.rpc('erase_site_proposal_contact', {
+    p_proposal: parsed.data.proposalId,
+  });
+  const result = (data ?? {}) as { ok?: boolean; code?: string };
+  if (error || !result.ok) {
+    return {
+      status: 'error',
+      message:
+        result.code === 'not_withdrawn'
+          ? 'Retirez d’abord la proposition : ses coordonnées s’effacent ensuite.'
+          : 'L’effacement n’a pas pu être enregistré.',
+    };
+  }
+
+  revalidatePath('/admin/propositions');
+  return {
+    status: 'success',
+    message: 'Coordonnées du prospect effacées. Il ne sera plus contacté pour cette proposition.',
   };
 }

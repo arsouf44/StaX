@@ -1,5 +1,5 @@
 {
-  "name": "@stax/site-data",
+  "name": "@nemasus/site-data",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,11 +13,11 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@stax/database": "workspace:*",
-    "@stax/site-engine": "workspace:*"
+    "@nemasus/database": "workspace:*",
+    "@nemasus/site-engine": "workspace:*"
   },
   "devDependencies": {
-    "@stax/config": "workspace:*",
+    "@nemasus/config": "workspace:*",
     "typescript": "5.9.3"
   }
 }

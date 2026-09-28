@@ -1,5 +1,5 @@
 {
-  "extends": "@stax/config/tsconfig/next",
+  "extends": "@nemasus/config/tsconfig/next",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

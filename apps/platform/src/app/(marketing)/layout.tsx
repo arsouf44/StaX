@@ -1,8 +1,14 @@
 import { SiteHeader } from '~/components/marketing/site-header';
 import { SiteFooter } from '~/components/marketing/site-footer';
-import { CookieBanner } from '~/components/cookie-banner';
 
-/** Enveloppe du site public. */
+/**
+ * Enveloppe du site public.
+ *
+ * Aucun bandeau de consentement : le site ne depose que des traceurs
+ * strictement necessaires (session, commande en cours, protection des
+ * formulaires), exemptes de consentement. Le jour ou un traceur soumis a
+ * consentement serait ajoute, un bandeau devrait l'etre dans le meme temps.
+ */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-dvh flex-col">
@@ -11,7 +17,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <SiteFooter />
-      <CookieBanner />
     </div>
   );
 }

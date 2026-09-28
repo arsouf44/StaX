@@ -1,5 +1,5 @@
-import { readEnv } from '@stax/config';
-import { timingSafeEqual } from '@stax/security';
+import { readEnv } from '@nemasus/config';
+import { timingSafeEqual } from '@nemasus/security';
 
 /**
  * Authentification des webhooks entrants (GitHub, Cloudflare).

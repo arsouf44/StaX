@@ -30,7 +30,7 @@ export function TurnstileField({ siteKey }: { siteKey: string | null }) {
     api.render(element, {
       sitekey: siteKey,
       theme: 'auto',
-      action: 'stax-form',
+      action: 'nemasus-form',
       'response-field-name': 'turnstileToken',
     });
   }, [siteKey, ready]);

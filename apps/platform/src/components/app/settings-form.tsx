@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Alert, Panel } from '@stax/ui';
+import { Alert, Panel } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { FieldControl, SubmitButton, type ClientField } from './form-fields';
 

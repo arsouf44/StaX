@@ -1,5 +1,5 @@
 {
-  "name": "@stax/types",
+  "name": "@nemasus/types",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@stax/config": "workspace:*",
+    "@nemasus/config": "workspace:*",
     "typescript": "5.9.3"
   }
 }

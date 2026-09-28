@@ -23,7 +23,7 @@ import { CONTRACT_LIMITS } from './constants';
 /* -------------------------------------------------------------------------- */
 
 export interface ImageValue {
-  /** Photo de la mediatheque StaX : deposee dans le depot a la publication. */
+  /** Photo de la mediatheque Nemasus : deposee dans le depot a la publication. */
   mediaId?: string;
   /** Image deja presente dans le site (chemin public ou URL https). */
   src?: string;

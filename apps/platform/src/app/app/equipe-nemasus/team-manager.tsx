@@ -21,7 +21,7 @@ import {
   THead,
   Textarea,
   TR,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {
   inviteMemberAction,
@@ -358,7 +358,7 @@ export function TeamManager({
         tone="danger"
         confirmLabel="Retirer l’accès"
         title="Retirer cet accès ?"
-        description="Cette personne perdra immédiatement l’accès à votre espace. Son compte StaX n’est pas supprimé, et ce qu’elle a créé reste en place."
+        description="Cette personne perdra immédiatement l’accès à votre espace. Son compte Nemasus n’est pas supprimé, et ce qu’elle a créé reste en place."
       />
     </div>
   );

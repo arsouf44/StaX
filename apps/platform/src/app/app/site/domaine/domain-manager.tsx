@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, ConfirmDialog, Field, Icon, Input, Panel, StatusPill } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { Alert, Button, ConfirmDialog, Field, Icon, Input, Panel, StatusPill } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {
   attachDomainAction,
@@ -197,7 +197,7 @@ export function DomainManager({
                   <p className="text-xs leading-relaxed text-[var(--muted)]">
                     Une modification DNS met en général quelques minutes à se propager, parfois
                     jusqu’à 48 heures. Tant qu’elle n’est pas visible, votre site reste joignable à
-                    son adresse StaX.
+                    son adresse Nemasus.
                   </p>
                 </div>
               ) : null}
@@ -268,8 +268,8 @@ export function DomainManager({
           <div>
             <h2 className="text-sm font-medium">Votre domaine reste le vôtre</h2>
             <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Il est enregistré à votre nom. Si vous quittez StaX, vous le récupérez : il suffit de
-              modifier l’enregistrement DNS pour le diriger ailleurs. Nous ne le retenons pas.
+              Il est enregistré à votre nom. Si vous quittez Nemasus, vous le récupérez : il suffit
+              de modifier l’enregistrement DNS pour le diriger ailleurs. Nous ne le retenons pas.
             </p>
           </div>
         </div>
@@ -290,7 +290,7 @@ export function DomainManager({
         confirmLabel="Retirer ce domaine"
         confirmationText={pendingDetach?.hostname}
         title="Retirer ce nom de domaine ?"
-        description="Votre site ne répondra plus à cette adresse. Il restera joignable à son adresse StaX. Le domaine reste votre propriété et pourra être rattaché à nouveau. Recopiez-le pour confirmer."
+        description="Votre site ne répondra plus à cette adresse. Il restera joignable à son adresse Nemasus. Le domaine reste votre propriété et pourra être rattaché à nouveau. Recopiez-le pour confirmer."
       />
     </div>
   );

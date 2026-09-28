@@ -2,11 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Field, Panel, Textarea, useToast } from '@stax/ui';
+import { Alert, Button, Field, Panel, Textarea, useToast } from '@nemasus/ui';
 import { respondToReviewAction } from './actions';
 
 /**
- * Validation demandee par l'equipe StaX : le client valide, ou decrit ses
+ * Validation demandee par l'equipe Nemasus : le client valide, ou decrit ses
  * corrections. La reponse est enregistree par la base et fait avancer le
  * projet — elle ne se perd pas dans un fil de messages.
  */

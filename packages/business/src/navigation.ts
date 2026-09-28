@@ -1,4 +1,4 @@
-import type { FeatureKey, OrgCapability } from '@stax/types';
+import type { FeatureKey, OrgCapability } from '@nemasus/types';
 import type { DashboardEntry, DashboardGroup, ModuleId } from './types';
 import { MODULES, getModule } from './modules';
 
@@ -19,7 +19,7 @@ export interface NavContext {
   hasFeature: (key: FeatureKey) => boolean;
   can: (capability: OrgCapability) => boolean;
   /**
-   * `false` tant que StaX construit le site et ne l a pas confie au client :
+   * `false` tant que Nemasus construit le site et ne l a pas confie au client :
    * seuls le suivi du projet et les ecrans du compte sont proposes.
    */
   siteDelivered?: boolean;
@@ -174,7 +174,7 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
     sortOrder: 10,
   },
   {
-    href: '/app/equipe-stax',
+    href: '/app/equipe-nemasus',
     label: 'Collaborateurs',
     icon: 'user-plus',
     capability: 'members.manage',

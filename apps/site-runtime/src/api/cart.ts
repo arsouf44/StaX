@@ -1,6 +1,6 @@
-import { formatMoney, sumCents } from '@stax/payments/money';
-import { createServiceClient, unwrapList } from '@stax/database';
-import { hmacHex, timingSafeEqual } from '@stax/security';
+import { formatMoney, sumCents } from '@nemasus/payments/money';
+import { createServiceClient, unwrapList } from '@nemasus/database';
+import { hmacHex, timingSafeEqual } from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import { guardPublicWrite, intField, field, refuse } from './shared';
 import type { ResolvedSite } from '../resolve';
@@ -17,7 +17,7 @@ import type { ResolvedSite } from '../resolve';
  * pas etre transpose d un site a un autre.
  */
 
-const COOKIE_NAME = '__stax_cart';
+const COOKIE_NAME = '__nemasus_cart';
 const MAX_LINES = 30;
 const MAX_QUANTITY = 99;
 

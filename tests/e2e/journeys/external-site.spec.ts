@@ -19,9 +19,9 @@ import {
 import { userClient } from './support/stack';
 
 /**
- * Le cycle complet d'un site StaX, par l'interface :
+ * Le cycle complet d'un site Nemasus, par l'interface :
  *
- *   COMMANDE -> SITE DEVELOPPE HORS DE STAX (depot GitHub, projet Cloudflare)
+ *   COMMANDE -> SITE DEVELOPPE HORS DE NEMASUS (depot GitHub, projet Cloudflare)
  *   -> RATTACHEMENT PAR L'EQUIPE -> CONTRAT D'EDITION -> CHECKLIST -> LIVRAISON
  *   -> BROUILLON DU CLIENT -> PUBLIER -> COMMIT GITHUB -> DEPLOIEMENT CLOUDFLARE
  *   -> EN LIGNE
@@ -203,7 +203,7 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
     const last = repo.writes.at(-1);
     expect(last?.branch).toBe('main');
     expect(last?.force).toBe(false);
-    expect(last?.message).toMatch(/^stax: publication client/);
+    expect(last?.message).toMatch(/^nemasus: publication client/);
     const production = await productionRelease();
     expect(production.version).toBe(2);
     expect(production.commit).toBe(repo.branches['main']);
