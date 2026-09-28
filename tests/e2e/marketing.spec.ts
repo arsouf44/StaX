@@ -53,18 +53,25 @@ test.describe('Site public', () => {
     expect(body.includes('€') || body.includes('momentanément indisponible')).toBe(true);
   });
 
-  test('en production, les mentions legales sont completes et sans marqueur', async ({ page }) => {
-    // Ce serveur est un build de production (`next start`). L'identite de
-    // l'editeur etant complete, un visiteur ne doit voir ni marqueur « [A
-    // CONFIGURER] », ni l'avertissement « modele a faire relire », reserve aux
-    // deploiements non commerciaux et aux identites incompletes.
+  test('les mentions legales sont completes ; le marqueur de relecture suit l environnement', async ({
+    page,
+  }) => {
+    // Regle de `LegalDocumentView` : l'avertissement « modele a faire relire »
+    // s'affiche hors production, ou tant que l'identite est incomplete. Le
+    // serveur de test herite de NEMASUS_ENV (en CI : `test`) ; sans elle,
+    // `next start` tourne en production.
+    const production = (process.env.NEMASUS_ENV ?? 'production') === 'production';
     await page.goto('/mentions-legales');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Mentions légales');
     const body = (await page.locator('body').textContent()) ?? '';
     expect(body).not.toContain('A CONFIGURER');
-    expect(body).not.toContain('Modèle en attente de validation juridique');
     for (const mention of ['Directeur de la publication', 'Capital social', 'Hébergeur']) {
       expect(body).toContain(mention);
+    }
+    if (production) {
+      expect(body).not.toContain('Modèle en attente de validation juridique');
+    } else {
+      expect(body).toContain('professionnel du droit');
     }
   });
 
