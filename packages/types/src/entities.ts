@@ -47,7 +47,7 @@ export interface Profile {
   platform_role: PlatformRole | null;
   mfa_enforced: boolean;
   /**
-   * Compte interne StaX. Ces quatre colonnes ne s ecrivent que par le script
+   * Compte interne Nemasus. Ces quatre colonnes ne s ecrivent que par le script
    * d approvisionnement (cle de service) : l interface les LIT pour adapter
    * ses libelles, mais c est la base qui decide (app.create_internal_order).
    */
@@ -83,7 +83,7 @@ export interface Organization {
   stripe_customer_id: string | null;
   status: 'active' | 'suspended' | 'archived';
   is_demo: boolean;
-  /** Organisation interne StaX : aucune facturation, toutes les fonctionnalites. */
+  /** Organisation interne Nemasus : aucune facturation, toutes les fonctionnalites. */
   account_type: 'customer' | 'internal';
   billing_exempt: boolean;
   all_features: boolean;
@@ -234,15 +234,15 @@ export interface Site {
   suspension_reason: string | null;
   archived_at: Timestamp | null;
   /**
-   * Date a laquelle StaX a confie le site a son client. `null` : site en
-   * construction, que seule l'equipe StaX peut modifier (verifie en base).
+   * Date a laquelle Nemasus a confie le site a son client. `null` : site en
+   * construction, que seule l'equipe Nemasus peut modifier (verifie en base).
    */
   delivered_at: Timestamp | null;
   delivered_by: UUID | null;
   /**
    * `external_repository` : site concu et developpe individuellement, dans son
    * propre depot GitHub, deploye par son propre projet Cloudflare, gere depuis
-   * StaX apres livraison. `legacy_engine` : site anterieur, rendu par l'ancien
+   * Nemasus apres livraison. `legacy_engine` : site anterieur, rendu par l'ancien
    * moteur multi-tenant.
    */
   architecture: SiteArchitecture;

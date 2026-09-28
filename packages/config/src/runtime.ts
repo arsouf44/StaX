@@ -1,7 +1,7 @@
 /**
  * Runtime environment access.
  *
- * StaX runs on two different runtimes:
+ * Nemasus runs on two different runtimes:
  *  - Next.js on Cloudflare Workers (OpenNext), where `process.env` is populated.
  *  - A plain Cloudflare Worker (the tenant site runtime), where variables and secrets
  *    arrive as the `env` argument of `fetch(request, env, ctx)`.
@@ -30,9 +30,26 @@ function processEnv(): EnvSource {
   return typeof process !== 'undefined' && process.env ? (process.env as EnvSource) : {};
 }
 
+/**
+ * Nemasus s'appelait StaX. Les variables `NEMASUS_*` ont remplace les
+ * `STAX_*` ; un deploiement configure sous l'ancien nom continue de
+ * fonctionner (la cle `STAX_SECRET_KEY` signe des jetons encore valides : la
+ * perdre au renommage les invaliderait tous). Le nouveau nom l'emporte
+ * toujours.
+ */
+const CURRENT_PREFIX = 'NEMASUS_';
+const LEGACY_PREFIX = 'STAX_';
+
+function rawValue(key: string): string | undefined {
+  return injectedSource?.[key] ?? processEnv()[key];
+}
+
 /** Reads a single variable from the active source. Never throws. */
 export function readEnv(key: string): string | undefined {
-  const value = injectedSource?.[key] ?? processEnv()[key];
+  let value = rawValue(key);
+  if ((value === undefined || value.trim().length === 0) && key.startsWith(CURRENT_PREFIX)) {
+    value = rawValue(LEGACY_PREFIX + key.slice(CURRENT_PREFIX.length));
+  }
   if (value === undefined) return undefined;
   const trimmed = value.trim();
   return trimmed.length === 0 ? undefined : trimmed;
@@ -40,7 +57,15 @@ export function readEnv(key: string): string | undefined {
 
 /** Snapshot of the active source, used by the schema validators. */
 export function readAllEnv(): EnvSource {
-  return { ...processEnv(), ...(injectedSource ?? {}) };
+  const snapshot: EnvSource = { ...processEnv(), ...(injectedSource ?? {}) };
+  for (const [key, value] of Object.entries(snapshot)) {
+    if (!key.startsWith(LEGACY_PREFIX)) continue;
+    const current = CURRENT_PREFIX + key.slice(LEGACY_PREFIX.length);
+    if (snapshot[current] === undefined || snapshot[current]?.trim() === '') {
+      snapshot[current] = value;
+    }
+  }
+  return snapshot;
 }
 
 export function isBrowser(): boolean {
@@ -54,7 +79,7 @@ export function isBrowser(): boolean {
 export type DeployEnvironment = 'development' | 'preview' | 'production' | 'test';
 
 export function deployEnvironment(): DeployEnvironment {
-  const raw = (readEnv('STAX_ENV') ?? readEnv('NODE_ENV') ?? 'development').toLowerCase();
+  const raw = (readEnv('NEMASUS_ENV') ?? readEnv('NODE_ENV') ?? 'development').toLowerCase();
   if (raw === 'production' || raw === 'prod') return 'production';
   if (raw === 'preview' || raw === 'staging') return 'preview';
   if (raw === 'test') return 'test';
@@ -72,7 +97,7 @@ export function isProduction(): boolean {
 export function assertServerOnly(moduleName: string): void {
   if (isBrowser()) {
     throw new Error(
-      `[StaX] ${moduleName} est un module serveur et ne doit jamais être importe cote navigateur.`,
+      `[Nemasus] ${moduleName} est un module serveur et ne doit jamais être importe cote navigateur.`,
     );
   }
 }

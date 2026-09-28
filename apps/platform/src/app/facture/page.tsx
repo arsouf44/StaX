@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { createUserClient, listMemberships, unwrapMaybe } from '@stax/database';
-import { deliveryPolicyConfig } from '@stax/config';
-import { Container, Logo, Panel } from '@stax/ui';
+import { createUserClient, listMemberships, unwrapMaybe } from '@nemasus/database';
+import { deliveryPolicyConfig } from '@nemasus/config';
+import { Container, Logo, Panel } from '@nemasus/ui';
 import { getSession } from '~/lib/session';
 import { InvoiceForm } from './invoice-form';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildDashboardNavigation } from '@stax/business';
-import { blankTemplate, buildTemplateForBusiness } from '@stax/site-engine';
+import { buildDashboardNavigation } from '@nemasus/business';
+import { blankTemplate, buildTemplateForBusiness } from '@nemasus/site-engine';
 import {
   clearEnvSource,
   coreConfigurationProblems,
@@ -8,12 +8,12 @@ import {
   resetEnvCache,
   setEnvSource,
   supabaseServiceCredentials,
-} from '@stax/config';
-import type { OrgCapability } from '@stax/types';
+} from '@nemasus/config';
+import type { OrgCapability } from '@nemasus/types';
 import { frameableProjectUrl } from '~/lib/frame-url';
 
 /**
- * StaX construit le site, puis le confie au client.
+ * Nemasus construit le site, puis le confie au client.
  *
  * Tant qu'il n'est pas confie, l'espace client ne propose que le suivi du
  * projet et les ecrans du compte (la base, elle, refuse toute modification :
@@ -177,7 +177,7 @@ describe('configuration du client de service', () => {
 
   it('nomme la variable manquante, sans jamais afficher de valeur', () => {
     withEnv(
-      { STAX_ENV: 'production', NEXT_PUBLIC_SUPABASE_URL: 'https://projet.supabase.co' },
+      { NEMASUS_ENV: 'production', NEXT_PUBLIC_SUPABASE_URL: 'https://projet.supabase.co' },
       () => {
         const credentials = supabaseServiceCredentials();
         expect(credentials.ok).toBe(false);

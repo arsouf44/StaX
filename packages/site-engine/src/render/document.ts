@@ -48,7 +48,7 @@ function header(context: RenderContext, logoUrl: string | null): RawHtml {
   const links = navLinks(context);
   const cta = context.settings.navigation.footer.find((link) => link.path.startsWith('#')) ?? null;
 
-  return html`<header class="hdr" data-stax-header>
+  return html`<header class="hdr" data-nemasus-header>
     <div class="wrap w-wide hdr-in">
       ${brand(context, logoUrl)}
       <nav class="nav nav-desktop" aria-label="Navigation principale">
@@ -77,7 +77,7 @@ function header(context: RenderContext, logoUrl: string | null): RawHtml {
       <button
         type="button"
         class="nav-toggle"
-        data-stax-nav-toggle
+        data-nemasus-nav-toggle
         aria-expanded="false"
         aria-controls="nav-mobile"
       >
@@ -179,7 +179,7 @@ function footer(context: RenderContext): RawHtml {
         ${context.hasCustomerAccounts ? html`<p><a href="/compte">Mon espace</a></p>` : ''}
         <p>
           Site réalisé et hébergé par
-          <a href="https://stax.fr" target="_blank" rel="noopener">StaX</a>
+          <a href="https://nemasus.fr" target="_blank" rel="noopener">Nemasus</a>
         </p>
       </div>
     </div>
@@ -317,7 +317,7 @@ export function renderDocument(input: DocumentInput): string {
     <link rel="canonical" href="${seo.canonical}" />
     <meta name="robots" content="${seo.robots}" />
     <meta name="theme-color" content="${context.theme.preset.colors.background}" />
-    <meta name="generator" content="StaX" />
+    <meta name="generator" content="Nemasus" />
     ${join(
       Object.entries(seo.openGraph).map(
         ([property, value]) => html`<meta property="${property}" content="${value}" />`,
@@ -360,9 +360,9 @@ export function renderDocument(input: DocumentInput): string {
   const tokenAttribute = renderToString(html`${context.formToken}`);
 
   return `<!doctype html>
-<html lang="${page.locale}" data-scheme="${context.theme.scheme}"${context.isPreview ? ' data-stax-preview="true"' : ''}>
+<html lang="${page.locale}" data-scheme="${context.theme.scheme}"${context.isPreview ? ' data-nemasus-preview="true"' : ''}>
 <head>${renderToString(head)}</head>
-<body data-stax-token="${tokenAttribute}">
+<body data-nemasus-token="${tokenAttribute}">
 ${body}
 <script nonce="${context.nonce}" defer>${SITE_SCRIPT}</script>
 ${

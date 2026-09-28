@@ -10,7 +10,7 @@ import {
   resolveTheme,
   type DraftState,
   type RenderContext,
-} from '@stax/site-engine';
+} from '@nemasus/site-engine';
 
 /**
  * Obligations legales des sites clients : mentions generees a partir de
@@ -47,11 +47,11 @@ function context(overrides: Partial<RenderContext> = {}): RenderContext {
       'Boulangerie Martin',
     ),
     host: {
-      name: 'StaX SAS',
+      name: 'Nemasus SAS',
       address: '2 avenue de l’Hébergeur, 75001 Paris',
       phone: '01 00 00 00 00',
       email: null,
-      reportUrl: 'https://stax.example/signaler-un-contenu',
+      reportUrl: 'https://nemasus.example/signaler-un-contenu',
     },
     pages: [],
     currentPath: '/',
@@ -79,9 +79,9 @@ describe('mentions légales d’un site client', () => {
   it('reprennent l’identité de l’éditeur et celle de l’hébergeur', () => {
     const htmlText = render('legal-notice', context());
     for (const value of Object.values(IDENTITY)) expect(htmlText).toContain(value.split(' €')[0]);
-    expect(htmlText).toContain('StaX SAS');
+    expect(htmlText).toContain('Nemasus SAS');
     expect(htmlText).toContain('01 00 00 00 00');
-    expect(htmlText).toContain('https://stax.example/signaler-un-contenu');
+    expect(htmlText).toContain('https://nemasus.example/signaler-un-contenu');
   });
 
   it('n’inventent rien : un champ vide n’apparaît pas en ligne', () => {
@@ -123,9 +123,11 @@ describe('contenus intégrés', () => {
   it('ne chargent aucun contenu tiers avant le clic du visiteur', () => {
     const htmlText = render('embed', context(), { provider: 'youtube', resourceId: 'abc123' });
     expect(htmlText).not.toContain('<iframe');
-    expect(htmlText).toContain('data-stax-embed="https://www.youtube-nocookie.com/embed/abc123"');
+    expect(htmlText).toContain(
+      'data-nemasus-embed="https://www.youtube-nocookie.com/embed/abc123"',
+    );
     expect(htmlText).toContain('YouTube');
-    expect(htmlText).toContain('data-stax-embed-load');
+    expect(htmlText).toContain('data-nemasus-embed-load');
   });
 });
 

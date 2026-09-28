@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getModule } from '@stax/business';
-import type { ModuleId } from '@stax/business';
-import type { FeatureKey } from '@stax/types';
-import { hasFeature } from '@stax/database';
-import { ButtonLink, Icon, Panel } from '@stax/ui';
+import { getModule } from '@nemasus/business';
+import type { ModuleId } from '@nemasus/business';
+import type { FeatureKey } from '@nemasus/types';
+import { hasFeature } from '@nemasus/database';
+import { ButtonLink, Icon, Panel } from '@nemasus/ui';
 import { getWorkspace } from '~/lib/workspace';
 import { PageHeader } from './page-header';
 

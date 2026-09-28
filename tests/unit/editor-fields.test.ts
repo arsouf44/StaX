@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLOCK_DEFINITIONS, editorFieldsFor } from '@stax/site-engine';
+import { BLOCK_DEFINITIONS, editorFieldsFor } from '@nemasus/site-engine';
 
 /**
  * Champs de l editeur.

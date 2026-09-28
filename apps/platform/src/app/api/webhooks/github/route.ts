@@ -1,9 +1,9 @@
-import { tryCreateServiceClient } from '@stax/database';
-import { verifyGitHubSignature } from '@stax/infrastructure';
+import { tryCreateServiceClient } from '@nemasus/database';
+import { verifyGitHubSignature } from '@nemasus/infrastructure';
 import { handleGitHubEvent } from '~/lib/external-sites/github-events';
 
 /**
- * Webhook de l'application GitHub StaX.
+ * Webhook de l'application GitHub Nemasus.
  *
  *  1. SIGNATURE : `X-Hub-Signature-256` verifiee sur le corps BRUT, avant
  *     toute lecture. Une livraison non signee ou mal signee est refusee (401).
@@ -82,7 +82,7 @@ export async function POST(request: Request): Promise<Response> {
       p_status: 'failed',
       p_error: message.slice(0, 500),
     });
-    console.error('[stax:github-webhook]', event, message);
+    console.error('[nemasus:github-webhook]', event, message);
     return reply({ received: true, deferred: true });
   }
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { IMPERSONATION_FORBIDDEN_ACTIONS, IMPERSONATION_MAX_MINUTES } from '@stax/auth';
-import { unwrapList } from '@stax/database';
-import { Panel } from '@stax/ui';
+import { IMPERSONATION_FORBIDDEN_ACTIONS, IMPERSONATION_MAX_MINUTES } from '@nemasus/auth';
+import { unwrapList } from '@nemasus/database';
+import { Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { requireAdminRole } from '~/lib/admin';
 import { StartSupportForm, type OrganizationChoice } from './start-form';

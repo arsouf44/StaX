@@ -1,15 +1,15 @@
-# Le contrat d’édition : `stax.manifest.json`
+# Le contrat d’édition : `nemasus.manifest.json`
 
-Chaque site StaX est **conçu et développé individuellement**, dans son propre
-dépôt, avec le code et le design faits pour ce client. StaX ne fournit aucun
+Chaque site Nemasus est **conçu et développé individuellement**, dans son propre
+dépôt, avec le code et le design faits pour ce client. Nemasus ne fournit aucun
 modèle de site et n’en choisit aucun : l’offre, le métier ou les réponses au
 questionnaire ne sélectionnent jamais de modèle.
 
-Ce que StaX sait d’un site, c’est ce que son développeur y **déclare
-modifiable**, dans un fichier à la racine du dépôt : `stax.manifest.json`. Ce
+Ce que Nemasus sait d’un site, c’est ce que son développeur y **déclare
+modifiable**, dans un fichier à la racine du dépôt : `nemasus.manifest.json`. Ce
 fichier ne décrit pas le site, il décrit une **surface d’édition** : les
 titres, textes, images, horaires, coordonnées, pages, collections et
-formulaires que le client pourra changer depuis StaX après la livraison. La
+formulaires que le client pourra changer depuis Nemasus après la livraison. La
 mise en page, le design, le code et les intégrations restent ceux qui ont été
 développés : le client ne peut ni les casser ni les remplacer.
 
@@ -17,21 +17,21 @@ Deux sites peuvent avoir des manifestes sans aucun point commun ; c’est voulu.
 
 Code : `packages/site-contract/` (schéma, validation, fichier de contenu, pont
 d’aperçu, contrôle de l’offre). Schéma JSON public, pour l’autocomplétion dans
-l’éditeur du développeur : `/schemas/stax.manifest.v1.json`.
+l’éditeur du développeur : `/schemas/nemasus.manifest.v1.json`.
 
 ---
 
 ## 1. Le cycle en une phrase
 
 Le développeur déclare les zones modifiables → l’équipe importe le manifeste
-dans StaX (*Administration → Site → Infrastructure & livraison*) → StaX reprend
+dans Nemasus (*Administration → Site → Infrastructure & livraison*) → Nemasus reprend
 le contenu déjà présent dans le dépôt comme **version 1** → après la
-livraison, le client modifie un **brouillon** → **Publier** → StaX écrit le
+livraison, le client modifie un **brouillon** → **Publier** → Nemasus écrit le
 **fichier de contenu** (et les images nouvelles) dans le dépôt par un commit
-`stax: publication client 0000N` → Cloudflare reconstruit le site → la version
+`nemasus: publication client 0000N` → Cloudflare reconstruit le site → la version
 n’est « en ligne » qu’une fois le déploiement confirmé.
 
-Le site **lit ce fichier au moment de sa construction**. Il n’appelle pas StaX
+Le site **lit ce fichier au moment de sa construction**. Il n’appelle pas Nemasus
 pour afficher son contenu : un site livré continue de fonctionner même si la
 plateforme est indisponible.
 
@@ -39,13 +39,13 @@ plateforme est indisponible.
 
 ```json
 {
-  "$schema": "https://stax.fr/schemas/stax.manifest.v1.json",
+  "$schema": "https://nemasus.fr/schemas/nemasus.manifest.v1.json",
   "contract": 1,
   "site": { "name": "Boulangerie Lumière", "locales": ["fr"], "defaultLocale": "fr" },
   "content": {
-    "file": "src/content/stax.content.json",
-    "mediaDir": "public/media/stax",
-    "mediaUrl": "/media/stax"
+    "file": "src/content/nemasus.content.json",
+    "mediaDir": "public/media/nemasus",
+    "mediaUrl": "/media/nemasus"
   },
   "preview": { "bridge": true },
   "globals": [ … ],
@@ -61,21 +61,21 @@ plateforme est indisponible.
 | --- | --- | --- |
 | `contract` | oui | version du contrat (`1`). Une version inconnue est **refusée**, jamais interprétée. |
 | `site.locales`, `site.defaultLocale` | oui | langues du site ; la langue par défaut doit figurer dans la liste |
-| `content.file` | oui | fichier `.json` du dépôt où StaX écrit le contenu publié |
-| `content.mediaDir` | oui | dossier du dépôt où StaX dépose les images envoyées par le client |
-| `content.mediaUrl` | oui | adresse publique de ce dossier sur le site (`/media/stax`) |
+| `content.file` | oui | fichier `.json` du dépôt où Nemasus écrit le contenu publié |
+| `content.mediaDir` | oui | dossier du dépôt où Nemasus dépose les images envoyées par le client |
+| `content.mediaUrl` | oui | adresse publique de ce dossier sur le site (`/media/nemasus`) |
 | `preview.bridge` | non | le site charge le pont d’aperçu dans ses builds d’aperçu (clic pour modifier) |
 | `globals` | non | groupes partagés par tout le site (coordonnées, horaires, réseaux, pied de page) |
 | `pages` | oui (≥ 1) | pages éditables, chacune découpée en sections, chacune en champs |
 | `collections` | non | listes d’éléments : actualités, réalisations, biens, fiches… |
-| `forms` | non | formulaires du site, reçus dans la messagerie StaX du client |
-| `modules` | non | services StaX que le code du site utilise via l’API des sites |
+| `forms` | non | formulaires du site, reçus dans la messagerie Nemasus du client |
+| `modules` | non | services Nemasus que le code du site utilise via l’API des sites |
 | `integrations` | non | mesure d’audience sans cookie, comptes clients, suivi de commande |
 
 Les chemins du dépôt sont relatifs et sans `..`. Les identifiants de pages,
 sections, groupes et collections sont en *kebab-case* ; ceux des champs en
 *camelCase* ou *snake_case*. **Ils doivent rester stables** : c’est par eux que
-StaX relie le contenu du client au code du site.
+Nemasus relie le contenu du client au code du site.
 
 ### Pages et sections
 
@@ -138,7 +138,7 @@ Types de base : `text`, `textarea`, `email`, `tel`, `consent`. Types avancés
 (droit « formulaires avancés » de l’offre) : `select`, `multiselect`, `radio`,
 `checkbox`, `number`, `date`, `time`. Déclarer des formulaires exige le module
 `contact`. Le site envoie les réponses à
-`POST https://<api>/v1/sites/<clé publique>/forms/<slug>` ; StaX revalide
+`POST https://<api>/v1/sites/<clé publique>/forms/<slug>` ; Nemasus revalide
 chaque réponse contre cette déclaration (champs inconnus rejetés).
 
 ## 3. Types de champs
@@ -215,13 +215,13 @@ soit le manifeste.
 
 ## 6. Le fichier de contenu
 
-À chaque publication, StaX écrit `content.file` dans le dépôt :
+À chaque publication, Nemasus écrit `content.file` dans le dépôt :
 
 ```json
 {
-  "$schema": "https://stax.fr/schemas/stax.content.v1.json",
+  "$schema": "https://nemasus.fr/schemas/nemasus.content.v1.json",
   "contract": 1,
-  "stax": { "site": "1f0a…", "version": 2, "release": "7c3b…", "preview": null },
+  "nemasus": { "site": "1f0a…", "version": 2, "release": "7c3b…", "preview": null },
   "defaultLocale": "fr",
   "locales": {
     "fr": {
@@ -230,7 +230,7 @@ soit le manifeste.
         "accueil": {
           "path": "/",
           "seo": { "title": "…", "description": "…", "image": null },
-          "sections": { "hero": { "titre": "Fournée du matin", "photo": { "src": "/media/stax/0b4e….webp", "alt": "…", "width": 1600, "height": 900 } } }
+          "sections": { "hero": { "titre": "Fournée du matin", "photo": { "src": "/media/nemasus/0b4e….webp", "alt": "…", "width": 1600, "height": 900 } } }
         }
       },
       "collections": { "actualites": [ { "_id": "…", "_slug": "ouverture", "_path": "/actualites/ouverture", "titre": "…" } ] }
@@ -249,8 +249,8 @@ Garanties :
 - la sérialisation est **stable** (clés triées) : un même contenu donne
   toujours le même fichier, donc des commits lisibles et des publications
   idempotentes ;
-- `stax.preview` n’est renseigné que dans les builds d’aperçu (branche
-  `stax-preview`), jamais en production.
+- `nemasus.preview` n’est renseigné que dans les builds d’aperçu (branche
+  `nemasus-preview`), jamais en production.
 
 **Images.** Une photo envoyée par le client est déposée dans
 `content.mediaDir` sous le nom `<identifiant>.<extension>` (jpg, png, webp,
@@ -259,11 +259,11 @@ son adresse publique (`content.mediaUrl`). Une image manquante bloque la
 publication plutôt que de publier un site cassé.
 
 **Contenu initial.** Le site est livré avec son fichier de contenu déjà
-rempli : à l’import, StaX relit `content.file` au commit de production, le
+rempli : à l’import, Nemasus relit `content.file` au commit de production, le
 valide contre le contrat et en fait la **version 1** du site (le contenu que
 l’équipe a réellement mis en ligne). Un fichier absent ou invalide bloque
 l’import : un site qui ne lit pas ses textes depuis ce fichier ne peut pas
-être géré par StaX.
+être géré par Nemasus.
 
 ## 7. Obligations du code du site
 
@@ -274,10 +274,10 @@ l’import : un site qui ne lit pas ses textes depuis ce fichier ne peut pas
 3. Générer les pages des collections, le `sitemap.xml` et les balises SEO
    **à la construction**, depuis le fichier de contenu.
 4. Servir `content.mediaDir` à l’adresse `content.mediaUrl`.
-5. Rendre le HTML de `richtext.html` tel quel (il est assaini par StaX), ou
+5. Rendre le HTML de `richtext.html` tel quel (il est assaini par Nemasus), ou
    rendre `blocks` soi-même.
-6. Accepter qu’un commit `stax:` modifie **uniquement** le fichier de contenu
-   et le dossier des médias. StaX ne touche à aucun autre fichier.
+6. Accepter qu’un commit `nemasus:` modifie **uniquement** le fichier de contenu
+   et le dossier des médias. Nemasus ne touche à aucun autre fichier.
 7. Garder les identifiants stables ; pour renommer ou retirer une zone,
    modifier le manifeste puis le faire **réimporter** par l’équipe (le
    contenu du client est revalidé ; les zones retirées sont signalées).
@@ -287,22 +287,22 @@ l’import : un site qui ne lit pas ses textes depuis ce fichier ne peut pas
 Le code marque les éléments modifiables avec l’adresse de leur champ :
 
 ```html
-<h1 data-stax="pages.accueil.hero.titre">Fournée du matin</h1>
-<p data-stax="globals.coordonnees.telephone">04 78 00 00 00</p>
-<title data-stax="pages.accueil._seo">…</title>
-<h2 data-stax="collections.actualites.<_id>.titre">…</h2>
+<h1 data-nemasus="pages.accueil.hero.titre">Fournée du matin</h1>
+<p data-nemasus="globals.coordonnees.telephone">04 78 00 00 00</p>
+<title data-nemasus="pages.accueil._seo">…</title>
+<h2 data-nemasus="collections.actualites.<_id>.titre">…</h2>
 ```
 
-et, **dans les builds d’aperçu seulement** (quand `stax.preview` est
+et, **dans les builds d’aperçu seulement** (quand `nemasus.preview` est
 renseigné), charge le pont :
 
 ```html
-<script src="https://app.stax.fr/bridge/v1.js" defer></script>
+<script src="https://app.nemasus.fr/bridge/v1.js" defer></script>
 ```
 
 Dans l’éditeur, un clic sur l’élément ouvre le champ correspondant, et une
 saisie de texte s’affiche aussitôt dans l’aperçu en attendant le build. Le
-pont n’écoute que l’origine de l’éditeur StaX, n’exécute jamais de code reçu
+pont n’écoute que l’origine de l’éditeur Nemasus, n’exécute jamais de code reçu
 et ne fait que remplacer du texte ou des attributs d’image et de lien
 (messages `ready`/`select` du site, `mode`/`highlight`/`patch` de l’éditeur).
 Sans pont, l’aperçu fonctionne ; le client choisit simplement la zone dans la
@@ -322,9 +322,9 @@ bloquent pas : ils sont affichés à l’équipe.
 
 ## 10. Vérifier son manifeste
 
-- Autocomplétion : ajouter `"$schema": "https://stax.fr/schemas/stax.manifest.v1.json"`.
-- Validation complète (mêmes règles que StaX) : `parseManifest` de
-  `@stax/site-contract` ; l’import dans *Infrastructure & livraison* affiche
+- Autocomplétion : ajouter `"$schema": "https://nemasus.fr/schemas/nemasus.manifest.v1.json"`.
+- Validation complète (mêmes règles que Nemasus) : `parseManifest` de
+  `@nemasus/site-contract` ; l’import dans *Infrastructure & livraison* affiche
   chaque erreur avec son chemin (`pages[0].sections[1].fields[2].maxLength`).
 - Tests : `tests/unit/site-contract.test.ts` (manifeste, valeurs, fichier de
   contenu, pont, offre).

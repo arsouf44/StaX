@@ -1,7 +1,7 @@
 import { createServerClient, type CookieMethodsServer } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { assertServerOnly, publicEnv, readEnv } from '@stax/config';
-import type { Profile, UUID } from '@stax/types';
+import { assertServerOnly, publicEnv, readEnv } from '@nemasus/config';
+import type { Profile, UUID } from '@nemasus/types';
 
 /**
  * Sessions Supabase cote serveur.
@@ -33,7 +33,7 @@ export const SESSION_COOKIE_OPTIONS = {
 } as const;
 
 export function createSessionClient(cookies: CookieAdapter): SupabaseClient {
-  assertServerOnly('@stax/auth/session');
+  assertServerOnly('@nemasus/auth/session');
   const url = readEnv('SUPABASE_URL') ?? publicEnv().NEXT_PUBLIC_SUPABASE_URL;
   const key = readEnv('SUPABASE_ANON_KEY') ?? publicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

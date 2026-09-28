@@ -11,12 +11,12 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Prerequis :
  *   pnpm e2e:stack start          # base, authentification, API
- *   pnpm build                    # build de production
+ *   pnpm build:platform           # build de production (next build)
  *   pnpm test:e2e:stack           # demarre plateforme + sites, puis les tests
  *
  * Les parcours partagent une base : ils s executent l un apres l autre.
  */
-const chromiumPath = process.env.STAX_E2E_CHROMIUM || undefined;
+const chromiumPath = process.env.NEMASUS_E2E_CHROMIUM || undefined;
 
 export default defineConfig({
   testDir: './tests/e2e/journeys',
@@ -43,9 +43,9 @@ export default defineConfig({
     viewport: { width: 1960, height: 1000 },
     launchOptions: {
       executablePath: chromiumPath,
-      // Les sites clients vivent sur *.sites.stax.test : le navigateur les
+      // Les sites clients vivent sur *.sites.nemasus.test : le navigateur les
       // resout vers le moteur local, comme le DNS vers Cloudflare en production.
-      args: ['--host-resolver-rules=MAP *.sites.stax.test 127.0.0.1:3101'],
+      args: ['--host-resolver-rules=MAP *.sites.nemasus.test 127.0.0.1:3101'],
     },
   },
 

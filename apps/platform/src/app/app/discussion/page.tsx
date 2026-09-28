@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { Panel } from '@stax/ui';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { ProjectConversation } from '../projet/project-conversation';
@@ -9,7 +9,7 @@ import { ProjectConversation } from '../projet/project-conversation';
 export const metadata: Metadata = { title: 'Écrire à l’équipe' };
 
 /**
- * La discussion avec l'équipe StaX : un seul fil par site, avant comme après
+ * La discussion avec l'équipe Nemasus : un seul fil par site, avant comme après
  * la livraison. Le client n'a pas à choisir entre « ticket », « projet » ou
  * « support » : il écrit, l'équipe répond ici et par e-mail.
  */
@@ -50,7 +50,7 @@ export default async function DiscussionPage() {
           <ProjectConversation
             projectId={project.id}
             messages={messages}
-            title="Votre discussion avec StaX"
+            title="Votre discussion avec Nemasus"
             intro="Tout l’historique de vos échanges est conservé ici."
             placeholder="Écrivez votre message comme vous le diriez au téléphone. Exemple : « Pouvez-vous ajouter nos congés d’août sur la page d’accueil ? »"
           />

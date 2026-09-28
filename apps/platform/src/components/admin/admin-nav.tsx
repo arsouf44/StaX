@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon, cn } from '@stax/ui';
-import type { PlatformRole } from '@stax/types';
+import { Icon, cn } from '@nemasus/ui';
+import type { PlatformRole } from '@nemasus/types';
 
 /**
  * Navigation du back-office.

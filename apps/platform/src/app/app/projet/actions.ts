@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient, unwrapMaybe } from '@stax/database';
-import { uuidSchema } from '@stax/validation';
+import { createUserClient, unwrapMaybe } from '@nemasus/database';
+import { uuidSchema } from '@nemasus/validation';
 import { storeMediaFile } from '~/lib/media-store';
 import { requireSession } from '~/lib/session';
 import { alertTeam } from '~/lib/team-alerts';
@@ -15,7 +15,7 @@ import { getWorkspace } from '~/lib/workspace';
  * Le message est ecrit avec le jeton de la personne : la RLS verifie qu elle
  * appartient bien a l organisation du projet. Le cote emetteur (`client`) est
  * impose ICI et jamais lu depuis le formulaire — sans quoi un client pourrait
- * se faire passer pour l equipe StaX dans le fil de discussion.
+ * se faire passer pour l equipe Nemasus dans le fil de discussion.
  */
 
 const messageSchema = z
@@ -217,5 +217,5 @@ export async function uploadProjectFileAction(
   });
   if (error) return { status: 'error', message: 'Le fichier n’a pas pu être joint au projet.' };
   revalidatePath('/app/projet');
-  return { status: 'success', message: 'Fichier transmis à l’équipe StaX.' };
+  return { status: 'success', message: 'Fichier transmis à l’équipe Nemasus.' };
 }

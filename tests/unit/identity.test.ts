@@ -6,7 +6,7 @@ import {
   isValidSiret,
   siretBelongsToSiren,
   vatNumberForSiren,
-} from '@stax/config/identity';
+} from '@nemasus/config/identity';
 
 /**
  * Identifiants de l'editeur.

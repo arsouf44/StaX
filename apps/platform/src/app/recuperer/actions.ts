@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { createUserClient } from '@stax/database';
+import { createUserClient } from '@nemasus/database';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { hashProposalCode, normalizeProposalCode } from '~/lib/proposals';
@@ -57,7 +57,7 @@ export async function claimProposalAction(
     p_code_hash: await hashProposalCode(parsed.data.code),
   });
   if (error) {
-    console.error('[stax:proposal] recuperation', error.code, error.message);
+    console.error('[nemasus:proposal] recuperation', error.code, error.message);
     return {
       status: 'error',
       message: 'La vérification n’a pas pu aboutir. Réessayez dans un instant.',

@@ -16,7 +16,7 @@ import {
   StatusPill,
   Switch,
   Textarea,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { deleteFormFieldAction, saveFormAction, saveFormFieldAction } from './actions';
 

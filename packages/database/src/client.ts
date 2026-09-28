@@ -4,7 +4,7 @@ import {
   publicEnv,
   readServerEnv,
   supabaseServiceCredentials,
-} from '@stax/config';
+} from '@nemasus/config';
 
 /**
  * Clients Supabase.
@@ -35,7 +35,7 @@ export function createAnonClient(): Db {
   const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } = publicEnv();
   return createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     ...NO_PERSIST,
-    global: { headers: { 'x-stax-client': 'anon' } },
+    global: { headers: { 'x-nemasus-client': 'anon' } },
   });
 }
 
@@ -45,7 +45,7 @@ export function createAnonClient(): Db {
  * claims, ce qui active toutes les policies.
  */
 export function createUserClient(accessToken: string): Db {
-  assertServerOnly('@stax/database/client#createUserClient');
+  assertServerOnly('@nemasus/database/client#createUserClient');
   const url = readServerEnv('SUPABASE_URL') ?? publicEnv().NEXT_PUBLIC_SUPABASE_URL;
   const key = readServerEnv('SUPABASE_ANON_KEY') ?? publicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return createClient(url, key, {
@@ -53,7 +53,7 @@ export function createUserClient(accessToken: string): Db {
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'x-stax-client': 'user',
+        'x-nemasus-client': 'user',
       },
     },
   });
@@ -67,20 +67,20 @@ let serviceClient: Db | null = null;
  * utilisateur (webhook Stripe, rendu d un site public, tache planifiee).
  */
 export function createServiceClient(): Db {
-  assertServerOnly('@stax/database/client#createServiceClient');
+  assertServerOnly('@nemasus/database/client#createServiceClient');
   if (serviceClient) return serviceClient;
   // Seules l'URL et la cle de service sont exigees : une variable sans rapport
   // mal renseignee ne doit pas priver la plateforme de son client de service.
   const credentials = supabaseServiceCredentials();
   if (!credentials.ok) {
     throw new Error(
-      `[StaX] Client de service indisponible : ${credentials.missing.join(', ')}. ` +
+      `[Nemasus] Client de service indisponible : ${credentials.missing.join(', ')}. ` +
         'Voir docs/deployment.md.',
     );
   }
   serviceClient = createClient(credentials.url, credentials.key, {
     ...NO_PERSIST,
-    global: { headers: { 'x-stax-client': 'service' } },
+    global: { headers: { 'x-nemasus-client': 'service' } },
   });
   return serviceClient;
 }
@@ -112,7 +112,7 @@ export function tryCreateServiceClient(): Db | null {
     return createServiceClient();
   } catch (error) {
     console.error(
-      '[stax:config] cle de service indisponible — les ecritures reservees au ' +
+      '[nemasus:config] cle de service indisponible — les ecritures reservees au ' +
         'role de service sont impossibles',
       error,
     );

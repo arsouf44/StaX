@@ -12,7 +12,7 @@ import {
   Textarea,
   type StatusTone,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { decideContentReportAction } from './actions';
 
 /**
@@ -121,7 +121,7 @@ export function ContentReportPanel({
                     {report.siteName ? (
                       <span className="text-[var(--muted)]"> · {report.siteName}</span>
                     ) : (
-                      <span className="text-[var(--muted)]"> · site non hébergé par StaX</span>
+                      <span className="text-[var(--muted)]"> · site non hébergé par Nemasus</span>
                     )}
                   </p>
                   <p className="mt-4 max-w-prose text-sm leading-relaxed whitespace-pre-line">

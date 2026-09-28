@@ -1,15 +1,15 @@
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 
 /**
  * API Cloudflare des sites livres — serveur uniquement.
  *
- * Chaque site StaX est deploye par SON projet Cloudflare (Pages, ou Worker
+ * Chaque site Nemasus est deploye par SON projet Cloudflare (Pages, ou Worker
  * avec Workers Builds), connecte a son depot GitHub : un commit sur la
- * branche de production declenche un build puis un deploiement. StaX ne
+ * branche de production declenche un build puis un deploiement. Nemasus ne
  * deploie pas a la place de Cloudflare ; il LIT l'etat reel des deploiements
  * pour savoir, sans le supposer, si une version est en ligne.
  *
- * Ce module est la seule source de verite de StaX sur ce point : une version
+ * Ce module est la seule source de verite de Nemasus sur ce point : une version
  * n'est « publiee » que lorsque Cloudflare rapporte le deploiement de son
  * commit comme reussi. Les notifications (webhooks) recues de Cloudflare ne
  * sont jamais crues sur parole : elles declenchent une relecture ici.
@@ -126,7 +126,7 @@ async function call<T>(
     const detail = body.errors?.[0]?.message;
     const message =
       response.status === 401 || response.status === 403
-        ? 'Cloudflare a refusé le jeton de StaX pour ce compte ou ce projet.'
+        ? 'Cloudflare a refusé le jeton de Nemasus pour ce compte ou ce projet.'
         : response.status === 404
           ? 'Projet ou déploiement Cloudflare introuvable.'
           : response.status === 429

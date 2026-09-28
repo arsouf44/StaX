@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { assignableRoles, ROLE_DESCRIPTIONS, ROLE_LABELS } from '@stax/business';
-import { unwrapList } from '@stax/database';
-import type { OrgRole } from '@stax/types';
-import { PermissionDenied } from '@stax/ui';
+import { assignableRoles, ROLE_DESCRIPTIONS, ROLE_LABELS } from '@nemasus/business';
+import { unwrapList } from '@nemasus/database';
+import type { OrgRole } from '@nemasus/types';
+import { PermissionDenied } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { TeamManager, type InvitationRow, type MemberRow } from './team-manager';

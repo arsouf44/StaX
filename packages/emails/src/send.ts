@@ -1,4 +1,4 @@
-import { hashEmail } from '@stax/security';
+import { hashEmail } from '@nemasus/security';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getEmailProvider, type EmailMessage, type EmailSendResult } from './provider';
 

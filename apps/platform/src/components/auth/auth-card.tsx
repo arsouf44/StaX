@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Panel } from '@stax/ui';
+import { Panel } from '@nemasus/ui';
 
 /**
  * Cadre commun aux formulaires d authentification.
@@ -19,7 +19,7 @@ export function AuthCard({
   return (
     <div className="mx-auto w-full max-w-[28rem]">
       <Panel level={2} padding="lg" className="glass-sheen">
-        <p className="kicker relative">Espace StaX</p>
+        <p className="kicker relative">Espace Nemasus</p>
         <h1 className="display-panel relative mt-3">{title}</h1>
         {description ? (
           <p className="relative mt-3.5 text-sm leading-relaxed text-[var(--foreground-muted)]">

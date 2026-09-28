@@ -25,16 +25,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 HERE="$ROOT/tests/e2e/stack"
-STACK_DIR="${STAX_E2E_STACK_DIR:-$ROOT/.e2e-stack}"
+STACK_DIR="${NEMASUS_E2E_STACK_DIR:-$ROOT/.e2e-stack}"
 PG_BIN="${PG_BIN:-$(dirname "$(command -v initdb 2>/dev/null || echo /usr/lib/postgresql/16/bin/initdb)")}"
 [ -x "$PG_BIN/initdb" ] || PG_BIN=/usr/lib/postgresql/16/bin
 
-PG_PORT="${STAX_E2E_PG_PORT:-55440}"
+PG_PORT="${NEMASUS_E2E_PG_PORT:-55440}"
 REST_PORT=54330
 AUTH_PORT=54340
 GATEWAY_PORT=54321
 PROVIDERS_PORT=54350
-DB_NAME=stax_e2e
+DB_NAME=nemasus_e2e
 # Compte Cloudflare fictif (32 caracteres hexadecimaux, non secret).
 CLOUDFLARE_ACCOUNT=0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e
 
@@ -146,8 +146,8 @@ start_all() {
   export GOTRUE_LOG_LEVEL=warn
   "$STACK_DIR/gotrue/auth" migrate > "$STACK_DIR/gotrue-migrate.log" 2>&1
 
-  # --- Migrations StaX -------------------------------------------------------
-  echo "→ Migrations StaX"
+  # --- Migrations Nemasus -------------------------------------------------------
+  echo "→ Migrations Nemasus"
   "$ROOT/scripts/db-apply.sh" "$db" > "$STACK_DIR/migrations.log"
 
   # --- Services --------------------------------------------------------------
@@ -186,17 +186,17 @@ start_all() {
   service="$(printf '%s\n' "$keys" | sed -n 's/^SERVICE_KEY=//p')"
 
   cat > "$STACK_DIR/env" <<EOF
-STAX_E2E_DATABASE_URL=$db
+NEMASUS_E2E_DATABASE_URL=$db
 SUPABASE_URL=http://127.0.0.1:$GATEWAY_PORT
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:$GATEWAY_PORT
 SUPABASE_ANON_KEY=$anon
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$anon
 SUPABASE_SERVICE_ROLE_KEY=$service
 SUPABASE_JWT_SECRET=$secret
-STAX_E2E_PROVIDERS_URL=http://127.0.0.1:$PROVIDERS_PORT
+NEMASUS_E2E_PROVIDERS_URL=http://127.0.0.1:$PROVIDERS_PORT
 GITHUB_API_BASE_URL=http://127.0.0.1:$PROVIDERS_PORT/github
 GITHUB_APP_ID=424242
-GITHUB_APP_SLUG=stax-sites-e2e
+GITHUB_APP_SLUG=nemasus-sites-e2e
 $(node "$HERE/providers.mjs" keys)
 GITHUB_APP_WEBHOOK_SECRET=$(head -c 24 /dev/urandom | base64 | tr -d '\n=/+')
 CLOUDFLARE_API_BASE_URL=http://127.0.0.1:$PROVIDERS_PORT/cloudflare/client/v4

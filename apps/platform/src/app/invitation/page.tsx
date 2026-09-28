@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { createUserClient } from '@stax/database';
-import { ButtonLink, Container, Logo, Panel } from '@stax/ui';
+import { createUserClient } from '@nemasus/database';
+import { ButtonLink, Container, Logo, Panel } from '@nemasus/ui';
 import { getSession } from '~/lib/session';
 import { invitationTokenHash } from '~/lib/invitations';
 import { AcceptInvitationForm } from './accept-form';
@@ -19,7 +19,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 /**
- * Lien reçu par e-mail : « X vous invite à rejoindre son espace StaX ».
+ * Lien reçu par e-mail : « X vous invite à rejoindre son espace Nemasus ».
  * Sans compte, la page mène à l'inscription, qui ramène ici.
  */
 export default async function InvitationPage({
@@ -57,7 +57,7 @@ export default async function InvitationPage({
         <Container size="default">
           <div className="max-w-xl">
             <h1 className="display-panel">
-              {organizationName ? `Rejoindre ${organizationName}` : 'Vous êtes invité sur StaX'}
+              {organizationName ? `Rejoindre ${organizationName}` : 'Vous êtes invité sur Nemasus'}
             </h1>
             <p className="mt-4 leading-relaxed text-[var(--foreground-muted)]">
               Vous pourrez aider à gérer le site de l’entreprise depuis votre propre compte.

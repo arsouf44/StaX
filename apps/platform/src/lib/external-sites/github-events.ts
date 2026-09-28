@@ -1,6 +1,6 @@
 import 'server-only';
-import { unwrapList, type Db } from '@stax/database';
-import { releaseIdFromMessage } from '@stax/infrastructure';
+import { unwrapList, type Db } from '@nemasus/database';
+import { releaseIdFromMessage } from '@nemasus/infrastructure';
 
 /**
  * Evenements de l'application GitHub (webhook signe, deja verifie).
@@ -8,7 +8,7 @@ import { releaseIdFromMessage } from '@stax/infrastructure';
  *  - `installation` / `installation_repositories` : l'application est
  *    installee, suspendue ou retiree d'un compte ;
  *  - `push` : un commit arrive sur la branche de production d'un site. S'il
- *    vient de StaX (marqueur `Stax-Release`), le depot est a jour ; sinon le
+ *    vient de Nemasus (marqueur `Nemasus-Release`), le depot est a jour ; sinon le
  *    developpeur a travaille directement : l'equipe le voit, et le manifeste
  *    est signale s'il a change ;
  *  - `repository` : depot renomme, transfere, archive ou supprime.
@@ -87,7 +87,7 @@ async function onInstallation(db: Db, payload: InstallationPayload): Promise<str
         p_repository: repository.id,
         p_head_sha: null,
         p_error:
-          'Ce dépôt a été retiré de l’application GitHub StaX : la publication est impossible.',
+          'Ce dépôt a été retiré de l’application GitHub Nemasus : la publication est impossible.',
       });
     }
   }
@@ -125,7 +125,7 @@ async function onPush(db: Db, payload: PushPayload): Promise<string> {
   let handled = 0;
   for (const repository of attached) {
     if (branch !== repository.production_branch) continue;
-    const fromStax =
+    const fromNemasus =
       Boolean(payload.head_commit && releaseIdFromMessage(payload.head_commit.message)) ||
       after === repository.last_stax_commit_sha;
     const manifestTouched = (payload.commits ?? []).some((commit) =>
@@ -137,7 +137,7 @@ async function onPush(db: Db, payload: PushPayload): Promise<string> {
       p_repository: repository.id,
       p_head_sha: after,
       p_committed_at: payload.head_commit?.timestamp ?? null,
-      p_sync_status: fromStax ? 'in_sync' : 'developer_changes',
+      p_sync_status: fromNemasus ? 'in_sync' : 'developer_changes',
       p_error: null,
       p_full_name: payload.repository?.full_name ?? null,
       p_default_branch: payload.repository?.default_branch ?? null,

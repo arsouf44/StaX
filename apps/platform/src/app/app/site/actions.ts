@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { unwrapList } from '@stax/database';
-import { legalIdentitySchema } from '@stax/site-engine';
+import { unwrapList } from '@nemasus/database';
+import { legalIdentitySchema } from '@nemasus/site-engine';
 import {
   fieldErrors,
   navigationSchema,
@@ -11,7 +11,7 @@ import {
   siteSettingsSchema,
   siteThemeSchema,
   uuidSchema,
-} from '@stax/validation';
+} from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace, type WorkspaceContext } from '~/lib/workspace';

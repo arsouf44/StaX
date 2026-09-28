@@ -2,9 +2,9 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createUserClient, unwrapMaybe } from '@stax/database';
-import { hashIp } from '@stax/security';
-import { boundedText } from '@stax/validation';
+import { createUserClient, unwrapMaybe } from '@nemasus/database';
+import { hashIp } from '@nemasus/security';
+import { boundedText } from '@nemasus/validation';
 import { z } from 'zod';
 import { TERMS_VERSION } from '~/content/legal';
 import { guardAction } from '~/lib/action-guard';
@@ -121,7 +121,7 @@ export async function claimInvoiceAction(
   });
 
   if (error) {
-    console.error('[stax:invoice] rattachement impossible', error.code, error.message);
+    console.error('[nemasus:invoice] rattachement impossible', error.code, error.message);
     return {
       status: 'error',
       message: 'Le rattachement n’a pas pu aboutir. Réessayez dans quelques instants.',

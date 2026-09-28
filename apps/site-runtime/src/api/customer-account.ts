@@ -1,7 +1,7 @@
-import { createServiceClient } from '@stax/database';
-import { customerLoginEmail, sendEmail } from '@stax/emails';
-import { formatMoney } from '@stax/payments/money';
-import { html, join, renderDocument, type RawHtml } from '@stax/site-engine';
+import { createServiceClient } from '@nemasus/database';
+import { customerLoginEmail, sendEmail } from '@nemasus/emails';
+import { formatMoney } from '@nemasus/payments/money';
+import { html, join, renderDocument, type RawHtml } from '@nemasus/site-engine';
 import { buildPageContext, siteOrigin } from '../context';
 import { htmlResponse, jsonResponse, redirectResponse } from '../responses';
 import { field, guardPublicWrite, refuse } from './shared';
@@ -100,7 +100,7 @@ export async function handleCustomerLoginRequest(
   });
 
   if (error) {
-    console.error('[stax:customer] demande impossible', error.code, error.message);
+    console.error('[nemasus:customer] demande impossible', error.code, error.message);
     return jsonResponse({ ok: true, message: UNIFORM_ANSWER });
   }
 
@@ -333,8 +333,8 @@ export async function handleCustomerAccount(
                 </div>`
           }
 
-          <form data-stax-customer-logout class="form" style="margin-top:3rem">
-            <input type="hidden" name="_token" value="__STAX_FORM_TOKEN__" />
+          <form data-nemasus-customer-logout class="form" style="margin-top:3rem">
+            <input type="hidden" name="_token" value="__NEMASUS_FORM_TOKEN__" />
             <button type="submit" class="btn btn-secondary">Me déconnecter</button>
           </form>
         </div>
@@ -347,17 +347,17 @@ export async function handleCustomerAccount(
 /**
  * Formulaire de demande de lien.
  *
- * `__STAX_FORM_TOKEN__` est un MARQUEUR, remplace au rendu par le vrai jeton
+ * `__NEMASUS_FORM_TOKEN__` est un MARQUEUR, remplace au rendu par le vrai jeton
  * anti-CSRF : celui-ci n'est connu qu'une fois le contexte de page construit,
  * et le faire circuler jusqu'ici n'apporterait rien.
  */
 function loginForm(): RawHtml {
   return html`
-    <form data-stax-customer-login class="form" style="margin-top:2rem" novalidate>
+    <form data-nemasus-customer-login class="form" style="margin-top:2rem" novalidate>
       <div class="field">
-        <label for="stax-customer-email">Votre adresse e-mail</label>
+        <label for="nemasus-customer-email">Votre adresse e-mail</label>
         <input
-          id="stax-customer-email"
+          id="nemasus-customer-email"
           name="email"
           type="email"
           autocomplete="email"
@@ -365,8 +365,8 @@ function loginForm(): RawHtml {
           required
         />
       </div>
-      <input type="hidden" name="_token" value="__STAX_FORM_TOKEN__" />
-      <div class="form-status" data-stax-status hidden role="status"></div>
+      <input type="hidden" name="_token" value="__NEMASUS_FORM_TOKEN__" />
+      <div class="form-status" data-nemasus-status hidden role="status"></div>
       <button type="submit" class="btn btn-primary">Recevoir mon lien</button>
       <p class="muted" style="margin-top:.75rem;font-size:.8125rem">
         Aucun mot de passe : le lien vous connecte directement, une seule fois.
@@ -402,7 +402,7 @@ async function renderInShell(
     logoUrl: context.logoUrl,
     ogImageUrl: context.ogImageUrl,
     mainOverride: main,
-  }).replaceAll('__STAX_FORM_TOKEN__', context.context.formToken);
+  }).replaceAll('__NEMASUS_FORM_TOKEN__', context.context.formToken);
 
   const response = htmlResponse(body, {
     status,

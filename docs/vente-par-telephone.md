@@ -31,7 +31,7 @@ Règles décidées :
 1. **Sites → Créer un site** : nom de l'entreprise, métier, ville. L'offre
    peut rester « À définir » : elle sera fixée par la proposition.
 2. Développez le site dans son **dépôt GitHub**, déployé par son **projet
-   Cloudflare** (comme tout site StaX : [site-delivery.md](./site-delivery.md)).
+   Cloudflare** (comme tout site Nemasus : [site-delivery.md](./site-delivery.md)).
 3. **Fiche du site → Infrastructure & livraison** : rattachez le dépôt et le
    projet, importez le manifeste (contenu initial = version 1), puis faites la
    **checklist** :
@@ -108,11 +108,43 @@ Vous recevez un e-mail quand un prospect **récupère** son site, quand il vous
 | Il veut une autre offre | Retirez la proposition et envoyez-en une nouvelle avec la bonne offre |
 | Il veut payer par virement | Ce parcours encaisse par carte (Stripe), ce qui permet aussi de prélever la maintenance. Un règlement par virement n'est pas automatisé ici : utilisez le parcours *Factures de vente*, et livrez à la main |
 | Il abandonne le paiement | Il revient sur son espace (« Paiement interrompu, rien n'a été débité ») et peut reprendre |
+| Il dit « STOP », « ne me rappelez plus » ou répond STOP à l'e-mail | **Retirer** la proposition, puis **Effacer les coordonnées** (même ligne, `/admin/propositions`). Retirez-le aussi de votre fichier de prospection et notez-le dans votre liste d'opposition |
+
+## 6. Les règles du démarchage — à respecter à chaque appel
+
+Le démarchage des **entreprises** est permis ; celui des **particuliers** ne
+l'est plus sans leur accord préalable (loi n° 2025-594 du 30 juin 2025, en
+vigueur depuis le **11 août 2026**, article L.223-1 du Code de la
+consommation). D'où ces règles, qui protègent la société :
+
+1. **N'appeler que des numéros professionnels** (standard, ligne de
+   l'établissement, numéro publié pour l'activité). Un artisan ou un
+   indépendant joint sur son numéro **personnel** peut être regardé comme un
+   consommateur : en cas de doute, on n'appelle pas.
+2. **Parler de son activité professionnelle** : l'offre (un site pour son
+   entreprise) doit être en rapport avec elle.
+3. **Se présenter** dès le début de l'appel : votre prénom, « Nemasus », l'objet
+   de l'appel. Si l'appel est enregistré, le dire et demander l'accord.
+4. **Respecter le refus immédiatement** : « pas intéressé » → on raccroche
+   poliment et on inscrit l'entreprise dans la liste d'opposition (3 ans) ;
+   « ne me rappelez plus » → idem, et on efface le reste.
+5. **N'envoyer l'e-mail de proposition qu'après un « oui »** pendant l'appel,
+   à l'adresse que la personne a donnée. Jamais d'envoi en masse.
+6. **Horaires raisonnables** : jours ouvrés, pendant les heures d'ouverture
+   de l'entreprise appelée.
+7. **Fichiers** : ne constituer les listes qu'à partir de sources publiques
+   (registres, annuaires professionnels, fiches d'établissement, sites des
+   entreprises) ; ne conserver un prospect que 3 ans après son dernier
+   contact ; le traitement est décrit dans
+   [REGISTRE_TRAITEMENTS.md § A9](./REGISTRE_TRAITEMENTS.md).
+
+Chaque e-mail de proposition rappelle automatiquement au prospect qui traite
+ses coordonnées et qu'il peut s'y opposer en répondant « STOP ».
 
 ---
 
 Côté technique : table `site_proposals` et fonctions `app.*_site_proposal`
-(migration 0054), `lib/proposals.ts`, `/admin/propositions`, `/recuperer`,
+(migrations 0054 et 0056 pour l'effacement sur opposition), `lib/proposals.ts`, `/admin/propositions`, `/recuperer`,
 `/app` (tableau de bord du prospect), webhook Stripe → `completePaidProposal`,
 reprise par `/api/cron/sites`. Preuves : `tests/sql/rls.test.sql`
 (« Propositions de site »), `tests/unit/proposals.test.ts`,

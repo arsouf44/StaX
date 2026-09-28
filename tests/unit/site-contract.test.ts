@@ -21,10 +21,10 @@ import {
   writeFieldValue,
   type MediaDescriptor,
   type SiteManifest,
-} from '@stax/site-contract';
+} from '@nemasus/site-contract';
 
 const fixture = readFileSync(
-  fileURLToPath(new URL('../fixtures/site-contract/stax.manifest.json', import.meta.url)),
+  fileURLToPath(new URL('../fixtures/site-contract/nemasus.manifest.json', import.meta.url)),
   'utf8',
 );
 
@@ -145,7 +145,7 @@ describe('manifeste', () => {
     const manifest = JSON.parse(fixture);
     manifest.content.file = '../../etc/passwd.json';
     expect(parseManifest(manifest).ok).toBe(false);
-    manifest.content.file = '/src/content/stax.content.json';
+    manifest.content.file = '/src/content/nemasus.content.json';
     expect(parseManifest(manifest).ok).toBe(false);
   });
 
@@ -157,7 +157,7 @@ describe('manifeste', () => {
 
   it('publie un schema JSON pour les developpeurs', () => {
     const schema = manifestJsonSchema();
-    expect(schema['$id']).toBe('https://stax.fr/schemas/stax.manifest.v1.json');
+    expect(schema['$id']).toBe('https://nemasus.fr/schemas/nemasus.manifest.v1.json');
     expect(JSON.stringify(schema)).toContain('opening_hours');
   });
 });
@@ -300,7 +300,7 @@ describe('bundle publie dans le depot', () => {
       href: '/contact',
     });
     expect(hero['image']).toEqual({
-      src: `/media/stax/${MEDIA_ID}.jpg`,
+      src: `/media/nemasus/${MEDIA_ID}.jpg`,
       alt: 'La vitrine',
       width: 1600,
       height: 900,
@@ -315,7 +315,7 @@ describe('bundle publie dans le depot', () => {
       _slug: 'galette-des-rois',
       _path: '/actualites/galette-des-rois',
     });
-    expect(bundle.stax).toEqual({
+    expect(bundle.nemasus).toEqual({
       site: 'site-1',
       version: 7,
       release: 'release-7',
@@ -433,7 +433,7 @@ describe('offre et contrat', () => {
     expect(keys).toEqual(expect.arrayContaining(['bookings', 'online_payments']));
   });
 
-  it('traduit les formulaires declares pour la messagerie StaX', () => {
+  it('traduit les formulaires declares pour la messagerie Nemasus', () => {
     const sync = integrationsFromManifest(loadManifest());
     expect(sync.forms[0]).toMatchObject({ slug: 'contact', kind: 'contact' });
     expect(sync.forms[0]?.fields.map((field) => field.name)).toEqual([
@@ -450,7 +450,7 @@ describe('pont d’apercu', () => {
   it('n’accepte que des messages bien formes', () => {
     expect(
       parseBridgeMessage({
-        source: 'stax-bridge',
+        source: 'nemasus-bridge',
         version: 1,
         type: 'select',
         address: 'pages.accueil.hero.titre',
@@ -461,20 +461,20 @@ describe('pont d’apercu', () => {
     ).toBeNull();
     expect(
       parseBridgeMessage({
-        source: 'stax-bridge',
+        source: 'nemasus-bridge',
         version: 1,
         type: 'select',
         address: '"><script>',
       }),
     ).toBeNull();
     expect(
-      parseBridgeMessage({ source: 'stax-bridge', version: 1, type: 'eval', code: 'alert(1)' }),
+      parseBridgeMessage({ source: 'nemasus-bridge', version: 1, type: 'eval', code: 'alert(1)' }),
     ).toBeNull();
   });
 
   it('inscrit l’origine exacte de l’editeur et rien d’autre', () => {
-    const script = bridgeScript('https://app.stax.fr/app/editeur?x=1');
-    expect(script).toContain('var ORIGIN = "https://app.stax.fr";');
+    const script = bridgeScript('https://app.nemasus.fr/app/editeur?x=1');
+    expect(script).toContain('var ORIGIN = "https://app.nemasus.fr";');
     expect(script).not.toContain('eval(');
     expect(script).not.toContain('innerHTML');
     expect(() => bridgeScript('pas une url')).toThrow();

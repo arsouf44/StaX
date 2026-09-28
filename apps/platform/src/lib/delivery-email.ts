@@ -1,14 +1,14 @@
 import 'server-only';
-import { platformUrl, refundPolicyConfig } from '@stax/config';
-import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
-import { sendEmail, siteDeliveredEmail } from '@stax/emails';
-import { formatMaintenance } from '@stax/payments';
+import { platformUrl, refundPolicyConfig } from '@nemasus/config';
+import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
+import { sendEmail, siteDeliveredEmail } from '@nemasus/emails';
+import { formatMaintenance } from '@nemasus/payments';
 
 /**
  * E-mail de livraison.
  *
  * La base notifie deja le client dans son espace (`deliver_site`) ; l'e-mail
- * reprend l'essentiel hors de StaX : le site est en ligne, l'editeur s'ouvre,
+ * reprend l'essentiel hors de Nemasus : le site est en ligne, l'editeur s'ouvre,
  * la maintenance mensuelle commence ce jour, la garantie court jusqu'a telle
  * date. Un envoi manque ne remet jamais la livraison en cause.
  */
@@ -98,7 +98,7 @@ export async function sendDeliveryEmails(service: Db, siteId: string): Promise<v
       { db: service, organizationId: site.organization_id },
     );
     if (!result.ok) {
-      console.error('[stax:delivery] e-mail de livraison non envoyé', result.error);
+      console.error('[nemasus:delivery] e-mail de livraison non envoyé', result.error);
     }
   }
 }

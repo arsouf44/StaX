@@ -1,5 +1,5 @@
 # Configuration Supabase locale (supabase start / supabase db reset).
-project_id = "stax"
+project_id = "nemasus"
 
 [api]
 enabled = true

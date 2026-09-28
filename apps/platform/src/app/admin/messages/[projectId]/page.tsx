@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { Panel, cn } from '@stax/ui';
-import { uuidSchema } from '@stax/validation';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { Panel, cn } from '@nemasus/ui';
+import { uuidSchema } from '@nemasus/validation';
 import { requireAdminRole } from '~/lib/admin';
 import { TeamReplyForm } from '../reply-form';
 
@@ -105,7 +105,7 @@ export default async function AdminConversationPage({
                   <p className="text-2xs font-medium tracking-[0.1em] text-[var(--muted)] uppercase">
                     {fromClient
                       ? (message.profiles?.first_name ?? message.profiles?.email ?? 'Client')
-                      : `Équipe StaX${message.profiles?.first_name ? ` (${message.profiles.first_name})` : ''}`}
+                      : `Équipe Nemasus${message.profiles?.first_name ? ` (${message.profiles.first_name})` : ''}`}
                     <span className="ml-2 font-normal tracking-normal normal-case">
                       {DATE.format(new Date(message.created_at))}
                     </span>

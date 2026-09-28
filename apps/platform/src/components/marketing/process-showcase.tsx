@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 import { Art, type ArtName } from './studio-art';
 
 /**
@@ -131,7 +131,7 @@ export function ProcessShowcase() {
                   'absolute top-[-1px] left-0 h-px w-full origin-left bg-[var(--ink)]',
                   on
                     ? playing
-                      ? 'animate-[stax-progress_5s_linear_both]'
+                      ? 'animate-[nemasus-progress_5s_linear_both]'
                       : 'scale-x-100 transition-transform duration-700'
                     : 'scale-x-0',
                 )}

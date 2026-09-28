@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Checkbox } from '@stax/ui';
+import { Alert, Button, Checkbox } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { startProposalCheckoutAction } from './actions';
 
@@ -68,7 +68,7 @@ export function ProposalPayForm({ proposalId, label }: { proposalId: string; lab
 
       <SubmitButton label={label} />
       <p className="text-center text-xs text-[var(--muted)]">
-        Paiement sécurisé par Stripe. StaX ne voit jamais votre numéro de carte.
+        Paiement sécurisé par Stripe. Nemasus ne voit jamais votre numéro de carte.
       </p>
     </form>
   );

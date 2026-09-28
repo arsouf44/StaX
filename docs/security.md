@@ -1,6 +1,6 @@
 # Sécurité
 
-Ce document décrit ce que StaX protège, contre quoi, et **comment cela est
+Ce document décrit ce que Nemasus protège, contre quoi, et **comment cela est
 vérifié**. Une défense qui n’est pas testée n’est pas une défense : c’est une
 intention.
 
@@ -10,7 +10,7 @@ intention.
 
 | Adversaire | Ce qu’il cherche | Défense principale |
 | --- | --- | --- |
-| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 461 assertions SQL |
+| Client curieux ou malveillant | Lire les données d’un autre client | RLS PostgreSQL, testée par 529 assertions SQL |
 | Client pressé | Modifier son site avant la livraison, ou après une suspension | `app.site_content_access` en base |
 | Client malveillant | Rattacher le dépôt ou le site d’une autre organisation | rattachement réservé à l’équipe, un dépôt = un site, propriétaire vérifié |
 | Tiers qui forge un webhook | Faire passer une version pour publiée, altérer un dépôt connu | signature HMAC / secret, idempotence, relecture auprès de l’API du fournisseur |
@@ -69,7 +69,7 @@ L’accès au back-office exige trois conditions cumulatives :
 
 ## 3. Sites livrés : dépôts, déploiements, publication
 
-Chaque site a son dépôt GitHub et son projet Cloudflare ; StaX y écrit et les
+Chaque site a son dépôt GitHub et son projet Cloudflare ; Nemasus y écrit et les
 observe. Les règles :
 
 **Secrets côté serveur uniquement.** La clé privée de l’application GitHub,
@@ -128,13 +128,13 @@ déployée. L’historique reste lisible et l’export possible.
 
 **Contenu revalidé à chaque étape.** Le contenu écrit dans le dépôt est
 revalidé contre le contrat au moment du commit, quelle que soit la façon dont
-il a été enregistré. Le texte riche est rendu en HTML échappé par StaX ; les
+il a été enregistré. Le texte riche est rendu en HTML échappé par Nemasus ; les
 images sont des fichiers téléversés dans la médiathèque (type vérifié), copiés
 sous un nom dérivé de leur identifiant. Les chemins du manifeste sont
 relatifs et sans `..`.
 
 **Pont d’aperçu.** Le script du pont n’accepte que les messages de l’origine
-de l’éditeur StaX, n’exécute jamais de code reçu et ne fait que remplacer du
+de l’éditeur Nemasus, n’exécute jamais de code reçu et ne fait que remplacer du
 texte ou des attributs d’image et de lien. L’aperçu est servi par le projet
 Cloudflare du site, donc sur une **autre origine** que l’éditeur, dans un
 `iframe` à attribut `sandbox`.
@@ -148,7 +148,7 @@ projet, domaine), import de manifeste, contenu initial, contrôles attestés de 
 checklist, livraison, publication, restauration, échec de déploiement,
 relance : chaque action écrit une ligne dans le journal d’audit, avec son
 auteur (personne ou système). Le journal lui-même est protégé : hors serveur et
-équipe StaX, `public.write_audit` n’écrit que dans le journal de sa propre
+équipe Nemasus, `public.write_audit` n’écrit que dans le journal de sa propre
 organisation, pour un site de cette organisation (0052).
 
 **Aperçu dans l’éditeur.** La CSP de `/app/editeur` n’autorise dans un iframe
@@ -189,7 +189,7 @@ expose explicitement à cette fin.
 
 Les encaissements réalisés sur les sites des clients passent par **Stripe
 Connect** : l’argent va directement sur le compte du client, ouvert à son nom.
-StaX n’est pas dans ce circuit financier et la commission est fixée à zéro.
+Nemasus n’est pas dans ce circuit financier et la commission est fixée à zéro.
 
 ---
 

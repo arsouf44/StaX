@@ -4,7 +4,7 @@ import { deployEnvironment, readEnv } from './runtime';
 /**
  * LEGAL_REVIEW_REQUIRED
  * ---------------------
- * Every legal text shipped with StaX (CGV, CGU, politique de confidentialite,
+ * Every legal text shipped with Nemasus (CGV, CGU, politique de confidentialite,
  * mentions legales, politique de remboursement, cookies, sous-traitants) is a
  * TEMPLATE. It must be reviewed and validated by a qualified lawyer before the
  * platform is opened commercially. Nothing in these templates overrides the
@@ -31,9 +31,10 @@ export interface LegalField {
    * them out of the repository would not protect anything — it would only mean
    * the site cannot render its own mandatory notices.
    *
-   * Values that are NOT public knowledge, or that a deployment may legitimately
-   * change (share capital, publication director, support contacts), have no
-   * default: they must be provided at deployment time.
+   * The share capital, the publication director and the public contact address
+   * are published on the same pages for the same reason; they were provided by
+   * the company (2026-09-28) and can still be overridden by an environment
+   * variable if they change.
    */
   defaultValue?: string;
 }
@@ -71,8 +72,8 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Nom commercial',
     required: true,
     placeholder: '[A CONFIGURER — nom commercial]',
-    defaultValue: 'StaX',
-    hint: 'Marque sous laquelle l’activité est exercée. StaX est une branche d’activité de LallianSe.',
+    defaultValue: 'Nemasus',
+    hint: 'Marque sous laquelle l’activité est exercée. Nemasus est une branche d’activité de LallianSe.',
   },
   {
     key: 'LEGAL_FORM',
@@ -87,6 +88,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Capital social',
     required: true,
     placeholder: '[A CONFIGURER — capital social]',
+    defaultValue: '3 000 €',
     hint: 'Obligatoire pour une société de capitaux (article R.123-237 du Code de commerce). Montant exact figurant sur le Kbis, par exemple « 10 000 € ».',
   },
   {
@@ -134,6 +136,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Directeur de la publication',
     required: true,
     placeholder: '[A CONFIGURER — directeur de la publication]',
+    defaultValue: 'Julie Rachline Gomez',
     hint: 'Personne physique responsable au sens de la loi du 21 juin 2004 (LCEN). Pour une SAS, le président, sauf désignation expresse.',
   },
   {
@@ -141,23 +144,23 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — hebergeur]',
-    defaultValue: 'Cloudflare, Inc. (diffusion) et Supabase, Inc. (base de données et fichiers)',
-    hint: 'Raison sociale de l’hébergeur, obligatoire au titre de l’article 6 III de la LCEN.',
+    defaultValue: 'Cloudflare, Inc.',
+    hint: 'Raison sociale du prestataire qui héberge la plateforme et les sites des clients (article 6 III de la LCEN). La base de données a son propre prestataire, nommé dans les mentions légales.',
   },
   {
     key: 'LEGAL_HOST_ADDRESS',
     label: 'Adresse de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — adresse de l’hebergeur]',
-    defaultValue:
-      'Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis — Supabase, Inc., 970 Toa Payoh North, Singapour',
-    hint: 'Adresse postale et moyen de contact de l’hébergeur.',
+    defaultValue: '101 Townsend Street, San Francisco, CA 94107, États-Unis',
+    hint: 'Adresse postale de l’hébergeur, telle qu’il la publie.',
   },
   {
     key: 'LEGAL_HOST_PHONE',
     label: 'Téléphone de l’hébergeur',
-    required: false,
+    required: true,
     placeholder: '[A CONFIGURER — telephone de l’hebergeur]',
+    defaultValue: '+1 650 319 8930',
     hint: 'Exigé par l’article 6 III de la LCEN (modifié par la loi du 21 mai 2024) : numéro de téléphone du prestataire d’hébergement, tel qu’il le publie.',
   },
   {
@@ -165,6 +168,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Contact données personnelles',
     required: true,
     placeholder: '[A CONFIGURER — contact RGPD]',
+    defaultValue: 'nemasus@lallianse.com',
     hint: 'Adresse de contact pour l’exercice des droits RGPD.',
   },
   {
@@ -179,6 +183,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'E-mail de support',
     required: true,
     placeholder: '[A CONFIGURER — email de support]',
+    defaultValue: 'nemasus@lallianse.com',
     hint: 'Adresse de contact affichee publiquement.',
   },
   {
@@ -203,7 +208,7 @@ export interface LegalStatus {
 
 function fieldFor(key: LegalKey): LegalField {
   const found = LEGAL_FIELDS.find((field) => field.key === key);
-  if (!found) throw new Error(`[StaX] Champ légal inconnu : ${key}`);
+  if (!found) throw new Error(`[Nemasus] Champ légal inconnu : ${key}`);
   return found;
 }
 
@@ -281,21 +286,21 @@ export function assertLegalConfigured(): void {
   // c'est une faute de frappe, pas une configuration incomplete, et elle ne se
   // verrait qu'une fois imprimee sur une facture.
   if (status.identityProblems.length > 0) {
-    throw new Error(`[StaX] Identite commerciale invalide : ${details.join(' | ')}`);
+    throw new Error(`[Nemasus] Identite commerciale invalide : ${details.join(' | ')}`);
   }
 
   if (deployEnvironment() !== 'production') return;
 
   if (readEnv('LEGAL_ALLOW_INCOMPLETE') === 'true') {
     console.warn(
-      `[StaX] Mentions légales incomplètes en production : ${details.join(' | ')}. ` +
+      `[Nemasus] Mentions légales incomplètes en production : ${details.join(' | ')}. ` +
         'LEGAL_ALLOW_INCOMPLETE=true est actif — a retirer avant ouverture commerciale.',
     );
     return;
   }
 
   throw new Error(
-    `[StaX] Demarrage refuse : informations legales obligatoires ${details.join(' | ')}. ` +
+    `[Nemasus] Demarrage refuse : informations legales obligatoires ${details.join(' | ')}. ` +
       'Renseignez-les dans les secrets de production ou definissez LEGAL_ALLOW_INCOMPLETE=true ' +
       'tant que le deploiement reste prive. Voir docs/legal-configuration.md.',
   );
@@ -386,10 +391,10 @@ export function maintenancePolicyConfig(): MaintenancePolicyConfig {
 }
 
 /**
- * Identite de StaX en tant qu HEBERGEUR des sites de ses clients.
+ * Identite de Nemasus en tant qu HEBERGEUR des sites de ses clients.
  *
  * Chaque site client doit nommer son hebergeur dans ses mentions legales
- * (article 6 III de la LCEN) : c est StaX, qui fournit l hebergement. Seules
+ * (article 6 III de la LCEN) : c est Nemasus, qui fournit l hebergement. Seules
  * les valeurs reellement configurees sont renvoyees — jamais un marqueur
  * « [A CONFIGURER] », qui n a rien a faire sur le site d un client.
  */
@@ -405,7 +410,7 @@ export function siteHostIdentity(platformBaseUrl: string | null): SiteHostIdenti
   const configured = (key: LegalKey): string | null =>
     isLegalValueConfigured(key) ? legalValue(key) : null;
   return {
-    name: configured('LEGAL_COMPANY_NAME') ?? 'StaX',
+    name: configured('LEGAL_COMPANY_NAME') ?? 'Nemasus',
     address: configured('LEGAL_ADDRESS'),
     phone: configured('SUPPORT_PHONE'),
     email: configured('SUPPORT_EMAIL'),

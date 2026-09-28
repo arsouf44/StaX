@@ -1,4 +1,4 @@
-import type { BillingInterval, Cents, Currency } from '@stax/types';
+import type { BillingInterval, Cents, Currency } from '@nemasus/types';
 import { applyBasisPoints, assertCents, vatFromGross } from './money';
 
 /**

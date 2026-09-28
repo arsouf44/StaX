@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@stax/ui';
+import { Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 import { DomainRoutingDiagram, OperationalIndicators } from '~/components/marketing/diagrams';
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ const LAYERS = [
     role: 'Chaque site possède son propre dépôt de code, créé pour lui. Chaque publication y devient un commit identifiable : l’historique de votre site est celui de son code.',
     facts: [
       'Un dépôt par site, jamais partagé entre clients',
-      'Accès de StaX limité aux dépôts autorisés, avec des droits minimaux',
+      'Accès de Nemasus limité aux dépôts autorisés, avec des droits minimaux',
       'Chaque version publiée correspond à un commit',
     ],
   },
@@ -34,9 +34,19 @@ const LAYERS = [
     ],
   },
   {
+    name: 'Plateforme',
+    provider: 'Cloudflare Workers',
+    role: 'Exécute le site Nemasus, votre espace client et l’éditeur sur le réseau de Cloudflare, placé automatiquement au plus près de la base de données qui conserve vos informations.',
+    facts: [
+      'Chaque mise à jour de la plateforme est une version distincte, activée d’un seul coup',
+      'Secrets et clés conservés côté serveur, jamais dans le navigateur',
+      'Protection réseau et HTTPS de bout en bout',
+    ],
+  },
+  {
     name: 'Espace client et données',
     provider: 'Supabase (PostgreSQL)',
-    role: 'Conserve vos brouillons, vos médias, vos messages, vos réservations et vos contacts dans une base relationnelle hébergée dans une région européenne.',
+    role: 'Conserve vos brouillons, vos médias, vos messages, vos réservations et vos contacts dans une base relationnelle hébergée en France, dans la région de Paris.',
     facts: [
       'Isolation entre clients imposée par la base elle-même',
       'Sauvegardes quotidiennes de la base',
@@ -48,7 +58,7 @@ const LAYERS = [
     provider: 'Stripe',
     role: 'Traite les paiements de la plateforme et les encaissements de vos clients finaux, sur son infrastructure certifiée PCI.',
     facts: [
-      'Aucune donnée de carte chez StaX',
+      'Aucune donnée de carte chez Nemasus',
       'Vos encaissements sur votre propre compte connecté',
       'Événements vérifiés par signature cryptographique',
     ],
@@ -108,7 +118,7 @@ export default function InfrastructurePage() {
           <SectionHeading
             eyebrow="Un site, un projet"
             title="Votre domaine pointe vers votre site, pas vers une plateforme partagée"
-            description="Chaque site a son dépôt, son projet Cloudflare et son domaine. StaX n’est pas sur le chemin de vos visiteurs : il intervient quand vous publiez, pour enregistrer vos modifications dans le code de votre site et les déployer."
+            description="Chaque site a son dépôt, son projet Cloudflare et son domaine. Nemasus n’est pas sur le chemin de vos visiteurs : il intervient quand vous publiez, pour enregistrer vos modifications dans le code de votre site et les déployer."
           />
           <Panel level={2} padding="lg" className="mt-10">
             <DomainRoutingDiagram />

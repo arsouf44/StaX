@@ -8,10 +8,10 @@ import {
   CONSTRUCTION_SESSION_MAX_MINUTES,
   IMPERSONATION_COOKIE,
   startImpersonation,
-} from '@stax/auth';
-import { createUserClient, tryCreateServiceClient, unwrapMaybe } from '@stax/database';
-import { activationCodeHint, generateActivationCode, hashActivationCode } from '@stax/security';
-import { emailSchema, optionalText, uuidSchema } from '@stax/validation';
+} from '@nemasus/auth';
+import { createUserClient, tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
+import { activationCodeHint, generateActivationCode, hashActivationCode } from '@nemasus/security';
+import { emailSchema, optionalText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import { startMaintenanceAtDelivery } from '~/lib/maintenance';
@@ -196,7 +196,7 @@ export async function issueActivationCodeAction(
   });
 
   if (error) {
-    console.error('[stax:activation] emission refusee', error.code, error.message);
+    console.error('[nemasus:activation] emission refusee', error.code, error.message);
     return { status: 'error', message: explain(error.code, error.message) };
   }
 
@@ -338,7 +338,7 @@ const deliverSchema = z
 
 const DELIVERY_ERRORS: Record<string, string> = {
   no_account:
-    'Aucun compte StaX n’utilise cette adresse. Demandez au client de créer son compte, ou créez-lui un code d’activation ci-dessous : il en deviendra membre en l’utilisant.',
+    'Aucun compte Nemasus n’utilise cette adresse. Demandez au client de créer son compte, ou créez-lui un code d’activation ci-dessous : il en deviendra membre en l’utilisant.',
   no_client:
     'Ce site n’a encore aucun client rattaché. Indiquez l’adresse e-mail du compte client à qui le confier.',
   not_found: 'Ce site est introuvable.',
@@ -362,7 +362,7 @@ export async function deliverSiteAction(payload: unknown): Promise<ActionState> 
     p_role: parsed.data.role,
   });
   if (error) {
-    console.error('[stax:delivery] refus', error.code, error.message);
+    console.error('[nemasus:delivery] refus', error.code, error.message);
     return { status: 'error', message: explain(error.code, error.message) };
   }
 
@@ -381,7 +381,7 @@ export async function deliverSiteAction(payload: unknown): Promise<ActionState> 
     : ({ status: 'failed', message: 'clé de service absente' } as const);
   if (service) {
     await sendDeliveryEmails(service, parsed.data.siteId).catch((mailError: unknown) => {
-      console.error('[stax:delivery] e-mail de livraison', mailError);
+      console.error('[nemasus:delivery] e-mail de livraison', mailError);
     });
   }
 

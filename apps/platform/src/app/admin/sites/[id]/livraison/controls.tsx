@@ -12,7 +12,7 @@ import {
   Select,
   Textarea,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import type { ActionState } from '~/lib/form-state';
 import {
   addDomainAction,
@@ -120,7 +120,7 @@ export function ConnectRepositoryForm({
   const [repositories, setRepositories] = useState<RepositoryOption[] | null>(null);
   const [repositoryId, setRepositoryId] = useState<number | null>(null);
   const [branch, setBranch] = useState(currentBranch ?? 'main');
-  const [manifestPath, setManifestPath] = useState('stax.manifest.json');
+  const [manifestPath, setManifestPath] = useState('nemasus.manifest.json');
   const [loading, startLoading] = useTransition();
 
   const load = (id: number) => {
@@ -138,7 +138,7 @@ export function ConnectRepositoryForm({
   if (installations.length === 0) {
     return (
       <p className="text-sm text-[var(--foreground-muted)]">
-        Aucune installation de l’application GitHub StaX n’est connue. Installez-la sur le compte
+        Aucune installation de l’application GitHub Nemasus n’est connue. Installez-la sur le compte
         qui héberge les dépôts des sites, puis synchronisez.
       </p>
     );
@@ -365,7 +365,7 @@ export function ConnectHostingForm({
         </div>
       ) : (
         <p className="text-xs text-[var(--muted)]">
-          StaX lit le projet chez Cloudflare : son adresse, sa branche de production et le dépôt
+          Nemasus lit le projet chez Cloudflare : son adresse, sa branche de production et le dépôt
           qu’il déploie sont vérifiés, jamais saisis.
         </p>
       )}
@@ -555,7 +555,7 @@ export function AttestForm({
               value={note}
               placeholder={
                 checkKey === 'forms'
-                  ? 'Ex. : formulaire de contact envoyé depuis le site en ligne, reçu dans la messagerie StaX.'
+                  ? 'Ex. : formulaire de contact envoyé depuis le site en ligne, reçu dans la messagerie Nemasus.'
                   : 'Ex. : vérifié sur iPhone 15, Pixel 8, iPad et écran 1440 px.'
               }
               onChange={(event) => setNote(event.target.value)}
@@ -651,7 +651,7 @@ export function DeliverForm({
           hint={
             hasClient
               ? 'Facultatif : le site est livré aux comptes clients déjà rattachés.'
-              : 'Adresse du compte StaX du client.'
+              : 'Adresse du compte Nemasus du client.'
           }
         >
           <Input

@@ -14,7 +14,7 @@ import {
  * Contenu d'un site : les valeurs des zones que son manifeste declare
  * modifiables, et rien d'autre.
  *
- * C'est ce document que StaX conserve (brouillon, versions publiees) et qu'il
+ * C'est ce document que Nemasus conserve (brouillon, versions publiees) et qu'il
  * valide avant chaque publication. Une cle que le manifeste ne declare pas est
  * retiree : le client ne peut pas, meme par une requete forgee, ecrire dans une
  * zone que le developpeur du site n'a pas ouverte.
@@ -56,7 +56,7 @@ export const PAGE_SEO_FIELD: FieldDefinition = {
 
 /**
  * Adresse d'un champ, reprise telle quelle dans le code du site
- * (`data-stax="pages.accueil.hero.titre"`) : un clic sur l'element dans
+ * (`data-nemasus="pages.accueil.hero.titre"`) : un clic sur l'element dans
  * l'apercu ouvre ce champ dans l'editeur.
  *
  *  - `globals.<groupe>.<champ>`

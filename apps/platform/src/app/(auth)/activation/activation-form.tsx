@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Checkbox, Field, FormErrorSummary, Input } from '@stax/ui';
+import { Alert, Button, Checkbox, Field, FormErrorSummary, Input } from '@nemasus/ui';
 import { PasswordField } from '~/components/auth/password-field';
 import { TurnstileField } from '~/components/auth/turnstile-field';
 import {
@@ -90,10 +90,10 @@ export function ActivationForm({
           label={
             <>
               J’accepte les{' '}
-              <Link href="/cgv" className="underline underline-offset-4" target="_blank">
-                conditions générales
-              </Link>{' '}
-              et la{' '}
+              <Link href="/cgu" className="underline underline-offset-4" target="_blank">
+                conditions générales d’utilisation
+              </Link>
+              . Mes données sont traitées selon la{' '}
               <Link
                 href="/confidentialite"
                 className="underline underline-offset-4"

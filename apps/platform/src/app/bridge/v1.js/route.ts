@@ -1,5 +1,5 @@
-import { platformUrl } from '@stax/config';
-import { bridgeScript } from '@stax/site-contract';
+import { platformUrl } from '@nemasus/config';
+import { bridgeScript } from '@nemasus/site-contract';
 
 /**
  * Pont d'apercu, charge par le code d'un site dans ses builds d'apercu.

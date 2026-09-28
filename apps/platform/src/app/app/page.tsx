@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { resolveBusiness } from '@stax/business';
-import { featureAccess, loadFeatureSnapshot, unwrapList, unwrapMaybe } from '@stax/database';
-import { formatMaintenance, PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@stax/payments';
+import { resolveBusiness } from '@nemasus/business';
+import { featureAccess, loadFeatureSnapshot, unwrapList, unwrapMaybe } from '@nemasus/database';
+import { formatMaintenance, PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@nemasus/payments';
 import {
   Alert,
   ButtonLink,
@@ -14,8 +14,8 @@ import {
   QuotaMeter,
   Stat,
   StatusPill,
-} from '@stax/ui';
-import { publicSiteUrl } from '@stax/config';
+} from '@nemasus/ui';
+import { publicSiteUrl } from '@nemasus/config';
 import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
 import { loadReleaseViews } from './editeur/contract/data';
 import { loadClientProposal, ProposalDashboard } from './proposition/proposal-dashboard';
@@ -221,7 +221,7 @@ export default async function DashboardPage({
 
       {params.commande === 'interne' ? (
         <Alert tone="success" live="status" title="Commande interne enregistrée">
-          Aucun paiement. Le site est conçu et construit par l’équipe StaX, puis confié depuis
+          Aucun paiement. Le site est conçu et construit par l’équipe Nemasus, puis confié depuis
           l’administration.
         </Alert>
       ) : null}
@@ -705,13 +705,13 @@ async function ProjectDashboard({
 
       {orderNotice === 'interne' ? (
         <Alert tone="success" live="status" title="Commande interne enregistrée">
-          Aucun paiement, aucune facture. Le site est conçu et développé par l’équipe StaX, puis
+          Aucun paiement, aucune facture. Le site est conçu et développé par l’équipe Nemasus, puis
           livré à ce compte depuis l’administration, comme pour un client.
         </Alert>
       ) : orderNotice ? (
         <Alert tone="success" live="status" title="Merci pour votre commande">
-          Votre paiement est confirmé. L’équipe StaX démarre votre projet. La maintenance mensuelle
-          ne commencera qu’à la livraison de votre site.
+          Votre paiement est confirmé. L’équipe Nemasus démarre votre projet. La maintenance
+          mensuelle ne commencera qu’à la livraison de votre site.
         </Alert>
       ) : null}
 
@@ -880,11 +880,11 @@ function maintenanceWithoutSubscription(delivered: boolean, status: string | nul
   if (!delivered) return 'Démarre à la livraison';
   switch (status) {
     case 'waived':
-      return 'Incluse (compte interne StaX)';
+      return 'Incluse (compte interne Nemasus)';
     case 'failed':
     case 'pending_delivery':
     case 'started':
-      return 'Mise en place en cours par l’équipe StaX';
+      return 'Mise en place en cours par l’équipe Nemasus';
     case 'not_applicable':
       return 'Définie par votre devis';
     default:
@@ -1114,7 +1114,7 @@ async function ManagedSiteDashboard({
       ) : null}
 
       {site.deliveredAt && canEdit ? (
-        <FirstSteps siteUrl={liveUrl} storageKey={`stax.first-steps.${site.id}`} />
+        <FirstSteps siteUrl={liveUrl} storageKey={`nemasus.first-steps.${site.id}`} />
       ) : null}
 
       <section aria-labelledby="a-traiter">

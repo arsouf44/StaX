@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 import { ORDER_STEPS } from '~/lib/order-draft';
 
 /**

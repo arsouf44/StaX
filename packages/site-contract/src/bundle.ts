@@ -12,13 +12,13 @@ import { richTextSchema, richTextToHtml, type RichText } from './richtext';
 import { isItemId, normalizePhone, type ImageValue } from './values';
 
 /**
- * Le « bundle » de contenu : le fichier que StaX ecrit dans le depot du site
+ * Le « bundle » de contenu : le fichier que Nemasus ecrit dans le depot du site
  * a chaque publication (chemin `content.file` du manifeste), et que le code du
  * site lit a la construction.
  *
  *   {
  *     "contract": 1,
- *     "stax": { "site": "…", "version": 18, "release": "…", "preview": null },
+ *     "nemasus": { "site": "…", "version": 18, "release": "…", "preview": null },
  *     "defaultLocale": "fr",
  *     "locales": {
  *       "fr": {
@@ -66,7 +66,7 @@ export interface ResolvedImage {
 export interface ContentBundle {
   $schema: string;
   contract: typeof CONTRACT_VERSION;
-  stax: {
+  nemasus: {
     site: string;
     version: number | null;
     release: string | null;
@@ -378,7 +378,7 @@ export function buildContentBundle(
   const bundle: ContentBundle = {
     $schema: CONTENT_SCHEMA_URL,
     contract: CONTRACT_VERSION,
-    stax: {
+    nemasus: {
       site: meta.siteId,
       version: meta.version,
       release: meta.releaseId,
@@ -469,7 +469,7 @@ function unresolveField(
 
 /**
  * Reconstruit un contenu a partir d'un bundle deja present dans le depot :
- * c'est ainsi que StaX reprend les textes et images mis en place par le
+ * c'est ainsi que Nemasus reprend les textes et images mis en place par le
  * developpeur du site, qui deviennent la version 1. Le resultat doit ensuite
  * passer par `validateContent`.
  */

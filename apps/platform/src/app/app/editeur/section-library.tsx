@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Dialog, Icon, Input, cn } from '@stax/ui';
+import { Dialog, Icon, Input, cn } from '@nemasus/ui';
 import type { BlockMeta } from './types';
 
 /**

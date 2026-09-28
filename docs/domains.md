@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Le client possède son domaine | `customer_owned` | Nous le connectons sans le transférer |
 | Nous l’achetons pour lui | `stax_purchase` | Enregistré **à son nom**, puis connecté |
-| Il choisira plus tard | `subdomain_only` | Adresse temporaire en `*.sites.stax.fr` |
+| Il choisira plus tard | `subdomain_only` | Adresse temporaire en `*.sites.nemasus.fr` |
 
 Dans les trois cas, **le domaine appartient au client**. Nous ne le retenons
 jamais en otage : les informations nécessaires pour en reprendre la main lui sont

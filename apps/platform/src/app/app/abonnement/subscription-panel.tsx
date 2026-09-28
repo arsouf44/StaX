@@ -12,8 +12,8 @@ import {
   StatusPill,
   Switch,
   Textarea,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {
   openBillingPortalAction,

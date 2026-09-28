@@ -2,7 +2,7 @@
  * Ce que comprend la maintenance mensuelle — et ce qu'elle ne comprend pas.
  *
  * Une seule liste pour la page Tarifs et l'espace client, alignee sur
- * l'article 9 des CGV. La maintenance commence a la LIVRAISON du site ; elle
+ * l'article 10 des CGV. La maintenance commence a la LIVRAISON du site ; elle
  * ne comprend pas de travaux de developpement illimites.
  */
 
@@ -12,7 +12,7 @@ export const MAINTENANCE_INCLUDES: readonly string[] = [
   'Versions conservées, et restauration d’une version précédente',
   'Surveillance de la disponibilité de votre site',
   'Mises à jour nécessaires et correctifs de sécurité, sans intervention de votre part',
-  'Accès à l’éditeur StaX et à votre espace, dans les limites de votre offre',
+  'Accès à l’éditeur Nemasus et à votre espace, dans les limites de votre offre',
   'Support par messages depuis votre espace',
   'Renouvellement du nom de domaine, lorsque nous l’avons acheté pour vous',
 ];

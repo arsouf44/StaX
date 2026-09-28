@@ -2,15 +2,15 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { maintenancePolicyConfig } from '@stax/config';
-import { tryCreateServiceClient, unwrapMaybe } from '@stax/database';
-import { sendEmail, subscriptionCancelledEmail } from '@stax/emails';
+import { maintenancePolicyConfig } from '@nemasus/config';
+import { tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
+import { sendEmail, subscriptionCancelledEmail } from '@nemasus/emails';
 import {
   cancelSubscriptionAtPeriodEnd,
   createBillingPortalSession,
   resumeSubscription,
-} from '@stax/payments';
-import { cancelSubscriptionSchema } from '@stax/validation';
+} from '@nemasus/payments';
+import { cancelSubscriptionSchema } from '@nemasus/validation';
 import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { getWorkspace, type WorkspaceContext } from '~/lib/workspace';
@@ -18,7 +18,7 @@ import { getWorkspace, type WorkspaceContext } from '~/lib/workspace';
 /**
  * Cycle de vie de l'abonnement de maintenance.
  *
- * La regle qui gouverne cet ecran : StaX ne DECLARE jamais l'etat d'un
+ * La regle qui gouverne cet ecran : Nemasus ne DECLARE jamais l'etat d'un
  * abonnement. Toute demande part vers Stripe ; c'est le webhook signe qui, en
  * revenant, met la base a jour. Entre les deux, l'ecran dit honnetement « pris
  * en compte », jamais « resilie ».
@@ -118,7 +118,7 @@ export async function requestCancellationAction(
       `${label}${parsed.data.comment ? ` — ${parsed.data.comment}` : ''}`,
     );
   } catch (error) {
-    console.error('[stax:subscription] resiliation impossible', error);
+    console.error('[nemasus:subscription] resiliation impossible', error);
     return {
       status: 'error',
       message:
@@ -187,7 +187,7 @@ async function sendCancellationConfirmation(
     );
     return result.ok;
   } catch (error) {
-    console.error('[stax:subscription] confirmation de resiliation non envoyee', error);
+    console.error('[nemasus:subscription] confirmation de resiliation non envoyee', error);
     return false;
   }
 }
@@ -202,7 +202,7 @@ export async function resumeSubscriptionAction(
   try {
     await resumeSubscription(gate.value.stripeSubscriptionId);
   } catch (error) {
-    console.error('[stax:subscription] reprise impossible', error);
+    console.error('[nemasus:subscription] reprise impossible', error);
     return {
       status: 'error',
       message: 'La reprise n’a pas pu être enregistrée. Réessayez dans quelques minutes.',
@@ -233,7 +233,7 @@ export async function resumeSubscriptionAction(
  * Portail de facturation Stripe.
  *
  * Moyen de paiement, factures et coordonnees de facturation sont geres par
- * Stripe : StaX ne voit jamais un numero de carte, et n'a donc aucune donnee
+ * Stripe : Nemasus ne voit jamais un numero de carte, et n'a donc aucune donnee
  * bancaire a proteger.
  */
 export async function openBillingPortalAction(
@@ -270,7 +270,7 @@ export async function openBillingPortalAction(
   try {
     url = await createBillingPortalSession(subscription.stripe_customer_id, '/app/abonnement');
   } catch (error) {
-    console.error('[stax:subscription] portail indisponible', error);
+    console.error('[nemasus:subscription] portail indisponible', error);
     return {
       status: 'error',
       message: 'Le portail de facturation est momentanément indisponible. Réessayez plus tard.',

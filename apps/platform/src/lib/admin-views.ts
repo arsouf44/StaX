@@ -1,6 +1,6 @@
 import 'server-only';
-import type { LabelTone, StatusLabel } from '@stax/business';
-import type { PlatformRole } from '@stax/types';
+import type { LabelTone, StatusLabel } from '@nemasus/business';
+import type { PlatformRole } from '@nemasus/types';
 
 /**
  * Registre des ecrans de liste du back-office.
@@ -271,7 +271,7 @@ export const ADMIN_VIEWS = {
     searchColumn: 'email',
     searchLabel: 'Rechercher par e-mail',
     filters: [
-      { value: 'equipe', label: 'Équipe StaX', column: 'platform_role', operator: 'notNull' },
+      { value: 'equipe', label: 'Équipe Nemasus', column: 'platform_role', operator: 'notNull' },
       { value: 'desactives', label: 'Désactivés', column: 'disabled_at', operator: 'notNull' },
     ],
     columns: [
@@ -641,7 +641,7 @@ export const ADMIN_VIEWS = {
     filters: [
       {
         value: 'equipe',
-        label: 'Équipe StaX',
+        label: 'Équipe Nemasus',
         column: 'actor_type',
         operator: 'eq',
         match: 'platform_staff',
@@ -841,7 +841,7 @@ export const ADMIN_VIEWS = {
     emptyTitle: 'Aucun métier',
     emptyDescription: 'Les métiers sont livrés par migration de données de référence.',
     icon: 'briefcase',
-    note: 'Lecture seule. Les métiers et leurs modules sont définis dans @stax/business, en même temps que les blocs et les questionnaires qui en dépendent.',
+    note: 'Lecture seule. Les métiers et leurs modules sont définis dans @nemasus/business, en même temps que les blocs et les questionnaires qui en dépendent.',
   },
 
   taches: {

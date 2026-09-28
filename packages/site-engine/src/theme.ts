@@ -12,13 +12,13 @@ import { z } from 'zod';
 /**
  * Polices des sites clients, AUTO-HEBERGEES.
  *
- * Elles sont servies par le site lui-meme (`/_stax/fonts/…`), jamais par un
+ * Elles sont servies par le site lui-meme (`/_nemasus/fonts/…`), jamais par un
  * service tiers : charger Google Fonts transmettrait l adresse IP de chaque
  * visiteur a Google, aux Etats-Unis, sans son consentement — ce que la
  * jurisprudence europeenne sanctionne. Sous-ensemble latin uniquement : il
  * couvre le francais (accents, œ, €) pour une fraction du poids.
  */
-export const FONT_BASE_PATH = '/_stax/fonts';
+export const FONT_BASE_PATH = '/_nemasus/fonts';
 
 interface FontFace {
   file: string;

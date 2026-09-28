@@ -1,4 +1,4 @@
-import type { FeatureKey } from '@stax/types';
+import type { FeatureKey } from '@nemasus/types';
 
 /** Identifiant d'un module metier. Miroir de public.business_modules.slug. */
 export type ModuleId =

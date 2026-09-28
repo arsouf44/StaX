@@ -1,12 +1,12 @@
-import type { UUID } from '@stax/types';
-import { appError, err, ok, type Result } from '@stax/types';
-import { hmacHex, randomToken, timingSafeEqual } from '@stax/security';
+import type { UUID } from '@nemasus/types';
+import { appError, err, ok, type Result } from '@nemasus/types';
+import { hmacHex, randomToken, timingSafeEqual } from '@nemasus/security';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Assistance client : « voir comme ce client ».
  *
- * Conception volontairement conservatrice. StaX n emet PAS de jeton de session
+ * Conception volontairement conservatrice. Nemasus n emet PAS de jeton de session
  * au nom du client : le membre de l equipe reste authentifie sous SA propre
  * identite, et l interface lui presente les donnees du client, auxquelles son
  * role plateforme lui donne deja acces en lecture.
@@ -28,7 +28,7 @@ export const IMPERSONATION_MAX_MINUTES = 60;
  * une journee de travail est permise d un tenant.
  */
 export const CONSTRUCTION_SESSION_MAX_MINUTES = 480;
-export const IMPERSONATION_COOKIE = 'stax_support_view';
+export const IMPERSONATION_COOKIE = 'nemasus_support_view';
 
 /** Operations interdites pendant une session d assistance, sans exception. */
 export const IMPERSONATION_FORBIDDEN_ACTIONS = [

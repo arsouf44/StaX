@@ -1,17 +1,17 @@
-import type { OrgRole, UUID } from '@stax/types';
-import { appError, err, ok, type Result } from '@stax/types';
+import type { OrgRole, UUID } from '@nemasus/types';
+import { appError, err, ok, type Result } from '@nemasus/types';
 import {
   activationCodeHint,
   generateActivationCode,
   hashActivationCode,
   normalizeActivationCode,
-} from '@stax/security';
+} from '@nemasus/security';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Codes d activation a usage unique.
  *
- * Usage : StaX construit un site pour un client, puis lui transmet un code qui
+ * Usage : Nemasus construit un site pour un client, puis lui transmet un code qui
  * lui donne la propriete de son espace. Le code en clair n existe QU UNE FOIS,
  * a l ecran, au moment de sa creation. La base ne stocke que son HMAC.
  */

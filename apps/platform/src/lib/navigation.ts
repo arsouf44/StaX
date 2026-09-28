@@ -67,7 +67,7 @@ export const FEATURE_LINKS: NavLink[] = [
 ];
 
 export const COMPANY_LINKS: NavLink[] = [
-  { label: 'A propos', href: '/a-propos', description: 'Qui construit StaX, et pourquoi.' },
+  { label: 'A propos', href: '/a-propos', description: 'Qui construit Nemasus, et pourquoi.' },
   { label: 'Sécurité', href: '/securite', description: 'Ce que nous protegeons, et comment.' },
   {
     label: 'Infrastructure',

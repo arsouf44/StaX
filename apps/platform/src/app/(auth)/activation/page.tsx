@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 import { AuthCard } from '~/components/auth/auth-card';
 import { ActivationForm } from './activation-form';
 
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Activer mon accès',
-  description: 'Saisissez le code reçu par e-mail pour activer l’accès à votre espace StaX.',
+  description: 'Saisissez le code reçu par e-mail pour activer l’accès à votre espace Nemasus.',
   robots: { index: false, follow: false },
 };
 

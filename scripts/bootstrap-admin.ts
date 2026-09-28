@@ -30,8 +30,8 @@
  * ==========================================================================
  */
 import { createClient } from '@supabase/supabase-js';
-import { assertServerOnly, readEnv } from '@stax/config';
-import { loadRootEnv } from '@stax/config/dotenv';
+import { assertServerOnly, readEnv } from '@nemasus/config';
+import { loadRootEnv } from '@nemasus/config/dotenv';
 
 assertServerOnly('scripts/bootstrap-admin');
 /**
@@ -47,7 +47,7 @@ function say(message: string): void {
 }
 
 function fail(message: string): never {
-  process.stderr.write(`\n[StaX] ${message}\n\n`);
+  process.stderr.write(`\n[Nemasus] ${message}\n\n`);
   process.exit(1);
 }
 
@@ -118,7 +118,7 @@ async function main(): Promise<void> {
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: 'Administrateur StaX' },
+      user_metadata: { full_name: 'Administrateur Nemasus' },
     });
     if (createError || !created.user) {
       fail(`Creation du compte impossible : ${createError?.message ?? 'reponse vide'}`);

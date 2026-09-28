@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList } from '@stax/database';
-import { legalValue } from '@stax/config';
-import { Panel } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { unwrapList } from '@nemasus/database';
+import { legalValue } from '@nemasus/config';
+import { Panel } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { SupportForms } from './support-forms';

@@ -2,12 +2,12 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { formatMaintenance, maintenancePeriodLabel } from '@stax/payments/money';
+import { formatMaintenance, maintenancePeriodLabel } from '@nemasus/payments/money';
 
 /**
  * Periodicite de la maintenance.
  *
- * La maintenance StaX est MENSUELLE et commence a la LIVRAISON du site. Un
+ * La maintenance Nemasus est MENSUELLE et commence a la LIVRAISON du site. Un
  * libelle « / an », « annuelle » ou « premiere annee de maintenance » oublie
  * dans un ecran annoncerait un prix ou un engagement faux au moment ou la
  * personne decide d'acheter. Aucune exception ne signale ce genre d'erreur :

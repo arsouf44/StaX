@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { BOOKING_STATUS_LABELS, BOOKING_TRANSITIONS, statusLabel } from '@stax/business';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { PermissionDenied } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { BOOKING_STATUS_LABELS, BOOKING_TRANSITIONS, statusLabel } from '@nemasus/business';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { PermissionDenied } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import Link from 'next/link';
 import { ModulePage } from '~/components/app/module-page';
 import { getWorkspace } from '~/lib/workspace';

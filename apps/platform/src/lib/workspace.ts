@@ -1,12 +1,12 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import { createUserClient, tryCreateServiceClient } from '@stax/database';
-import { loadStaffWorkspace, loadWorkspace, type Workspace } from '@stax/database';
-import { IMPERSONATION_COOKIE, verifyImpersonation } from '@stax/auth';
-import type { Db } from '@stax/database';
-import type { OrgCapability } from '@stax/types';
-import { hasPlatformRole } from '@stax/auth';
+import { createUserClient, tryCreateServiceClient } from '@nemasus/database';
+import { loadStaffWorkspace, loadWorkspace, type Workspace } from '@nemasus/database';
+import { IMPERSONATION_COOKIE, verifyImpersonation } from '@nemasus/auth';
+import type { Db } from '@nemasus/database';
+import type { OrgCapability } from '@nemasus/types';
+import { hasPlatformRole } from '@nemasus/auth';
 import { requireSession } from './session';
 
 /**
@@ -21,8 +21,8 @@ import { requireSession } from './session';
  * La cle de service n est JAMAIS utilisee ici.
  */
 
-export const ORG_COOKIE = 'stax_org';
-export const SITE_COOKIE = 'stax_site';
+export const ORG_COOKIE = 'nemasus_org';
+export const SITE_COOKIE = 'nemasus_site';
 
 export interface WorkspaceContext {
   workspace: Workspace;
@@ -37,7 +37,7 @@ export const getWorkspace = cache(async (): Promise<WorkspaceContext> => {
 
   const db = createUserClient(session.user.accessToken);
 
-  // Equipe StaX en session d assistance : l espace du CLIENT, avec les seuls
+  // Equipe Nemasus en session d assistance : l espace du CLIENT, avec les seuls
   // droits de contenu que la base lui accorde pendant la session.
   const supportToken = store.get(IMPERSONATION_COOKIE)?.value ?? null;
   if (supportToken && session.profile.platform_role) {
@@ -71,7 +71,7 @@ export const getWorkspace = cache(async (): Promise<WorkspaceContext> => {
   });
 
   if (!workspace) {
-    // L equipe StaX n a pas d organisation cliente : l envoyer vers le tunnel
+    // L equipe Nemasus n a pas d organisation cliente : l envoyer vers le tunnel
     // de commande n aurait aucun sens, et la laissait sans issue. Sa place est
     // au back-office, dont l acces ne depend que du role inscrit en base.
     if (hasPlatformRole(session.profile, 'support')) redirect('/admin');
@@ -105,7 +105,7 @@ export async function requireCapability(capability: OrgCapability): Promise<Work
 }
 
 /**
- * Roles de l equipe StaX qui construisent les sites : meme liste que
+ * Roles de l equipe Nemasus qui construisent les sites : meme liste que
  * `app.is_platform_site_editor()` en base.
  */
 const SITE_BUILDER_ROLES: ReadonlySet<string> = new Set([
@@ -116,10 +116,10 @@ const SITE_BUILDER_ROLES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Le site courant est-il encore en construction chez StaX, pour la personne
+ * Le site courant est-il encore en construction chez Nemasus, pour la personne
  * connectee ?
  *
- * StaX concoit et construit le site ; le client n y a acces qu une fois le
+ * Nemasus concoit et construit le site ; le client n y a acces qu une fois le
  * site confie (`sites.delivered_at`). La regle qui fait foi est en base
  * (`app.site_can`) : ceci ne fait qu accorder l interface a ce que la base
  * permet, pour que le client ne tombe pas sur des ecrans qu il ne peut pas
@@ -137,7 +137,7 @@ const ACCOUNT_PATHS = [
   '/app/projet',
   '/app/discussion',
   '/app/entreprise',
-  '/app/equipe-stax',
+  '/app/equipe-nemasus',
   '/app/facturation',
   '/app/abonnement',
   '/app/securite',
@@ -145,12 +145,12 @@ const ACCOUNT_PATHS = [
   '/app/activite',
   '/app/support',
   '/app/compte',
-  // Detail d une commande StaX (`/app/commande/[id]`), a ne pas confondre avec
+  // Detail d une commande Nemasus (`/app/commande/[id]`), a ne pas confondre avec
   // `/app/commandes`, les commandes de la boutique du site.
   '/app/commande',
 ] as const;
 
-/** Chemin accessible pendant que StaX construit le site. */
+/** Chemin accessible pendant que Nemasus construit le site. */
 export function isAccountPath(pathname: string): boolean {
   if (pathname === '/app' || pathname === '/app/') return true;
   return ACCOUNT_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));

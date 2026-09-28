@@ -959,7 +959,9 @@ function buildSeo(spec: BusinessSpec): SeoDefaults {
 function buildDefinition(spec: BusinessSpec): BusinessDefinition {
   const sector = getSector(spec.sector);
   if (!sector) {
-    throw new Error(`[StaX] Métier « ${spec.id} » rattache a un secteur inconnu : ${spec.sector}`);
+    throw new Error(
+      `[Nemasus] Métier « ${spec.id} » rattache a un secteur inconnu : ${spec.sector}`,
+    );
   }
 
   const removed = new Set(spec.removeModules ?? []);
@@ -1007,7 +1009,7 @@ export function listBusinessesBySector(sectorId: string): readonly BusinessDefin
 /** Metier de repli, pour ne jamais rendre une interface vide. */
 export function fallbackBusiness(): BusinessDefinition {
   const fallback = BUSINESS_INDEX.get('autre-activite');
-  if (!fallback) throw new Error('[StaX] Metier de repli introuvable dans le registre.');
+  if (!fallback) throw new Error('[Nemasus] Metier de repli introuvable dans le registre.');
   return fallback;
 }
 

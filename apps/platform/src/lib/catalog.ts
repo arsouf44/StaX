@@ -5,10 +5,10 @@ import {
   listSectorsWithCounts,
   listBusinessTypes,
   listSubprocessors,
-} from '@stax/database';
-import type { BusinessTypeView, PlanView, SectorView, SubprocessorView } from '@stax/database';
-import { deliveryPolicyConfig } from '@stax/config';
-import { formatMoney, maintenancePeriodLabel } from '@stax/payments';
+} from '@nemasus/database';
+import type { BusinessTypeView, PlanView, SectorView, SubprocessorView } from '@nemasus/database';
+import { deliveryPolicyConfig } from '@nemasus/config';
+import { formatMoney, maintenancePeriodLabel } from '@nemasus/payments';
 
 /**
  * Acces au catalogue public.

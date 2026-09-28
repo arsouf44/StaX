@@ -2,16 +2,16 @@ import { z } from 'zod';
 import { CONTRACT_LIMITS, CONTRACT_VERSION } from './constants';
 
 /**
- * `stax.manifest.json` — le contrat d'edition d'UN site.
+ * `nemasus.manifest.json` — le contrat d'edition d'UN site.
  *
- * Chaque site StaX est concu et developpe individuellement, dans son propre
+ * Chaque site Nemasus est concu et developpe individuellement, dans son propre
  * depot. Son developpeur y declare, dans ce fichier, CE QUI EST MODIFIABLE par
  * le client apres la livraison — et rien d'autre : titres, textes, images,
  * horaires, pages, collections, formulaires. Le design, la mise en page, le
  * code et les integrations restent ceux qui ont ete developpes pour le client :
  * le manifeste ne decrit pas un site, il decrit une surface d'edition.
  *
- * StaX n'impose aucune structure de site. Deux sites peuvent avoir des
+ * Nemasus n'impose aucune structure de site. Deux sites peuvent avoir des
  * manifestes sans aucun point commun ; c'est le but.
  */
 
@@ -339,7 +339,7 @@ export const collectionSchema = z
   .strict();
 
 /* -------------------------------------------------------------------------- */
-/*  Formulaires : recus dans la messagerie StaX du client                      */
+/*  Formulaires : recus dans la messagerie Nemasus du client                      */
 /* -------------------------------------------------------------------------- */
 
 export const FORM_FIELD_BASIC_TYPES = ['text', 'textarea', 'email', 'tel', 'consent'] as const;
@@ -380,7 +380,7 @@ export const formSchema = z
   })
   .strict();
 
-/** Modules StaX que le code du site utilise, via l'API des sites. */
+/** Modules Nemasus que le code du site utilise, via l'API des sites. */
 export const SITE_MODULES = [
   'contact',
   'booking',
@@ -410,19 +410,19 @@ export const manifestSchema = z
       .strict(),
     content: z
       .object({
-        /** Fichier ou StaX ecrit le contenu publie. */
+        /** Fichier ou Nemasus ecrit le contenu publie. */
         file: repoPathSchema.refine((path) => path.endsWith('.json'), 'Fichier .json attendu.'),
-        /** Dossier du depot ou StaX depose les images envoyees par le client. */
+        /** Dossier du depot ou Nemasus depose les images envoyees par le client. */
         mediaDir: repoPathSchema,
-        /** Adresse publique de ce dossier sur le site (« /media/stax »). */
+        /** Adresse publique de ce dossier sur le site (« /media/nemasus »). */
         mediaUrl: z
           .string()
-          .regex(/^\/[A-Za-z0-9._/-]{0,120}$/, 'Chemin public attendu : /media/stax'),
+          .regex(/^\/[A-Za-z0-9._/-]{0,120}$/, 'Chemin public attendu : /media/nemasus'),
       })
       .strict(),
     preview: z
       .object({
-        /** Le site inclut le pont d'apercu StaX dans ses builds d'apercu. */
+        /** Le site inclut le pont d'apercu Nemasus dans ses builds d'apercu. */
         bridge: z.boolean(),
       })
       .strict()
@@ -434,7 +434,7 @@ export const manifestSchema = z
     modules: z.array(z.enum(SITE_MODULES)).optional(),
     integrations: z
       .object({
-        /** Le site envoie sa mesure d'audience a StaX (sans cookie). */
+        /** Le site envoie sa mesure d'audience a Nemasus (sans cookie). */
         analytics: z.boolean().optional(),
         customerAccounts: z
           .object({ loginPath: z.string().regex(/^\/[a-z0-9-/]*$/) })
@@ -706,7 +706,7 @@ export function parseManifest(input: unknown): ManifestParseResult {
       errors: [
         {
           path: 'contract',
-          message: `Version de contrat ${declared} inconnue : cette version de StaX lit la version ${CONTRACT_VERSION}.`,
+          message: `Version de contrat ${declared} inconnue : cette version de Nemasus lit la version ${CONTRACT_VERSION}.`,
         },
       ],
     };
@@ -737,7 +737,7 @@ export function parseManifest(input: unknown): ManifestParseResult {
     warnings.push({
       path: 'integrations.analytics',
       message:
-        'La mesure d’audience StaX n’est pas déclarée : les statistiques du client resteront vides.',
+        'La mesure d’audience Nemasus n’est pas déclarée : les statistiques du client resteront vides.',
     });
   }
   return { ok: true, manifest, summary: summarizeManifest(manifest), warnings };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formDataToObject, signUpSchema, signInSchema } from '@stax/validation';
+import { formDataToObject, signUpSchema, signInSchema } from '@nemasus/validation';
 
 /**
  * Champs injectes par le framework dans une action serveur.

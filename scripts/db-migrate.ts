@@ -14,8 +14,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { assertServerOnly, readEnv } from '@stax/config';
-import { loadRootEnv } from '@stax/config/dotenv';
+import { assertServerOnly, readEnv } from '@nemasus/config';
+import { loadRootEnv } from '@nemasus/config/dotenv';
 import { Client } from 'pg';
 
 assertServerOnly('scripts/db-migrate');
@@ -30,7 +30,7 @@ const MIGRATIONS_DIR = join(process.cwd(), 'supabase', 'migrations');
 const statusOnly = process.argv.includes('--status');
 
 function fail(message: string): never {
-  process.stderr.write(`\n[StaX] ${message}\n\n`);
+  process.stderr.write(`\n[Nemasus] ${message}\n\n`);
   process.exit(1);
 }
 

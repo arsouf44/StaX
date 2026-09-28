@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Panel, Textarea, cn } from '@stax/ui';
+import { Alert, Button, Panel, Textarea, cn } from '@nemasus/ui';
 import { sendProjectMessageAction } from './actions';
 
 interface Message {
@@ -34,7 +34,7 @@ function formatDate(iso: string): string {
  * Fil de discussion du projet.
  *
  * Le cote emetteur affiche vient de la base, pas du formulaire : un message
- * marque « StaX » l est parce que le serveur l a ecrit ainsi.
+ * marque « Nemasus » l est parce que le serveur l a ecrit ainsi.
  */
 export function ProjectConversation({
   projectId,
@@ -75,7 +75,7 @@ export function ProjectConversation({
                 )}
               >
                 <p className="text-2xs font-medium tracking-[0.1em] text-[var(--muted)] uppercase">
-                  {fromClient ? 'Vous' : 'Équipe StaX'}
+                  {fromClient ? 'Vous' : 'Équipe Nemasus'}
                   <span className="ml-2 font-normal tracking-normal normal-case">
                     <time dateTime={message.created_at}>{formatDate(message.created_at)}</time>
                   </span>

@@ -19,7 +19,7 @@ import { FEATURE_PAGES } from '../../apps/platform/src/content/features';
  * Sans base configuree, il est SAUTE — jamais passe en silence.
  */
 
-const DATABASE_URL = process.env.STAX_TEST_DATABASE_URL;
+const DATABASE_URL = process.env.NEMASUS_TEST_DATABASE_URL;
 const describeIfDb = DATABASE_URL ? describe : describe.skip;
 
 /** Fonctionnalite de catalogue correspondant a chaque page vitrine. */

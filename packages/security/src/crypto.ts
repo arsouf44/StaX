@@ -1,4 +1,4 @@
-import { isProduction, readEnv } from '@stax/config';
+import { isProduction, readEnv } from '@nemasus/config';
 
 /**
  * Primitives cryptographiques.
@@ -33,7 +33,7 @@ function developmentFallbackKey(): string {
   if (!developmentKeyAnnounced) {
     developmentKeyAnnounced = true;
     console.warn(
-      '[StaX] STAX_SECRET_KEY absent : une cle ephemere de developpement est utilisee. ' +
+      '[Nemasus] NEMASUS_SECRET_KEY absent : une cle ephemere de developpement est utilisee. ' +
         'Les jetons signes ne survivront pas au redemarrage. ' +
         'Generez une vraie cle avec : openssl rand -base64 48',
     );
@@ -43,7 +43,7 @@ function developmentFallbackKey(): string {
 }
 
 function secretKeyMaterial(): Uint8Array {
-  const secret = readEnv('STAX_SECRET_KEY');
+  const secret = readEnv('NEMASUS_SECRET_KEY');
 
   if (secret && secret.length >= 32) return encoder.encode(secret);
 
@@ -51,7 +51,7 @@ function secretKeyMaterial(): Uint8Array {
   // refuser bruyamment que signer avec une cle devinable.
   if (isProduction()) {
     throw new Error(
-      '[StaX] STAX_SECRET_KEY absent ou trop court (32 caracteres minimum). ' +
+      '[Nemasus] NEMASUS_SECRET_KEY absent ou trop court (32 caracteres minimum). ' +
         'Generez-le avec : openssl rand -base64 48, puis ajoutez-le aux secrets ' +
         'de deploiement. Sans cette cle, aucun formulaire ne peut fonctionner.',
     );

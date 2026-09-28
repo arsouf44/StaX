@@ -1,7 +1,7 @@
-import { readEnv } from '@stax/config';
-import { CACHE_POLICIES, securityHeaders } from '@stax/security';
-import { escapeHtml } from '@stax/security';
-import { SITE_STYLESHEET, resolveTheme } from '@stax/site-engine';
+import { readEnv } from '@nemasus/config';
+import { CACHE_POLICIES, securityHeaders } from '@nemasus/security';
+import { escapeHtml } from '@nemasus/security';
+import { SITE_STYLESHEET, resolveTheme } from '@nemasus/site-engine';
 
 /**
  * Reponses du Worker.

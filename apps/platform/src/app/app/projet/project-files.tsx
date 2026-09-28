@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Field, Panel, Select, useToast } from '@stax/ui';
+import { Alert, Button, Field, Panel, Select, useToast } from '@nemasus/ui';
 import { uploadProjectFileAction } from './actions';
 
 export interface ProjectFileView {
@@ -20,7 +20,7 @@ const KIND_LABELS: Record<string, string> = {
   document: 'Document',
   menu: 'Carte / menu',
   brochure: 'Brochure',
-  deliverable: 'Livrable StaX',
+  deliverable: 'Livrable Nemasus',
   asset: 'Fichier',
 };
 
@@ -120,7 +120,7 @@ export function ProjectFiles({
                 )}
                 <span className="text-2xs text-[var(--muted)]">
                   {KIND_LABELS[file.kind] ?? file.kind} ·{' '}
-                  {file.direction === 'outbound' ? 'remis par StaX' : 'envoyé par vous'} ·{' '}
+                  {file.direction === 'outbound' ? 'remis par Nemasus' : 'envoyé par vous'} ·{' '}
                   {DATE.format(new Date(file.createdAt))}
                 </span>
               </span>

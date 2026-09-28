@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import { Alert, Button, Field, Input, Spinner } from '@stax/ui';
+import { Alert, Button, Field, Input, Spinner } from '@nemasus/ui';
 import {
   confirmMfaEnrollmentAction,
   startMfaEnrollmentAction,

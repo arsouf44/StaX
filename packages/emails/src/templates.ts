@@ -1,4 +1,4 @@
-import { deliveryPolicyConfig, legalValue, platformUrl } from '@stax/config';
+import { deliveryPolicyConfig, legalValue, platformUrl } from '@nemasus/config';
 import {
   codeBlock,
   definitionList,
@@ -65,6 +65,22 @@ function shell(params: {
   };
 }
 
+/**
+ * Information due a un prospect (article 13 du RGPD) : qui traite ses
+ * coordonnees, pourquoi, et comment s'y opposer. Figure sur chaque message
+ * adresse a une entreprise qui n'est pas encore cliente.
+ */
+function prospectPrivacyNotice(): string {
+  const company = legalValue('LEGAL_COMPANY_NAME');
+  return (
+    `Vous recevez ce message parce que vous avez accepté, lors de notre échange, de recevoir ` +
+    `cette proposition. ${company} (Nemasus) utilise vos coordonnées professionnelles pour vous ` +
+    'l’adresser et en assurer le suivi. Vous pouvez vous y opposer à tout moment en répondant ' +
+    '« STOP » à ce message : vos coordonnées seront alors supprimées. En savoir plus : ' +
+    `${platformUrl()}/confidentialite.`
+  );
+}
+
 const hello = (firstName?: string | null) => (firstName ? `Bonjour ${firstName},` : 'Bonjour,');
 
 /* -------------------------------------------------------------------------- */
@@ -75,9 +91,9 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
   return shell({
     to: ctx.to,
     template: 'welcome',
-    subject: 'Bienvenue sur StaX',
+    subject: 'Bienvenue sur Nemasus',
     preheader: 'Votre compte est créé. Voici la suite.',
-    heading: 'Bienvenue sur StaX',
+    heading: 'Bienvenue sur Nemasus',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
@@ -91,7 +107,7 @@ export function welcomeEmail(ctx: BaseContext): EmailMessage {
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      'Votre compte StaX est créé. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
+      'Votre compte Nemasus est créé. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
     ],
     action: { label: 'Ouvrir mon espace', url: `${platformUrl()}/app` },
   });
@@ -165,7 +181,7 @@ export function activationCodeEmail(
       `Code à usage unique, valable jusqu’au ${ctx.expiresAt}.`,
     ],
     action: { label: 'Activer mon espace', url: `${platformUrl()}/activation` },
-    footerNote: 'Ce code est personnel. StaX ne vous le demandera jamais par téléphone.',
+    footerNote: 'Ce code est personnel. Nemasus ne vous le demandera jamais par téléphone.',
   });
 }
 
@@ -181,7 +197,7 @@ export function teamInvitationEmail(
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Vous avez été invité à rejoindre l’espace de ${ctx.organizationName} sur StaX ` +
+        `Vous avez été invité à rejoindre l’espace de ${ctx.organizationName} sur Nemasus ` +
           `avec le rôle « ${ctx.roleLabel} ».`,
       ),
     ].join(''),
@@ -346,7 +362,7 @@ export function siteDeliveredEmail(
     to: ctx.to,
     template: 'site_delivered',
     subject: 'Votre site vous est livré',
-    preheader: 'Il est en ligne : vous pouvez désormais le modifier depuis StaX.',
+    preheader: 'Il est en ligne : vous pouvez désormais le modifier depuis Nemasus.',
     heading: 'Votre site vous est livré',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
@@ -364,7 +380,7 @@ export function siteDeliveredEmail(
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      'Votre site vous est livré : il est en ligne et vous pouvez le modifier depuis StaX.',
+      'Votre site vous est livré : il est en ligne et vous pouvez le modifier depuis Nemasus.',
       ...rows.map(([label, value]) => `${label} : ${value}.`),
     ],
     action: { label: 'Ouvrir mon espace', url: ctx.appUrl },
@@ -882,7 +898,7 @@ export function siteProposalEmail(ctx: {
       ctx.message ? quote(ctx.message) : '',
       strongLine('Pour le récupérer, trois étapes :'),
       paragraph('1. Cliquez sur « Récupérer mon site » ci-dessous.'),
-      paragraph('2. Créez votre compte StaX avec cette adresse e-mail.'),
+      paragraph('2. Créez votre compte Nemasus avec cette adresse e-mail.'),
       paragraph(
         '3. Vérifiez votre site et réglez-le en ligne : il est à vous aussitôt, et vous ' +
           'pouvez le modifier vous-même.',
@@ -896,15 +912,16 @@ export function siteProposalEmail(ctx: {
       `Comme convenu, le site de ${ctx.companyName} est prêt et déjà en ligne.`,
       ctx.siteUrl ? `Voir le site : ${ctx.siteUrl}` : '',
       ctx.message ?? '',
-      'Pour le récupérer : cliquez sur le lien ci-dessous, créez votre compte StaX avec cette adresse e-mail, puis réglez en ligne.',
+      'Pour le récupérer : cliquez sur le lien ci-dessous, créez votre compte Nemasus avec cette adresse e-mail, puis réglez en ligne.',
       ...rows.map(([label, value]) => `${label} : ${value}`),
       `Votre code personnel : ${ctx.code}`,
+      prospectPrivacyNotice(),
     ],
     action: { label: 'Récupérer mon site', url: ctx.claimUrl },
     ...(ctx.siteUrl ? { secondaryAction: { label: 'Voir mon site', url: ctx.siteUrl } } : {}),
     footerNote:
-      'Ce code est personnel et ne fonctionne qu’avec votre adresse e-mail. StaX ne vous le ' +
-      'demandera jamais par téléphone.',
+      'Ce code est personnel et ne fonctionne qu’avec votre adresse e-mail. Nemasus ne vous le ' +
+      `demandera jamais par téléphone. ${prospectPrivacyNotice()}`,
   });
 }
 
@@ -926,16 +943,18 @@ export function proposalPaymentReminderEmail(ctx: {
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        `Votre site est prêt dans votre espace StaX. Il ne reste qu’à le régler ` +
+        `Votre site est prêt dans votre espace Nemasus. Il ne reste qu’à le régler ` +
           `(${ctx.priceLabel}) pour qu’il soit à vous et que vous puissiez le modifier.`,
       ),
       paragraph(`Cette proposition est valable jusqu’au ${ctx.expiresLabel}.`),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Votre site est prêt dans votre espace StaX. Réglez-le (${ctx.priceLabel}) avant le ${ctx.expiresLabel}.`,
+      `Votre site est prêt dans votre espace Nemasus. Réglez-le (${ctx.priceLabel}) avant le ${ctx.expiresLabel}.`,
+      prospectPrivacyNotice(),
     ],
     action: { label: 'Finaliser', url: ctx.appUrl },
+    footerNote: prospectPrivacyNotice(),
   });
 }
 
@@ -943,7 +962,7 @@ export function proposalPaymentReminderEmail(ctx: {
 /*  Discussion avec l'equipe                                                   */
 /* -------------------------------------------------------------------------- */
 
-/** L'équipe StaX a répondu au client. */
+/** L'équipe Nemasus a répondu au client. */
 export function teamReplyEmail(ctx: {
   to: string;
   firstName?: string | null;
@@ -953,21 +972,25 @@ export function teamReplyEmail(ctx: {
   return shell({
     to: ctx.to,
     template: 'team_reply',
-    subject: 'L’équipe StaX vous a répondu',
+    subject: 'L’équipe Nemasus vous a répondu',
     preheader: ctx.excerpt.slice(0, 120),
     heading: 'Vous avez une réponse',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
-      paragraph('L’équipe StaX vous a répondu :'),
+      paragraph('L’équipe Nemasus vous a répondu :'),
       quote(ctx.excerpt.slice(0, 800)),
     ].join(''),
-    bodyText: [hello(ctx.firstName), 'L’équipe StaX vous a répondu :', ctx.excerpt.slice(0, 800)],
+    bodyText: [
+      hello(ctx.firstName),
+      'L’équipe Nemasus vous a répondu :',
+      ctx.excerpt.slice(0, 800),
+    ],
     action: { label: 'Lire et répondre', url: ctx.conversationUrl },
   });
 }
 
 /**
- * Alerte interne à l'équipe StaX (nouveau message d'un client, site récupéré,
+ * Alerte interne à l'équipe Nemasus (nouveau message d'un client, site récupéré,
  * paiement reçu, livraison bloquée). Jamais envoyée à un client.
  */
 export function staffAlertEmail(ctx: {

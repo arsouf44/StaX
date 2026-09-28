@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Panel } from '@stax/ui';
+import { Panel } from '@nemasus/ui';
 import { CollectionSection } from '~/components/app/collection-section';
 import { ModulePage } from '~/components/app/module-page';
 
@@ -20,8 +20,8 @@ export default function ContactsPage() {
           <h2 className="text-sm font-medium">Ces données vous appartiennent</h2>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
             Vous êtes responsable de traitement pour ces contacts : vous décidez de ce que vous en
-            faites, et vous devez pouvoir répondre à une demande d’accès ou de suppression. StaX les
-            héberge pour vous et vous permet de les exporter à tout moment.
+            faites, et vous devez pouvoir répondre à une demande d’accès ou de suppression. Nemasus
+            les héberge pour vous et vous permet de les exporter à tout moment.
           </p>
           <p className="mt-3 text-sm">
             <Link href="/app/donnees" className="text-[var(--accent)] underline underline-offset-4">

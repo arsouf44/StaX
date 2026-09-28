@@ -5,7 +5,7 @@ import {
   unwrapList,
   type Db,
   type MediaRow,
-} from '@stax/database';
+} from '@nemasus/database';
 import {
   emptySiteData,
   type BookingServiceView,
@@ -15,7 +15,7 @@ import {
   type MenuCategoryView,
   type ParsedBlock,
   type SiteData,
-} from '@stax/site-engine';
+} from '@nemasus/site-engine';
 
 /**
  * Chargement des donnees vivantes d un site.
@@ -647,7 +647,7 @@ export async function loadSiteData(
     if (result.status === 'rejected') {
       // Une collection indisponible ne doit pas faire tomber toute la page :
       // le bloc concerne ne s affichera simplement pas.
-      console.error('[stax:site-runtime] chargement partiel des donnees', result.reason);
+      console.error('[nemasus:site-runtime] chargement partiel des donnees', result.reason);
     }
   }
 

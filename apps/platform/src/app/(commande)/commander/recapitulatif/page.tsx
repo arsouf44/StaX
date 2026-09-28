@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { resolveBusiness } from '@stax/business';
-import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@stax/payments';
-import { refundPolicyConfig } from '@stax/config';
-import { Alert, ButtonLink, Panel } from '@stax/ui';
+import { resolveBusiness } from '@nemasus/business';
+import { formatMaintenance, formatMoney, grossFromNet, vatFromNet } from '@nemasus/payments';
+import { refundPolicyConfig } from '@nemasus/config';
+import { Alert, ButtonLink, Panel } from '@nemasus/ui';
 import { OrderSteps } from '~/components/order/order-steps';
 import { deliveryWeeksLabel, getPlans } from '~/lib/catalog';
 import { readOrderDraft } from '~/lib/order-draft';
@@ -27,7 +27,7 @@ const DOMAIN_LABELS: Record<string, string> = {
 };
 
 /**
- * Ce qui se passe apres la commande. StaX concoit et developpe le site
+ * Ce qui se passe apres la commande. Nemasus concoit et developpe le site
  * individuellement, dans son propre depot, puis le met en ligne sur son
  * propre projet Cloudflare ; le client en prend la main a la livraison. Rien
  * ici ne promet un site disponible le jour meme.
@@ -37,15 +37,15 @@ function nextSteps(deliveryLabel: string): string[] {
     'Votre espace client s’ouvre dès le paiement : vous y suivez chaque étape de votre projet, envoyez vos informations et vos fichiers, et échangez avec l’équipe.',
     `Nous concevons puis développons votre site pour votre entreprise — pas de modèle à personnaliser. Comptez ${deliveryLabel} à partir de la réception de tous vos éléments.`,
     'Nous le mettons en ligne sur votre domaine, en HTTPS, et vérifions tout avant de vous le livrer.',
-    'À la livraison, vous gardez la main : vous modifiez vos textes, photos et informations depuis StaX. La maintenance mensuelle commence ce jour-là, pas avant.',
+    'À la livraison, vous gardez la main : vous modifiez vos textes, photos et informations depuis Nemasus. La maintenance mensuelle commence ce jour-là, pas avant.',
   ];
 }
 
 const INTERNAL_NEXT_STEPS = [
   'La commande est enregistrée sans paiement et l’espace client s’ouvre : il affiche le suivi du projet, comme pour un client.',
-  'L’équipe StaX conçoit et développe le site hors de StaX, dans son propre dépôt GitHub et son propre projet Cloudflare, puis le rattache.',
+  'L’équipe Nemasus conçoit et développe le site hors de Nemasus, dans son propre dépôt GitHub et son propre projet Cloudflare, puis le rattache.',
   'Le site n’est modifiable depuis l’espace client que lorsque l’administration le lui livre.',
-  'L’équipe StaX garde la main sur le site en permanence, avant comme après.',
+  'L’équipe Nemasus garde la main sur le site en permanence, avant comme après.',
 ];
 
 export default async function OrderSummaryPage({
@@ -172,7 +172,7 @@ export default async function OrderSummaryPage({
           {internal ? (
             <Panel level={3} padding="lg">
               <p className="inline-flex rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
-                Compte interne StaX
+                Compte interne Nemasus
               </p>
               <h2 className="mt-3 text-sm font-medium">Aucun paiement</h2>
               <dl className="mt-4 space-y-2 text-sm">
@@ -189,7 +189,7 @@ export default async function OrderSummaryPage({
               </dl>
               <p className="mt-4 text-sm text-[var(--foreground-muted)]">
                 La commande est enregistrée comme interne : aucune facture, aucun prélèvement. Le
-                site sera construit par l’équipe StaX, puis confié à ce compte depuis
+                site sera construit par l’équipe Nemasus, puis confié à ce compte depuis
                 l’administration.
               </p>
               <div className="mt-6">
@@ -257,7 +257,7 @@ export default async function OrderSummaryPage({
               </div>
 
               <p className="mt-5 text-xs leading-relaxed text-[var(--muted)]">
-                Paiement traité par Stripe. Aucune donnée de carte ne transite par StaX ni n’est
+                Paiement traité par Stripe. Aucune donnée de carte ne transite par Nemasus ni n’est
                 conservée par nos soins.{' '}
                 <Link href="/remboursements" className="underline underline-offset-2">
                   Garantie de {refund.windowDays} jours

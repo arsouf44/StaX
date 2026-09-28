@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { SHOP_ORDER_TRANSITIONS } from '@stax/business';
-import { unwrapMaybe } from '@stax/database';
-import { optionalText, uuidSchema } from '@stax/validation';
+import { SHOP_ORDER_TRANSITIONS } from '@nemasus/business';
+import { unwrapMaybe } from '@nemasus/database';
+import { optionalText, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';

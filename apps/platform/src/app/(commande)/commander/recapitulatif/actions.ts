@@ -8,9 +8,9 @@ import {
   listMemberships,
   tryCreateServiceClient,
   unwrapMaybe,
-} from '@stax/database';
-import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@stax/payments';
-import { getBusiness } from '@stax/business';
+} from '@nemasus/database';
+import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@nemasus/payments';
+import { getBusiness } from '@nemasus/business';
 import { clearOrderDraft, readOrderDraft } from '~/lib/order-draft';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 import { getSession } from '~/lib/session';
@@ -278,7 +278,7 @@ export async function startCheckoutAction(
       p_session: checkout.sessionId,
     });
   } catch (error) {
-    console.error('[stax:checkout]', error);
+    console.error('[nemasus:checkout]', error);
     return {
       status: 'error',
       message:
@@ -291,9 +291,9 @@ export async function startCheckoutAction(
 }
 
 /**
- * Commande d un compte interne StaX : aucun paiement, meme parcours qu un
+ * Commande d un compte interne Nemasus : aucun paiement, meme parcours qu un
  * client. La commande, l organisation, le projet et un site VIDE sont crees ;
- * l equipe StaX construit ensuite le site depuis l administration, puis le
+ * l equipe Nemasus construit ensuite le site depuis l administration, puis le
  * confie a ce compte.
  *
  * L interface ne propose ce chemin qu aux comptes internes, mais CE N EST PAS
@@ -392,7 +392,7 @@ export async function createInternalOrderAction(
         message: 'Ce compte ne peut pas commander sans paiement. Passez par le règlement habituel.',
       };
     }
-    console.error('[stax:internal-order]', error?.message);
+    console.error('[nemasus:internal-order]', error?.message);
     return {
       status: 'error',
       message: 'La commande n’a pas pu être enregistrée. Rien n’a été créé : réessayez.',

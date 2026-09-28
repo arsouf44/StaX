@@ -12,7 +12,7 @@ import {
   Input,
   Select,
   Textarea,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { TurnstileField } from '~/components/auth/turnstile-field';
 import { IDLE_STATE as LEAD_IDLE } from '~/lib/form-state';
 import { sendContactAction, type LeadState } from './actions';
@@ -138,7 +138,11 @@ export function ContactForm({ turnstileSiteKey }: { turnstileSiteKey: string | n
 
       <p className="text-xs text-[var(--muted)]">
         Vos coordonnées servent uniquement à vous répondre. Elles ne sont ni revendues, ni utilisées
-        pour du démarchage.
+        pour du démarchage.{' '}
+        <Link href="/confidentialite" className="underline underline-offset-4">
+          Vos droits
+        </Link>
+        .
       </p>
     </form>
   );

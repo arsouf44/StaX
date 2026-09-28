@@ -1,5 +1,5 @@
 {
-  "name": "@stax/infrastructure",
+  "name": "@nemasus/infrastructure",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,9 +13,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@stax/config": "workspace:*",
-    "@stax/security": "workspace:*",
-    "@stax/types": "workspace:*",
+    "@nemasus/config": "workspace:*",
+    "@nemasus/security": "workspace:*",
+    "@nemasus/types": "workspace:*",
     "zod": "4.6.5"
   },
   "devDependencies": {

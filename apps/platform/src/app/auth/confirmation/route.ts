@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
-import { createSessionClient } from '@stax/auth';
+import { createSessionClient } from '@nemasus/auth';
 import { absolutePlatformUrl } from '~/lib/action-guard';
 import { safeRedirectTarget } from '~/lib/session';
 

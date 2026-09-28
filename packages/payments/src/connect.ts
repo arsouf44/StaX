@@ -1,15 +1,15 @@
-import type { Cents, ConnectStatus, Currency, UUID } from '@stax/types';
-import { platformUrl } from '@stax/config';
+import type { Cents, ConnectStatus, Currency, UUID } from '@nemasus/types';
+import { platformUrl } from '@nemasus/config';
 import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
 
 /**
  * Stripe Connect — paiements encaisses SUR les sites des clients.
  *
  * Principe non negociable : l'argent d'un consommateur qui reserve une table
- * ou achete un produit chez un client de StaX ne transite JAMAIS par les
+ * ou achete un produit chez un client de Nemasus ne transite JAMAIS par les
  * revenus de la plateforme. On utilise des charges DIRECTES sur le compte
  * connecte du professionnel : les fonds lui appartiennent des l'encaissement,
- * et StaX n'est pas dans le flux financier.
+ * et Nemasus n'est pas dans le flux financier.
  *
  * Une commission plateforme est architecturalement possible
  * (`application_fee_amount`), mais elle vaut zero : aucune commission n'est
@@ -30,14 +30,14 @@ export interface CreateConnectedAccountInput {
  * Compte Stripe COMPLET, au nom du professionnel (equivalent « Standard »).
  *
  * - tableau de bord Stripe complet : le client s y connecte avec ses propres
- *   identifiants, voit tout, rembourse, exporte, sans passer par StaX ;
- * - les frais de Stripe sont factures au client par Stripe, pas a StaX ;
+ *   identifiants, voit tout, rembourse, exporte, sans passer par Nemasus ;
+ * - les frais de Stripe sont factures au client par Stripe, pas a Nemasus ;
  * - les pertes (litiges, soldes negatifs) relevent de Stripe et du client :
- *   StaX n est ni dans le flux financier, ni garant de ses encaissements ;
+ *   Nemasus n est ni dans le flux financier, ni garant de ses encaissements ;
  * - Stripe collecte lui-meme les justificatifs d identite (aucune donnee KYC
- *   ne transite par StaX).
+ *   ne transite par Nemasus).
  *
- * Un compte « Express » ferait au contraire de StaX le payeur des frais et
+ * Un compte « Express » ferait au contraire de Nemasus le payeur des frais et
  * le responsable des pertes de chaque client, avec un tableau de bord reduit.
  */
 export async function createConnectedAccount(input: CreateConnectedAccountInput): Promise<string> {
@@ -56,7 +56,7 @@ export async function createConnectedAccount(input: CreateConnectedAccountInput)
       capabilities: {
         card_payments: { requested: true },
       },
-      metadata: { stax_organization_id: input.organizationId },
+      metadata: { nemasus_organization_id: input.organizationId },
     },
     { idempotencyKey: idempotencyKey('connect-account', input.organizationId) },
   );
@@ -88,7 +88,7 @@ export const STRIPE_DASHBOARD_URL = 'https://dashboard.stripe.com/';
  *
  * Un compte complet se consulte sur dashboard.stripe.com avec les identifiants
  * du client : il n existe pas (et il ne doit pas exister) de lien de connexion
- * delivre par StaX. Seul un ancien compte « Express » passe par un lien
+ * delivre par Nemasus. Seul un ancien compte « Express » passe par un lien
  * a usage unique.
  */
 export async function createLoginLink(stripeAccountId: string): Promise<string> {
@@ -106,7 +106,7 @@ export async function createLoginLink(stripeAccountId: string): Promise<string> 
 
 /**
  * Un client qui a DEJA un compte Stripe le relie en un clic : il se connecte
- * chez Stripe et autorise StaX a creer des paiements sur son compte. Aucun
+ * chez Stripe et autorise Nemasus a creer des paiements sur son compte. Aucun
  * justificatif a refournir, aucun nouveau compte a ouvrir.
  */
 export function connectOAuthUrl(params: {
@@ -199,7 +199,7 @@ export interface ConnectPaymentInput {
   stripeAccountId: string;
   amountCents: Cents;
   currency: Currency;
-  /** Identifiant metier StaX, pour la reconciliation et l'idempotence. */
+  /** Identifiant metier Nemasus, pour la reconciliation et l'idempotence. */
   referenceId: UUID;
   description: string;
   customerEmail?: string;
@@ -227,7 +227,7 @@ export async function createConnectPaymentIntent(
       ...(input.customerEmail ? { receipt_email: input.customerEmail } : {}),
       automatic_payment_methods: { enabled: true },
       ...(applicationFee > 0 ? { application_fee_amount: applicationFee } : {}),
-      metadata: { stax_reference_id: input.referenceId, ...(input.metadata ?? {}) },
+      metadata: { nemasus_reference_id: input.referenceId, ...(input.metadata ?? {}) },
     },
     {
       // En-tete Stripe-Account : la requete s'execute AU NOM du compte connecte.
@@ -273,7 +273,7 @@ export async function createConnectCheckoutSession(params: {
       locale: 'fr',
       ...(params.customerEmail ? { customer_email: params.customerEmail } : {}),
       client_reference_id: params.referenceId,
-      metadata: { stax_reference_id: params.referenceId, ...(params.metadata ?? {}) },
+      metadata: { nemasus_reference_id: params.referenceId, ...(params.metadata ?? {}) },
     },
     {
       stripeAccount: params.stripeAccountId,

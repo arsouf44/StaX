@@ -1,4 +1,4 @@
-import { getModule, resolveBusiness, type BusinessDefinition } from '@stax/business';
+import { getModule, resolveBusiness, type BusinessDefinition } from '@nemasus/business';
 import { createBlock, getBlockDefinition, type ParsedBlock } from './blocks/registry';
 import { getPreset } from './theme';
 

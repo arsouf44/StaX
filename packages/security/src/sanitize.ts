@@ -2,7 +2,7 @@
  * Assainissement du contenu.
  *
  * Choix d'architecture : le contenu riche n'est JAMAIS stocke en HTML. Il est
- * stocke en blocs structures (voir @stax/site-engine), et le rendu produit le
+ * stocke en blocs structures (voir @nemasus/site-engine), et le rendu produit le
  * HTML a partir de ces structures. Une injection ne peut donc pas survivre au
  * cycle de vie du contenu — il n'existe aucun chemin ou une chaine fournie par
  * l'utilisateur serait interpretee comme du balisage.

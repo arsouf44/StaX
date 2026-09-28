@@ -1,6 +1,6 @@
 import 'server-only';
-import { getModule, resolveBusiness } from '@stax/business';
-import { mediaPublicUrl, unwrapList, type Db } from '@stax/database';
+import { getModule, resolveBusiness } from '@nemasus/business';
+import { mediaPublicUrl, unwrapList, type Db } from '@nemasus/database';
 import {
   BLOCK_DEFINITIONS,
   availableBlocks,
@@ -8,7 +8,7 @@ import {
   editorFieldsFor,
   getBlockDefinition,
   type EditorField,
-} from '@stax/site-engine';
+} from '@nemasus/site-engine';
 import type {
   AuthorKind,
   BlockMeta,
@@ -247,9 +247,9 @@ function authorOf(
   if (actorId && actorId === viewerId) return { author: 'Vous', authorKind: 'you' };
   const name = actorId ? (names.get(actorId) ?? null) : null;
   if (actorKind === 'stax') {
-    return { author: name ? `Équipe StaX (${name})` : 'Équipe StaX', authorKind: 'stax' };
+    return { author: name ? `Équipe Nemasus (${name})` : 'Équipe Nemasus', authorKind: 'stax' };
   }
-  if (actorKind === 'system' || !actorId) return { author: 'StaX', authorKind: 'system' };
+  if (actorKind === 'system' || !actorId) return { author: 'Nemasus', authorKind: 'system' };
   return { author: name ?? 'Un membre de votre équipe', authorKind: 'member' };
 }
 

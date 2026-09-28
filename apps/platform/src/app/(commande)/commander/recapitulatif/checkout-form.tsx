@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Checkbox } from '@stax/ui';
+import { Alert, Button, Checkbox } from '@nemasus/ui';
 import { IDLE_STATE as CHECKOUT_IDLE } from '~/lib/form-state';
 import { createInternalOrderAction, startCheckoutAction, type CheckoutState } from './actions';
 
@@ -23,7 +23,7 @@ function SubmitButton({ internal }: { internal: boolean }) {
 }
 
 /**
- * Compte interne StaX : aucun paiement. La confirmation reste explicite — on
+ * Compte interne Nemasus : aucun paiement. La confirmation reste explicite — on
  * n enregistre pas une commande d un clic involontaire — mais elle ne parle ni
  * de CGV ni de garantie, qui n ont pas d objet sans vente.
  */
@@ -44,7 +44,7 @@ export function InternalOrderForm() {
       <Checkbox
         name="acceptTerms"
         required
-        label="Je confirme cette commande interne StaX, sans paiement."
+        label="Je confirme cette commande interne Nemasus, sans paiement."
       />
 
       <SubmitButton internal />
@@ -96,7 +96,7 @@ export function CheckoutForm({
               accord de traitement des données
             </Link>
             , et je comprends que la garantie commerciale de {refundWindowDays} jours court à partir
-            de la mise en ligne de mon site.
+            de la livraison de mon site.
           </>
         }
       />

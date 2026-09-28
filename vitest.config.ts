@@ -6,24 +6,24 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
-      '@stax/types': r('./packages/types/src/index.ts'),
-      '@stax/config/dotenv': r('./packages/config/src/dotenv.ts'),
-      '@stax/config/identity': r('./packages/config/src/identity.ts'),
-      '@stax/config': r('./packages/config/src/index.ts'),
-      '@stax/validation': r('./packages/validation/src/index.ts'),
+      '@nemasus/types': r('./packages/types/src/index.ts'),
+      '@nemasus/config/dotenv': r('./packages/config/src/dotenv.ts'),
+      '@nemasus/config/identity': r('./packages/config/src/identity.ts'),
+      '@nemasus/config': r('./packages/config/src/index.ts'),
+      '@nemasus/validation': r('./packages/validation/src/index.ts'),
       // Le sous-chemin doit venir AVANT le module racine : vite applique la
-      // premiere correspondance, et `@stax/payments` capturerait sinon
-      // `@stax/payments/money`.
-      '@stax/payments/money': r('./packages/payments/src/money.ts'),
-      '@stax/payments': r('./packages/payments/src/index.ts'),
-      '@stax/business': r('./packages/business/src/index.ts'),
-      '@stax/security': r('./packages/security/src/index.ts'),
-      '@stax/site-engine': r('./packages/site-engine/src/index.ts'),
-      '@stax/site-contract': r('./packages/site-contract/src/index.ts'),
-      '@stax/infrastructure': r('./packages/infrastructure/src/index.ts'),
-      '@stax/database': r('./packages/database/src/index.ts'),
-      '@stax/analytics': r('./packages/analytics/src/index.ts'),
-      '@stax/emails': r('./packages/emails/src/index.ts'),
+      // premiere correspondance, et `@nemasus/payments` capturerait sinon
+      // `@nemasus/payments/money`.
+      '@nemasus/payments/money': r('./packages/payments/src/money.ts'),
+      '@nemasus/payments': r('./packages/payments/src/index.ts'),
+      '@nemasus/business': r('./packages/business/src/index.ts'),
+      '@nemasus/security': r('./packages/security/src/index.ts'),
+      '@nemasus/site-engine': r('./packages/site-engine/src/index.ts'),
+      '@nemasus/site-contract': r('./packages/site-contract/src/index.ts'),
+      '@nemasus/infrastructure': r('./packages/infrastructure/src/index.ts'),
+      '@nemasus/database': r('./packages/database/src/index.ts'),
+      '@nemasus/analytics': r('./packages/analytics/src/index.ts'),
+      '@nemasus/emails': r('./packages/emails/src/index.ts'),
       // Modules serveur de la plateforme (routes de webhooks, publication),
       // appeles tels quels par les tests de securite.
       '~': r('./apps/platform/src'),

@@ -14,7 +14,7 @@ GitHub dans [github-integration.md](./github-integration.md).
 ## 0. Vue d’ensemble
 
 ```
-                         ┌──────────────────────── StaX (apps/platform, Next.js) ────────────────────────┐
+                         ┌──────────────────────── Nemasus (apps/platform, Next.js) ────────────────────────┐
   Visiteur ─ marketing ─▶│ offres · commande · paiement Stripe · compte · questionnaire · suivi du projet │
                          │ administration : Projet › Infrastructure & livraison (checklist, livraison)   │
   Client ── /app ───────▶│ éditeur du contrat · brouillon · Publier · versions · restaurer · abonnement   │
@@ -22,7 +22,7 @@ GitHub dans [github-integration.md](./github-integration.md).
                                 │ RLS + fonctions app.*│ GitHub App (serveur)     │ API Cloudflare (serveur)
                                 ▼                      ▼                          ▼
                      Supabase Postgres        Dépôt GitHub DU site ──build──▶ Projet Cloudflare DU site
-                     (vérité : droits,        stax.manifest.json              Pages / Workers, domaine
+                     (vérité : droits,        nemasus.manifest.json              Pages / Workers, domaine
                       versions, audit)        + fichier de contenu            ──▶ site en ligne
                                 ▲                      │ webhook signé            │ webhook signé
                                 └──────────────────────┴──────────────────────────┘
@@ -31,7 +31,7 @@ GitHub dans [github-integration.md](./github-integration.md).
                                    boutique, comptes clients, mesure d’audience — jamais le rendu
 ```
 
-ORDER → BUILD EXTERNALLY → GITHUB → CLOUDFLARE → VERIFY → IMPORT INTO STAX →
+ORDER → BUILD EXTERNALLY → GITHUB → CLOUDFLARE → VERIFY → IMPORT INTO NEMASUS →
 DELIVER → CLIENT EDITS DRAFT → PUBLISH → GITHUB COMMIT → CLOUDFLARE DEPLOYMENT
 → LIVE.
 
@@ -39,7 +39,7 @@ DELIVER → CLIENT EDITS DRAFT → PUBLISH → GITHUB COMMIT → CLOUDFLARE DEPL
 | --- | --- |
 | `apps/platform` | site commercial, commande, espace client, administration, webhooks, tâche de fond `/api/cron/sites` |
 | `apps/site-runtime` | Worker Cloudflare : **API des sites** (`/v1/sites/<clé publique>/…`) et rendu des sites de l’ancien moteur |
-| `packages/site-contract` | contrat `stax.manifest.json` : schéma, validation, fichier de contenu, pont d’aperçu, contrôle de l’offre |
+| `packages/site-contract` | contrat `nemasus.manifest.json` : schéma, validation, fichier de contenu, pont d’aperçu, contrôle de l’offre |
 | `packages/infrastructure` | clients serveur GitHub App et Cloudflare, vérification des webhooks, sonde HTTPS |
 | `packages/database` | clients Supabase (anonyme, utilisateur, service) et requêtes typées |
 | `packages/payments` | Stripe, prix, machines à états des commandes et abonnements |
@@ -49,12 +49,12 @@ DELIVER → CLIENT EDITS DRAFT → PUBLISH → GITHUB COMMIT → CLOUDFLARE DEPL
 
 ---
 
-## 1. StaX ne fabrique pas de sites
+## 1. Nemasus ne fabrique pas de sites
 
 **Le choix.** Il n’existe aucun modèle de site, nulle part : ni table de
 modèles, ni fonction qui écrit une structure dans un site, ni sélection par
 l’offre, le métier, les couleurs ou le questionnaire (migration 0045). Chaque
-site est **conçu et développé individuellement** par l’équipe, hors de StaX.
+site est **conçu et développé individuellement** par l’équipe, hors de Nemasus.
 
 **Pourquoi.** C’est la promesse commerciale : « Nous créons votre site. Vous
 le gérez ensuite. » Un site généré puis « personnalisé » ne la tient pas. Le
@@ -67,7 +67,7 @@ refuse les formulations de générateur dans le site commercial.
 ## 2. Un dépôt et un projet Cloudflare par site
 
 **Le choix.** Chaque site a **son** dépôt GitHub et **son** projet Cloudflare
-Pages (ou Workers Builds), avec son domaine. StaX s’y rattache, il ne les
+Pages (ou Workers Builds), avec son domaine. Nemasus s’y rattache, il ne les
 remplace pas. `sites.architecture = 'external_repository'` pour tout nouveau
 site.
 
@@ -76,12 +76,12 @@ site.
 - Le site est un vrai projet de développement : son code, ses dépendances,
   ses optimisations, son design, sans contrainte de moteur commun.
 - Il reste **réversible** : le client peut repartir avec son code, qui se
-  construit sans StaX.
-- Il ne dépend pas de StaX pour s’afficher : le contenu est **écrit dans le
+  construit sans Nemasus.
+- Il ne dépend pas de Nemasus pour s’afficher : le contenu est **écrit dans le
   dépôt** et lu à la construction. Une panne de la plateforme n’éteint aucun
   site.
 
-**La conséquence sur la sécurité.** StaX doit écrire dans des dépôts et
+**La conséquence sur la sécurité.** Nemasus doit écrire dans des dépôts et
 piloter des déploiements. Il le fait avec une **application GitHub** (jetons
 d’une heure, limités à un dépôt et à `contents`), un jeton Cloudflare au
 périmètre minimal, tous deux **côté serveur uniquement** ; chaque webhook est
@@ -92,8 +92,8 @@ audité. Détails : [security.md](./security.md).
 
 ## 3. Le contrat d’édition : une surface, pas une structure
 
-**Le choix.** Le développeur déclare dans `stax.manifest.json` ce que le
-client pourra modifier (champs typés, pages, collections, formulaires). StaX
+**Le choix.** Le développeur déclare dans `nemasus.manifest.json` ce que le
+client pourra modifier (champs typés, pages, collections, formulaires). Nemasus
 construit l’éditeur à partir de cette déclaration et écrit le contenu dans un
 fichier JSON du dépôt.
 
@@ -144,7 +144,7 @@ précédente reste en ligne** et le client le lit en clair.
 
 **Commits.** Avance rapide uniquement (jamais `force`) : si un développeur a
 poussé entre-temps, la publication est rejouée au-dessus de son travail. Le
-marqueur `Stax-Release` rend l’écriture idempotente.
+marqueur `Nemasus-Release` rend l’écriture idempotente.
 
 **Historique.** Chaque version garde son contenu, son commit, son
 déploiement, son auteur, sa date et son état. **Restaurer** crée une
@@ -153,7 +153,7 @@ jamais un simple changement de pointeur.
 
 ---
 
-## 6. L’API des sites : les modules StaX au service d’un site indépendant
+## 6. L’API des sites : les modules Nemasus au service d’un site indépendant
 
 **Le choix.** Formulaires, réservations, boutique, paiement sur le compte
 Stripe du commerçant, comptes clients et mesure d’audience passent par

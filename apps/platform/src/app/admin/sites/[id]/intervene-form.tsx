@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, Panel, Textarea } from '@stax/ui';
+import { Alert, Button, Field, Panel, Textarea } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { startImpersonationAction } from '~/app/admin/assistance/actions';
 
@@ -19,7 +19,7 @@ function Submit() {
  * Intervenir sur le site d'un client (creation, correction, publication,
  * restauration). Ouvre une session d'assistance : motif obligatoire, duree
  * limitee, et chaque action apparait dans l'historique du client comme
- * faite par l'equipe StaX.
+ * faite par l'equipe Nemasus.
  */
 export function InterveneForm({
   organizationId,

@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { legalStatus, legalValue, isProduction } from '@stax/config';
-import { Wordmark } from '@stax/ui';
+import { legalStatus, legalValue, isProduction } from '@nemasus/config';
+import { Wordmark } from '@nemasus/ui';
 import { COMPANY_LINKS, FEATURE_LINKS, LEGAL_LINKS, RESOURCE_LINKS } from '~/lib/navigation';
 
 /**
@@ -99,7 +99,7 @@ export function SiteFooter() {
 
       {/* Ligne de signature */}
       <div className="mt-8 flex flex-col gap-2.5 border-t border-[var(--border)] pt-7 text-[13.5px] text-[var(--foreground-muted)] sm:flex-row sm:items-baseline sm:justify-between">
-        <p>StaX. Studio de conception et de développement de sites web.</p>
+        <p>Nemasus. Studio de conception et de développement de sites web.</p>
         <p>
           <a href={`mailto:${support}`} className="transition-colors hover:text-[var(--ink)]">
             {support}

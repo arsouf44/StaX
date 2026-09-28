@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient, unwrapList, unwrapMaybe } from '@stax/database';
-import { boundedText, optionalText, uuidSchema } from '@stax/validation';
+import { createUserClient, unwrapList, unwrapMaybe } from '@nemasus/database';
+import { boundedText, optionalText, uuidSchema } from '@nemasus/validation';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
 
@@ -126,7 +126,7 @@ export async function declareBreachAction(
   });
 
   if (error) {
-    console.error('[stax:breach] enregistrement refuse', error.code, error.message);
+    console.error('[nemasus:breach] enregistrement refuse', error.code, error.message);
     return { status: 'error', message: 'Cette entrée n’a pas pu être enregistrée.' };
   }
 

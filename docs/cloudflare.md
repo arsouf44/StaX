@@ -1,15 +1,118 @@
 # Cloudflare
 
+Tout Nemasus tourne sur Cloudflare : la plateforme (site public, espace
+client, administration), l’API des sites et chaque site client. La base est
+chez Supabase, les paiements chez Stripe, le code sur GitHub.
+
+## 0. Mettre la plateforme en ligne (Workers Builds)
+
+Le Worker de la plateforme est construit et déployé par **Workers Builds**,
+relié au dépôt GitHub. Réglages, dans *Workers & Pages → (le Worker) →
+Settings → Build* :
+
+| Réglage | Valeur |
+| --- | --- |
+| Dépôt, branche de production | ce dépôt, `main` |
+| Root directory | `/` (la racine du dépôt) |
+| Build command | `pnpm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Version command (autres branches) | `npx wrangler versions upload` |
+
+`pnpm run build` produit le Worker avec OpenNext (`apps/platform/.open-next`)
+et `npx wrangler deploy` le publie d’après [`wrangler.jsonc`](../wrangler.jsonc)
+**à la racine** du dépôt. Aucune variable n’est nécessaire au build : la
+configuration est lue à l’exécution.
+
+**Nom du Worker.** Le fichier le nomme `nemasus`. Si le Worker s’appelle
+encore `stax` dans Cloudflare, le build le signale (« Failed to match Worker
+name ») mais déploie quand même sur `stax` ; renommez-le en `nemasus`
+(*Settings → General → Name*) pour faire disparaître l’avertissement — les
+domaines rattachés suivent.
+
+**Offre Workers Paid obligatoire** (5 $/mois, *Workers & Pages → Plans*) : le
+Worker compressé pèse environ 4,1 Mo, au-delà de la limite de 3 Mo de l’offre
+gratuite, et une page rendue dépasse les 10 ms de calcul qu’elle accorde.
+
+### Variables et secrets du Worker
+
+*Settings → Variables and Secrets*. Les valeurs publiques (URL du projet
+Supabase et sa clé « anon », `NEMASUS_ENV=production`) sont déjà dans
+`wrangler.jsonc`, et l’identité légale dans `packages/config/src/legal.ts`.
+Les variables posées ici survivent aux déploiements (`keep_vars`).
+
+**Secrets (type « Secret ») — sans eux, la plateforme ne fonctionne pas :**
+
+```
+SUPABASE_SERVICE_ROLE_KEY   Supabase → Project Settings → API keys (clé secrète)
+NEMASUS_SECRET_KEY          openssl rand -base64 48 — ou la valeur de l’ancienne
+                            STAX_SECRET_KEY si elle existait déjà (les deux noms sont lus)
+```
+
+**Adresse publique (type « Text ») :**
+
+```
+PLATFORM_URL        https://<domaine de la plateforme>, sans / final
+SITES_DOMAIN        domaine parent des adresses temporaires des sites, ex. sites.nemasus.fr
+```
+
+**Selon les fonctions** (chaque fonction non configurée se déclare
+indisponible au lieu d’échouer ; `/admin/sante` liste ce qui manque) :
+
+```
+STRIPE_SECRET_KEY  STRIPE_WEBHOOK_SECRET          (Secret)  paiements
+STRIPE_CONNECT_WEBHOOK_SECRET  STRIPE_CONNECT_CLIENT_ID     encaissements des clients
+EMAIL_PROVIDER=resend  EMAIL_API_KEY (Secret)  EMAIL_FROM=Nemasus <…>  EMAIL_REPLY_TO
+NEXT_PUBLIC_TURNSTILE_SITE_KEY  TURNSTILE_SECRET_KEY (Secret)  anti-robot des formulaires
+GITHUB_APP_ID  GITHUB_APP_SLUG  GITHUB_APP_PRIVATE_KEY (Secret)  GITHUB_APP_WEBHOOK_SECRET (Secret)
+CLOUDFLARE_SITES_API_TOKEN (Secret)  CLOUDFLARE_SITES_ACCOUNT_ID  CLOUDFLARE_WEBHOOK_SECRET (Secret)
+CRON_SECRET (Secret)
+```
+
+### Domaine
+
+*Settings → Domains & Routes → Add → Custom domain* : le domaine de la
+plateforme (par exemple `nemasus.fr`), s’il est géré par Cloudflare. Mettez
+ensuite la même adresse dans `PLATFORM_URL`, dans Supabase
+(*Authentication → URL Configuration*) et dans les webhooks Stripe
+(`https://<domaine>/api/webhooks/stripe`).
+
+### Vérifier après chaque déploiement
+
+```
+/tarifs              les offres s’affichent avec leurs prix
+/mentions-legales    aucun marqueur « [A CONFIGURER — … ] »
+/inscription         créer un compte de test
+/admin/sante         ce qui manque encore, en clair
+```
+
+Journaux : *Workers & Pages → nemasus → Logs* (activés par `observability`).
+
+### L’API des sites : un second Worker
+
+`apps/site-runtime` (formulaires, réservations, boutique, comptes des sites
+clients ; sites de l’ancien moteur) est un Worker distinct, `nemasus-sites`.
+Créez un second projet Workers Builds sur le même dépôt :
+
+| Réglage | Valeur |
+| --- | --- |
+| Root directory | `/` |
+| Build command | *(vide)* |
+| Deploy command | `npx wrangler deploy -c apps/site-runtime/wrangler.jsonc --env production` |
+
+avec les mêmes secrets Supabase et `NEMASUS_SECRET_KEY`. Il n’est utile que
+lorsque des sites livrés utilisent ces fonctions.
+
+---
+
 Cloudflare joue deux rôles, à ne pas confondre :
 
 1. **Chaque site client a son propre projet Cloudflare** (Pages, ou Worker
    avec Workers Builds), relié à **son** dépôt GitHub. C’est ce projet qui
-   construit et sert le site. StaX ne déploie pas à sa place : il **lit l’état
+   construit et sert le site. Nemasus ne déploie pas à sa place : il **lit l’état
    réel** des déploiements pour savoir, sans le supposer, si une version est
    en ligne.
-2. **StaX a ses propres Workers** : la plateforme (si elle n’est pas sur
-   Vercel) et `apps/site-runtime`, qui porte l’API des sites et l’ancien
-   moteur.
+2. **Nemasus a ses propres Workers** : la plateforme (`nemasus`, § 0) et
+   `apps/site-runtime`, qui porte l’API des sites et l’ancien moteur.
 
 Code : `packages/infrastructure/src/cloudflare-sites.ts` (client API),
 `apps/platform/src/app/api/webhooks/cloudflare/route.ts` (notifications),
@@ -25,23 +128,23 @@ projet web :
 - **Pages** : *Workers & Pages → Create → Pages → Connect to Git*, dépôt du
   site, branche de production (souvent `main`), commande de build du
   framework. Les aperçus sont construits sur les autres branches, dont
-  `stax-preview`.
+  `nemasus-preview`.
 - **Worker + Workers Builds** : *Workers & Pages → Create → Import a
   repository*. Relever l’identifiant du déclencheur de build si l’équipe veut
-  pouvoir relancer un build depuis StaX.
+  pouvoir relancer un build depuis Nemasus.
 
-Le domaine du client est ajouté **au projet** (Pages : StaX peut le faire
+Le domaine du client est ajouté **au projet** (Pages : Nemasus peut le faire
 depuis *Infrastructure & livraison* ; Worker : domaine personnalisé ajouté
-dans Cloudflare puis vérifié par StaX). Le client pointe son DNS vers
+dans Cloudflare puis vérifié par Nemasus). Le client pointe son DNS vers
 l’adresse du projet (`<projet>.pages.dev`, ou la cible indiquée par
-Cloudflare) ; StaX relit l’état du domaine et du certificat auprès de
+Cloudflare) ; Nemasus relit l’état du domaine et du certificat auprès de
 Cloudflare (`site_domains.status` : `pending` → `verifying` → `active`), puis
 vérifie lui-même la réponse HTTPS avant la livraison.
 
-### Rattachement dans StaX
+### Rattachement dans Nemasus
 
 *Administration → Site → Infrastructure & livraison → Hébergement* : compte
-Cloudflare, nom du projet. StaX **lit le projet chez Cloudflare** (existence,
+Cloudflare, nom du projet. Nemasus **lit le projet chez Cloudflare** (existence,
 branche de production, URL, dernier déploiement) avant de l’enregistrer
 (`app.connect_site_hosting`, réservé à l’équipe, audité). Un projet ne sert
 qu’un site.
@@ -65,12 +168,12 @@ navigateur (vérifié par `tests/security/external-sites.test.ts`).
 `CLOUDFLARE_SITES_ACCOUNT_ID` : compte proposé par défaut à l’équipe (non
 secret). `CLOUDFLARE_API_BASE_URL` : facultatif (tests).
 
-## 3. Ce que StaX lit
+## 3. Ce que Nemasus lit
 
 | Donnée | Source | Usage |
 | --- | --- | --- |
 | Déploiements de production (commit, état, étape, erreur, URL) | Pages : `…/pages/projects/<p>/deployments` ; Workers : builds | passer une version à `published` ou `failed` |
-| Déploiements d’aperçu (branche `stax-preview`) | idem | afficher l’aperçu réel dans l’éditeur |
+| Déploiements d’aperçu (branche `nemasus-preview`) | idem | afficher l’aperçu réel dans l’éditeur |
 | Journal d’un déploiement échoué | `…/deployments/<id>/history/logs` | message clair à l’équipe |
 | Domaines du projet | `…/pages/projects/<p>/domains` | état du domaine et du certificat |
 
@@ -97,7 +200,7 @@ status* (et/ou *Workers Builds*) vers cette destination.
 
 - Cloudflare transmet le secret dans l’en-tête `cf-webhook-auth` : comparé à
   temps constant, **401** sinon, sans lire le corps.
-- La notification n’est qu’un **signal** : StaX relit les déploiements du
+- La notification n’est qu’un **signal** : Nemasus relit les déploiements du
   projet auprès de l’API. Une notification forgée, même avec le bon secret, ne
   peut pas faire passer une version pour publiée.
 
@@ -113,12 +216,12 @@ depuis son historique : cela crée une nouvelle version et un nouveau commit.
 
 ---
 
-## 6. Les Workers de StaX
+## 6. Les Workers de Nemasus
 
 | Worker | Nom | Sert |
 | --- | --- | --- |
-| `apps/platform` | `stax-platform` | `stax.fr`, `www.stax.fr` (si la plateforme n’est pas sur Vercel) |
-| `apps/site-runtime` | `stax-sites` | API des sites ; sites de l’ancien moteur (`*.sites.stax.fr`, domaines rattachés) |
+| `apps/platform` | `nemasus` (déployé par Workers Builds, `wrangler.jsonc` à la racine) | le domaine de la plateforme, par exemple `nemasus.fr` |
+| `apps/site-runtime` | `nemasus-sites` | API des sites ; sites de l’ancien moteur (`*.sites.nemasus.fr`, domaines rattachés) |
 
 `compatibility_date` : `2026-09-01`. Indicateurs : `nodejs_compat`,
 `global_fetch_strictly_public`. Ce dernier interdit à un Worker d’atteindre
@@ -137,12 +240,12 @@ chaque opération. Le **rendu** d’un site ne dépend jamais de cette API.
 ### Ancien moteur
 
 Les sites construits avant le modèle actuel (`architecture = 'legacy_engine'`)
-restent servis par `stax-sites`, tenant résolu par le nom d’hôte :
+restent servis par `nemasus-sites`, tenant résolu par le nom d’hôte :
 
 ```
-*.sites.stax.fr             → stax-sites
-preview.sites.stax.fr       → stax-sites   (aperçus privés, jamais indexés)
-<domaine rattaché>          → stax-sites   (Cloudflare for SaaS)
+*.sites.nemasus.fr             → nemasus-sites
+preview.sites.nemasus.fr       → nemasus-sites   (aperçus privés, jamais indexés)
+<domaine rattaché>          → nemasus-sites   (Cloudflare for SaaS)
 ```
 
 | Ressource | Politique de cache |
@@ -160,10 +263,10 @@ version apparaît à l’expiration du cache (une minute).
 
 ## Ce que Cloudflare ne fait pas ici
 
-- **Pas de déploiement déclenché « à l’aveugle ».** StaX écrit un commit ;
-  c’est l’intégration Git du projet qui construit. StaX n’envoie jamais de
+- **Pas de déploiement déclenché « à l’aveugle ».** Nemasus écrit un commit ;
+  c’est l’intégration Git du projet qui construit. Nemasus n’envoie jamais de
   fichiers de build directement.
-- **Pas de Workers KV pour les données de StaX.** La source de vérité est
+- **Pas de Workers KV pour les données de Nemasus.** La source de vérité est
   PostgreSQL.
 - **Pas de R2 pour la médiathèque.** Elle est dans Supabase Storage ; les
   images publiées sont copiées **dans le dépôt du site** et servies par son

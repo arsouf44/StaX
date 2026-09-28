@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { createAnonClient, loadSystemHealth, type SystemHealthView } from '@stax/database';
+import { createAnonClient, loadSystemHealth, type SystemHealthView } from '@nemasus/database';
 
 /**
  * Indicateurs de santé publiés sur /status.

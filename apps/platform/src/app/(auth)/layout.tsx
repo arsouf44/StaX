@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Wordmark } from '@stax/ui';
-import { legalValue } from '@stax/config';
+import { Wordmark } from '@nemasus/ui';
+import { legalValue } from '@nemasus/config';
 
 /**
  * Enveloppe des pages d authentification.
@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="relative flex min-h-dvh flex-col">
       <header className="mx-auto flex min-h-[76px] w-full max-w-[1280px] items-center justify-center border-b border-[var(--line)] px-[clamp(20px,4.4vw,64px)] max-[800px]:min-h-[64px]">
-        <Link href="/" aria-label="StaX — accueil" className="inline-flex">
+        <Link href="/" aria-label="Nemasus — accueil" className="inline-flex">
           <Wordmark size={24} />
         </Link>
       </header>

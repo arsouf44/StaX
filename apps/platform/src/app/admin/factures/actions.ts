@@ -1,11 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { tryCreateServiceClient, unwrapList, unwrapMaybe, type Db } from '@stax/database';
-import { salesInvoiceIssuedEmail, sendEmail } from '@stax/emails';
-import { platformUrl } from '@stax/config';
-import { computeOrderPricing, formatMaintenance, formatMoney } from '@stax/payments';
-import { boundedText, emailSchema, optionalText, uuidSchema } from '@stax/validation';
+import { tryCreateServiceClient, unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
+import { salesInvoiceIssuedEmail, sendEmail } from '@nemasus/emails';
+import { platformUrl } from '@nemasus/config';
+import { computeOrderPricing, formatMaintenance, formatMoney } from '@nemasus/payments';
+import { boundedText, emailSchema, optionalText, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
@@ -175,7 +175,7 @@ export async function issueSalesInvoiceAction(
         message: 'Ce numéro vient d’être attribué à une autre facture. Réessayez.',
       };
     }
-    console.error('[stax:invoice] emission refusee', error.code, error.message);
+    console.error('[nemasus:invoice] emission refusee', error.code, error.message);
     return { status: 'error', message: 'Cette facture n’a pas pu être émise.' };
   }
 

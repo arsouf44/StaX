@@ -61,7 +61,7 @@ active** au moment de la migration. Sur Supabase, activez `pg_cron`
 ensuite :
 
 ```sql
-select cron.schedule('stax-retention', '17 3 * * *', 'select app.apply_retention()');
+select cron.schedule('nemasus-retention', '17 3 * * *', 'select app.apply_retention()');
 ```
 
 Sans cette planification, les durées de conservation publiées ne sont pas
@@ -69,14 +69,14 @@ respectées : c’est une non-conformité au RGPD (article 5.1.e).
 
 ## Tâche de fond des sites (toutes les 5 minutes)
 
-La migration 0053 active `pg_net` et planifie `stax-site-operations`
+La migration 0053 active `pg_net` et planifie `nemasus-site-operations`
 (`*/5 * * * *`), qui appelle `/api/cron/sites` de la plateforme. Elle ne fait
 rien tant que l’adresse de la plateforme et `CRON_SECRET` ne sont pas dans
 Vault :
 
 ```sql
-select vault.create_secret('https://votre-domaine.fr', 'stax_platform_url');
-select vault.create_secret('<valeur de CRON_SECRET>', 'stax_cron_secret');
+select vault.create_secret('https://votre-domaine.fr', 'nemasus_platform_url');
+select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');
 ```
 
 Détails et vérification : [deployment.md](./deployment.md) § 9.

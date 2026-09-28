@@ -6,8 +6,8 @@ import {
   resolveSession,
   type AuthenticatedUser,
   type SessionContext,
-} from '@stax/auth';
-import type { Profile } from '@stax/types';
+} from '@nemasus/auth';
+import type { Profile } from '@nemasus/types';
 
 /**
  * Session de la requete en cours.
@@ -87,7 +87,7 @@ export async function requirePlatformStaff(): Promise<AuthenticatedSession> {
 /** Chemin courant, pour revenir a la bonne page apres connexion. */
 async function currentPath(): Promise<string> {
   const store = await headers();
-  const path = store.get('x-stax-pathname') ?? store.get('x-invoke-path') ?? '/app';
+  const path = store.get('x-nemasus-pathname') ?? store.get('x-invoke-path') ?? '/app';
   return path.startsWith('/') ? path : '/app';
 }
 

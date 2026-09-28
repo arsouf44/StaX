@@ -9,7 +9,7 @@ const HTML_ESCAPES: Record<string, string> = {
 /**
  * Echappement HTML local au paquet e-mails.
  *
- * Duplique volontairement la fonction de @stax/security : le rendu d e-mail
+ * Duplique volontairement la fonction de @nemasus/security : le rendu d e-mail
  * doit rester utilisable dans un contexte ou seul ce paquet est charge, et
  * cette dependance ne doit jamais devenir optionnelle.
  */

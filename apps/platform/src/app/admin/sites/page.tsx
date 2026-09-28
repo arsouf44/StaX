@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { hasPlatformRole } from '@stax/auth';
-import { unwrapList } from '@stax/database';
+import { hasPlatformRole } from '@nemasus/auth';
+import { unwrapList } from '@nemasus/database';
 import { AdminTable } from '~/components/admin/admin-table';
 import { requireAdminRole } from '~/lib/admin';
 import { CreateSiteButton } from './create-site-button';

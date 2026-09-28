@@ -65,52 +65,55 @@ importers:
       vitest:
         specifier: 3.2.7
         version: 3.2.7(@types/node@22.19.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.16.9)(tsx@4.21.1)(yaml@2.9.1)
+      wrangler:
+        specifier: 4.132.0
+        version: 4.132.0(@cloudflare/workers-types@5.20260916.1)(@types/node@22.19.1)
 
   apps/platform:
     dependencies:
-      '@stax/analytics':
+      '@nemasus/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
-      '@stax/auth':
+      '@nemasus/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@stax/business':
+      '@nemasus/business':
         specifier: workspace:*
         version: link:../../packages/business
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@stax/database':
+      '@nemasus/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@stax/emails':
+      '@nemasus/emails':
         specifier: workspace:*
         version: link:../../packages/emails
-      '@stax/infrastructure':
+      '@nemasus/infrastructure':
         specifier: workspace:*
         version: link:../../packages/infrastructure
-      '@stax/payments':
+      '@nemasus/payments':
         specifier: workspace:*
         version: link:../../packages/payments
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@stax/site-contract':
+      '@nemasus/site-contract':
         specifier: workspace:*
         version: link:../../packages/site-contract
-      '@stax/site-data':
+      '@nemasus/site-data':
         specifier: workspace:*
         version: link:../../packages/site-data
-      '@stax/site-engine':
+      '@nemasus/site-engine':
         specifier: workspace:*
         version: link:../../packages/site-engine
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@stax/ui':
+      '@nemasus/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../../packages/validation
       '@supabase/ssr':
@@ -165,37 +168,37 @@ importers:
 
   apps/site-runtime:
     dependencies:
-      '@stax/analytics':
+      '@nemasus/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
-      '@stax/business':
+      '@nemasus/business':
         specifier: workspace:*
         version: link:../../packages/business
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@stax/database':
+      '@nemasus/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@stax/emails':
+      '@nemasus/emails':
         specifier: workspace:*
         version: link:../../packages/emails
-      '@stax/payments':
+      '@nemasus/payments':
         specifier: workspace:*
         version: link:../../packages/payments
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@stax/site-data':
+      '@nemasus/site-data':
         specifier: workspace:*
         version: link:../../packages/site-data
-      '@stax/site-engine':
+      '@nemasus/site-engine':
         specifier: workspace:*
         version: link:../../packages/site-engine
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../../packages/validation
       '@supabase/supabase-js':
@@ -217,16 +220,16 @@ importers:
 
   packages/analytics:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../security
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../validation
       zod:
@@ -239,16 +242,16 @@ importers:
 
   packages/auth:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/database':
+      '@nemasus/database':
         specifier: workspace:*
         version: link:../database
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../security
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
       '@supabase/ssr':
@@ -267,17 +270,17 @@ importers:
 
   packages/business:
     dependencies:
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../validation
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       typescript:
@@ -296,16 +299,16 @@ importers:
 
   packages/database:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../security
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../validation
       '@supabase/supabase-js':
@@ -321,13 +324,13 @@ importers:
 
   packages/emails:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../security
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
       '@supabase/supabase-js':
@@ -343,13 +346,13 @@ importers:
 
   packages/infrastructure:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../security
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
       zod:
@@ -362,13 +365,13 @@ importers:
 
   packages/payments:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../validation
       stripe:
@@ -384,10 +387,10 @@ importers:
 
   packages/security:
     dependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
       zod:
@@ -404,7 +407,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -416,14 +419,14 @@ importers:
 
   packages/site-data:
     dependencies:
-      '@stax/database':
+      '@nemasus/database':
         specifier: workspace:*
         version: link:../database
-      '@stax/site-engine':
+      '@nemasus/site-engine':
         specifier: workspace:*
         version: link:../site-engine
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       typescript:
@@ -432,26 +435,26 @@ importers:
 
   packages/site-engine:
     dependencies:
-      '@stax/business':
+      '@nemasus/business':
         specifier: workspace:*
         version: link:../business
-      '@stax/payments':
+      '@nemasus/payments':
         specifier: workspace:*
         version: link:../payments
-      '@stax/security':
+      '@nemasus/security':
         specifier: workspace:*
         version: link:../security
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
-      '@stax/validation':
+      '@nemasus/validation':
         specifier: workspace:*
         version: link:../validation
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       '@types/react':
@@ -466,7 +469,7 @@ importers:
 
   packages/types:
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       typescript:
@@ -481,7 +484,7 @@ importers:
       '@fontsource/eb-garamond':
         specifier: 5.3.0
         version: 5.3.0
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
       class-variance-authority:
@@ -497,7 +500,7 @@ importers:
         specifier: 3.7.0
         version: 3.7.0
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       '@types/react':
@@ -521,14 +524,14 @@ importers:
 
   packages/validation:
     dependencies:
-      '@stax/types':
+      '@nemasus/types':
         specifier: workspace:*
         version: link:../types
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@stax/config':
+      '@nemasus/config':
         specifier: workspace:*
         version: link:../config
       typescript:

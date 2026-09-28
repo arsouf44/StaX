@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { formatMaintenance, SUBSCRIPTION_STATUS_LABELS } from '@stax/payments';
-import { refundPolicyConfig } from '@stax/config';
-import { EmptyState, Icon, Panel, PermissionDenied } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+import { formatMaintenance, SUBSCRIPTION_STATUS_LABELS } from '@nemasus/payments';
+import { refundPolicyConfig } from '@nemasus/config';
+import { EmptyState, Icon, Panel, PermissionDenied } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { MAINTENANCE_EXCLUDES, MAINTENANCE_INCLUDES } from '~/content/maintenance';
@@ -40,7 +40,7 @@ function emptyStateCopy(
       return {
         title: 'Maintenance incluse',
         description:
-          'Ce site est rattaché à un compte interne StaX : aucune maintenance n’est facturée.',
+          'Ce site est rattaché à un compte interne Nemasus : aucune maintenance n’est facturée.',
       };
     case 'not_applicable':
       return {
@@ -51,7 +51,7 @@ function emptyStateCopy(
       return {
         title: 'Maintenance en cours de mise en place',
         description:
-          'Votre site est livré : l’équipe StaX finalise l’abonnement mensuel, qui démarre à la date de livraison. Vous recevrez une confirmation par e-mail.',
+          'Votre site est livré : l’équipe Nemasus finalise l’abonnement mensuel, qui démarre à la date de livraison. Vous recevrez une confirmation par e-mail.',
       };
   }
 }

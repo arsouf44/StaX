@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Checkbox, Field, Input, Select, Switch, Textarea } from '@stax/ui';
+import { Button, Checkbox, Field, Input, Select, Switch, Textarea } from '@nemasus/ui';
 import { useFormStatus } from 'react-dom';
 
 /**

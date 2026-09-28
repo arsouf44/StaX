@@ -26,7 +26,7 @@ import {
  */
 
 const ROOT = resolve(__dirname, '../../../..');
-const STACK_DIR = process.env.STAX_E2E_STACK_DIR ?? resolve(ROOT, '.e2e-stack');
+const STACK_DIR = process.env.NEMASUS_E2E_STACK_DIR ?? resolve(ROOT, '.e2e-stack');
 
 function readStackEnv(): Record<string, string> {
   const raw = readFileSync(resolve(STACK_DIR, 'env'), 'utf8');
@@ -42,7 +42,7 @@ export const stackEnv = readStackEnv();
 
 export const PLATFORM_URL = 'http://127.0.0.1:3100';
 export const SITES_PORT = 3101;
-export const SITES_DOMAIN = 'sites.stax.test';
+export const SITES_DOMAIN = 'sites.nemasus.test';
 
 const SUPABASE_URL = stackEnv['SUPABASE_URL'] ?? 'http://127.0.0.1:54321';
 const ANON_KEY = stackEnv['SUPABASE_ANON_KEY'] ?? '';
@@ -163,7 +163,7 @@ export async function createCustomerWithPaidOrder(options: {
    */
   withLegalIdentity?: boolean;
   /**
-   * Site construit par StaX et confie au client (defaut : oui). `false` :
+   * Site construit par Nemasus et confie au client (defaut : oui). `false` :
    * commande payee, site encore en construction, que le client ne voit pas.
    */
   delivered?: boolean;
@@ -237,7 +237,7 @@ export async function createCustomerWithPaidOrder(options: {
         id: `cs_e2e_${suffix}`,
         object: 'checkout.session',
         client_reference_id: orderId,
-        metadata: { stax_order_id: orderId },
+        metadata: { nemasus_order_id: orderId },
         payment_status: 'paid',
         payment_intent: `pi_e2e_${suffix}`,
         customer: null,
@@ -252,7 +252,7 @@ export async function createCustomerWithPaidOrder(options: {
     throw new Error(`Commande non payee apres le webhook : ${JSON.stringify(paid.data)}`);
   }
 
-  // L'equipe StaX developpe le site HORS de StaX (depot + projet Cloudflare),
+  // L'equipe Nemasus developpe le site HORS de Nemasus (depot + projet Cloudflare),
   // le rattache, verifie la checklist, puis le livre. Le parcours complet par
   // l'interface d'administration est couvert par external-site.spec.ts ; ici,
   // les memes fonctions sont appelees directement.
@@ -295,12 +295,12 @@ export async function createCustomerWithPaidOrder(options: {
   };
 }
 
-/** Compte de l'equipe StaX (role plateforme), cree avec la cle de service. */
+/** Compte de l'equipe Nemasus (role plateforme), cree avec la cle de service. */
 export async function createStaffAccount(
   role: 'platform_owner' | 'platform_admin' | 'designer' | 'support',
 ): Promise<{ email: string; password: string; id: string }> {
   const admin = serviceClient();
-  const email = `equipe-${uniqueSuffix()}@stax.test`;
+  const email = `equipe-${uniqueSuffix()}@nemasus.test`;
   const password = randomPassword();
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error) throw new Error(`Compte equipe : ${created.error.message}`);
@@ -314,7 +314,7 @@ export async function createStaffAccount(
 }
 
 /**
- * Le site developpe par l'equipe est rattache a StaX puis livre :
+ * Le site developpe par l'equipe est rattache a Nemasus puis livre :
  *   depot GitHub + projet Cloudflare (faux fournisseurs) -> rattachement par
  *   une personne de l'equipe -> contrat d'edition et version 1 -> domaine ->
  *   checklist -> `deliver_site`.

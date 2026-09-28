@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Dialog, Field, Input, Select } from '@stax/ui';
+import { Alert, Button, Dialog, Field, Input, Select } from '@nemasus/ui';
 import { createSiteAction } from './actions';
 
 export interface CreateSiteOption {

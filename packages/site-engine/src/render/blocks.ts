@@ -1,4 +1,4 @@
-import { formatMoney } from '@stax/payments/money';
+import { formatMoney } from '@nemasus/payments/money';
 import { getBlockDefinition, type ParsedBlock } from '../blocks/registry';
 import type { BlockSettings } from '../blocks/primitives';
 import { DEFAULT_HOST } from '../legal';
@@ -684,7 +684,7 @@ function renderForm(
       class="form ${fallbackKind === 'newsletter' ? '' : 'wide'}"
       method="post"
       action="/api/forms/${form.slug}"
-      data-stax-form="${form.slug}"
+      data-nemasus-form="${form.slug}"
       novalidate
       style="margin-top:2rem"
     >
@@ -710,7 +710,7 @@ function renderForm(
             ></div>`
           : ''
       }
-      <div class="form-status" data-stax-status hidden role="status"></div>
+      <div class="form-status" data-nemasus-status hidden role="status"></div>
       <div><button type="submit" class="btn btn-primary">${submitLabel}</button></div>
       <p class="form-note">
         ${context.settings.legalIdentity.legalName || context.settings.businessName} utilise ces
@@ -793,7 +793,7 @@ function renderNewsletter(props: Props, context: RenderContext): RawHtml {
       class="form"
       method="post"
       action="/api/forms/${form.slug}"
-      data-stax-form="${form.slug}"
+      data-nemasus-form="${form.slug}"
       novalidate
       style="margin-top:1.75rem"
     >
@@ -810,7 +810,7 @@ function renderNewsletter(props: Props, context: RenderContext): RawHtml {
         <input type="checkbox" id="nl-consent" name="consent" value="1" required />
         <label for="nl-consent">${consent}</label>
       </div>
-      <div class="form-status" data-stax-status hidden role="status"></div>
+      <div class="form-status" data-nemasus-status hidden role="status"></div>
       <div><button type="submit" class="btn btn-primary">Je m’inscris</button></div>
     </form>
   `;
@@ -1040,7 +1040,7 @@ function renderMenu(props: Props, context: RenderContext): RawHtml {
   if (layout === 'tabs' && populated.length > 1) {
     return html`
       ${heading(str(props, 'title'), '')}
-      <div style="margin-top:2rem" data-stax-tabs>
+      <div style="margin-top:2rem" data-nemasus-tabs>
         <div class="tabs" role="tablist" aria-label="Sections de la carte">
           ${join(
             populated.map(
@@ -1150,7 +1150,7 @@ function renderBooking(props: Props, context: RenderContext): RawHtml {
       class="form wide"
       method="post"
       action="/api/bookings"
-      data-stax-booking
+      data-nemasus-booking
       novalidate
       style="margin-top:2rem"
     >
@@ -1189,7 +1189,7 @@ function renderBooking(props: Props, context: RenderContext): RawHtml {
         </div>
         <div class="field">
           <label for="bk-slot">Horaire</label>
-          <select id="bk-slot" name="slot" required data-stax-slots>
+          <select id="bk-slot" name="slot" required data-nemasus-slots>
             <option value="">Choisissez d’abord une date</option>
           </select>
         </div>
@@ -1237,7 +1237,7 @@ function renderBooking(props: Props, context: RenderContext): RawHtml {
             ></div>`
           : ''
       }
-      <div class="form-status" data-stax-status hidden role="status"></div>
+      <div class="form-status" data-nemasus-status hidden role="status"></div>
       <div><button type="submit" class="btn btn-primary">Demander la réservation</button></div>
       <p class="form-note">
         Votre demande est transmise à l’établissement. Vous recevrez une confirmation par e-mail une
@@ -1288,7 +1288,7 @@ function renderProducts(props: Props, context: RenderContext): RawHtml {
                     ? html`<button
                         type="button"
                         class="btn btn-secondary"
-                        data-stax-add-to-cart="${product.id}"
+                        data-nemasus-add-to-cart="${product.id}"
                       >
                         Ajouter au panier
                       </button>`
@@ -1314,20 +1314,20 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
   if (!context.enabledModules.has('orders')) return raw('');
   return html`
     ${heading(str(props, 'title'), '')}
-    <div data-stax-cart style="margin-top:2rem">
-      <p class="muted" data-stax-cart-empty>Votre panier est vide pour le moment.</p>
-      <div data-stax-cart-body hidden></div>
+    <div data-nemasus-cart style="margin-top:2rem">
+      <p class="muted" data-nemasus-cart-empty>Votre panier est vide pour le moment.</p>
+      <div data-nemasus-cart-body hidden></div>
 
-      <form data-stax-checkout class="form" style="margin-top:2.5rem" hidden novalidate>
+      <form data-nemasus-checkout class="form" style="margin-top:2.5rem" hidden novalidate>
         <h3>Vos coordonnées</h3>
         <p class="muted" style="margin-top:.25rem">
           Nous en avons besoin pour préparer votre commande et vous tenir informé.
         </p>
 
         <div class="field">
-          <label for="stax-order-name">Nom et prénom</label>
+          <label for="nemasus-order-name">Nom et prénom</label>
           <input
-            id="stax-order-name"
+            id="nemasus-order-name"
             name="name"
             type="text"
             autocomplete="name"
@@ -1336,9 +1336,9 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
           />
         </div>
         <div class="field">
-          <label for="stax-order-email">Adresse e-mail</label>
+          <label for="nemasus-order-email">Adresse e-mail</label>
           <input
-            id="stax-order-email"
+            id="nemasus-order-email"
             name="email"
             type="email"
             autocomplete="email"
@@ -1347,8 +1347,14 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
           />
         </div>
         <div class="field">
-          <label for="stax-order-phone">Téléphone <span class="muted">(facultatif)</span></label>
-          <input id="stax-order-phone" name="phone" type="tel" autocomplete="tel" maxlength="40" />
+          <label for="nemasus-order-phone">Téléphone <span class="muted">(facultatif)</span></label>
+          <input
+            id="nemasus-order-phone"
+            name="phone"
+            type="tel"
+            autocomplete="tel"
+            maxlength="40"
+          />
         </div>
 
         <fieldset class="field">
@@ -1363,11 +1369,11 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
           >
         </fieldset>
 
-        <div data-stax-checkout-address hidden>
+        <div data-nemasus-checkout-address hidden>
           <div class="field">
-            <label for="stax-order-address">Adresse</label>
+            <label for="nemasus-order-address">Adresse</label>
             <input
-              id="stax-order-address"
+              id="nemasus-order-address"
               name="addressLine1"
               type="text"
               autocomplete="address-line1"
@@ -1375,9 +1381,9 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
             />
           </div>
           <div class="field">
-            <label for="stax-order-postal">Code postal</label>
+            <label for="nemasus-order-postal">Code postal</label>
             <input
-              id="stax-order-postal"
+              id="nemasus-order-postal"
               name="postalCode"
               type="text"
               autocomplete="postal-code"
@@ -1386,9 +1392,9 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
             />
           </div>
           <div class="field">
-            <label for="stax-order-city">Ville</label>
+            <label for="nemasus-order-city">Ville</label>
             <input
-              id="stax-order-city"
+              id="nemasus-order-city"
               name="city"
               type="text"
               autocomplete="address-level2"
@@ -1398,8 +1404,8 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
         </div>
 
         <div class="field">
-          <label for="stax-order-note">Précisions <span class="muted">(facultatif)</span></label>
-          <textarea id="stax-order-note" name="note" rows="3" maxlength="1000"></textarea>
+          <label for="nemasus-order-note">Précisions <span class="muted">(facultatif)</span></label>
+          <textarea id="nemasus-order-note" name="note" rows="3" maxlength="1000"></textarea>
         </div>
 
         <input type="hidden" name="_token" value="${context.formToken}" />
@@ -1411,8 +1417,8 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
         ${
           context.pages.some((entry) => normalizeHref(entry.path) === SALES_TERMS_PATH)
             ? html`<div class="consent">
-                <input type="checkbox" id="stax-order-terms" name="acceptTerms" required />
-                <label for="stax-order-terms"
+                <input type="checkbox" id="nemasus-order-terms" name="acceptTerms" required />
+                <label for="nemasus-order-terms"
                   >J’ai lu et j’accepte les
                   <a href="${SALES_TERMS_PATH}" target="_blank" rel="noopener"
                     >conditions générales de vente</a
@@ -1421,7 +1427,7 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
               </div>`
             : ''
         }
-        <div class="form-status" data-stax-status hidden role="status"></div>
+        <div class="form-status" data-nemasus-status hidden role="status"></div>
         <button type="submit" class="btn btn-primary">Commander avec obligation de paiement</button>
         <p class="muted" style="margin-top:.75rem;font-size:.8125rem">
           Le paiement se fait sur une page sécurisée. Aucune donnée bancaire ne transite par ce
@@ -1732,7 +1738,7 @@ function renderDonation(props: Props, context: RenderContext): RawHtml {
       class="form"
       method="post"
       action="/api/donations"
-      data-stax-donation
+      data-nemasus-donation
       novalidate
       style="margin-top:2rem"
     >
@@ -1768,7 +1774,7 @@ function renderDonation(props: Props, context: RenderContext): RawHtml {
         <label for="don-email">Votre e-mail</label>
         <input type="email" id="don-email" name="email" required autocomplete="email" />
       </div>
-      <div class="form-status" data-stax-status hidden role="status"></div>
+      <div class="form-status" data-nemasus-status hidden role="status"></div>
       <div><button type="submit" class="btn btn-primary">Faire un don</button></div>
       <p class="form-note">
         Le paiement est traité par notre prestataire bancaire. Aucune donnée de carte ne transite
@@ -1879,8 +1885,8 @@ function renderEmbed(props: Props): RawHtml {
     <div
       class="embed embed-gated ar-${ratio}"
       style="margin-top:1.5rem"
-      data-stax-embed="${url}"
-      data-stax-embed-title="${str(props, 'title') || kind}"
+      data-nemasus-embed="${url}"
+      data-nemasus-embed-title="${str(props, 'title') || kind}"
     >
       <div class="embed-gate">
         <p>
@@ -1889,7 +1895,7 @@ function renderEmbed(props: Props): RawHtml {
           données de navigation et dépose des cookies.
         </p>
         <p class="row" style="justify-content:center">
-          <button type="button" class="btn btn-primary" data-stax-embed-load>Afficher</button>
+          <button type="button" class="btn btn-primary" data-nemasus-embed-load>Afficher</button>
           <a class="btn btn-link" href="${url}" target="_blank" rel="noopener noreferrer"
             >Ouvrir chez ${providerName}</a
           >
@@ -2464,9 +2470,9 @@ function annotate(markup: string, block: ParsedBlock, hidden: boolean): string {
 }
 
 function renderToAttributes(id: string, label: string, hidden: boolean): string {
-  return html`data-stax-block="${id}" data-stax-label="${label}"
+  return html`data-nemasus-block="${id}" data-nemasus-label="${label}"
   ${attrs({
-    'data-stax-hidden': hidden ? 'true' : false,
+    'data-nemasus-hidden': hidden ? 'true' : false,
   })}`.value;
 }
 
@@ -2481,7 +2487,7 @@ export function renderBlocks(blocks: readonly ParsedBlock[], context: RenderCont
       let markup = renderBlock(block, context).value;
       if (!markup.trim()) {
         const definition = getBlockDefinition(block.type);
-        markup = html`<section class="sec stax-empty">
+        markup = html`<section class="sec nemasus-empty">
           <div class="wrap w-default">
             <p class="eyebrow">${definition?.label ?? 'Section'}</p>
             <p class="muted">${emptyHint(block)}</p>

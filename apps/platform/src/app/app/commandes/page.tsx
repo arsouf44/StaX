@@ -4,11 +4,11 @@ import {
   SHOP_ORDER_STATUS_LABELS,
   SHOP_ORDER_TRANSITIONS,
   statusLabel,
-} from '@stax/business';
-import { unwrapList } from '@stax/database';
-import { formatMoney } from '@stax/payments';
-import { PermissionDenied } from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/business';
+import { unwrapList } from '@nemasus/database';
+import { formatMoney } from '@nemasus/payments';
+import { PermissionDenied } from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { ModulePage } from '~/components/app/module-page';
 import { getWorkspace } from '~/lib/workspace';
 import { OrderList, type ShopOrderView } from './order-list';

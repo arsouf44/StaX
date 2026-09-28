@@ -4,8 +4,8 @@ import {
   legalStatus,
   missingCapabilities,
   type CapabilityKey,
-} from '@stax/config';
-import { unwrapList } from '@stax/database';
+} from '@nemasus/config';
+import { unwrapList } from '@nemasus/database';
 import {
   Alert,
   Icon,
@@ -18,8 +18,8 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getAdminContext } from '~/lib/admin';
 
@@ -225,7 +225,7 @@ export default async function AdminHealthPage() {
         <Panel level={1} padding="lg">
           <h2 className="text-sm font-medium">Sauvegardes</h2>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Les sauvegardes PostgreSQL sont assurées par Supabase selon le plan du projet. StaX
+            Les sauvegardes PostgreSQL sont assurées par Supabase selon le plan du projet. Nemasus
             n’affiche pas d’état de sauvegarde tant qu’une sonde ne le remonte pas réellement :
             annoncer une sauvegarde inexistante serait la pire erreur possible sur cet écran.
           </p>

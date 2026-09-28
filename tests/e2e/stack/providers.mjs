@@ -100,7 +100,7 @@ function createRepository({ installationId, accountLogin, accountId, repositoryI
   const commitSha = sha1(`initial ${fullName} ${randomBytes(8).toString('hex')}`);
   repository.commits.set(commitSha, {
     sha: commitSha,
-    message: 'Site développé par l’équipe StaX',
+    message: 'Site développé par l’équipe Nemasus',
     tree: treeSha,
     parents: [],
     date: now(),
@@ -573,7 +573,7 @@ async function control(request, response, path) {
     projects.set(project.name, project);
     // Le site est deja en ligne : son commit actuel est deploye.
     onBranchMoved(repository, 'main', repository.branches.get('main'));
-    // Deja construit et en ligne avant que StaX ne le regarde.
+    // Deja construit et en ligne avant que Nemasus ne le regarde.
     const initial = project.deployments[0];
     initial.reads = 2;
     return send(response, 201, {

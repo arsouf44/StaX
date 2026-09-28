@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { serializeJsonLd } from '@stax/security';
-import { ButtonLink, Container, Section, SectionHeading } from '@stax/ui';
+import { serializeJsonLd } from '@nemasus/security';
+import { ButtonLink, Container, Section, SectionHeading } from '@nemasus/ui';
 import { FAQ_CATEGORIES, FAQ_ITEMS, type FaqItem } from '~/content/faq';
 
 export const metadata: Metadata = {

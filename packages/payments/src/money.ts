@@ -1,4 +1,4 @@
-import type { Cents, Currency } from '@stax/types';
+import type { Cents, Currency } from '@nemasus/types';
 
 /**
  * Arithmetique monetaire.
@@ -109,7 +109,7 @@ export function formatMoney(
  * Maintenance : « 12 € / mois ».
  *
  * SEUL endroit du code ou la periodicite d'un abonnement s'ecrit. La
- * maintenance StaX est MENSUELLE ; les rares contrats annuels vendus avant ce
+ * maintenance Nemasus est MENSUELLE ; les rares contrats annuels vendus avant ce
  * passage gardent leur periodicite, lue sur le contrat (`billing_interval`),
  * jamais supposee. Afficher « / an » pour un prix mensuel (ou l'inverse)
  * annoncerait un prix faux au moment ou la personne decide d'acheter.

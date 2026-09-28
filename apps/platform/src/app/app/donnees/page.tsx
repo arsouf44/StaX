@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { maintenancePolicyConfig } from '@stax/config';
-import { Panel, PermissionDenied } from '@stax/ui';
+import { maintenancePolicyConfig } from '@nemasus/config';
+import { Panel, PermissionDenied } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { ExportPanel } from './export-panel';

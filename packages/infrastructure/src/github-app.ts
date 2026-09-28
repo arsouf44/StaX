@@ -1,9 +1,9 @@
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 
 /**
- * Application GitHub de StaX — serveur uniquement.
+ * Application GitHub de Nemasus — serveur uniquement.
  *
- * Chaque site livre par StaX vit dans SON depot GitHub. StaX n'y accede que
+ * Chaque site livre par Nemasus vit dans SON depot GitHub. Nemasus n'y accede que
  * par une GitHub App installee sur le compte qui heberge les depots :
  *
  *  - aucun jeton personnel (PAT) : l'application s'authentifie avec sa cle
@@ -184,10 +184,10 @@ type FetchImpl = typeof fetch;
 
 function explain(status: number, body: { message?: string }): string {
   const detail = typeof body.message === 'string' ? body.message : '';
-  if (status === 401) return 'GitHub a refusé l’authentification de l’application StaX.';
+  if (status === 401) return 'GitHub a refusé l’authentification de l’application Nemasus.';
   if (status === 403 && /rate limit/i.test(detail))
     return 'Limite d’appels GitHub atteinte : nouvel essai dans quelques minutes.';
-  if (status === 403) return 'L’application StaX n’a pas la permission nécessaire sur ce dépôt.';
+  if (status === 403) return 'L’application Nemasus n’a pas la permission nécessaire sur ce dépôt.';
   if (status === 404)
     return 'Dépôt, branche ou fichier introuvable (ou application non installée sur ce dépôt).';
   if (status === 409) return 'Le dépôt est vide ou dans un état qui empêche l’opération.';
@@ -211,7 +211,7 @@ async function request<T>(
         accept: options.accept ?? 'application/vnd.github+json',
         authorization: `Bearer ${token}`,
         'x-github-api-version': API_VERSION,
-        'user-agent': 'StaX-Platform',
+        'user-agent': 'Nemasus-Platform',
         ...(options.body !== undefined ? { 'content-type': 'application/json' } : {}),
       },
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
@@ -741,10 +741,10 @@ export function releaseCommitMessage(input: {
 }): string {
   const title =
     input.kind === 'rollback'
-      ? `stax: restauration de la version ${input.sourceVersion ?? '?'} (version ${input.version})`
-      : `stax: publication client ${String(input.version).padStart(5, '0')}`;
-  const body = input.author ? `\n\nPubliée depuis StaX par ${input.author.slice(0, 120)}.` : '';
-  return `${title}${body}\n\nStax-Release: ${input.releaseId}\nStax-Site: ${input.siteId}\nStax-Version: ${input.version}\n`;
+      ? `nemasus: restauration de la version ${input.sourceVersion ?? '?'} (version ${input.version})`
+      : `nemasus: publication client ${String(input.version).padStart(5, '0')}`;
+  const body = input.author ? `\n\nPubliée depuis Nemasus par ${input.author.slice(0, 120)}.` : '';
+  return `${title}${body}\n\nNemasus-Release: ${input.releaseId}\nNemasus-Site: ${input.siteId}\nNemasus-Version: ${input.version}\n`;
 }
 
 export function previewCommitMessage(input: {
@@ -752,11 +752,11 @@ export function previewCommitMessage(input: {
   deploymentId: string;
   revision: number;
 }): string {
-  return `stax: aperçu du brouillon (révision ${input.revision})\n\nStax-Preview: ${input.deploymentId}\nStax-Site: ${input.siteId}\n`;
+  return `nemasus: aperçu du brouillon (révision ${input.revision})\n\nNemasus-Preview: ${input.deploymentId}\nNemasus-Site: ${input.siteId}\n`;
 }
 
-/** Identifiant de version StaX porte par un message de commit, s'il y en a un. */
+/** Identifiant de version Nemasus porte par un message de commit, s'il y en a un. */
 export function releaseIdFromMessage(message: string): string | null {
-  const match = message.match(/^Stax-Release:\s*([0-9a-f-]{36})\s*$/m);
+  const match = message.match(/^Nemasus-Release:\s*([0-9a-f-]{36})\s*$/m);
   return match?.[1] ?? null;
 }

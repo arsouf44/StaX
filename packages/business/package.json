@@ -1,5 +1,5 @@
 {
-  "name": "@stax/business",
+  "name": "@nemasus/business",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,12 +13,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@stax/types": "workspace:*",
-    "@stax/validation": "workspace:*",
+    "@nemasus/types": "workspace:*",
+    "@nemasus/validation": "workspace:*",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@stax/config": "workspace:*",
+    "@nemasus/config": "workspace:*",
     "typescript": "5.9.3"
   }
 }

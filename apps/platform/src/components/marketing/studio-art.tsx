@@ -1,4 +1,4 @@
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 
 /**
  * Illustrations du site public, dessinees dans la palette : une pile de

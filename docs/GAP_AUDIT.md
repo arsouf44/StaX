@@ -7,12 +7,14 @@ complet est compté **non terminé**, comme demandé.
 Date : 2026-09-21 · Branche : `claude/saas-web-builder-platform-lsbygs`
 Mise à jour : 2026-09-22 (éditeur visuel, comptes internes, parcours réels —
 § 2 et § 11) · Branche : `claude/busy-turing-xwqbpn`
-Mise à jour : 2026-09-24 (**sites développés hors de StaX**, contrat
+Mise à jour : 2026-09-24 (**sites développés hors de Nemasus**, contrat
 d’édition, publication GitHub + Cloudflare, cinq offres mensuelles — § 12, qui
 remplace § 1 et § 2 là où ils se contredisent) · Branche :
 `claude/clever-maxwell-syg8wd`
 Mise à jour : 2026-09-26 (**vente par téléphone**, messagerie de l’équipe,
 pannes de lancement — § 13) · Branche : `claude/upbeat-goldberg-rfm9uz`
+Mise à jour : 2026-09-28 (**StaX devient Nemasus**, revue juridique de toutes
+les pages — § 14) · Branche : `claude/relaxed-allen-29o1o2`
 
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
@@ -29,7 +31,7 @@ fonctionne ».
 |---|---|---|---|---|
 | 1 | Catalogue vide, création de site impossible | Six migrations **déjà appliquées** modifiées en place. Le lanceur vérifie l'empreinte et refuse de tourner ; la base restait sur l'ancien schéma pendant que le code interrogeait `maintenance_price_cents` et `billing_interval`, inexistants | Migrations restaurées à l'octet près ; changement porté par une migration avant. Les deux chemins (installation neuve / base existante) produisent un schéma **identique**, vérifié par `pg_dump` | `supabase/migrations/20260101000003,05,09,10,11,16`, `…20_annual_maintenance.sql` |
 | 2 | **Tous** les formulaires rejetaient leur propre soumission | Next.js injecte `$ACTION_REF_1`, `$ACTION_KEY`… dans le FormData ; `formDataToObject` les passait à des schémas `.strict()` → « Unrecognized keys ». Plus : une case HTML envoie `'on'`, donc `z.literal(true)` sur les CGV était insatisfiable depuis un navigateur | Filtrage des champs du framework au point unique ; `checkboxSchema` / `consentCheckbox` | `packages/validation/src/common.ts`, `auth.ts`, `commerce.ts` |
-| 3 | 500 anonyme à chaque envoi de formulaire | `STAX_SECRET_KEY` absent → exception non rattrapée | Clé obligatoire **en production** (refus de démarrage) ; clé éphémère marquée hors production | `packages/security/src/crypto.ts` |
+| 3 | 500 anonyme à chaque envoi de formulaire | `NEMASUS_SECRET_KEY` absent → exception non rattrapée | Clé obligatoire **en production** (refus de démarrage) ; clé éphémère marquée hors production | `packages/security/src/crypto.ts` |
 
 **Pourquoi les tests ne les ont pas vus** : les E2E d'authentification
 vérifiaient qu'« une erreur s'affiche ». L'erreur de validation les satisfaisait.
@@ -59,7 +61,7 @@ désormais le FormData réel du framework.
 ## 2. Éditeur client — **OK** (réécrit, vérifié dans un vrai navigateur)
 
 > **Ne concerne plus que les sites de l’ancien moteur** (`legacy_engine`).
-> Les nouveaux sites sont développés hors de StaX et édités par leur contrat
+> Les nouveaux sites sont développés hors de Nemasus et édités par leur contrat
 > d’édition : voir § 12.
 
 L’éditeur est un **éditeur visuel en trois zones** (`apps/platform/src/app/app/editeur`) :
@@ -78,9 +80,9 @@ des onglets et l’aperçu s’ouvre au format téléphone.
 | Enregistrement automatique + points de sauvegarde | **OK** — un point par fenêtre de 10 min, un point avant chaque restauration | `draft_checkpoints` |
 | Aperçu ordinateur / tablette / téléphone | **OK** — rendu à la vraie largeur puis réduit | `preview-frame.tsx` |
 | Vérification avant publication | **OK** — bloquant vs conseil, « Corriger » amène à la section | `publication-checks.ts` |
-| Publication | **OK** — version immuable, atomique, purge du cache, `x-stax-version` | `app.publish_site`, `cache-purge.ts` |
+| Publication | **OK** — version immuable, atomique, purge du cache, `x-nemasus-version` | `app.publish_site`, `cache-purge.ts` |
 | Historique : Voir, Comparer, Restaurer, Republier | **OK** — restaurer ne détruit jamais les versions suivantes | `history-panel.tsx`, `app.rollback_site` |
-| Auteur de chaque version : vous, un membre, l’équipe StaX | **OK** | `actor_kind` |
+| Auteur de chaque version : vous, un membre, l’équipe Nemasus | **OK** | `actor_kind` |
 | Conflit entre deux onglets | **OK** — refus explicite, rechargement | `p_base_seq`, `40001` |
 
 **Sécurité de l’aperçu** : le contenu affiché est écrit par le client. Il est
@@ -123,14 +125,14 @@ SQL « Editeur et versions ».
 | Un panier abandonné rend son stock | `app.release_expired_shop_orders` | assertion SQL |
 | Le produit d'un autre client n'existe pas depuis ce site | filtre `site_id` côté serveur | assertion SQL |
 | La vente en ligne est un droit d'offre | `app.has_feature(org,'ecommerce')` | assertion SQL |
-| Aucune donnée bancaire ne touche StaX | Stripe Connect, page hébergée par Stripe | — |
+| Aucune donnée bancaire ne touche Nemasus | Stripe Connect, page hébergée par Stripe | — |
 
 32 assertions SQL sur cette chaîne.
 
 **Défaut trouvé au passage** : l'ajout au panier était **cassé en production**.
 Le script client postait sur `/api/cart` sans le jeton anti-CSRF, que la garde
 exige — le bouton « Ajouter au panier » répondait donc toujours 403. Le jeton
-est maintenant porté par le document (`<body data-stax-token>`), là où les
+est maintenant porté par le document (`<body data-nemasus-token>`), là où les
 interactions sans formulaire peuvent le lire.
 
 **Second défaut** : un don réussi laissait sa ligne de paiement en `pending`
@@ -147,7 +149,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | Le cookie de session est signé **avec l'identifiant du site** | Un cookie du site A ne vaut rien sur le site B, bien que le même Worker serve les deux |
 | La demande de lien répond **toujours la même chose** | Le formulaire ne peut pas servir d'annuaire de la clientèle d'un commerçant |
 | Au plus 5 liens par heure et par compte | Le formulaire ne peut pas servir à inonder la boîte de quelqu'un |
-| L'e-mail est signé **par le commerçant**, pas par StaX | Le destinataire est le client d'une boulangerie, pas le nôtre : un message signé par une plateforme inconnue serait pris pour de l'hameçonnage |
+| L'e-mail est signé **par le commerçant**, pas par Nemasus | Le destinataire est le client d'une boulangerie, pas le nôtre : un message signé par une plateforme inconnue serait pris pour de l'hameçonnage |
 | Le jeton est consommé puis la page **redirige** | Le lien ne survit ni dans l'historique ni dans les référents |
 | Un compte se **bloque**, il ne se supprime pas | Une commande passée doit rester rattachable |
 
@@ -166,7 +168,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | Activations progressives | **OK** — bascule globale, distincte des droits d'offre (un drapeau déploie, il ne vend pas) |
 | Demandes RGPD | **OK** — tri par échéance, compte à rebours du délai d'un mois, et **l'ordre est imposé** : une demande ne peut pas être marquée traitée sans identité vérifiée |
 | Tâches de fond | **OK** — ce qui échoue là ne se voyait nulle part ailleurs |
-| Modèles de site, métiers et modules | **OK, en lecture seule** — ce sont du code versionné (`@stax/business`, migrations de référence). Les modifier depuis une interface les désynchroniserait du dépôt, et c'est écrit sur l'écran |
+| Modèles de site, métiers et modules | **OK, en lecture seule** — ce sont du code versionné (`@nemasus/business`, migrations de référence). Les modifier depuis une interface les désynchroniserait du dépôt, et c'est écrit sur l'écran |
 
 ---
 
@@ -221,7 +223,7 @@ confirmer celle écrite avant l'appel à Stripe.
 | `format:check`, `lint`, `typecheck` | **OK** — 0 |
 | Tests unitaires + sécurité + intégration | **OK** |
 | Assertions SQL / RLS | **OK** — 270 |
-| E2E | **OK** — 54 tests (marketing, accessibilité, auth, intégrité des liens, en-têtes de sécurité). Les 4 tests d'authentification **passaient à côté du produit** : sans `STAX_SECRET_KEY`, le build de production levait une exception et ils vérifiaient le comportement d'une plateforme mal configurée. Le serveur de test reçoit désormais des secrets jetables, régénérés à chaque exécution |
+| E2E | **OK** — 54 tests (marketing, accessibilité, auth, intégrité des liens, en-têtes de sécurité). Les 4 tests d'authentification **passaient à côté du produit** : sans `NEMASUS_SECRET_KEY`, le build de production levait une exception et ils vérifiaient le comportement d'une plateforme mal configurée. Le serveur de test reçoit désormais des secrets jetables, régénérés à chaque exécution |
 | Parcours critiques | **OK** — 12 parcours d'intégration contre une vraie base : commande → paiement → création du site → édition → publication → brouillon indépendant → retour arrière → résolution du tenant → formulaire → réservation → activation → suspension |
 | Build production + Cloudflare | **OK** |
 
@@ -258,7 +260,7 @@ revient.
 ## 10. Installation réelle — le défaut que seul le déploiement révèle
 
 Le produit était testé, typé, audité… et **installé nulle part**. Aucune base
-de données StaX n'existait : ni en production, ni ailleurs. Un client arrivait
+de données Nemasus n'existait : ni en production, ni ailleurs. Un client arrivait
 donc sur « Catalogue tarifaire momentanément indisponible » et ne pouvait pas
 créer de compte. Aucun test ne pouvait le voir : les tests parlent au code, pas
 à une installation.
@@ -305,7 +307,7 @@ documenté qui ne fonctionnait pas.
 
 | Correction | Verrou |
 |---|---|
-| `@stax/config/dotenv` charge `.env.local` puis `.env` depuis la racine de l'espace de travail | `tests/unit/dotenv.test.ts` — 13 tests |
+| `@nemasus/config/dotenv` charge `.env.local` puis `.env` depuis la racine de l'espace de travail | `tests/unit/dotenv.test.ts` — 13 tests |
 | `apps/platform/next.config.ts` et les 5 scripts d'exploitation l'appellent avant toute autre chose | — |
 | Une variable déjà définie n'est **jamais** écrasée : secret Cloudflare et variable de CI gardent la priorité | test dédié |
 
@@ -348,7 +350,7 @@ Parcours automatisés (`pnpm test:e2e:stack`, 6 parcours) :
 1. **Client, 16 étapes** : connexion → éditeur → titre modifié en cliquant sur
    l’aperçu → photo remplacée (réellement chargée) → section ajoutée → déplacée →
    supprimée puis restaurée → rendu téléphone → publication → requête HTTP sur
-   l’adresse publique → nouvelle version servie (`x-stax-version`) → nouvelle
+   l’adresse publique → nouvelle version servie (`x-nemasus-version`) → nouvelle
    modification non publiée → le site public montre toujours l’ancienne →
    publication → retour à la première version → requête HTTP : la première
    version est de nouveau servie, les versions intermédiaires restent dans
@@ -362,15 +364,15 @@ Parcours automatisés (`pnpm test:e2e:stack`, 6 parcours) :
 4. **Tout est réversible** : annuler/rétablir, comparer, restaurer une version
    sans rien détruire, site en ligne inchangé.
 5. **Page supprimée** puis restaurée depuis la corbeille.
-6. **Équipe StaX** : refusée sans session d’assistance ; en session, son
-   intervention apparaît « Équipe StaX » dans l’historique du client.
+6. **Équipe Nemasus** : refusée sans session d’assistance ; en session, son
+   intervention apparaît « Équipe Nemasus » dans l’historique du client.
 
 ---
 
-## 12. Sites développés hors de StaX — état au 2026-09-24
+## 12. Sites développés hors de Nemasus — état au 2026-09-24
 
-StaX ne fabrique pas de sites. Chaque site est développé dans son propre dépôt
-GitHub, déployé par son propre projet Cloudflare, rattaché à StaX, vérifié,
+Nemasus ne fabrique pas de sites. Chaque site est développé dans son propre dépôt
+GitHub, déployé par son propre projet Cloudflare, rattaché à Nemasus, vérifié,
 puis livré ; le client le gère ensuite. Détails :
 [site-delivery.md](./site-delivery.md).
 
@@ -381,8 +383,8 @@ puis livré ; le client le gère ensuite. Détails :
 | Aucune édition avant la livraison, imposé techniquement | **OK** — `app.site_content_access` refuse le client tant que `delivered_at` est vide | `0044`, `0051` | SQL, intégration, E2E « avant la livraison » |
 | Suivi de projet client en 7 étapes, validations enregistrées | **OK** | `0042`, `0050`, `/app` | E2E, intégration |
 | Admin *Projet → Infrastructure & livraison* avec checklist | **OK** — dépôt, projet Cloudflare, domaine, contrat, contenu initial, contrôles automatiques et attestés, livraison | `admin/sites/[id]/livraison` | E2E « l’équipe rattache… puis livre » |
-| Contrat `stax.manifest.json` | **OK** — 17 types de champs, collections, formulaires, modules, limites, contrôle de l’offre | `packages/site-contract` | `tests/unit/site-contract.test.ts` |
-| Brouillon → Publier → commit `stax: publication client 0000N` → déploiement Cloudflare suivi | **OK** — avance rapide, idempotent (`Stax-Release`) | `lib/external-sites/publisher.ts` | E2E « le client publie », sécurité |
+| Contrat `nemasus.manifest.json` | **OK** — 17 types de champs, collections, formulaires, modules, limites, contrôle de l’offre | `packages/site-contract` | `tests/unit/site-contract.test.ts` |
+| Brouillon → Publier → commit `nemasus: publication client 0000N` → déploiement Cloudflare suivi | **OK** — avance rapide, idempotent (`Nemasus-Release`) | `lib/external-sites/publisher.ts` | E2E « le client publie », sécurité |
 | Jamais « Publié » avant confirmation | **OK** — `published` posé uniquement par `record_site_deployment` sur le commit exact ; délai 45 min, confirmation tardive | `0044`, `0049` | SQL, intégration, E2E |
 | Un échec garde la version précédente | **OK** — `production_release_id` inchangé | `0044` | E2E « déploiement en échec » |
 | Historique : version, SHA, déploiement, auteur, date, état ; Voir / Restaurer / Republier | **OK** — restaurer crée une version et la redéploie réellement | `/app/site/versions` | E2E « restaurer la version 1 » |
@@ -408,7 +410,7 @@ modifier les migrations précédentes.
 |---|---|---|
 | L’éditeur encadrait le **domaine du client**, que la CSP de l’éditeur n’autorise pas | En production, aperçu bloqué (« This content is blocked ») pour tout site doté de son domaine | L’éditeur encadre l’adresse du projet Cloudflare (`*.pages.dev`, `*.workers.dev`), même déploiement ; test unitaire + assertion E2E |
 | Après la livraison, le tableau de bord et la page Maintenance annonçaient encore « démarre à la livraison » | Message faux pour un site livré | Libellé tiré de l’état réel (`orders.maintenance_status`) : active, en cours de mise en place, incluse (compte interne), au devis |
-| Le tunnel de commande proposait une adresse provisoire `xxx.sites.stax.fr` | Promesse d’une adresse que le nouveau modèle ne sert pas | « Je choisirai plus tard » : adresse technique du projet Cloudflare, communiquée à la mise en ligne |
+| Le tunnel de commande proposait une adresse provisoire `xxx.sites.nemasus.fr` | Promesse d’une adresse que le nouveau modèle ne sert pas | « Je choisirai plus tard » : adresse technique du projet Cloudflare, communiquée à la mise en ligne |
 | `public.write_audit` ouvert à toute personne connectée, pour toute organisation | Lignes d’audit injectables dans le journal d’une autre société | 0052 : restreint à sa propre organisation (8 assertions SQL) |
 | `public.compute_order_pricing` exécutable sans compte | Codes promotionnels testables sans limite | 0052 : fermé à `anon` |
 | Carte Exceptionnel : surtitre et badge superposés ; étape du projet affichée en valeur technique (`ordered`) dans l’administration ; apostrophes et accents manquants dans des e-mails et messages | Finition | Corrigés |
@@ -450,7 +452,7 @@ Aucune de ces pannes ne levait d’exception ni ne faisait échouer un test.
 |---|---|---|---|
 | 1 | Le correctif 0053 (tâche de fond compatible Vercel Hobby) était appliqué en base mais **jamais fusionné** | La branche principale gardait une tâche planifiée toutes les 5 min, refusée par Vercel Hobby : **déploiement en échec** | Fusionné |
 | 2 | Aucun écran d’administration ne lisait les messages clients (`project_messages`) ni les tickets | Un client qui écrivait n’avait **jamais de réponse** | `/admin/messages`, fiche ticket, réponse avec e-mail |
-| 3 | Les policies d’insertion des messages ne vérifiaient pas le côté de l’auteur | Un client pouvait, par l’API, écrire un message affiché « Équipe StaX » | 0055 : côté imposé par la base (SQL) |
+| 3 | Les policies d’insertion des messages ne vérifiaient pas le côté de l’auteur | Un client pouvait, par l’API, écrire un message affiché « Équipe Nemasus » | 0055 : côté imposé par la base (SQL) |
 | 4 | Aucune route de retour des liens d’e-mail (échange du code PKCE) | **Mot de passe oublié impossible à terminer** ; la confirmation d’inscription ne connectait pas | `/auth/confirmation` |
 | 5 | Les invitations de collaborateurs menaient à `/invitation`, page inexistante, et aucune fonction ne permettait de les accepter | Invitations **impossibles à accepter** | `/invitation`, `app.accept_organization_invitation` |
 | 6 | Retour d’annulation Stripe vers `/commander/paiement` | Page **404** pour qui renonçait au paiement | Retour au récapitulatif (ou à l’espace), message « rien n’a été débité » |
@@ -479,6 +481,43 @@ en mots simples, pastille des réponses non lues.
 
 ---
 
+## 14. Nemasus et revue juridique — état au 2026-09-28
+
+Renommage complet (marque, logo, paquets `@nemasus/*`, variables `NEMASUS_*`
+avec repli sur `STAX_*`, contrat `nemasus.manifest.json`, textes stockés en
+base par la migration 0056). Ce qui reste sous l’ancien nom et pourquoi : voir
+l’encadré en tête du README.
+
+Défauts trouvés en relisant les pages contre le code et la production :
+
+| # | Défaut | Risque | Correction |
+|---|---|---|---|
+| 1 | Mentions légales : hébergeur décrit « Cloudflare (diffusion) et Supabase » sans téléphone, avec l’adresse d’un bureau de Supabase au lieu de celle de la société contractante | Mention obligatoire inexacte (LCEN art. 6 III) | Cloudflare, Inc. (adresse, téléphone) pour la plateforme et les sites ; Supabase Pte. Ltd. nommé pour les données |
+| 2 | Téléphone de l’hébergeur jamais renseigné : « [A CONFIGURER] » en production | Mention obligatoire manquante | Valeur publiée par Cloudflare, vérifiée à la source |
+| 3 | Bandeau cookies annonçant une mesure d’audience « activée par défaut » que le site ne fait pas | Information inexacte | Bandeau retiré (aucun traceur soumis à consentement) ; politique cookies réécrite, cookies réels nommés |
+| 4 | Inscription : « J’accepte les CGV et la politique de confidentialité » | CGU jamais acceptées alors qu’elles disent l’être ; « accepter » une politique de confidentialité est une confusion relevée par la CNIL | Case « J’accepte les CGU », version des CGU conservée ; confidentialité en simple information |
+| 5 | E-mail de proposition sans information du prospect ni moyen de s’opposer ; aucun moyen d’effacer ses coordonnées avant 3 ans | RGPD art. 13 et 21 | Mention dans chaque e-mail (« STOP ») ; `app.erase_site_proposal_contact` + bouton, 4 assertions SQL |
+| 6 | Prospection B2B fondée sur le « consentement » dans la politique de confidentialité | Base légale inadaptée | Intérêt légitime, source des données (art. 14), liste d’opposition, registre § A9 |
+| 7 | Sous-traitants publiés sans Resend ; Cloudflare dit « Union européenne » et limité à la diffusion | Liste art. 28 incomplète et inexacte | Liste corrigée en base (0056), registre et politique alignés |
+| 8 | Exemples fictifs sur de vrais noms de domaine (`restaurant-dupont.fr`…) | Confusion avec une entreprise réelle | Domaines réservés `.example` |
+| 9 | CGV « références » (sans accord) contredisant la page Réalisations (accord explicite) | Clause contredite par l’offre publiée | Références avec accord ; mention « Site réalisé par Nemasus » retirable |
+
+**Déploiement Cloudflare (2026-09-28).** La plateforme revient sur Cloudflare
+Workers. Le déploiement échouait : Workers Builds lance `npx wrangler deploy`
+à la racine, où `wrangler` n’était pas installé et où aucune configuration
+n’existait ; `pnpm run build` ne produisait d’ailleurs pas le Worker
+(`next build` seul). Corrigé : `wrangler` à la racine, `wrangler.jsonc` racine
+pointant sur la sortie OpenNext, `pnpm run build` = build Cloudflare, et
+configuration publique relue à l’exécution (le build n’a besoin d’aucune
+variable). Vérifié sur une copie propre : installation figée, build,
+déploiement à blanc, puis pages servies par `wrangler dev` (moteur workerd).
+
+Non corrigeables depuis le dépôt (voir [LANCEMENT.md](./LANCEMENT.md)) :
+offre Workers Paid (le Worker dépasse 3 Mo compressé), secrets du Worker,
+Supabase en offre gratuite (pas de sauvegardes, alors que les CGV et la page
+Infrastructure en annoncent) ; migration 0056 à appliquer ; relecture par un
+avocat.
+
 ## Ce qui reste non terminé, sans détour
 
 0. ~~Migrations 0054 et 0055 à appliquer sur le projet Supabase réel~~ —
@@ -492,7 +531,7 @@ en mots simples, pastille des réponses non lues.
 
 0 ter. ~~Migrations à appliquer sur le projet Supabase réel~~ — **fait le
    2026-09-24** : les migrations 0042 à 0053 sont appliquées sur le projet
-   « StaX » (53 au total), chacune tracée dans `app.schema_migrations` avec
+   « Nemasus » (53 au total), chacune tracée dans `app.schema_migrations` avec
    l’empreinte de son fichier. Le schéma réel a été comparé à une base locale
    construite depuis le dépôt : tables, politiques RLS, contraintes, index,
    fonctions et droits d’exécution identiques. Reste `pnpm internal:bootstrap`

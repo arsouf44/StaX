@@ -1,10 +1,10 @@
-import type { Cents, Currency, RefundRequestStatus } from '@stax/types';
+import type { Cents, Currency, RefundRequestStatus } from '@nemasus/types';
 
 /**
  * Politique commerciale de remboursement.
  *
  * LEGAL_REVIEW_REQUIRED — Cette regle est une GARANTIE COMMERCIALE offerte par
- * StaX. Elle s'ajouté aux droits légaux du client et ne s'y substitue jamais :
+ * Nemasus. Elle s'ajouté aux droits légaux du client et ne s'y substitue jamais :
  * un professionnel ne beneficie pas du droit de retractation de l'article
  * L.221-18 du Code de la consommation dans les memes conditions qu'un
  * consommateur, et aucune stipulation contractuelle ne peut ecarter les
@@ -36,7 +36,7 @@ export interface RefundEligibilityInput {
   goLiveAt: Date | null;
   /** Montant reellement encaisse, deduction faite des remboursements deja emis. */
   amountPaidCents: Cents;
-  /** Un domaine a-t-il ete achete par StaX pour ce client ? */
+  /** Un domaine a-t-il ete achete par Nemasus pour ce client ? */
   domainPurchased: boolean;
   /** Cout reel du domaine, conserve comme preuve d'achat. */
   domainCostCents?: Cents;

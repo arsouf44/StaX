@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { EmptyState, Icon, Panel } from '@stax/ui';
+import { EmptyState, Icon, Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { requireCurrentSite } from '~/lib/workspace';
 import { loadReleaseViews } from '../../editeur/contract/data';

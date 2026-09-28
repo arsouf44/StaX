@@ -7,7 +7,7 @@ import {
   loadRootEnv,
   parseDotenv,
   resetRootEnvLoader,
-} from '@stax/config/dotenv';
+} from '@nemasus/config/dotenv';
 
 /**
  * Le chargement des fichiers `.env` de la racine.
@@ -22,7 +22,7 @@ import {
 const created: string[] = [];
 
 function workspace(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), 'stax-dotenv-'));
+  const root = mkdtempSync(join(tmpdir(), 'nemasus-dotenv-'));
   created.push(root);
   writeFileSync(join(root, 'pnpm-workspace.yaml'), "packages:\n  - 'packages/*'\n");
   for (const [name, content] of Object.entries(files)) {
@@ -71,7 +71,7 @@ describe('findWorkspaceRoot', () => {
   });
 
   it('renvoie null hors de tout espace de travail', () => {
-    const orphan = mkdtempSync(join(tmpdir(), 'stax-orphan-'));
+    const orphan = mkdtempSync(join(tmpdir(), 'nemasus-orphan-'));
     created.push(orphan);
     expect(findWorkspaceRoot(orphan)).toBeNull();
   });
@@ -79,52 +79,52 @@ describe('findWorkspaceRoot', () => {
 
 describe('loadRootEnv', () => {
   it('charge .env.local depuis la racine quand on part du repertoire d une application', () => {
-    const root = workspace({ '.env.local': 'STAX_TEST_FROM_LOCAL=ok\n' });
-    delete process.env.STAX_TEST_FROM_LOCAL;
+    const root = workspace({ '.env.local': 'NEMASUS_TEST_FROM_LOCAL=ok\n' });
+    delete process.env.NEMASUS_TEST_FROM_LOCAL;
 
     loadRootEnv(join(root, 'apps', 'platform'));
 
-    expect(process.env.STAX_TEST_FROM_LOCAL).toBe('ok');
-    delete process.env.STAX_TEST_FROM_LOCAL;
+    expect(process.env.NEMASUS_TEST_FROM_LOCAL).toBe('ok');
+    delete process.env.NEMASUS_TEST_FROM_LOCAL;
   });
 
   it('donne la priorite a .env.local sur .env', () => {
     const root = workspace({
-      '.env.local': 'STAX_TEST_PRIORITE=local\n',
-      '.env': 'STAX_TEST_PRIORITE=partage\nSTAX_TEST_SEULEMENT_ENV=present\n',
+      '.env.local': 'NEMASUS_TEST_PRIORITE=local\n',
+      '.env': 'NEMASUS_TEST_PRIORITE=partage\nNEMASUS_TEST_SEULEMENT_ENV=present\n',
     });
-    delete process.env.STAX_TEST_PRIORITE;
-    delete process.env.STAX_TEST_SEULEMENT_ENV;
+    delete process.env.NEMASUS_TEST_PRIORITE;
+    delete process.env.NEMASUS_TEST_SEULEMENT_ENV;
 
     loadRootEnv(root);
 
-    expect(process.env.STAX_TEST_PRIORITE).toBe('local');
-    expect(process.env.STAX_TEST_SEULEMENT_ENV).toBe('present');
-    delete process.env.STAX_TEST_PRIORITE;
-    delete process.env.STAX_TEST_SEULEMENT_ENV;
+    expect(process.env.NEMASUS_TEST_PRIORITE).toBe('local');
+    expect(process.env.NEMASUS_TEST_SEULEMENT_ENV).toBe('present');
+    delete process.env.NEMASUS_TEST_PRIORITE;
+    delete process.env.NEMASUS_TEST_SEULEMENT_ENV;
   });
 
   it('n ecrase JAMAIS une variable deja definie : un secret de deploiement gagne', () => {
-    const root = workspace({ '.env.local': 'STAX_TEST_DEJA_DEFINI=fichier\n' });
-    process.env.STAX_TEST_DEJA_DEFINI = 'secret-de-deploiement';
+    const root = workspace({ '.env.local': 'NEMASUS_TEST_DEJA_DEFINI=fichier\n' });
+    process.env.NEMASUS_TEST_DEJA_DEFINI = 'secret-de-deploiement';
 
     loadRootEnv(root);
 
-    expect(process.env.STAX_TEST_DEJA_DEFINI).toBe('secret-de-deploiement');
-    delete process.env.STAX_TEST_DEJA_DEFINI;
+    expect(process.env.NEMASUS_TEST_DEJA_DEFINI).toBe('secret-de-deploiement');
+    delete process.env.NEMASUS_TEST_DEJA_DEFINI;
   });
 
   it('est idempotent : le second appel ne relit rien', () => {
-    const root = workspace({ '.env.local': 'STAX_TEST_IDEMPOTENT=1\n' });
-    delete process.env.STAX_TEST_IDEMPOTENT;
+    const root = workspace({ '.env.local': 'NEMASUS_TEST_IDEMPOTENT=1\n' });
+    delete process.env.NEMASUS_TEST_IDEMPOTENT;
 
     expect(loadRootEnv(root)).toEqual(['.env.local']);
     expect(loadRootEnv(root)).toEqual([]);
-    delete process.env.STAX_TEST_IDEMPOTENT;
+    delete process.env.NEMASUS_TEST_IDEMPOTENT;
   });
 
   it('ne fait rien, sans lever, hors de tout espace de travail', () => {
-    const orphan = mkdtempSync(join(tmpdir(), 'stax-orphan-'));
+    const orphan = mkdtempSync(join(tmpdir(), 'nemasus-orphan-'));
     created.push(orphan);
     expect(loadRootEnv(orphan)).toEqual([]);
   });

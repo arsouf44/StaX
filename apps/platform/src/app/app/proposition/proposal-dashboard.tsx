@@ -1,6 +1,6 @@
-import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
-import { formatMaintenance, formatMoney } from '@stax/payments';
-import { Alert, ButtonLink, Icon, Panel, StatusPill } from '@stax/ui';
+import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
+import { formatMaintenance, formatMoney } from '@nemasus/payments';
+import { Alert, ButtonLink, Icon, Panel, StatusPill } from '@nemasus/ui';
 import { ProjectConversation } from '../projet/project-conversation';
 import { ProposalPayForm } from './pay-form';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@stax/payments",
+  "name": "@nemasus/payments",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,9 +13,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@stax/config": "workspace:*",
-    "@stax/types": "workspace:*",
-    "@stax/validation": "workspace:*",
+    "@nemasus/config": "workspace:*",
+    "@nemasus/types": "workspace:*",
+    "@nemasus/validation": "workspace:*",
     "stripe": "22.6.2",
     "zod": "4.6.5"
   },

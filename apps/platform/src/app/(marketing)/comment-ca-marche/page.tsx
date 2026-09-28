@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@stax/ui';
+import { ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@nemasus/ui';
 import { CreationTimeline } from '~/components/marketing/diagrams';
 import { BrowserFrame, EditorMock, ProjectMock } from '~/components/marketing/product-visuals';
 import { PROCESS_STEPS } from '~/content/process';
@@ -7,7 +7,7 @@ import { PROCESS_STEPS } from '~/content/process';
 export const metadata: Metadata = {
   title: 'Comment ça marche',
   description:
-    'Nous créons votre site, vous le gérez ensuite. Les six étapes d’un projet StaX : votre ' +
+    'Nous créons votre site, vous le gérez ensuite. Les six étapes d’un projet Nemasus : votre ' +
     'projet, la conception, le développement, la mise en ligne, la livraison, puis votre autonomie.',
   alternates: { canonical: '/comment-ca-marche' },
 };
@@ -76,7 +76,7 @@ export default function HowItWorksPage() {
               <CreationTimeline steps={PROCESS_STEPS} />
             </Reveal>
             <div className="lg:sticky lg:top-28">
-              <BrowserFrame url="stax.fr/app">
+              <BrowserFrame url="nemasus.fr/app">
                 <ProjectMock />
               </BrowserFrame>
               <p className="mt-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
       <Section spacing="compact" className="border-y border-[var(--border)]">
         <Container size="wide">
           <SectionHeading
-            eyebrow="Votre espace StaX"
+            eyebrow="Votre espace Nemasus"
             title="Avant la livraison, vous suivez. Après, vous gérez."
             description="L’éditeur n’existe pas encore tant que votre site est en construction : il s’ouvre le jour de la livraison, sur un site déjà en ligne."
           />
@@ -156,7 +156,7 @@ export default function HowItWorksPage() {
             </div>
             <Reveal delay={80}>
               <div className="stage">
-                <BrowserFrame url="stax.fr/app/editeur">
+                <BrowserFrame url="nemasus.fr/app/editeur">
                   <EditorMock />
                 </BrowserFrame>
               </div>

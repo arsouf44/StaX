@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button, ButtonLink, Container } from '@stax/ui';
+import { Button, ButtonLink, Container } from '@nemasus/ui';
 
 /**
  * Erreur inattendue.
@@ -19,7 +19,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[stax:error]', error.digest ?? error.message);
+    console.error('[nemasus:error]', error.digest ?? error.message);
   }, [error]);
 
   return (

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { platformUrl } from '@stax/config';
+import { platformUrl } from '@nemasus/config';
 import { SITEMAP_ROUTES } from '~/lib/navigation';
 
 /**

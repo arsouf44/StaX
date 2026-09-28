@@ -1,7 +1,7 @@
 'use server';
 
-import { createUserClient, adminSearch, type AdminSearchResult } from '@stax/database';
-import { hasPlatformRole } from '@stax/auth';
+import { createUserClient, adminSearch, type AdminSearchResult } from '@nemasus/database';
+import { hasPlatformRole } from '@nemasus/auth';
 import { requireSession } from '~/lib/session';
 
 /**

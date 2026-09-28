@@ -1,5 +1,5 @@
 import 'server-only';
-import { unwrapList, unwrapMaybe, type Db } from '@stax/database';
+import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
 import {
   addPagesDomain,
   CloudflareError,
@@ -15,7 +15,7 @@ import {
   runDeliveryProbes,
   type HostingProvider,
   type InstallationRepository,
-} from '@stax/infrastructure';
+} from '@nemasus/infrastructure';
 import {
   checkManifestAgainstPlan,
   contentFromBundle,
@@ -29,7 +29,7 @@ import {
   type ManifestSummary,
   type PlanProblem,
   type PlanRights,
-} from '@stax/site-contract';
+} from '@nemasus/site-contract';
 import { syncHostingDeployments } from './publisher';
 import {
   loadActiveManifest,
@@ -40,7 +40,7 @@ import {
 } from './records';
 
 /**
- * Operations de l'equipe StaX sur l'infrastructure d'un site (page
+ * Operations de l'equipe Nemasus sur l'infrastructure d'un site (page
  * « Infrastructure & livraison »).
  *
  * Deux clients :
@@ -136,7 +136,7 @@ export async function connectRepository(
   if (!repository) {
     return {
       ok: false,
-      message: 'Ce dépôt n’est pas accessible à l’application StaX sur cette installation.',
+      message: 'Ce dépôt n’est pas accessible à l’application Nemasus sur cette installation.',
     };
   }
   if (repository.archived) {
@@ -189,7 +189,7 @@ export async function connectRepository(
   };
 }
 
-/** Relit le sommet de la branche de production (et detecte le travail hors StaX). */
+/** Relit le sommet de la branche de production (et detecte le travail hors Nemasus). */
 export async function refreshRepository(db: Db, service: Db, siteId: string): Promise<FlowResult> {
   const repository = await loadRepository(db, siteId);
   if (!repository) return { ok: false, message: 'Aucun dépôt rattaché.' };
@@ -208,13 +208,14 @@ export async function refreshRepository(db: Db, service: Db, siteId: string): Pr
       };
     }
     const commit = await client.commit(head);
-    const fromStax =
-      head === repository.last_stax_commit_sha || /^Stax-Release:/m.test(commit.message);
+    const fromNemasus =
+      head === repository.last_stax_commit_sha || /^Nemasus-Release:/m.test(commit.message);
     await service.rpc('record_repository_state', {
       p_repository: repository.id,
       p_head_sha: head,
       p_committed_at: commit.committedAt,
-      p_sync_status: fromStax || !repository.last_stax_commit_sha ? 'in_sync' : 'developer_changes',
+      p_sync_status:
+        fromNemasus || !repository.last_stax_commit_sha ? 'in_sync' : 'developer_changes',
       p_error: null,
     });
     return { ok: true, message: `Dépôt relu : dernier commit ${head.slice(0, 7)}.` };
@@ -292,7 +293,7 @@ export async function connectHosting(
     return {
       ok: false,
       message:
-        'Les déploiements automatiques sont désactivés sur ce projet : StaX ne pourrait pas publier.',
+        'Les déploiements automatiques sont désactivés sur ce projet : Nemasus ne pourrait pas publier.',
     };
   }
 

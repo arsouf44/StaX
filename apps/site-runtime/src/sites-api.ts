@@ -4,9 +4,9 @@ import {
   unwrap,
   unwrapList,
   unwrapMaybe,
-} from '@stax/database';
-import { customerLoginEmail, sendEmail } from '@stax/emails';
-import { createConnectCheckoutSession } from '@stax/payments';
+} from '@nemasus/database';
+import { customerLoginEmail, sendEmail } from '@nemasus/emails';
+import { createConnectCheckoutSession } from '@nemasus/payments';
 import {
   enforceRateLimit,
   hashIp,
@@ -18,7 +18,7 @@ import {
   verifyTurnstile,
   visitorHash,
   type RateLimitName,
-} from '@stax/security';
+} from '@nemasus/security';
 import { clientIp, field, intField } from './api/shared';
 import { loginTokenHash, newLoginToken } from './api/customer-session';
 
@@ -27,7 +27,7 @@ import { loginTokenHash, newLoginToken } from './api/customer-session';
  *
  * Un tel site est servi par SON projet Cloudflare ; ses formulaires, sa mesure
  * d'audience, ses reservations, sa boutique et l'espace de ses clients
- * s'appuient sur StaX via cette API :
+ * s'appuient sur Nemasus via cette API :
  *
  *     https://<api>/v1/sites/<cle publique>/<ressource>
  *
@@ -39,10 +39,10 @@ import { loginTokenHash, newLoginToken } from './api/customer-session';
  *    nom de celui-ci depuis un navigateur ;
  *  - chaque operation est limitee en debit, et la base verifie ce que l'offre
  *    du client comprend (`submit_form`, `create_booking`, `create_shop_order`) ;
- *  - l'argent ne transite jamais par StaX : paiement sur le compte Stripe
+ *  - l'argent ne transite jamais par Nemasus : paiement sur le compte Stripe
  *    connecte du commercant.
  *
- * Le rendu du site ne depend PAS de cette API : si StaX est indisponible, le
+ * Le rendu du site ne depend PAS de cette API : si Nemasus est indisponible, le
  * site s'affiche ; seules ces interactions sont suspendues.
  */
 
@@ -168,7 +168,7 @@ async function limit(
     return { ok: decision.allowed, ipHash, retry: decision.retryAfterSeconds };
   } catch (error) {
     // Compteur injoignable : on laisse passer, l'incident est journalise.
-    console.error('[stax:sites-api] compteur indisponible', error);
+    console.error('[nemasus:sites-api] compteur indisponible', error);
     return { ok: true, ipHash };
   }
 }
@@ -258,7 +258,7 @@ export async function handleSitesApi(request: Request): Promise<Response> {
       return await customerSession(request, site, replyOrigin);
     if (resource === 'customers/me' && isRead) return await customerMe(request, site, replyOrigin);
   } catch (error) {
-    console.error('[stax:sites-api] erreur', resource, error);
+    console.error('[nemasus:sites-api] erreur', resource, error);
     return refuse('Service momentanément indisponible.', 503, 'unavailable', replyOrigin);
   }
   return refuse('Ressource inconnue.', 404, 'not_found', replyOrigin);
@@ -479,9 +479,9 @@ async function checkout(request: Request, site: ApiSite, origin: string | null):
     cancelUrl: `${origin}/?paiement=annule`,
     ...(email ? { customerEmail: email } : {}),
     metadata: {
-      stax_site_id: site.siteId,
-      stax_kind: 'shop_order',
-      stax_order_id: result.orderId ?? '',
+      nemasus_site_id: site.siteId,
+      nemasus_kind: 'shop_order',
+      nemasus_order_id: result.orderId ?? '',
     },
   });
   return json(
@@ -634,7 +634,7 @@ async function customerLogin(
         businessName: site.businessName,
         siteUrl: origin,
         contactEmail: null,
-        loginUrl: `${origin}${site.integration.customerAccountsLoginPath}?stax_token=${encodeURIComponent(token)}`,
+        loginUrl: `${origin}${site.integration.customerAccountsLoginPath}?nemasus_token=${encodeURIComponent(token)}`,
         expiresLabel: new Intl.DateTimeFormat('fr-FR', {
           dateStyle: 'short',
           timeStyle: 'short',

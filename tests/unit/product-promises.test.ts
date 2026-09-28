@@ -14,9 +14,9 @@ import { MAINTENANCE_EXCLUDES, MAINTENANCE_INCLUDES } from '~/content/maintenanc
 import { FEATURE_PAGES } from '~/content/features';
 
 /**
- * Ce que StaX dit de lui-meme.
+ * Ce que Nemasus dit de lui-meme.
  *
- * StaX n'est ni un generateur de sites, ni un systeme de modeles : chaque site
+ * Nemasus n'est ni un generateur de sites, ni un systeme de modeles : chaque site
  * est concu et developpe par l'equipe, dans son propre depot, puis livre ; le
  * client le gere ENSUITE. Une page qui laisserait croire l'inverse vendrait
  * un produit qui n'existe pas. Ces regles le verifient mecaniquement.
@@ -117,7 +117,7 @@ describe('le vrai produit, dit clairement', () => {
       'Nous concevons et développons votre site',
       'Nous le mettons réellement en ligne',
       'Nous vous le livrons',
-      'Vous modifiez son contenu depuis StaX',
+      'Vous modifiez son contenu depuis Nemasus',
       'Vous publiez, et c’est réellement en ligne',
     ]);
   });

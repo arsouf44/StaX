@@ -90,7 +90,7 @@ export function renderEmailLayout(options: EmailLayoutOptions): string {
           <td style="padding:28px 32px 0;">
             <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
                          font-size:18px;font-weight:700;letter-spacing:-0.02em;color:${COLORS.ink};">
-              Sta<span style="color:#7C5CFF;">X</span>
+              Nemasus
             </span>
           </td>
         </tr>

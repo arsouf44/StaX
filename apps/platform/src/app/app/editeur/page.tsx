@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { publicSiteUrl } from '@stax/config';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { Alert, ButtonLink, EmptyState, Icon, PermissionDenied } from '@stax/ui';
+import { publicSiteUrl } from '@nemasus/config';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { Alert, ButtonLink, EmptyState, Icon, PermissionDenied } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { blockMetas, loadEditorStatus, loadPageBlocks, loadPageTrash } from './data';
@@ -65,13 +65,13 @@ export default async function EditorPage({
 
   if (pages.length === 0) {
     // Aucun site n'est plus prepare a partir d'un modele : un site sans page
-    // est un projet en cours chez StaX, pas une coquille a remplir.
+    // est un projet en cours chez Nemasus, pas une coquille a remplir.
     return (
       <>
         <PageHeader title="Modifier mon site" />
         <Alert tone="info" live="status" title="Votre site est en cours de réalisation">
-          L’équipe StaX conçoit et développe votre site. Vous pourrez modifier ses contenus dès sa
-          livraison ; en attendant, suivez l’avancement depuis « Mon projet ».
+          L’équipe Nemasus conçoit et développe votre site. Vous pourrez modifier ses contenus dès
+          sa livraison ; en attendant, suivez l’avancement depuis « Mon projet ».
         </Alert>
       </>
     );

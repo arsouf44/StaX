@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button } from '@stax/ui';
+import { Alert, Button } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { acceptInvitationAction } from './actions';
 

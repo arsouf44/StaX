@@ -17,7 +17,7 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { FieldControl, SubmitButton, type ClientField } from './form-fields';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import {

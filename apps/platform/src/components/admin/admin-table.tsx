@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { statusLabel } from '@stax/business';
-import { unwrapList } from '@stax/database';
-import { formatMoney } from '@stax/payments';
+import { statusLabel } from '@nemasus/business';
+import { unwrapList } from '@nemasus/database';
+import { formatMoney } from '@nemasus/payments';
 import {
   EmptyState,
   Icon,
@@ -14,8 +14,8 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getAdminContext } from '~/lib/admin';
 import { getAdminView, type AdminColumn, type AdminViewId } from '~/lib/admin-views';

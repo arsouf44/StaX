@@ -6,8 +6,8 @@
 # Usage : scripts/db-test.sh [admin_url] [db_name]
 set -euo pipefail
 
-ADMIN_URL="${1:-${STAX_PG_ADMIN_URL:-postgresql://postgres@127.0.0.1:55432/postgres}}"
-DB_NAME="${2:-stax_test}"
+ADMIN_URL="${1:-${NEMASUS_PG_ADMIN_URL:-postgresql://postgres@127.0.0.1:55432/postgres}}"
+DB_NAME="${2:-nemasus_test}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET_URL="${ADMIN_URL%/*}/${DB_NAME}"
 

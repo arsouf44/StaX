@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Panel, Switch, useToast } from '@stax/ui';
+import { Panel, Switch, useToast } from '@nemasus/ui';
 import { toggleFeatureFlagAction } from './actions';
 
 /**

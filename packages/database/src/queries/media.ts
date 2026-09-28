@@ -1,4 +1,4 @@
-import { publicEnv, readEnv } from '@stax/config';
+import { publicEnv, readEnv } from '@nemasus/config';
 
 /**
  * URL publique d un media.

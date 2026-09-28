@@ -8,9 +8,14 @@ renseigné, et ce qui se passe si ça ne l’est pas.
 
 ## Aucune valeur n’est inventée
 
-Le dépôt ne contient **aucun** numéro SIREN, aucune adresse, aucun capital,
-aucun nom de directeur de la publication. Toutes ces valeurs viennent de
-l’environnement. Une valeur absente affiche un marqueur explicite :
+Le dépôt contient les seules informations **publiques** de l’éditeur, que la
+loi impose d’afficher : dénomination (LallianSe), nom commercial (Nemasus),
+forme, capital (3 000 €), siège, SIREN, SIRET, RCS, TVA, directrice de la
+publication (Julie Rachline Gomez), adresse de contact et RGPD
+(`nemasus@lallianse.com`), ainsi que l’hébergeur (Cloudflare, Inc.). Elles
+sont lues dans `packages/config/src/legal.ts` et remplaçables par variable
+d’environnement si elles changent. Une valeur absente affiche un marqueur
+explicite :
 
 ```
 [A CONFIGURER — SIREN]
@@ -81,15 +86,17 @@ pnpm legal:check
 export const LEGAL_REVIEW_REQUIRED = true as const;
 ```
 
-Les neuf documents livrés (mentions légales, CGV, CGU, confidentialité, cookies,
-remboursements, données personnelles, sous-traitants, accessibilité) sont des
+Les onze documents livrés (mentions légales, CGV, CGU, accord de traitement des
+données, confidentialité, cookies, remboursements, données personnelles,
+sous-traitants, signalement d’un contenu, accessibilité) sont des
 **modèles**. Ils sont sérieux, structurés et cohérents avec ce que le produit
 fait réellement — ils n’ont pas été relus par un professionnel du droit.
 
 **À faire avant ouverture commerciale :**
 
-1. Faire relire les neuf documents par un avocat spécialisé.
-2. Valider la rédaction du droit de rétractation (article 8 des CGV) : les
+1. Faire relire les onze documents par un avocat spécialisé (points d’attention :
+   [LANCEMENT.md, étape 10](./LANCEMENT.md)).
+2. Valider la rédaction du droit de rétractation (article 25 des CGV) : les
    exceptions applicables aux services pleinement exécutés et aux biens
    personnalisés doivent être formulées avec précision.
 3. Vérifier les clauses limitatives de responsabilité : une clause qui viderait

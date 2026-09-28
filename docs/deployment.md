@@ -4,7 +4,7 @@ Deux applications, un seul dépôt, un seul pipeline.
 
 | Application | Cible | Rôle |
 | --- | --- | --- |
-| `apps/platform` | Worker Cloudflare (OpenNext) ou Vercel ([vercel.md](./vercel.md)) | Site public, espace client, back-office, webhooks, tâche de fond |
+| `apps/platform` | Worker Cloudflare `nemasus` (OpenNext, Workers Builds — [cloudflare.md § 0](./cloudflare.md)) | Site public, espace client, back-office, webhooks, tâche de fond |
 | `apps/site-runtime` | Worker Cloudflare | API des sites ; sites de l’ancien moteur |
 
 Les **sites clients** ne sont pas déployés ici : chacun a son dépôt GitHub et
@@ -42,7 +42,7 @@ déploie, puis on supprime dans une migration ultérieure.
 
 ```bash
 # Projet dans une région européenne
-supabase projects create stax-production --region eu-west-3
+supabase projects create nemasus-production --region eu-west-3
 
 pnpm db:migrate            # DATABASE_URL pointe vers la production
 pnpm db:types
@@ -59,7 +59,7 @@ Vérifier ensuite :
 ```bash
 cd apps/platform
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
-wrangler secret put STAX_SECRET_KEY           --env production   # openssl rand -base64 48
+wrangler secret put NEMASUS_SECRET_KEY           --env production   # openssl rand -base64 48
 wrangler secret put STRIPE_SECRET_KEY         --env production
 wrangler secret put STRIPE_WEBHOOK_SECRET     --env production
 wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET --env production
@@ -74,11 +74,11 @@ wrangler secret put CRON_SECRET                --env production   # openssl rand
 
 cd ../site-runtime
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
-wrangler secret put STAX_SECRET_KEY           --env production   # LA MÊME valeur
+wrangler secret put NEMASUS_SECRET_KEY           --env production   # LA MÊME valeur
 wrangler secret put TURNSTILE_SECRET_KEY      --env production
 ```
 
-> `STAX_SECRET_KEY` doit être **identique** dans les deux Workers : elle signe
+> `NEMASUS_SECRET_KEY` doit être **identique** dans les deux Workers : elle signe
 > les jetons de formulaire émis par le moteur des sites et vérifiés par lui.
 
 ### 3. Informations légales
@@ -91,7 +91,7 @@ pnpm legal:check
 
 Sans elles, **la production refuse de démarrer**. C’est voulu.
 
-Le Worker des sites clients a aussi besoin de l’identité de StaX : StaX est
+Le Worker des sites clients a aussi besoin de l’identité de Nemasus : Nemasus est
 l’**hébergeur** de chaque site client, et ses mentions légales doivent le
 nommer avec son adresse et son téléphone (article 6 III de la LCEN).
 
@@ -104,15 +104,15 @@ wrangler secret put SUPPORT_EMAIL      --env production
 ```
 
 Les polices des sites clients sont servies par le Worker lui-même
-(`/_stax/fonts/`, configuration `assets` de `wrangler.jsonc`) : aucun visiteur
+(`/_nemasus/fonts/`, configuration `assets` de `wrangler.jsonc`) : aucun visiteur
 n’est jamais envoyé vers Google Fonts.
 
 ### 4. Déploiement
 
 ```bash
 pnpm build:cf
-pnpm --filter @stax/site-runtime deploy:production
-pnpm --filter @stax/platform deploy:production
+pnpm --filter @nemasus/site-runtime deploy:production
+pnpm --filter @nemasus/platform deploy:production
 ```
 
 ### 5. Compte administrateur
@@ -143,7 +143,7 @@ le même jour ([vente-par-telephone.md](./vente-par-telephone.md)).
 
 ### 6 bis. E-mails et authentification
 
-- `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` : e-mails de StaX
+- `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` : e-mails de Nemasus
   (propositions, livraison, réponses de l’équipe, alertes) ;
 - `SUPPORT_EMAIL` : reçoit aussi **toutes les alertes de l’équipe** (à défaut
   `ADMIN_EMAIL`) ;
@@ -186,26 +186,22 @@ déploiement Pages / Workers Builds. Détails : [cloudflare.md](./cloudflare.md)
 déploiements, délai de 45 minutes, aperçus, surveillance HTTPS des sites
 livrés. Sans secret valide, la route répond **401**.
 
-**Qui l’appelle.** Le plan Hobby de Vercel n’accepte qu’une tâche planifiée
-par jour : `apps/platform/vercel.json` déclare donc un passage **quotidien**
-de secours (4 h UTC, Vercel envoie `CRON_SECRET`). La cadence de 5 minutes est
-assurée par **Supabase** : `pg_cron` exécute `app.trigger_site_operations()`
-(migration 0053), qui appelle la route avec `pg_net`. L’adresse de la
+**Qui l’appelle.** **Supabase** : `pg_cron` exécute
+`app.trigger_site_operations()` toutes les 5 minutes (migrations 0053 et
+0056), qui appelle la route avec `pg_net`. L’adresse de la
 plateforme et le secret sont lus dans Supabase Vault ; tant qu’ils sont
 absents, rien n’est envoyé. À faire une fois, dans l’éditeur SQL de Supabase,
-avec **la même valeur** que `CRON_SECRET` sur Vercel :
+avec **la même valeur** que le secret `CRON_SECRET` du Worker :
 
 ```sql
-select vault.create_secret('https://votre-domaine.fr', 'stax_platform_url');
-select vault.create_secret('<valeur de CRON_SECRET>', 'stax_cron_secret');
+select vault.create_secret('https://votre-domaine.fr', 'nemasus_platform_url');
+select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');
 ```
 
 Pour changer une valeur : `select vault.update_secret(id, 'nouvelle valeur')`
 (l’`id` se lit dans `vault.secrets`). Pour vérifier les appels :
 `select status_code, created from net._http_response order by created desc limit 5;`
-(200 attendu). Sur un plan Vercel Pro, la cadence peut aussi être déclarée
-directement dans `vercel.json` (`*/5 * * * *`). Sur Cloudflare Workers, un
-*Cron Trigger* fait de même.
+(200 attendu).
 
 Vérifier ensuite *Administration → Santé* : l’application GitHub, l’API
 Cloudflare des sites et les tâches de fond ne doivent plus figurer parmi les
@@ -216,9 +212,9 @@ fonctions non configurées.
 ## Vérification après déploiement
 
 ```bash
-curl -sS https://stax.fr/status            # page d’état
-curl -sS https://stax.fr/robots.txt        # doit autoriser en production
-curl -sSI https://stax.fr | grep -i content-security-policy
+curl -sS https://nemasus.fr/status            # page d’état
+curl -sS https://nemasus.fr/robots.txt        # doit autoriser en production
+curl -sSI https://nemasus.fr | grep -i content-security-policy
 ```
 
 Dans l’interface :

@@ -8,13 +8,13 @@ import {
   Reveal,
   Section,
   SectionHeading,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import { BrowserFrame, SitePreview } from '~/components/marketing/product-visuals';
 
 export const metadata: Metadata = {
   title: 'Réalisations',
   description:
-    'Des exemples concrets de sites StaX, offre par offre. Ces démonstrations sont clairement ' +
+    'Des exemples concrets de sites Nemasus, offre par offre. Ces démonstrations sont clairement ' +
     'identifiées comme telles : nous ne présentons jamais un exemple comme un vrai client.',
   alternates: { canonical: '/realisations' },
 };
@@ -24,7 +24,7 @@ const SHOWCASES = [
     variant: 'restaurant' as const,
     name: 'Restaurant Dupont',
     plan: 'Premium',
-    host: 'restaurant-dupont.fr',
+    host: 'restaurant-dupont.example',
     features: ['Carte & menus', 'Réservations en ligne', 'Horaires', 'Galerie'],
     note: 'Carte gérée par le restaurateur, réservations validées depuis le téléphone, horaires modifiables en trente secondes.',
   },
@@ -32,7 +32,7 @@ const SHOWCASES = [
     variant: 'coiffeur' as const,
     name: 'Atelier Camille',
     plan: 'Premium',
-    host: 'atelier-camille.fr',
+    host: 'atelier-camille.example',
     features: ['Prestations & tarifs', 'Prise de rendez-vous', 'Équipe', 'Avis clients'],
     note: 'Prise de rendez-vous par prestation et par coiffeuse, avec durée et tarif affichés.',
   },
@@ -40,7 +40,7 @@ const SHOWCASES = [
     variant: 'artisan' as const,
     name: 'Martin Plomberie',
     plan: 'Essentiel',
-    host: 'martin-plomberie.fr',
+    host: 'martin-plomberie.example',
     features: ['Prestations', 'Zones d’intervention', 'Galerie de chantiers', 'Demande de devis'],
     note: 'Formulaire de devis qualifiant la demande : nature de la panne, urgence, code postal.',
   },
@@ -54,7 +54,7 @@ export default function ShowcasePage() {
           <SectionHeading
             as="h1"
             eyebrow="Réalisations"
-            title="À quoi ressemble un site StaX"
+            title="À quoi ressemble un site Nemasus"
             description="Chaque site est conçu et développé individuellement, pour une entreprise : sa structure, son design et ses fonctionnalités lui sont propres. Voici trois exemples de projets."
           />
           <Alert tone="warning" title="Ces exemples sont des démonstrations" className="mt-10">
@@ -114,7 +114,7 @@ export default function ShowcasePage() {
               Vous serez notre prochaine référence
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
-              StaX est un produit jeune. Les premiers clients bénéficient d’une attention
+              Nemasus est un produit jeune. Les premiers clients bénéficient d’une attention
               particulière — et, s’ils le souhaitent, d’une place sur cette page.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

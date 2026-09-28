@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient } from '@stax/database';
-import { boundedText, optionalText, uuidSchema } from '@stax/validation';
+import { createUserClient } from '@nemasus/database';
+import { boundedText, optionalText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
@@ -51,7 +51,7 @@ export async function createSiteAction(
 
   const result = (data ?? null) as { ok?: boolean; siteId?: string } | null;
   if (error || !result?.ok || !result.siteId) {
-    console.error('[stax:admin-site] creation refusee', error?.code, error?.message);
+    console.error('[nemasus:admin-site] creation refusee', error?.code, error?.message);
     return {
       status: 'error',
       message:

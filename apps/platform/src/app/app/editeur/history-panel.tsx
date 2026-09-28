@@ -10,7 +10,7 @@ import {
   Spinner,
   StatusPill,
   useToast,
-} from '@stax/ui';
+} from '@nemasus/ui';
 import {
   compareAction,
   loadHistoryAction,
@@ -23,7 +23,7 @@ import type { HistoryChange, HistoryEntry, PublishOutcome } from './types';
  * Historique des versions.
  *
  * Chaque ligne dit QUAND, QUI et QUOI, avec des mots simples :
- * « Aujourd’hui 18:42 — Vous — Publication ». L equipe StaX apparait comme
+ * « Aujourd’hui 18:42 — Vous — Publication ». L equipe Nemasus apparait comme
  * telle : le client sait toujours qui a touche a son site.
  *
  * Quatre actions, et aucune ne detruit rien :
@@ -127,7 +127,7 @@ export function HistoryPanel({
                     <span className="text-sm text-[var(--foreground-muted)]">— {entry.author}</span>
                     {entry.isLive ? <StatusPill tone="success">En ligne</StatusPill> : null}
                     {entry.authorKind === 'stax' ? (
-                      <StatusPill tone={AUTHOR_TONE.stax}>Équipe StaX</StatusPill>
+                      <StatusPill tone={AUTHOR_TONE.stax}>Équipe Nemasus</StatusPill>
                     ) : null}
                   </div>
                   <p className="mt-0.5 text-sm">{entry.title}</p>

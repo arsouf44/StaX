@@ -34,7 +34,7 @@ jobs:
       NEXT_PUBLIC_SITES_DOMAIN: sites.e2e.invalid
       NEXT_PUBLIC_PREVIEW_DOMAIN: preview.sites.e2e.invalid
       NEXT_PUBLIC_DEFAULT_LOCALE: fr
-      STAX_ENV: test
+      NEMASUS_ENV: test
 
     steps:
       - uses: actions/checkout@v4

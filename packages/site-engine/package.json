@@ -1,5 +1,5 @@
 {
-  "name": "@stax/site-engine",
+  "name": "@nemasus/site-engine",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,15 +13,15 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@stax/business": "workspace:*",
-    "@stax/payments": "workspace:*",
-    "@stax/security": "workspace:*",
-    "@stax/types": "workspace:*",
-    "@stax/validation": "workspace:*",
+    "@nemasus/business": "workspace:*",
+    "@nemasus/payments": "workspace:*",
+    "@nemasus/security": "workspace:*",
+    "@nemasus/types": "workspace:*",
+    "@nemasus/validation": "workspace:*",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@stax/config": "workspace:*",
+    "@nemasus/config": "workspace:*",
     "@types/react": "19.3.0",
     "react": "19.3.0",
     "typescript": "5.9.3"

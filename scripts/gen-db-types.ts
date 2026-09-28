@@ -13,8 +13,8 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { assertServerOnly, readEnv } from '@stax/config';
-import { loadRootEnv } from '@stax/config/dotenv';
+import { assertServerOnly, readEnv } from '@nemasus/config';
+import { loadRootEnv } from '@nemasus/config/dotenv';
 
 /**
  * Les variables viennent de `.env.local` a la racine du depot (copie de
@@ -37,7 +37,7 @@ const HEADER = `/**
 `;
 
 function fail(message: string): never {
-  process.stderr.write(`\n[StaX] ${message}\n\n`);
+  process.stderr.write(`\n[Nemasus] ${message}\n\n`);
   process.exit(1);
 }
 

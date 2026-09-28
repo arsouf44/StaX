@@ -1,9 +1,9 @@
-import { ButtonLink, Icon, Panel } from '@stax/ui';
+import { ButtonLink, Icon, Panel } from '@nemasus/ui';
 
 /**
- * Site en construction chez StaX.
+ * Site en construction chez Nemasus.
  *
- * Le site est concu et construit par l equipe StaX ; le client le decouvre
+ * Le site est concu et construit par l equipe Nemasus ; le client le decouvre
  * quand il lui est confie. En attendant, il suit son projet et peut nous
  * ecrire. Aucune date n est promise ici : l echeance, quand elle existe, est
  * celle du projet, affichee dans « Mon projet ».
@@ -54,7 +54,7 @@ export function SiteUnderConstruction({
             Votre site est en cours de création
           </h2>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-            L’équipe StaX conçoit et construit votre site. Il apparaîtra ici dès que nous vous
+            L’équipe Nemasus conçoit et construit votre site. Il apparaîtra ici dès que nous vous
             l’aurons confié, et nous vous préviendrons. Vous pourrez alors le découvrir, demander
             vos corrections et le modifier.
           </p>

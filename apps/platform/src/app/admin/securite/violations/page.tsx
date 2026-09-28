@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
+import { unwrapList } from '@nemasus/database';
 import { requireAdminRole } from '~/lib/admin';
 import { BreachRegister, type BreachView } from './breach-panel';
 

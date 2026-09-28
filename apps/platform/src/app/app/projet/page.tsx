@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { mediaPublicUrl, unwrapList, unwrapMaybe } from '@stax/database';
-import { PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@stax/payments';
-import { Alert, ButtonLink, EmptyState, Icon, Panel, StatusPill, cn } from '@stax/ui';
+import { mediaPublicUrl, unwrapList, unwrapMaybe } from '@nemasus/database';
+import { PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@nemasus/payments';
+import { Alert, ButtonLink, EmptyState, Icon, Panel, StatusPill, cn } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { ProjectConversation } from './project-conversation';

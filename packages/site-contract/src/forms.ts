@@ -3,7 +3,7 @@ import type { SiteManifest } from './manifest';
 /**
  * Formulaires et modules declares par le contrat, traduits dans la forme que
  * la base attend (`public.sync_site_integrations`). A l'activation d'un
- * manifeste, StaX cree ou met a jour les formulaires du site : la messagerie
+ * manifeste, Nemasus cree ou met a jour les formulaires du site : la messagerie
  * du client connait les champs attendus, et l'API des sites n'accepte que
  * ceux-la.
  */

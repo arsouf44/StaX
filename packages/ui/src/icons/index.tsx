@@ -178,7 +178,7 @@ import { cn } from '../lib';
  * reste utilisable, une exception de rendu ne le serait pas.
  *
  * FICHIER PARTIELLEMENT GENERE : la table ci-dessous est derivee des noms
- * declares dans @stax/business et @stax/site-engine.
+ * declares dans @nemasus/business et @nemasus/site-engine.
  */
 
 export type IconName = keyof typeof ICONS;

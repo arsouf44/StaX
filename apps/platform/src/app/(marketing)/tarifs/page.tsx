@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { refundPolicyConfig } from '@stax/config';
-import { formatMoney } from '@stax/payments';
-import { Alert, Container, Panel, Section, SectionHeading, ButtonLink } from '@stax/ui';
+import { refundPolicyConfig } from '@nemasus/config';
+import { formatMoney } from '@nemasus/payments';
+import { Alert, Container, Panel, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 import { PlanComparisonTable, PricingCards } from '~/components/marketing/pricing-cards';
 import { entryPriceLabel, getPlans } from '~/lib/catalog';
 import { FAQ_ITEMS } from '~/content/faq';
@@ -125,7 +125,7 @@ export default async function PricingPage() {
               <h2 className="text-base font-medium">Aucune commission sur vos ventes</h2>
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
                 Quand votre site encaisse un paiement, l’argent va directement sur votre compte
-                Stripe. StaX ne prélève rien dessus, aujourd’hui comme demain — et si cela devait
+                Stripe. Nemasus ne prélève rien dessus, aujourd’hui comme demain — et si cela devait
                 changer un jour, ce serait annoncé avant, jamais appliqué rétroactivement.
               </p>
             </Panel>
@@ -154,7 +154,7 @@ export default async function PricingPage() {
           <Alert tone="neutral" title={`Garantie commerciale de ${refund.windowDays} jours`}>
             <p className="leading-relaxed">
               Si le site livré ne vous convient pas, vous disposez de {refund.windowDays} jours
-              après sa mise en ligne pour demander un remboursement. Lorsqu’un nom de domaine a
+              après sa livraison pour demander un remboursement. Lorsqu’un nom de domaine a
               réellement été acheté pour vous, son coût —{' '}
               {formatMoney(refund.domainDeductionCents, refund.currency, {
                 hideDecimalsWhenRound: true,

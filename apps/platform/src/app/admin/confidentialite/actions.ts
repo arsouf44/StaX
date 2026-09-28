@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createUserClient, unwrapMaybe } from '@stax/database';
-import { boundedText, uuidSchema } from '@stax/validation';
+import { createUserClient, unwrapMaybe } from '@nemasus/database';
+import { boundedText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';

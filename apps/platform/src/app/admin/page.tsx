@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { loadAdminOverview } from '@stax/database';
-import { formatMoney } from '@stax/payments';
-import { Alert, Card, Icon, Panel, Stat } from '@stax/ui';
+import { loadAdminOverview } from '@nemasus/database';
+import { formatMoney } from '@nemasus/payments';
+import { Alert, Card, Icon, Panel, Stat } from '@nemasus/ui';
 import { getAdminContext } from '~/lib/admin';
 
 export const metadata: Metadata = { title: 'Vue d’ensemble' };

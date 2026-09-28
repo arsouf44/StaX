@@ -1,8 +1,8 @@
 import 'server-only';
-import { unwrapMaybe, type Db } from '@stax/database';
-import { proposalPaymentReminderEmail, sendEmail, siteProposalEmail } from '@stax/emails';
-import { formatMaintenance, formatMoney } from '@stax/payments';
-import { generateActivationCode, hmacHex, normalizeActivationCode } from '@stax/security';
+import { unwrapMaybe, type Db } from '@nemasus/database';
+import { proposalPaymentReminderEmail, sendEmail, siteProposalEmail } from '@nemasus/emails';
+import { formatMaintenance, formatMoney } from '@nemasus/payments';
+import { generateActivationCode, hmacHex, normalizeActivationCode } from '@nemasus/security';
 import { absolutePlatformUrl } from './action-guard';
 import { sendDeliveryEmails } from './delivery-email';
 import { runDeliveryChecks } from './external-sites/admin-flows';
@@ -14,7 +14,7 @@ import { alertTeam } from './team-alerts';
  * prospect le récupère et le paie ».
  *
  * Le code personnel n'existe en clair que le temps de l'e-mail : la base n'en
- * garde que l'empreinte HMAC (clé serveur `STAX_SECRET_KEY`). Un code perdu se
+ * garde que l'empreinte HMAC (clé serveur `NEMASUS_SECRET_KEY`). Un code perdu se
  * remplace (« Relancer »), il ne se relit pas.
  */
 
@@ -261,7 +261,7 @@ export async function completePaidProposal(
       id: proposal.site_id,
       organizationId: proposal.organization_id,
     }).catch((error: unknown) => {
-      console.error('[stax:proposal] controles', error instanceof Error ? error.message : error);
+      console.error('[nemasus:proposal] controles', error instanceof Error ? error.message : error);
     });
   }
 
@@ -280,7 +280,7 @@ export async function completePaidProposal(
     if (result.code === 'delivered') {
       const maintenance = await startMaintenanceAtDelivery(service, proposal.site_id);
       await sendDeliveryEmails(service, proposal.site_id).catch((mailError: unknown) => {
-        console.error('[stax:proposal] e-mail de livraison', mailError);
+        console.error('[nemasus:proposal] e-mail de livraison', mailError);
       });
       await alertTeam(
         {

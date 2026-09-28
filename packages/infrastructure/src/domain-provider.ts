@@ -1,4 +1,4 @@
-import { hasCapability, readEnv, sitesDomain } from '@stax/config';
+import { hasCapability, readEnv, sitesDomain } from '@nemasus/config';
 
 /**
  * Fournisseur de domaines.
@@ -67,7 +67,7 @@ function baseInstructions(hostname: string, verificationToken: string): DnsInstr
   return [
     {
       type: 'TXT',
-      name: `_stax-verification.${hostname}`,
+      name: `_nemasus-verification.${hostname}`,
       value: verificationToken,
       purpose:
         'Prouve que ce domaine vous appartient. Sans cette preuve, personne ne peut rattacher votre domaine à un autre site.',

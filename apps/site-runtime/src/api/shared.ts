@@ -1,4 +1,4 @@
-import { createServiceClient, PostgresRateLimitStore } from '@stax/database';
+import { createServiceClient, PostgresRateLimitStore } from '@nemasus/database';
 import {
   enforceRateLimit,
   hashIp,
@@ -7,7 +7,7 @@ import {
   verifyCsrfToken,
   verifyTurnstile,
   type RateLimitName,
-} from '@stax/security';
+} from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import type { ResolvedSite } from '../resolve';
 import { siteOrigin } from '../context';
@@ -142,7 +142,7 @@ export async function guardPublicWrite(
       };
     }
   } catch (error) {
-    console.error('[stax:rate-limit] compteur indisponible', error);
+    console.error('[nemasus:rate-limit] compteur indisponible', error);
   }
 
   const captcha =

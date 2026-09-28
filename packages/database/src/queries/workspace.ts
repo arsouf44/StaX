@@ -7,8 +7,8 @@ import type {
   SiteDomain,
   Subscription,
   UUID,
-} from '@stax/types';
-import { toCsv } from '@stax/security';
+} from '@nemasus/types';
+import { toCsv } from '@nemasus/security';
 import { type Db, unwrapList, unwrapMaybe } from '../client';
 
 /**
@@ -30,7 +30,7 @@ export interface WorkspaceSite {
   lastPublishedAt: string | null;
   isDemo: boolean;
   suspendedAt: string | null;
-  /** `null` tant que StaX construit le site et ne l'a pas confie au client. */
+  /** `null` tant que Nemasus construit le site et ne l'a pas confie au client. */
   deliveredAt: string | null;
   /** Site independant (depot + projet Cloudflare) ou ancien moteur. */
   architecture: 'external_repository' | 'legacy_engine';
@@ -54,7 +54,7 @@ export interface Workspace {
   /** Toutes les organisations de l utilisateur, pour le selecteur de compte. */
   memberships: Array<{ organizationId: UUID; name: string; slug: string; role: OrgRole }>;
   /**
-   * Intervention de l equipe StaX sur l espace d un client (assistance). Les
+   * Intervention de l equipe Nemasus sur l espace d un client (assistance). Les
    * droits reels restent ceux verifies en base pour le role plateforme.
    */
   staffMode?: boolean;
@@ -218,7 +218,7 @@ export async function loadWorkspace(
 }
 
 /**
- * Espace d un client vu par l equipe StaX, pendant une session d assistance.
+ * Espace d un client vu par l equipe Nemasus, pendant une session d assistance.
  *
  * Les droits ne sont PAS decides ici : `my_capabilities` interroge
  * `app.org_can`, qui n accorde a l equipe que les droits de contenu, et
@@ -312,7 +312,7 @@ export async function toCsvExport(
     );
     return {
       ok: true,
-      filename: `stax-comptes-clients-${stamp}.csv`,
+      filename: `nemasus-comptes-clients-${stamp}.csv`,
       csv: toCsv([
         [
           'E-mail',
@@ -358,7 +358,7 @@ export async function toCsvExport(
 
     return {
       ok: true,
-      filename: `stax-contacts-${stamp}.csv`,
+      filename: `nemasus-contacts-${stamp}.csv`,
       csv: toCsv([
         ['Prénom', 'Nom', 'E-mail', 'Téléphone', 'Société', 'Origine', 'Consentement', 'Créé le'],
         ...rows.map((row) => [
@@ -397,7 +397,7 @@ export async function toCsvExport(
 
     return {
       ok: true,
-      filename: `stax-reservations-${stamp}.csv`,
+      filename: `nemasus-reservations-${stamp}.csv`,
       csv: toCsv([
         ['Référence', 'Date', 'Personnes', 'État', 'Nom', 'E-mail', 'Téléphone', 'Précision'],
         ...rows.map((row) => [
@@ -432,7 +432,7 @@ export async function toCsvExport(
 
     return {
       ok: true,
-      filename: `stax-commandes-${stamp}.csv`,
+      filename: `nemasus-commandes-${stamp}.csv`,
       csv: toCsv([
         ['Référence', 'État', 'Total (centimes)', 'Devise', 'E-mail', 'Créée le'],
         ...rows.map((row) => [
@@ -465,7 +465,7 @@ export async function toCsvExport(
 
   return {
     ok: true,
-    filename: `stax-messages-${stamp}.csv`,
+    filename: `nemasus-messages-${stamp}.csv`,
     csv: toCsv([
       ['Reçu le', 'État', ...columns],
       ...rows.map((row) => [

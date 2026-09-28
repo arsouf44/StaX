@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Checkbox, Field, Select, Textarea } from '@stax/ui';
+import { Alert, Button, Checkbox, Field, Select, Textarea } from '@nemasus/ui';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { replyToTicketAsTeamAction } from './actions';
 

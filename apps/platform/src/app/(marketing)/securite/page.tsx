@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Alert, Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@stax/ui';
+import { Alert, Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 
 export const metadata: Metadata = {
   title: 'Sécurité',
   description:
     'Isolation stricte entre clients garantie par la base de données, aucune donnée bancaire ' +
-    'stockée, chiffrement en transit, journaux d’audit. Comment StaX protège vos données.',
+    'stockée, chiffrement en transit, journaux d’audit. Comment Nemasus protège vos données.',
   alternates: { canonical: '/securite' },
 };
 

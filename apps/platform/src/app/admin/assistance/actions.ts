@@ -8,9 +8,9 @@ import {
   IMPERSONATION_MAX_MINUTES,
   startImpersonation,
   verifyImpersonation,
-} from '@stax/auth';
-import { tryCreateServiceClient } from '@stax/database';
-import { boundedText, uuidSchema } from '@stax/validation';
+} from '@nemasus/auth';
+import { tryCreateServiceClient } from '@nemasus/database';
+import { boundedText, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
@@ -21,7 +21,7 @@ import { SITE_COOKIE } from '~/lib/workspace';
 /**
  * Assistance client : ouvrir et fermer une session « voir comme ce client ».
  *
- * Point de conception essentiel : StaX n'emet JAMAIS de jeton de session au nom
+ * Point de conception essentiel : Nemasus n'emet JAMAIS de jeton de session au nom
  * du client. Le membre de l'equipe reste authentifie sous sa propre identite ;
  * l'interface lui presente les donnees du client, auxquelles son role
  * plateforme lui donne deja acces en lecture.

@@ -1,28 +1,28 @@
 # Du projet au site en ligne : le cycle de livraison
 
-**Nous créons le site. Le client le gère ensuite.** StaX n’est ni un générateur
+**Nous créons le site. Le client le gère ensuite.** Nemasus n’est ni un générateur
 de sites, ni un système de modèles : chaque site est un projet individuel,
 conçu et développé par l’équipe dans son propre dépôt, déployé sur son propre
-projet Cloudflare, puis **rattaché** à StaX pour que le client en modifie le
+projet Cloudflare, puis **rattaché** à Nemasus pour que le client en modifie le
 contenu **après** la livraison.
 
 ```
 ORDER
- → BUILD EXTERNALLY        l'équipe développe le site hors de StaX
- → GITHUB                  un dépôt par site (application GitHub StaX)
+ → BUILD EXTERNALLY        l'équipe développe le site hors de Nemasus
+ → GITHUB                  un dépôt par site (application GitHub Nemasus)
  → CLOUDFLARE              un projet Pages ou Workers par site, domaine, HTTPS
  → VERIFY                  checklist : déployé, domaine, HTTPS, SEO, formulaires, responsive…
- → IMPORT INTO STAX        dépôt + projet + stax.manifest.json + contenu initial = version 1
+ → IMPORT INTO NEMASUS        dépôt + projet + nemasus.manifest.json + contenu initial = version 1
  → DELIVER                 « Livrer le site au client » : l'éditeur s'ouvre, la maintenance démarre
  → CLIENT EDITS DRAFT      brouillon, aperçu du VRAI site (build Cloudflare de prévisualisation)
  → PUBLISH                 « Publier » : nouvelle version demandée
- → GITHUB COMMIT           commit `stax: publication client 00002` en avance rapide
+ → GITHUB COMMIT           commit `nemasus: publication client 00002` en avance rapide
  → CLOUDFLARE DEPLOYMENT   Cloudflare construit et déploie ce commit
  → LIVE                    « Publié » seulement quand Cloudflare confirme le déploiement
 ```
 
-Le site public **ne dépend pas** de la plateforme StaX : il est servi par son
-projet Cloudflare. Si StaX est indisponible, le site s’affiche ; seules les
+Le site public **ne dépend pas** de la plateforme Nemasus : il est servi par son
+projet Cloudflare. Si Nemasus est indisponible, le site s’affiche ; seules les
 interactions qui passent par l’[API des sites](#api-des-sites) (formulaires,
 réservations, paiements, statistiques) sont suspendues.
 
@@ -67,47 +67,47 @@ Commande validée → Informations reçues → Conception → Développement
                  → Vérifications → Mise en ligne → Livraison
 ```
 
-(`PROJECT_TIMELINE`, `@stax/payments`). Le client y transmet ses informations
+(`PROJECT_TIMELINE`, `@nemasus/payments`). Le client y transmet ses informations
 et ses fichiers, échange avec l’équipe, répond aux demandes de validation
 (`app.respond_to_project_review`), retrouve ses factures. L’équipe fait avancer
 l’étape depuis l’administration (`app.set_project_phase`).
 
 Il **ne peut pas** modifier le site : `app.site_content_access` refuse
 l’édition, l’aperçu et la publication tant que `delivered_at` est nul, et
-l’interface remplace les écrans du site par le suivi du projet. L’équipe StaX,
+l’interface remplace les écrans du site par le suivi du projet. L’équipe Nemasus,
 elle, peut travailler sur le brouillon avant la livraison.
 
-## 3. Développement hors de StaX (BUILD EXTERNALLY → GITHUB → CLOUDFLARE)
+## 3. Développement hors de Nemasus (BUILD EXTERNALLY → GITHUB → CLOUDFLARE)
 
 L’équipe développe le site avec les outils de son choix, dans un **dépôt
-GitHub dédié** au compte sur lequel l’application GitHub StaX est installée.
+GitHub dédié** au compte sur lequel l’application GitHub Nemasus est installée.
 Le dépôt contient :
 
 - le code du site ;
-- `stax.manifest.json` : le **contrat d’édition** (ce que le client pourra
+- `nemasus.manifest.json` : le **contrat d’édition** (ce que le client pourra
   modifier) — voir [editable-site-contract.md](./editable-site-contract.md) ;
 - le fichier de contenu déclaré par le contrat (par ex.
-  `src/content/stax.content.json`), que le site lit **au build**.
+  `src/content/nemasus.content.json`), que le site lit **au build**.
 
 Le dépôt est relié à un **projet Cloudflare** (Pages, ou Workers Builds) qui
 déploie la branche de production à chaque commit. Le domaine du client pointe
-vers **ce** projet — jamais vers un rendu générique de StaX.
+vers **ce** projet — jamais vers un rendu générique de Nemasus.
 
-## 4. Rattachement dans StaX (IMPORT INTO STAX)
+## 4. Rattachement dans Nemasus (IMPORT INTO NEMASUS)
 
 Administration → site → **Infrastructure & livraison**
 (`/admin/sites/<id>/livraison`) :
 
 1. **Dépôt GitHub** : choisi dans la liste des dépôts de l’installation
-   (lue chez GitHub). La base refuse un dépôt hors de l’application StaX,
+   (lue chez GitHub). La base refuse un dépôt hors de l’application Nemasus,
    d’un autre compte que celui de l’installation, ou déjà rattaché à un autre
    site (`app.connect_site_repository` : `installation_unknown`,
    `owner_mismatch`, `repository_already_attached`).
-2. **Projet Cloudflare** : StaX lit le projet chez Cloudflare et vérifie qu’il
+2. **Projet Cloudflare** : Nemasus lit le projet chez Cloudflare et vérifie qu’il
    déploie **ce** dépôt, depuis **sa** branche de production, déploiements
    automatiques actifs. Un projet ne sert qu’un site (`project_already_attached`).
 3. **Contrat d’édition** : « Importer le manifeste du dépôt » lit
-   `stax.manifest.json` au sommet de la branche, le valide, le compare aux
+   `nemasus.manifest.json` au sommet de la branche, le valide, le compare aux
    droits de l’offre, crée les formulaires déclarés (`sync_site_integrations`).
 4. **Contenu initial** : le fichier de contenu **au commit actuellement
    déployé avec succès** (confirmé par l’API Cloudflare) devient la
@@ -155,13 +155,13 @@ La garantie commerciale court à partir de la livraison.
 `/app/editeur` (site livré) : à gauche les **zones modifiables** du contrat, au
 centre l’**aperçu du vrai site**, à droite les **champs** (titre, texte, image
 à remplacer, bouton : texte + lien…). Pas de HTML, de CSS, de JSON ni de
-fichier. Un clic dans l’aperçu sur un élément marqué `data-stax` ouvre son
+fichier. Un clic dans l’aperçu sur un élément marqué `data-nemasus` ouvre son
 champ (script de pont, `packages/site-contract/src/bridge.ts`).
 
 - **Enregistrer le brouillon** : `save_site_draft`, avec contrôle de révision
   (un brouillon modifié entre-temps n’est jamais écrasé).
-- **Aperçu** : un vrai build du brouillon. StaX écrit le contenu sur la branche
-  `stax-preview`, **repartie du commit de production**, et Cloudflare en fait
+- **Aperçu** : un vrai build du brouillon. Nemasus écrit le contenu sur la branche
+  `nemasus-preview`, **repartie du commit de production**, et Cloudflare en fait
   un déploiement de prévisualisation. L’aperçu est donc rendu par le même code
   que la production.
 - Le design, la structure, le code et les intégrations ne sont pas modifiables.
@@ -179,11 +179,11 @@ scheduled ─→ queued ─→ committing ─→ deploying ─→ published
    les offres qui la comprennent (`feature_unavailable` sinon).
 2. **Commit** (`processRelease`) : le contenu est revalidé contre le contrat,
    le fichier de contenu et les médias nouveaux sont écrits en **un commit**
-   `stax: publication client 00002` (marqueurs `Stax-Release`, `Stax-Site`,
-   `Stax-Version`), en **avance rapide uniquement** : un commit poussé entre-temps
+   `nemasus: publication client 00002` (marqueurs `Nemasus-Release`, `Nemasus-Site`,
+   `Nemasus-Version`), en **avance rapide uniquement** : un commit poussé entre-temps
    par un développeur n’est jamais écrasé (une seule reprise au-dessus du
    nouveau sommet, sinon échec explicite).
-3. **Déploiement** : Cloudflare construit ce commit. StaX relit l’état **chez
+3. **Déploiement** : Cloudflare construit ce commit. Nemasus relit l’état **chez
    Cloudflare** (webhook de notification, tâche de fond toutes les 5 minutes,
    suivi par l’interface) ; le webhook n’est qu’un signal.
 4. **En ligne** : `record_site_deployment` + `finalize_site_release` ne
@@ -210,7 +210,7 @@ commit, l’état de son déploiement, et :
 - **Voir** : l’adresse du déploiement Cloudflare de cette version ;
 - **Restaurer** : une **nouvelle** version au contenu de l’ancienne,
   réellement recommitée et redéployée (commit
-  `stax: restauration de la version 1 (version 5)`) ; le brouillon en cours
+  `nemasus: restauration de la version 1 (version 5)`) ; le brouillon en cours
   n’est pas modifié ;
 - **Republier** : redéploie la version en ligne à l’identique.
 
@@ -219,7 +219,7 @@ La page suit une restauration jusqu’à la confirmation de Cloudflare.
 ## 10. Après la livraison : maintenance, suspension, résiliation
 
 - **Maintenance mensuelle**, sans durée minimale, résiliable en ligne ; elle
-  prend fin au terme du mois en cours. Contenu exact : [CGV, article 9](../apps/platform/src/content/legal.ts).
+  prend fin au terme du mois en cours. Contenu exact : [CGV, article 10](../apps/platform/src/content/legal.ts).
 - **Suspension** (impayé persistant, contenu illicite, fin de la période de
   continuité) : l’éditeur, l’aperçu, la publication et les interactions de
   l’API des sites sont interrompus ; rien n’est effacé ; le client relit son
@@ -229,7 +229,7 @@ La page suit une restauration jusqu’à la confirmation de Cloudflare.
 
 ## API des sites
 
-Un site indépendant s’appuie sur StaX pour ses interactions, via
+Un site indépendant s’appuie sur Nemasus pour ses interactions, via
 `https://<api>/v1/sites/<clé publique>/…` (`apps/site-runtime/src/sites-api.ts`) :
 formulaires, mesure d’audience sans cookie, réservations, boutique et
 paiement sur le compte Stripe du commerçant, comptes clients. Le site est

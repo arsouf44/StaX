@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
+import { unwrapList } from '@nemasus/database';
 import { AdminTable } from '~/components/admin/admin-table';
 import { requireAdminRole } from '~/lib/admin';
 import { FlagSwitches, type FlagView } from './flag-switches';

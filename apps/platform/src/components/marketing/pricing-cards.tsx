@@ -1,14 +1,14 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
-import type { PlanInclusionView, PlanView } from '@stax/database';
+import type { PlanInclusionView, PlanView } from '@nemasus/database';
 import {
   computeOrderPricing,
   firstYearTotal,
   formatMaintenance,
   formatMoney,
   type PricingPlanInput,
-} from '@stax/payments';
-import { ButtonLink, cn } from '@stax/ui';
+} from '@nemasus/payments';
+import { ButtonLink, cn } from '@nemasus/ui';
 import { deliveryWeeksLabel } from '~/lib/catalog';
 import { PLAN_EXAMPLES } from '~/content/plan-examples';
 
@@ -406,7 +406,7 @@ export function PlanComparisonTable({ plans }: { plans: PlanView[] }) {
     >
       <table className="w-full min-w-[48rem] border-collapse text-sm">
         <caption className="sr-only">
-          Comparaison des fonctionnalités incluses dans chaque offre StaX
+          Comparaison des fonctionnalités incluses dans chaque offre Nemasus
         </caption>
         <thead className="border-b border-[var(--border)] bg-[var(--background-subtle)]">
           <tr>

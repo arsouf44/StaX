@@ -26,7 +26,7 @@
 @source '../../src';
 
 /* ==========================================================================
-   StaX — systeme de design « Studio »
+   Nemasus — systeme de design « Studio »
    --------------------------------------------------------------------------
    Direction : un studio d architecture plutot qu une vitrine. Un gris perle
    tres clair, une encre presque noire, un seul bleu (la mer) et le graphite
@@ -1047,7 +1047,7 @@
 }
 
 /* Barre de progression d une etape qui defile seule */
-@keyframes stax-progress {
+@keyframes nemasus-progress {
   from {
     transform: scaleX(0);
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Button, Icon, Select, Switch, Field, cn } from '@stax/ui';
+import { Button, Icon, Select, Switch, Field, cn } from '@nemasus/ui';
 import { FieldEditor, type FieldContext } from './field-editors';
 import type { BlockMeta, EditorBlock } from './types';
 

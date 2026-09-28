@@ -1,5 +1,5 @@
-import { createServiceClient, unwrap } from '@stax/database';
-import { scoreSubmission, visitorHash } from '@stax/security';
+import { createServiceClient, unwrap } from '@nemasus/database';
+import { scoreSubmission, visitorHash } from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import { clientIp, field, guardPublicWrite, refuse } from './shared';
 import type { ResolvedSite } from '../resolve';

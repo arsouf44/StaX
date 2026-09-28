@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { buildDashboardNavigation } from '@stax/business';
-import { featureAccess, loadFeatureSnapshot } from '@stax/database';
+import { buildDashboardNavigation } from '@nemasus/business';
+import { featureAccess, loadFeatureSnapshot } from '@nemasus/database';
 import { AppHeader } from '~/components/app/app-header';
 import { AppShell } from '~/components/app/app-shell';
 import { SiteUnderConstruction } from '~/components/app/site-under-construction';
@@ -17,7 +17,7 @@ import { getWorkspace, isAccountPath, isSiteUnderConstruction } from '~/lib/work
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: { default: 'Mon espace', template: '%s — Mon espace StaX' },
+  title: { default: 'Mon espace', template: '%s — Mon espace Nemasus' },
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -35,11 +35,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const support = await activeSupportSession();
   const supportActive = support?.organizationId === workspace.organization.id;
 
-  // Site en construction chez StaX : le client suit son projet, il n a pas
+  // Site en construction chez Nemasus : le client suit son projet, il n a pas
   // encore la main sur le site. La base le refuserait de toute facon
   // (`app.site_can`) ; l interface ne propose donc pas ces ecrans.
   const underConstruction = isSiteUnderConstruction(workspace);
-  const pathname = (await headers()).get('x-stax-pathname') ?? '/app';
+  const pathname = (await headers()).get('x-nemasus-pathname') ?? '/app';
   const hideContent = underConstruction && !isAccountPath(pathname);
   // Site proposé et récupéré, en attente de règlement : il est prêt, le
   // message ne doit pas dire « en création ».

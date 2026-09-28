@@ -37,7 +37,7 @@ restauration **écrase** l’état courant.
 
 ```bash
 # 1. Couper l’accès écrit (mode maintenance)
-wrangler secret put STAX_MAINTENANCE_MODE --env production   # valeur: true
+wrangler secret put NEMASUS_MAINTENANCE_MODE --env production   # valeur: true
 
 # 2. Restaurer depuis l’interface Supabase (PITR ou sauvegarde datée)
 
@@ -45,7 +45,7 @@ wrangler secret put STAX_MAINTENANCE_MODE --env production   # valeur: true
 psql "$DATABASE_URL" -f tests/sql/rls.test.sql
 
 # 4. Rouvrir
-wrangler secret delete STAX_MAINTENANCE_MODE --env production
+wrangler secret delete NEMASUS_MAINTENANCE_MODE --env production
 ```
 
 **Entre l’instant restauré et l’instant de la panne, les données sont perdues.**

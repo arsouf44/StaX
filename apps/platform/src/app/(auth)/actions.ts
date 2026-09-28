@@ -2,9 +2,9 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionClient, peekActivationCode, redeemActivationCode } from '@stax/auth';
-import { isLegalValueConfigured, legalValue } from '@stax/config';
-import { tryCreateServiceClient } from '@stax/database';
+import { createSessionClient, peekActivationCode, redeemActivationCode } from '@nemasus/auth';
+import { isLegalValueConfigured, legalValue } from '@nemasus/config';
+import { tryCreateServiceClient } from '@nemasus/database';
 import {
   activationCompleteSchema,
   activationSchema,
@@ -14,8 +14,8 @@ import {
   passwordResetSchema,
   signInSchema,
   signUpSchema,
-} from '@stax/validation';
-import { TERMS_VERSION } from '~/content/legal';
+} from '@nemasus/validation';
+import { TERMS_OF_USE_VERSION } from '~/content/legal';
 import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import { safeRedirectTarget } from '~/lib/session';
 
@@ -224,8 +224,9 @@ export async function signUpAction(
             phone: parsed.data.phone ?? null,
             locale: parsed.data.locale,
             marketing_opt_in: parsed.data.marketingOptIn,
-            // Version des conditions acceptees, conservee comme preuve.
-            terms_version: TERMS_VERSION,
+            // Version des CGU acceptees, conservee comme preuve. Les CGV sont
+            // acceptees, et leur version enregistree, a chaque commande.
+            terms_of_use_version: TERMS_OF_USE_VERSION,
             terms_accepted_at: new Date().toISOString(),
           },
         },
@@ -462,7 +463,7 @@ export async function completeActivationAction(
     user_metadata: {
       first_name: parsed.data.firstName,
       last_name: parsed.data.lastName,
-      terms_version: TERMS_VERSION,
+      terms_of_use_version: TERMS_OF_USE_VERSION,
       terms_accepted_at: new Date().toISOString(),
     },
   });

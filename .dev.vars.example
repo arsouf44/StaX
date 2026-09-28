@@ -1,5 +1,5 @@
 # =============================================================================
-#  StaX — modele de configuration
+#  Nemasus — modele de configuration
 # =============================================================================
 #  Ce fichier ne contient QUE des noms de variables. Aucune valeur reelle,
 #  aucun secret, aucune cle. Copiez-le en `.env.local` pour le developpement,
@@ -8,7 +8,7 @@
 # =============================================================================
 
 # --- Environnement ------------------------------------------------------------
-STAX_ENV=
+NEMASUS_ENV=
 NODE_ENV=
 
 # --- URLs publiques -----------------------------------------------------------
@@ -36,7 +36,7 @@ SUPABASE_ACCESS_TOKEN=
 # --- Secret applicatif --------------------------------------------------------
 # 32 octets minimum. Utilise pour le HMAC des codes d'activation, des jetons de
 # preview et des jetons CSRF. Generer avec : openssl rand -base64 48
-STAX_SECRET_KEY=
+NEMASUS_SECRET_KEY=
 
 # --- Stripe (paiements de la plateforme) --------------------------------------
 STRIPE_SECRET_KEY=

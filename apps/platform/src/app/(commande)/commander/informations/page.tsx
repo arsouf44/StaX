@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { resolveBusiness } from '@stax/business';
+import { resolveBusiness } from '@nemasus/business';
 import { OrderSteps } from '~/components/order/order-steps';
 import { readOrderDraft } from '~/lib/order-draft';
 import { InformationForm } from './information-form';

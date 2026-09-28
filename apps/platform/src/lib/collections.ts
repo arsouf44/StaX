@@ -18,9 +18,9 @@ import {
   serviceAreaSchema,
   serviceSchema,
   teamMemberSchema,
-} from '@stax/validation';
-import type { FeatureKey, OrgCapability } from '@stax/types';
-import type { ModuleId } from '@stax/business';
+} from '@nemasus/validation';
+import type { FeatureKey, OrgCapability } from '@nemasus/types';
+import type { ModuleId } from '@nemasus/business';
 
 /**
  * Registre des collections de l'espace client.

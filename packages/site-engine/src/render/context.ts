@@ -230,7 +230,7 @@ export interface RenderContext {
   hasCustomerAccounts: boolean;
   theme: ResolvedTheme;
   settings: SiteSettingsView;
-  /** Hebergeur du site (StaX), repris dans les mentions legales. */
+  /** Hebergeur du site (Nemasus), repris dans les mentions legales. */
   host?: HostIdentity;
   pages: RenderablePage[];
   currentPath: string;

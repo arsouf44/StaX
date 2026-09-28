@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { legalValue, readEnv } from '@stax/config';
-import { Container, Panel, Section, SectionHeading } from '@stax/ui';
+import { legalValue, readEnv } from '@nemasus/config';
+import { Container, Panel, Section, SectionHeading } from '@nemasus/ui';
 import { ContactForm } from './contact-form';
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +58,10 @@ export default function ContactPage() {
             <Panel level={1} padding="md">
               <h2 className="text-sm font-medium">Ce que nous ne faisons pas</h2>
               <ul className="mt-2 space-y-1.5 text-sm text-[var(--foreground-muted)]">
-                <li>Nous ne démarchons pas par téléphone.</li>
+                <li>
+                  Nous ne démarchons jamais les particuliers, et un « non » suffit : nous ne
+                  rappelons pas.
+                </li>
                 <li>Nous ne revendons aucune coordonnée.</li>
                 <li>Nous n’envoyons pas de relances automatiques répétées.</li>
               </ul>

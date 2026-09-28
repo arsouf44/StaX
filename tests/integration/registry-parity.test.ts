@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from 'pg';
-import { ORG_CAPABILITIES, ORG_ROLES } from '@stax/types';
-import { ROLE_CAPABILITIES, listBusinesses, listSectors, MODULES } from '@stax/business';
+import { ORG_CAPABILITIES, ORG_ROLES } from '@nemasus/types';
+import { ROLE_CAPABILITIES, listBusinesses, listSectors, MODULES } from '@nemasus/business';
 
 /**
  * Le registre metier TypeScript et le catalogue PostgreSQL decrivent la meme
@@ -9,7 +9,7 @@ import { ROLE_CAPABILITIES, listBusinesses, listSectors, MODULES } from '@stax/b
  * ou pire, un droit accorde cote client est refuse cote serveur sans message.
  */
 
-const DATABASE_URL = process.env.STAX_TEST_DATABASE_URL;
+const DATABASE_URL = process.env.NEMASUS_TEST_DATABASE_URL;
 const describeIfDb = DATABASE_URL ? describe : describe.skip;
 
 describeIfDb('coherence registre TypeScript / catalogue PostgreSQL', () => {

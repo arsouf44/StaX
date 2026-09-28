@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { assertServerOnly, hasCapability, readEnv } from '@stax/config';
+import { assertServerOnly, hasCapability, readEnv } from '@nemasus/config';
 
 /**
  * Fabrique du client Stripe.
@@ -28,7 +28,7 @@ export function isStripeConfigured(): boolean {
 }
 
 export function getStripe(): Stripe {
-  assertServerOnly('@stax/payments/stripe-client');
+  assertServerOnly('@nemasus/payments/stripe-client');
   if (cached) return cached;
 
   const secretKey = readEnv('STRIPE_SECRET_KEY');
@@ -39,7 +39,7 @@ export function getStripe(): Stripe {
     httpClient: Stripe.createFetchHttpClient(),
     maxNetworkRetries: 2,
     timeout: 20_000,
-    appInfo: { name: 'StaX', version: '0.1.0' },
+    appInfo: { name: 'Nemasus', version: '0.1.0' },
   });
   return cached;
 }
@@ -59,7 +59,7 @@ export function resetStripeClient(): void {
  * metier produisent la meme cle : Stripe ne cree alors qu'un seul objet.
  */
 export function idempotencyKey(...parts: (string | number)[]): string {
-  return ['stax', ...parts].join(':').slice(0, 255);
+  return ['nemasus', ...parts].join(':').slice(0, 255);
 }
 
 export type { Stripe };

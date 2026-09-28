@@ -1,6 +1,6 @@
-# Intégration GitHub : l’application StaX
+# Intégration GitHub : l’application Nemasus
 
-Chaque site client vit dans **son propre dépôt GitHub**. StaX y écrit les
+Chaque site client vit dans **son propre dépôt GitHub**. Nemasus y écrit les
 publications du client (le fichier de contenu et les médias nouveaux) au moyen
 d’une **application GitHub** — jamais d’un jeton personnel à portée
 universelle.
@@ -108,22 +108,22 @@ d’une autre organisation**. Chaque rattachement et détachement est audité.
 Message de commit :
 
 ```
-stax: publication client 00002
+nemasus: publication client 00002
 
-Publiée depuis StaX par Marie Dupont.
+Publiée depuis Nemasus par Marie Dupont.
 
-Stax-Release: 7c3b…
-Stax-Site: 1f0a…
-Stax-Version: 2
+Nemasus-Release: 7c3b…
+Nemasus-Site: 1f0a…
+Nemasus-Version: 2
 ```
 
-Une restauration : `stax: restauration de la version 1 (version 5)`. Le
-marqueur `Stax-Release` rend l’écriture **idempotente** : après une
+Une restauration : `nemasus: restauration de la version 1 (version 5)`. Le
+marqueur `Nemasus-Release` rend l’écriture **idempotente** : après une
 interruption, le commit déjà écrit est retrouvé parmi les commits récents au
 lieu d’être refait.
 
-**Aperçus** : branche technique `stax-preview`, toujours repartie du commit de
-production, puis déplacée (seule branche jamais publiée, seule où StaX déplace
+**Aperçus** : branche technique `nemasus-preview`, toujours repartie du commit de
+production, puis déplacée (seule branche jamais publiée, seule où Nemasus déplace
 une référence).
 
 ## 6. Le webhook
@@ -140,14 +140,14 @@ une référence).
 | Événement | Effet |
 | --- | --- |
 | `installation`, `installation_repositories` | installation connue, suspendue, retirée |
-| `push` sur la branche de production | commit de StaX (marqueur) → dépôt à jour ; commit d’un développeur → `sync_status = developer_changes`, manifeste signalé s’il a changé |
+| `push` sur la branche de production | commit de Nemasus (marqueur) → dépôt à jour ; commit d’un développeur → `sync_status = developer_changes`, manifeste signalé s’il a changé |
 | `repository` | dépôt renommé, transféré, archivé, supprimé |
 
-## 7. Développeurs et StaX sur le même dépôt
+## 7. Développeurs et Nemasus sur le même dépôt
 
-Les développeurs continuent de travailler normalement sur le dépôt. StaX
+Les développeurs continuent de travailler normalement sur le dépôt. Nemasus
 n’écrase jamais leur travail (avance rapide). L’administration voit les
-commits extérieurs ; si `stax.manifest.json` a changé, il faut le
+commits extérieurs ; si `nemasus.manifest.json` a changé, il faut le
 **réimporter** avant la prochaine publication (le contenu du client est
 revalidé contre le nouveau contrat ; les zones retirées sont signalées).
 

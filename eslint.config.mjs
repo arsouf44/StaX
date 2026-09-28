@@ -6,7 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
 /**
- * Flat ESLint config for the StaX monorepo.
+ * Flat ESLint config for the Nemasus monorepo.
  * Rules are intentionally strict: the repository has a `--max-warnings=0` gate in CI.
  */
 export default tseslint.config(
@@ -54,13 +54,13 @@ export default tseslint.config(
           // valeurs nommees en centimes : `deltaBps / 100` reste legitime.
           selector: "BinaryExpression[operator='/'][right.value=100][left.name=/[Cc]ents$/]",
           message:
-            'Ne divisez pas des montants en centimes par 100. Utilisez formatMoney() ou toMajorUnits() de @stax/payments.',
+            'Ne divisez pas des montants en centimes par 100. Utilisez formatMoney() ou toMajorUnits() de @nemasus/payments.',
         },
         {
           selector:
             "BinaryExpression[operator='/'][right.value=100][left.property.name=/[Cc]ents$/]",
           message:
-            'Ne divisez pas des montants en centimes par 100. Utilisez formatMoney() ou toMajorUnits() de @stax/payments.',
+            'Ne divisez pas des montants en centimes par 100. Utilisez formatMoney() ou toMajorUnits() de @nemasus/payments.',
         },
       ],
       eqeqeq: ['error', 'always', { null: 'ignore' }],
@@ -85,7 +85,7 @@ export default tseslint.config(
           object: 'process',
           property: 'env',
           message:
-            "N'accedez pas a process.env directement : utilisez serverEnv()/publicEnv() de @stax/config/env.",
+            "N'accedez pas a process.env directement : utilisez serverEnv()/publicEnv() de @nemasus/config/env.",
         },
       ],
     },

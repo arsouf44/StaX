@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { featureAccess, loadFeatureSnapshot, mediaPublicUrl, unwrapList } from '@stax/database';
-import { PermissionDenied } from '@stax/ui';
+import { featureAccess, loadFeatureSnapshot, mediaPublicUrl, unwrapList } from '@nemasus/database';
+import { PermissionDenied } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { MediaLibrary, type MediaItem } from './media-library';

@@ -1,4 +1,4 @@
-import type { Cents, UUID } from '@stax/types';
+import type { Cents, UUID } from '@nemasus/types';
 import { type Db, unwrapList } from '../client';
 
 /**
@@ -13,7 +13,7 @@ export interface AdminOverview {
   /**
    * Revenu recurrent ANNUEL contractualise.
    *
-   * La maintenance StaX est facturee a l'annee. Additionner 22 EUR et 82 EUR
+   * La maintenance Nemasus est facturee a l'annee. Additionner 22 EUR et 82 EUR
    * puis appeler le resultat « MRR » donnerait un chiffre faux d'un facteur
    * douze, et une decision commerciale prise dessus serait fausse aussi. La
    * periodicite de chaque contrat est donc lue, jamais supposee.

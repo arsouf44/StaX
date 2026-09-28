@@ -1,4 +1,4 @@
-import type { RateLimitDecision, RateLimitStore } from '@stax/security';
+import type { RateLimitDecision, RateLimitStore } from '@nemasus/security';
 import { createServiceClient, type Db } from './client';
 
 /**

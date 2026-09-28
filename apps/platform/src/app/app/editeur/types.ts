@@ -1,4 +1,4 @@
-import type { EditorField, HistoryChange, PublicationReport } from '@stax/site-engine';
+import type { EditorField, HistoryChange, PublicationReport } from '@nemasus/site-engine';
 
 /**
  * Types partages entre la page serveur, les actions et les composants de

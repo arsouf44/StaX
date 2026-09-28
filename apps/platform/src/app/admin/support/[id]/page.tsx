@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { Panel, StatusPill, cn } from '@stax/ui';
-import { uuidSchema } from '@stax/validation';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { Panel, StatusPill, cn } from '@nemasus/ui';
+import { uuidSchema } from '@nemasus/validation';
 import { requireAdminRole } from '~/lib/admin';
 import { TICKET_STATUSES } from '~/lib/admin-views';
 import { TicketReplyForm } from '../ticket-reply-form';
@@ -98,7 +98,7 @@ export default async function AdminTicketPage({ params }: { params: Promise<{ id
                     ? 'Note interne'
                     : message.author_side === 'client'
                       ? 'Client'
-                      : 'Équipe StaX'}
+                      : 'Équipe Nemasus'}
                   <span className="ml-2 font-normal tracking-normal normal-case">
                     {DATE.format(new Date(message.created_at))}
                   </span>

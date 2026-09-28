@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
-import { Panel } from '@stax/ui';
+import { unwrapList } from '@nemasus/database';
+import { Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { PageManager, type PageRow } from './page-manager';

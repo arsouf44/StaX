@@ -2,13 +2,13 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionClient } from '@stax/auth';
+import { createSessionClient } from '@nemasus/auth';
 import {
   fieldErrors,
   formDataToObject,
   mfaChallengeSchema,
   mfaEnrollSchema,
-} from '@stax/validation';
+} from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { safeRedirectTarget } from '~/lib/session';
 import type { AuthFormState } from '../actions';
@@ -56,7 +56,7 @@ export async function startMfaEnrollmentAction(): Promise<MfaEnrollState> {
 
   const { data, error } = await client.auth.mfa.enroll({
     factorType: 'totp',
-    friendlyName: `StaX ${new Date().toISOString().slice(0, 10)}`,
+    friendlyName: `Nemasus ${new Date().toISOString().slice(0, 10)}`,
   });
 
   if (error || !data) {

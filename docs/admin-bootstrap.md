@@ -63,13 +63,13 @@ Attribution depuis le back-office, par un `platform_owner` uniquement.
 
 ---
 
-## Compte interne StaX (sites sans paiement)
+## Compte interne Nemasus (sites sans paiement)
 
 Un compte interne peut commander **autant de sites qu’il veut, sur n’importe
 quelle offre et n’importe quel métier, sans jamais payer**. Il sert à l’équipe
 (sites offerts, comptes de test commerciaux). Après la commande, il suit
 **exactement le parcours d’un client** : le site est construit par l’équipe
-StaX, puis confié au compte depuis l’administration (voir « Construire puis
+Nemasus, puis confié au compte depuis l’administration (voir « Construire puis
 confier un site » ci-dessous).
 
 ### Ce qui fait le privilège — et ce qui ne le fait pas
@@ -119,7 +119,7 @@ Le script `scripts/bootstrap-internal-owner.ts` :
 - est **idempotent** : le relancer ne change rien de plus.
 
 Ensuite, depuis `/commander` : choisir l’offre et le métier, cocher « Je confirme
-la création de ce site dans le cadre d’une commande interne StaX, sans
+la création de ce site dans le cadre d’une commande interne Nemasus, sans
 paiement » et cliquer « Créer le site maintenant ». Le site s’ouvre dans
 l’espace client, prêt à être modifié et publié. « Créer un nouveau site »
 reste accessible depuis le menu du compte.
@@ -140,11 +140,11 @@ séparément.
 
 ## Construire puis confier un site
 
-StaX conçoit et construit le site de chaque client, de zéro, puis le lui
+Nemasus conçoit et construit le site de chaque client, de zéro, puis le lui
 confie. Tant qu’un site n’est pas confié (`sites.delivered_at` vide), le
 client suit son projet et ne peut **ni voir ni modifier** le site : la base le
 refuse (`app.site_can`), l’espace client affiche « Votre site est en cours de
-création ». L’équipe StaX garde la main sur le site en permanence.
+création ». L’équipe Nemasus garde la main sur le site en permanence.
 
 1. **Le site existe** : soit il vient d’une commande (payée ou interne) — un
    site vide est créé avec la commande — soit on le crée depuis
@@ -160,7 +160,7 @@ création ». L’équipe StaX garde la main sur le site en permanence.
    e-mail du compte client (facultative si le client est déjà rattaché, par
    exemple parce qu’il a commandé). Le compte devient membre de l’organisation
    avec le rôle choisi, le projet passe « En attente de votre validation » et le
-   client est prévenu dans son espace. Une adresse sans compte StaX est
+   client est prévenu dans son espace. Une adresse sans compte Nemasus est
    refusée : utilisez alors un code d’activation (même fiche).
 4. **Reprendre** : **Reprendre le site** le remet « en construction » ; rien
    n’est effacé, le site en ligne ne change pas.

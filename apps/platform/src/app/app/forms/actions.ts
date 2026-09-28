@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { unwrapList, unwrapMaybe } from '@stax/database';
-import { slugify } from '@stax/security';
-import { boundedText, emailSchema, optionalText, uuidSchema } from '@stax/validation';
+import { unwrapList, unwrapMaybe } from '@nemasus/database';
+import { slugify } from '@nemasus/security';
+import { boundedText, emailSchema, optionalText, uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import { buildSlug } from '~/lib/collection-io';

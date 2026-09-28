@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { FONT_STACKS, fontFaceCss } from '@stax/site-engine';
+import { FONT_STACKS, fontFaceCss } from '@nemasus/site-engine';
 
 /**
  * Les polices des sites clients sont auto-hebergees : servies par le Worker
@@ -12,8 +12,8 @@ import { FONT_STACKS, fontFaceCss } from '@stax/site-engine';
  */
 
 const ROOT = join(__dirname, '..', '..');
-const ENGINE = join(ROOT, 'packages/site-engine/public/_stax/fonts');
-const PLATFORM = join(ROOT, 'apps/platform/public/_stax/fonts');
+const ENGINE = join(ROOT, 'packages/site-engine/public/_nemasus/fonts');
+const PLATFORM = join(ROOT, 'apps/platform/public/_nemasus/fonts');
 
 const digest = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
 
@@ -35,7 +35,7 @@ describe('polices des sites clients', () => {
 
   it('aucune police ne vient d un service tiers', () => {
     const css = fontFaceCss(Object.keys(FONT_STACKS));
-    expect(css).toContain('url(/_stax/fonts/inter.woff2)');
+    expect(css).toContain('url(/_nemasus/fonts/inter.woff2)');
     expect(css).not.toMatch(/googleapis|gstatic|https?:/);
   });
 });

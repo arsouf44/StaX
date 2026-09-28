@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { unwrapList } from '@stax/database';
+import { unwrapList } from '@nemasus/database';
 import {
   Alert,
   EmptyState,
@@ -13,8 +13,8 @@ import {
   TH,
   THead,
   TR,
-} from '@stax/ui';
-import type { StatusTone } from '@stax/ui';
+} from '@nemasus/ui';
+import type { StatusTone } from '@nemasus/ui';
 import { FilterTabs } from '~/components/app/filter-tabs';
 import { PageHeader } from '~/components/app/page-header';
 import { requireAdminRole } from '~/lib/admin';

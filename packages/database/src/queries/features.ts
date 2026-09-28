@@ -1,4 +1,4 @@
-import type { FeatureKey, LimitKey, UUID } from '@stax/types';
+import type { FeatureKey, LimitKey, UUID } from '@nemasus/types';
 import type { Db } from '../client';
 
 /**
@@ -128,7 +128,8 @@ export async function hasFeature(
 export const FEATURE_UPGRADE_MESSAGES: Record<FeatureKey, string> = {
   custom_domain: 'Le nom de domaine personnalisé est inclus dans toutes nos offres.',
   seo_tools: 'Le référencement technique est inclus dans toutes nos offres.',
-  content_editor: 'L’éditeur StaX est inclus dans toutes nos offres, après la livraison du site.',
+  content_editor:
+    'L’éditeur Nemasus est inclus dans toutes nos offres, après la livraison du site.',
   scheduled_publishing: 'La publication programmée est incluse à partir de l’offre Premium.',
   version_history: 'L’historique des versions est inclus dans toutes nos offres.',
   bookings: 'La réservation en ligne est incluse à partir de l’offre Premium.',

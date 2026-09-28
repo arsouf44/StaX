@@ -1,5 +1,5 @@
 {
-  "name": "@stax/database",
+  "name": "@nemasus/database",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,10 +13,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@stax/config": "workspace:*",
-    "@stax/security": "workspace:*",
-    "@stax/types": "workspace:*",
-    "@stax/validation": "workspace:*",
+    "@nemasus/config": "workspace:*",
+    "@nemasus/security": "workspace:*",
+    "@nemasus/types": "workspace:*",
+    "@nemasus/validation": "workspace:*",
     "@supabase/supabase-js": "2.116.0",
     "zod": "4.6.5"
   },

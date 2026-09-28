@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { deployEnvironment, legalStatus, LEGAL_FIELDS } from '@stax/config';
-import { Alert, Container, Panel, Section } from '@stax/ui';
+import { deployEnvironment, legalStatus, LEGAL_FIELDS } from '@nemasus/config';
+import { Alert, Container, Panel, Section } from '@nemasus/ui';
 import { LEGAL_ORDER, LEGAL_BUILDERS, type LegalBlock, type LegalDocument } from '~/content/legal';
 
 /**

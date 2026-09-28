@@ -1,4 +1,4 @@
-import { readEnv } from '@stax/config';
+import { readEnv } from '@nemasus/config';
 
 /**
  * Invalidation du cache Cloudflare apres une publication.

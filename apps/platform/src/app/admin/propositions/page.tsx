@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { unwrapList } from '@stax/database';
-import { formatMaintenance, formatMoney } from '@stax/payments';
-import { Panel, StatusPill, type StatusTone } from '@stax/ui';
+import { unwrapList } from '@nemasus/database';
+import { formatMaintenance, formatMoney } from '@nemasus/payments';
+import { Panel, StatusPill, type StatusTone } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 import { ProposalForm, type ProposalPlanChoice, type ProposalSiteChoice } from './proposal-form';
 import { ProposalRowActions } from './proposal-row-actions';
@@ -223,6 +223,10 @@ export default async function AdminProposalsPage({
           {visible.map((row) => {
             const state = displayStatus(row, now);
             const open = row.status === 'sent' || row.status === 'claimed';
+            // Une proposition retiree dont les coordonnees n'ont pas encore ete
+            // effacees : l'opposition du prospect peut encore etre honoree.
+            const erasable =
+              row.status === 'withdrawn' && !row.prospect_email.endsWith('@anonymise.invalid');
             return (
               <li key={row.id}>
                 <Panel level={2} padding="lg">
@@ -289,13 +293,14 @@ export default async function AdminProposalsPage({
                       ) : null}
                     </div>
                   </div>
-                  {open ? (
+                  {open || erasable ? (
                     <div className="mt-4 border-t border-[var(--border)] pt-4">
                       <ProposalRowActions
                         proposalId={row.id}
                         companyName={row.company_name}
                         canRenew={open}
                         canWithdraw={open}
+                        canErase={erasable}
                       />
                     </div>
                   ) : null}

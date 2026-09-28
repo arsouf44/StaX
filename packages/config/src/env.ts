@@ -1,14 +1,21 @@
 import { z } from 'zod';
-import { assertServerOnly, deployEnvironment, isProduction, readAllEnv, readEnv } from './runtime';
+import {
+  assertServerOnly,
+  deployEnvironment,
+  isBrowser,
+  isProduction,
+  readAllEnv,
+  readEnv,
+} from './runtime';
 
 /* -------------------------------------------------------------------------- */
 /*  Public configuration (safe to ship in a browser bundle)                    */
 /* -------------------------------------------------------------------------- */
 
 const publicSchema = z.object({
-  /** Canonical origin of the platform application, e.g. https://stax.fr */
+  /** Canonical origin of the platform application, e.g. https://nemasus.fr */
   NEXT_PUBLIC_PLATFORM_URL: z.string().url().default('http://localhost:3000'),
-  /** Apex domain used to mint tenant subdomains, e.g. `sites.stax.fr`. */
+  /** Apex domain used to mint tenant subdomains, e.g. `sites.nemasus.fr`. */
   NEXT_PUBLIC_SITES_DOMAIN: z.string().min(3).default('sites.localhost'),
   /** Supabase project URL — public by design. */
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().default('http://127.0.0.1:54321'),
@@ -27,6 +34,22 @@ export type PublicEnv = z.infer<typeof publicSchema>;
 let publicCache: PublicEnv | null = null;
 
 /**
+ * Sur un Worker Cloudflare, la configuration arrive a l'EXECUTION, pas au
+ * build : Next remplace `process.env.NEXT_PUBLIC_*` par la valeur connue au
+ * moment du build, c'est-a-dire `undefined` si le build n'en avait pas. Cote
+ * serveur, la valeur est alors relue a l'execution, sous son nom public ou son
+ * equivalent serveur (`SUPABASE_URL`…). Dans le navigateur, rien a relire.
+ */
+function atRuntime(...keys: string[]): string | undefined {
+  if (isBrowser()) return undefined;
+  for (const key of keys) {
+    const value = readEnv(key);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/**
  * Public configuration. Next.js inlines `process.env.NEXT_PUBLIC_*` at build time,
  * so the literal member accesses below are required — a dynamic lookup would be
  * replaced by `undefined` in the client bundle.
@@ -34,12 +57,25 @@ let publicCache: PublicEnv | null = null;
 export function publicEnv(): PublicEnv {
   if (publicCache) return publicCache;
   const raw = {
-    NEXT_PUBLIC_PLATFORM_URL: process.env.NEXT_PUBLIC_PLATFORM_URL,
-    NEXT_PUBLIC_SITES_DOMAIN: process.env.NEXT_PUBLIC_SITES_DOMAIN,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-    NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
+    NEXT_PUBLIC_PLATFORM_URL:
+      process.env.NEXT_PUBLIC_PLATFORM_URL || atRuntime('NEXT_PUBLIC_PLATFORM_URL', 'PLATFORM_URL'),
+    NEXT_PUBLIC_SITES_DOMAIN:
+      process.env.NEXT_PUBLIC_SITES_DOMAIN || atRuntime('NEXT_PUBLIC_SITES_DOMAIN', 'SITES_DOMAIN'),
+    NEXT_PUBLIC_SUPABASE_URL:
+      process.env.NEXT_PUBLIC_SUPABASE_URL || atRuntime('NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL'),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      atRuntime(
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        'SUPABASE_ANON_KEY',
+        'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+        'SUPABASE_PUBLISHABLE_KEY',
+      ),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY:
+      process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
+      atRuntime('NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SITE_KEY'),
+    NEXT_PUBLIC_DEFAULT_LOCALE:
+      process.env.NEXT_PUBLIC_DEFAULT_LOCALE || atRuntime('NEXT_PUBLIC_DEFAULT_LOCALE'),
   };
   const cleaned = Object.fromEntries(
     Object.entries(raw).filter(([, value]) => value !== undefined && value !== ''),
@@ -47,13 +83,16 @@ export function publicEnv(): PublicEnv {
   const parsed = publicSchema.safeParse(cleaned);
   if (!parsed.success) {
     throw new Error(
-      `[StaX] Configuration publique invalide : ${parsed.error.issues
+      `[Nemasus] Configuration publique invalide : ${parsed.error.issues
         .map((issue) => `${issue.path.join('.')} ${issue.message}`)
         .join(' | ')}`,
     );
   }
-  publicCache = parsed.data;
-  return publicCache;
+  // Pas de cache tant que la configuration n'est pas arrivee : une lecture
+  // faite avant l'installation des variables du Worker ne doit pas figer les
+  // valeurs de repli locales pour toute la vie de l'isolat.
+  if (cleaned['NEXT_PUBLIC_SUPABASE_URL'] !== undefined) publicCache = parsed.data;
+  return parsed.data;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -110,7 +149,7 @@ const serverSchema = z.object({
 
   EMAIL_PROVIDER: z.enum(['console', 'resend', 'postmark']).default('console'),
   EMAIL_API_KEY: optionalSecret,
-  EMAIL_FROM: z.string().default('StaX <bonjour@localhost>'),
+  EMAIL_FROM: z.string().default('Nemasus <bonjour@localhost>'),
   EMAIL_REPLY_TO: z.string().optional(),
 
   ADMIN_EMAIL: z.string().email().optional(),
@@ -121,7 +160,7 @@ const serverSchema = z.object({
   ADMIN_BOOTSTRAP_PASSWORD: optionalSecret,
 
   /** 32+ byte secret used to HMAC activation codes, preview tokens and CSRF tokens. */
-  STAX_SECRET_KEY: z.string().min(32),
+  NEMASUS_SECRET_KEY: z.string().min(32),
 
   PLATFORM_URL: z.string().url().optional(),
   SITES_DOMAIN: z.string().optional(),
@@ -138,8 +177,8 @@ function developmentFallbacks(): Record<string, string> {
     SUPABASE_URL: 'http://127.0.0.1:54321',
     SUPABASE_ANON_KEY: 'local-development-anon-key',
     SUPABASE_SERVICE_ROLE_KEY: 'local-development-service-role-key',
-    STAX_SECRET_KEY: 'stax-development-only-secret-key-not-for-production-use',
-    EMAIL_FROM: 'StaX (dev) <bonjour@localhost>',
+    NEMASUS_SECRET_KEY: 'nemasus-development-only-secret-key-not-for-production-use',
+    EMAIL_FROM: 'Nemasus (dev) <bonjour@localhost>',
   };
 }
 
@@ -149,7 +188,7 @@ function developmentFallbacks(): Record<string, string> {
  * L'URL du projet et la cle publique sont les MEMES valeurs cote serveur et
  * cote navigateur : un deploiement qui ne declare que `NEXT_PUBLIC_SUPABASE_URL`
  * ne doit pas voir tout le code serveur s'arreter pour autant. Les integrations
- * Supabase (Vercel notamment) nomment aussi la cle de service
+ * Supabase nomment aussi la cle de service
  * `SUPABASE_SECRET_KEY`. Aucun alias ne rend public un secret : on ne va
  * jamais chercher la cle de service dans une variable `NEXT_PUBLIC_*`.
  */
@@ -220,10 +259,10 @@ export function coreConfigurationProblems(): string[] {
         'ne fonctionnent pas.',
     );
   }
-  const secret = readEnv('STAX_SECRET_KEY');
+  const secret = readEnv('NEMASUS_SECRET_KEY');
   if (!secret || secret.length < 32) {
     problems.push(
-      'STAX_SECRET_KEY est absente ou trop courte (32 caractères minimum) : les formulaires ' +
+      'NEMASUS_SECRET_KEY est absente ou trop courte (32 caractères minimum) : les formulaires ' +
         'et les liens signés sont refusés.',
     );
   }
@@ -243,7 +282,7 @@ export function coreConfigurationProblems(): string[] {
 }
 
 export function serverEnv(): ServerEnv {
-  assertServerOnly('@stax/config/env#serverEnv');
+  assertServerOnly('@nemasus/config/env#serverEnv');
   if (serverCache) return serverCache;
 
   const source = withAliases(readAllEnv());
@@ -254,7 +293,7 @@ export function serverEnv(): ServerEnv {
   if (!parsed.success) {
     const missing = parsed.error.issues.map((issue) => issue.path.join('.')).join(', ');
     throw new Error(
-      `[StaX] Variables d'environnement serveur manquantes ou invalides : ${missing}. ` +
+      `[Nemasus] Variables d'environnement serveur manquantes ou invalides : ${missing}. ` +
         'Consultez .env.example et docs/deployment.md.',
     );
   }

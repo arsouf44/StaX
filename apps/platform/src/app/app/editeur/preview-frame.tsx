@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { cn } from '@stax/ui';
+import { cn } from '@nemasus/ui';
 
 /**
  * Apercu du brouillon, rendu par le moteur public.
@@ -122,7 +122,7 @@ export function PreviewFrame({
         index?: number | null;
         y?: number;
       };
-      if (data?.source !== 'stax-preview') return;
+      if (data?.source !== 'nemasus-preview') return;
       if (data.type === 'scroll' && typeof data.y === 'number') scrollRef.current = data.y;
       if (data.type === 'select' && typeof data.blockId === 'string') {
         onSelectRef.current({
@@ -150,7 +150,7 @@ export function PreviewFrame({
     scrolledTo.current = selectedId;
     // Origine opaque : `*` est la seule cible possible. Le message ne contient
     // qu un identifiant de section, rien de sensible.
-    target.postMessage({ type: 'stax:select', blockId: selectedId, scroll }, '*');
+    target.postMessage({ type: 'nemasus:select', blockId: selectedId, scroll }, '*');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, front]);
 

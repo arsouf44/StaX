@@ -1,7 +1,7 @@
 import { cache } from 'react';
-import { createUserClient, type Db } from '@stax/database';
-import type { PlatformRole } from '@stax/types';
-import { hasPlatformRole } from '@stax/auth';
+import { createUserClient, type Db } from '@nemasus/database';
+import type { PlatformRole } from '@nemasus/types';
+import { hasPlatformRole } from '@nemasus/auth';
 import { notFound, redirect } from 'next/navigation';
 import { requireSession, type AuthenticatedSession } from './session';
 

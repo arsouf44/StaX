@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, FormErrorSummary, Input, Select, Textarea } from '@stax/ui';
+import { Alert, Button, Field, FormErrorSummary, Input, Select, Textarea } from '@nemasus/ui';
 import { IDLE_STATE as STEP_IDLE } from '~/lib/form-state';
 import { saveInformationAction, type StepState } from '../actions';
 

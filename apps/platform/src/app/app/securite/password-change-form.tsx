@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, FormErrorSummary, Input } from '@stax/ui';
+import { Alert, Button, Field, FormErrorSummary, Input } from '@nemasus/ui';
 import { PasswordField } from '~/components/auth/password-field';
 import { IDLE_STATE, type ActionState } from '~/lib/form-state';
 import { changePasswordAction } from './actions';

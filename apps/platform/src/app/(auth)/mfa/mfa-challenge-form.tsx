@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, Input } from '@stax/ui';
+import { Alert, Button, Field, Input } from '@nemasus/ui';
 import { IDLE_STATE } from '~/lib/form-state';
 import type { AuthFormState } from '../actions';
 import { verifyMfaChallengeAction } from './actions';

@@ -5,7 +5,7 @@ import type {
   FeatureRow,
   PlanHighlight,
   PlanRow,
-} from '@stax/types';
+} from '@nemasus/types';
 import { type Db, unwrapList } from '../client';
 
 /**

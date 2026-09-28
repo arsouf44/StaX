@@ -1,12 +1,12 @@
 import 'server-only';
-import { mediaPublicUrl, unwrapList, unwrapMaybe, type Db } from '@stax/database';
+import { mediaPublicUrl, unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
 import {
   collectMediaIds,
   parseManifest,
   stableStringify,
   validateContent,
-} from '@stax/site-contract';
-import type { WorkspaceSite } from '@stax/database';
+} from '@nemasus/site-contract';
+import type { WorkspaceSite } from '@nemasus/database';
 import { frameableProjectUrl } from '~/lib/frame-url';
 import type { ContractEditorData, PreviewView, ReleaseState, ReleaseView } from './types';
 
@@ -83,7 +83,7 @@ export async function loadReleaseViews(db: Db, siteId: string, limit = 30): Prom
     const author = authors.find((entry) => entry.id === row.created_by);
     const authorName =
       row.actor_kind === 'stax'
-        ? 'L’équipe StaX'
+        ? 'L’équipe Nemasus'
         : author
           ? author.first_name?.trim() || author.full_name?.trim() || null
           : null;

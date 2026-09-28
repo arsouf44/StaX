@@ -5,7 +5,7 @@
 --  migration : les roles de l'API, le schema `auth` possede par le service
 --  d'authentification, et surtout les PRIVILEGES PAR DEFAUT. Supabase accorde
 --  tout a `anon`, `authenticated` et `service_role` sur ce qui est cree dans
---  `public` ; les migrations StaX retirent ensuite ce qui doit l'etre, et la
+--  `public` ; les migrations Nemasus retirent ensuite ce qui doit l'etre, et la
 --  RLS fait le reste. Reproduire ce comportement ici garantit que les tests
 --  voient la meme surface qu'en production, pas une surface plus etroite qui
 --  masquerait un oubli.

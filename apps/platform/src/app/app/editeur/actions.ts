@@ -2,9 +2,15 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { publicSiteUrl, readEnv, publicEnv } from '@stax/config';
-import { createUserClient, mediaPublicUrl, unwrapList, unwrapMaybe, type Db } from '@stax/database';
-import { purgeSiteCache } from '@stax/infrastructure';
+import { publicSiteUrl, readEnv, publicEnv } from '@nemasus/config';
+import {
+  createUserClient,
+  mediaPublicUrl,
+  unwrapList,
+  unwrapMaybe,
+  type Db,
+} from '@nemasus/database';
+import { purgeSiteCache } from '@nemasus/infrastructure';
 import {
   availableBlocks,
   checkSiteForPublication,
@@ -15,8 +21,8 @@ import {
   parseLegalIdentity,
   type CollectionKey,
   type PublicationReport,
-} from '@stax/site-engine';
-import { uuidSchema } from '@stax/validation';
+} from '@nemasus/site-engine';
+import { uuidSchema } from '@nemasus/validation';
 import { requireSession } from '~/lib/session';
 import { getWorkspace } from '~/lib/workspace';
 import { storeMediaFile } from '~/lib/media-store';
@@ -46,7 +52,7 @@ import type {
  * Quatre garanties, toutes cote serveur :
  *
  *  1. Chaque ecriture passe par le jeton de la personne, puis par une fonction
- *     SQL qui verifie ses droits sur CE site (ou son role dans l equipe StaX).
+ *     SQL qui verifie ses droits sur CE site (ou son role dans l equipe Nemasus).
  *     Un identifiant de page ou de section etranger ne designe rien.
  *
  *  2. Chaque section est REVALIDEE par son schema avant ecriture, et son type
@@ -98,9 +104,9 @@ function failure(message: string, conflict = false): Failure {
 }
 
 function databaseFailure(error: { code?: string; message?: string } | null): Failure {
-  if (error?.code === '40001' || error?.message?.includes('stax:conflict')) {
+  if (error?.code === '40001' || error?.message?.includes('nemasus:conflict')) {
     return failure(
-      'Cette page vient d’être modifiée ailleurs (par un membre de votre équipe ou par StaX). Nous rechargeons la dernière version : vos modifications précédentes sont conservées.',
+      'Cette page vient d’être modifiée ailleurs (par un membre de votre équipe ou par Nemasus). Nous rechargeons la dernière version : vos modifications précédentes sont conservées.',
       true,
     );
   }
@@ -537,7 +543,7 @@ async function afterPublication(
   const addresses = await liveAddresses(db, siteId);
   const purge = await purgeSiteCache({ hostnames: addresses.hostnames, paths: addresses.paths });
 
-  // Trace sans secret : l equipe StaX sait si le cache a bien ete vide.
+  // Trace sans secret : l equipe Nemasus sait si le cache a bien ete vide.
   await db.rpc('write_audit', {
     p_action: 'site.cache_purged',
     p_org: organizationId,
@@ -579,7 +585,7 @@ export async function publishAction(
     p_label: null,
   });
   if (error || typeof versionId !== 'string') {
-    if (error?.message?.includes('stax:no_home')) {
+    if (error?.message?.includes('nemasus:no_home')) {
       return failure(
         'Nous avons détecté un problème avant la publication : votre site n’a pas de page d’accueil.',
       );

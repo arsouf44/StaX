@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { Button, Dialog, Field, Icon, Input, Select, Switch, Textarea, cn } from '@stax/ui';
-import type { EditorField } from '@stax/site-engine';
+import { Button, Dialog, Field, Icon, Input, Select, Switch, Textarea, cn } from '@nemasus/ui';
+import type { EditorField } from '@nemasus/site-engine';
 import { listMediaAction, uploadImageAction } from './actions';
 import type { EditorPageRef, MediaItem } from './types';
 

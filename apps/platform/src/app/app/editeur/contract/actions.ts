@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { hasFeature, tryCreateServiceClient, unwrapMaybe, type Db } from '@stax/database';
-import { parseManifest, validateContent, type ValueIssue } from '@stax/site-contract';
-import { uuidSchema } from '@stax/validation';
+import { hasFeature, tryCreateServiceClient, unwrapMaybe, type Db } from '@nemasus/database';
+import { parseManifest, validateContent, type ValueIssue } from '@nemasus/site-contract';
+import { uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import {
   processPreview,
@@ -54,7 +54,7 @@ async function activeManifest(db: Db, siteId: string) {
 }
 
 const DENIED =
-  'Votre site est encore entre les mains de l’équipe StaX : vous pourrez le modifier dès sa livraison.';
+  'Votre site est encore entre les mains de l’équipe Nemasus : vous pourrez le modifier dès sa livraison.';
 
 /* -------------------------------------------------------------------------- */
 /*  Brouillon                                                                   */
@@ -146,7 +146,7 @@ export async function requestContractPreviewAction(): Promise<
     const messages: Record<string, string> = {
       rate_limited: 'Beaucoup d’aperçus en une heure : patientez quelques minutes.',
       preview_in_progress: 'Un aperçu est déjà en préparation.',
-      infrastructure_missing: 'L’hébergement du site n’est pas disponible : contactez StaX.',
+      infrastructure_missing: 'L’hébergement du site n’est pas disponible : contactez Nemasus.',
       not_initialized: 'Le site n’est pas encore prêt pour un aperçu.',
     };
     return { status: 'error', message: messages[result.code ?? ''] ?? 'Aperçu impossible.' };
@@ -224,7 +224,7 @@ const RELEASE_ERRORS: Record<string, string> = {
   conflict: 'Le brouillon a changé entre-temps : enregistrez-le de nouveau, puis publiez.',
   feature_unavailable: 'La publication programmée n’est pas incluse dans votre offre.',
   schedule_out_of_range: 'Choisissez une date entre dans 5 minutes et dans un an.',
-  infrastructure_missing: 'L’hébergement du site n’est pas disponible : contactez StaX.',
+  infrastructure_missing: 'L’hébergement du site n’est pas disponible : contactez Nemasus.',
   site_unavailable: 'Votre site est suspendu : la publication est impossible.',
   not_initialized: 'Le site n’est pas encore prêt.',
   source_not_found: 'Cette version est introuvable.',

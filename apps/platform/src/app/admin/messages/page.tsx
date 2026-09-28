@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Panel, StatusPill } from '@stax/ui';
+import { Panel, StatusPill } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 
 export const metadata: Metadata = { title: 'Messages clients' };

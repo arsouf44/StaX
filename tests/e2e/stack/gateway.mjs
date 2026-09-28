@@ -71,8 +71,8 @@ if (process.argv[2] === 'keys') {
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 60 * 60 * 24 * 365;
   process.stdout.write(
-    `ANON_KEY=${signJwt({ role: 'anon', iss: 'stax-e2e', iat, exp }, secret)}\n` +
-      `SERVICE_KEY=${signJwt({ role: 'service_role', iss: 'stax-e2e', iat, exp }, secret)}\n`,
+    `ANON_KEY=${signJwt({ role: 'anon', iss: 'nemasus-e2e', iat, exp }, secret)}\n` +
+      `SERVICE_KEY=${signJwt({ role: 'service_role', iss: 'nemasus-e2e', iat, exp }, secret)}\n`,
   );
   process.exit(0);
 }

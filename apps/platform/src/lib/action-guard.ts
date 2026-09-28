@@ -1,14 +1,14 @@
 import 'server-only';
 import { headers } from 'next/headers';
-import { PostgresRateLimitStore, tryCreateServiceClient } from '@stax/database';
-import { isLegalValueConfigured, legalValue, platformUrl } from '@stax/config';
+import { PostgresRateLimitStore, tryCreateServiceClient } from '@nemasus/database';
+import { isLegalValueConfigured, legalValue, platformUrl } from '@nemasus/config';
 import {
   enforceRateLimit,
   hashIp,
   rateLimitIdentity,
   verifyTurnstile,
   type RateLimitName,
-} from '@stax/security';
+} from '@nemasus/security';
 
 /**
  * Garde commune aux actions serveur publiques.
@@ -41,7 +41,7 @@ async function withinBudget<T>(operation: Promise<T>, fallback: T, label: string
       operation,
       new Promise<T>((resolve) => {
         timer = setTimeout(() => {
-          console.error(`[stax:guard] ${label} n'a pas repondu en ${GUARD_TIMEOUT_MS} ms`);
+          console.error(`[nemasus:guard] ${label} n'a pas repondu en ${GUARD_TIMEOUT_MS} ms`);
           resolve(fallback);
         }, GUARD_TIMEOUT_MS);
       }),
@@ -98,7 +98,7 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
     store.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     null;
 
-  // `hashIp` refuse de signer sans STAX_SECRET_KEY en production, et c'est la
+  // `hashIp` refuse de signer sans NEMASUS_SECRET_KEY en production, et c'est la
   // bonne regle : une empreinte calculee avec une cle devinable ne protege
   // rien. Mais l'exception remontait jusqu'a `error.tsx`, et un secret de
   // deploiement absent se presentait au visiteur comme « Une erreur est
@@ -112,7 +112,7 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
     ipHash = await hashIp(ip);
   } catch (error) {
     console.error(
-      '[stax:config] STAX_SECRET_KEY absent ou trop court : aucun formulaire ne ' +
+      '[nemasus:config] NEMASUS_SECRET_KEY absent ou trop court : aucun formulaire ne ' +
         'peut fonctionner tant que ce secret n est pas fourni',
       error,
     );
@@ -138,7 +138,7 @@ export async function guardAction(input: ActionGuardInput): Promise<ActionGuardR
       return { ok: false, message: decision.error?.message ?? 'Trop de tentatives.' };
     }
   } catch (error) {
-    console.error('[stax:rate-limit] compteur indisponible', error);
+    console.error('[nemasus:rate-limit] compteur indisponible', error);
   }
 
   // A l'inverse du compteur, une verification anti-robot muette echoue en

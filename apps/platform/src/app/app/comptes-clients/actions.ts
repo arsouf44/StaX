@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { uuidSchema } from '@stax/validation';
+import { uuidSchema } from '@nemasus/validation';
 import { z } from 'zod';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';

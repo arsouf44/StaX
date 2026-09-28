@@ -1,5 +1,5 @@
-import type { Cents, Currency, UUID } from '@stax/types';
-import { platformUrl } from '@stax/config';
+import type { Cents, Currency, UUID } from '@nemasus/types';
+import { platformUrl } from '@nemasus/config';
 import { formatMoney } from './money';
 import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
 
@@ -7,7 +7,7 @@ import { getStripe, idempotencyKey, type Stripe } from './stripe-client';
  * Parcours de paiement de la plateforme.
  *
  * A la commande, le client paie la CREATION de son site, et rien d'autre.
- * Sa carte est enregistree chez Stripe (jamais chez StaX) pour la suite.
+ * Sa carte est enregistree chez Stripe (jamais chez Nemasus) pour la suite.
  *
  * La maintenance est MENSUELLE et ne commence qu'a la LIVRAISON du site :
  * c'est la livraison, confirmee par l'equipe apres la checklist, qui cree
@@ -62,7 +62,7 @@ export interface CreateCheckoutInput {
  * Stripe ajoute la TVA au montant HT et la fait apparaitre sur la facture
  * (HT, taux, montant de TVA, TTC) : le montant encaisse est exactement le
  * total TTC affiche au client. Le taux est cree une fois puis reutilise ; il
- * est reconnu a sa marque `stax_vat`, jamais a son seul libelle.
+ * est reconnu a sa marque `nemasus_vat`, jamais a son seul libelle.
  */
 const vatRateCache = new Map<number, string>();
 
@@ -77,7 +77,7 @@ export async function ensureVatTaxRate(rateBps: number): Promise<string | null> 
     if (
       !rate.inclusive &&
       rate.percentage === percentage &&
-      rate.metadata?.['stax_vat'] === String(rateBps)
+      rate.metadata?.['nemasus_vat'] === String(rateBps)
     ) {
       vatRateCache.set(rateBps, rate.id);
       return rate.id;
@@ -93,7 +93,7 @@ export async function ensureVatTaxRate(rateBps: number): Promise<string | null> 
       country: 'FR',
       jurisdiction: 'FR',
       tax_type: 'vat',
-      metadata: { stax_vat: String(rateBps) },
+      metadata: { nemasus_vat: String(rateBps) },
     },
     { idempotencyKey: idempotencyKey('vat-rate', String(rateBps)) },
   );
@@ -139,11 +139,11 @@ export async function createCheckoutSession(
   const hasMaintenance = input.plan.maintenancePriceCents > 0;
 
   const metadata: Stripe.MetadataParam = {
-    stax_order_id: input.orderId,
-    stax_order_reference: input.orderReference,
-    stax_organization_id: input.organizationId,
-    stax_plan_slug: input.plan.planSlug,
-    ...(input.couponCode ? { stax_coupon: input.couponCode } : {}),
+    nemasus_order_id: input.orderId,
+    nemasus_order_reference: input.orderReference,
+    nemasus_organization_id: input.organizationId,
+    nemasus_plan_slug: input.plan.planSlug,
+    ...(input.couponCode ? { nemasus_coupon: input.couponCode } : {}),
   };
 
   const maintenanceNotice = hasMaintenance
@@ -174,12 +174,12 @@ export async function createCheckoutSession(
         metadata,
       },
     },
-    // Le consentement CGV est deja recueilli et horodate cote StaX ; Stripe
+    // Le consentement CGV est deja recueilli et horodate cote Nemasus ; Stripe
     // le redemande pour que la preuve existe aussi chez le prestataire.
     consent_collection: { terms_of_service: 'required' },
     custom_text: {
       terms_of_service_acceptance: {
-        message: `J’accepte les conditions générales de vente de StaX disponibles sur ${base}/cgv.`,
+        message: `J’accepte les conditions générales de vente de Nemasus disponibles sur ${base}/cgv.`,
       },
       ...(maintenanceNotice ? { submit: { message: maintenanceNotice } } : {}),
     },
@@ -274,7 +274,7 @@ async function ensureMaintenanceProduct(planSlug: string, planName: string): Pro
   if (cached) return cached;
   const stripe = getStripe();
   const found = await stripe.products.search({
-    query: `metadata['stax_maintenance_plan']:'${planSlug.replace(/[^a-z0-9-]/g, '')}' AND active:'true'`,
+    query: `metadata['nemasus_maintenance_plan']:'${planSlug.replace(/[^a-z0-9-]/g, '')}' AND active:'true'`,
     limit: 1,
   });
   const existing = found.data[0];
@@ -286,8 +286,8 @@ async function ensureMaintenanceProduct(planSlug: string, planName: string): Pro
     {
       name: `Maintenance mensuelle — offre ${planName}`,
       description:
-        'Hébergement et diffusion Cloudflare, HTTPS, surveillance, sauvegardes, infrastructure de publication, mises à jour StaX, support et accès à l’éditeur.',
-      metadata: { stax_maintenance_plan: planSlug },
+        'Hébergement et diffusion Cloudflare, HTTPS, surveillance, sauvegardes, infrastructure de publication, mises à jour Nemasus, support et accès à l’éditeur.',
+      metadata: { nemasus_maintenance_plan: planSlug },
     },
     { idempotencyKey: idempotencyKey('maintenance-product', planSlug) },
   );
@@ -321,11 +321,11 @@ export async function startMaintenanceSubscription(input: StartMaintenanceInput)
     defaultMethod = intent.payment_method;
   }
   const metadata: Stripe.MetadataParam = {
-    stax_order_id: input.orderId,
-    stax_order_reference: input.orderReference,
-    stax_organization_id: input.organizationId,
-    stax_site_id: input.siteId,
-    stax_plan_slug: input.plan.planSlug,
+    nemasus_order_id: input.orderId,
+    nemasus_order_reference: input.orderReference,
+    nemasus_organization_id: input.organizationId,
+    nemasus_site_id: input.siteId,
+    nemasus_plan_slug: input.plan.planSlug,
   };
 
   const item: Stripe.SubscriptionCreateParams.Item = input.plan.stripeMaintenancePriceId
@@ -407,7 +407,7 @@ export async function ensureStripeCustomer(params: {
     {
       email: params.email,
       name: params.organizationName,
-      metadata: { stax_organization_id: params.organizationId },
+      metadata: { nemasus_organization_id: params.organizationId },
       preferred_locales: ['fr'],
     },
     { idempotencyKey: idempotencyKey('customer', params.organizationId) },
@@ -422,7 +422,7 @@ export async function cancelSubscriptionAtPeriodEnd(
   const stripe = getStripe();
   await stripe.subscriptions.update(stripeSubscriptionId, {
     cancel_at_period_end: true,
-    ...(reason ? { metadata: { stax_cancel_reason: reason.slice(0, 500) } } : {}),
+    ...(reason ? { metadata: { nemasus_cancel_reason: reason.slice(0, 500) } } : {}),
   });
 }
 
@@ -444,7 +444,7 @@ export async function refundPayment(params: {
       payment_intent: params.paymentIntentId,
       amount: params.amountCents,
       reason: params.reason ?? 'requested_by_customer',
-      metadata: { stax_refund_request_id: params.refundRequestId },
+      metadata: { nemasus_refund_request_id: params.refundRequestId },
     },
     { idempotencyKey: idempotencyKey('refund', params.refundRequestId) },
   );
