@@ -55,6 +55,15 @@ PLATFORM_URL        https://<domaine de la plateforme>, sans / final
 SITES_DOMAIN        domaine parent des adresses temporaires des sites, ex. sites.nemasus.fr
 ```
 
+Tant que `PLATFORM_URL` manque, les pages prennent l’adresse par laquelle le
+Worker est appelé (`https://stax.<compte>.workers.dev`, puis votre domaine) pour
+leurs URL canoniques, le plan du site et les retours de paiement. Les e-mails
+envoyés hors d’une visite (tâches planifiées) exigent, eux, `PLATFORM_URL`.
+
+Les **aperçus** de branche (`wrangler versions upload`) peuvent ne recevoir
+aucune de ces variables : le catalogue y apparaît « momentanément
+indisponible ». Vérifiez le site sur l’adresse de production, pas sur un aperçu.
+
 **Selon les fonctions** (chaque fonction non configurée se déclare
 indisponible au lieu d’échouer ; `/admin/sante` liste ce qui manque) :
 
