@@ -8,6 +8,7 @@ import { uuidSchema } from '@nemasus/validation';
 import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
 import type { ActionState } from '~/lib/form-state';
+import { messageText } from '~/lib/message-text';
 
 /**
  * Réponse de l'équipe à un ticket d'assistance.
@@ -20,7 +21,7 @@ import type { ActionState } from '~/lib/form-state';
 const schema = z
   .object({
     ticketId: uuidSchema,
-    body: z.string().trim().min(2, 'Votre réponse est vide.').max(5000),
+    body: messageText(2, 5000, 'Votre réponse est vide.'),
     internal: z.boolean(),
     status: z.enum(['waiting_customer', 'resolved', 'closed', 'waiting_support']),
   })

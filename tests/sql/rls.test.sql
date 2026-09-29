@@ -3470,7 +3470,7 @@ begin
   perform t.assert(v_result ->> 'code' in ('not_found', 'withdrawn'),
     'Une proposition retiree ne se paie plus');
 
-  -- Opposition du prospect (0056) : effacement immediat, sur une proposition retiree.
+  -- Opposition du prospect (0057) : effacement immediat, sur une proposition retiree.
   perform t.assert(t.denied_as(erwan, format('select public.erase_site_proposal_contact(%L::uuid)', v_prop)),
     'Le client n''efface pas les coordonnees d''une proposition');
   perform t.assert(not has_function_privilege('anon', 'public.erase_site_proposal_contact(uuid)', 'execute'),
@@ -3618,6 +3618,330 @@ begin
     'Une invitation expiree ou d''une autre personne est refusee');
   perform t.assert(not has_function_privilege('anon', 'public.accept_organization_invitation(text)', 'execute'),
     'Accepter une invitation exige un compte');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Durcissement de securite (0056)
+-- -----------------------------------------------------------------------------
+\echo '--- Durcissement : second facteur, messagerie, contenus malveillants (0056) ---'
+
+-- Comme count_as / denied_as, avec le niveau d'authentification du jeton.
+create or replace function t.count_as_aal(p_user uuid, p_aal text, p_sql text)
+returns integer language plpgsql as $$
+declare v_count integer;
+begin
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', p_user, 'role', 'authenticated', 'aal', p_aal)::text, true);
+  set local role authenticated;
+  execute 'select count(*) from (' || p_sql || ') q' into v_count;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  return v_count;
+end;
+$$;
+
+create or replace function t.denied_as_aal(p_user uuid, p_aal text, p_sql text)
+returns boolean language plpgsql as $$
+declare v_rows integer;
+begin
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', p_user, 'role', 'authenticated', 'aal', p_aal)::text, true);
+  begin
+    set local role authenticated;
+    execute p_sql;
+    get diagnostics v_rows = row_count;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    return v_rows = 0;
+  exception when others then
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    return true;
+  end;
+end;
+$$;
+
+do $$
+declare
+  staff     uuid := (select v from t.fixtures where k='staff');
+  claire    uuid := (select v from t.fixtures where k='claire');
+  bob       uuid := (select v from t.fixtures where k='bob');
+  v_org_x   uuid := (select v from t.fixtures where k='org_x');
+  v_project uuid;
+  v_boss    uuid;
+  v_flooder uuid;
+  v_ticket  uuid;
+  v_msg     record;
+  v_tables  int;
+  v_projects int;
+  i         int;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  v_project := (select id from public.projects where organization_id = v_org_x limit 1);
+
+  -- 1. Second facteur du personnel, exige par la base ---------------------------
+  insert into auth.users (email) values ('chef@equipe-nemasus.test') returning id into v_boss;
+  update public.profiles set platform_role = 'platform_admin', mfa_enforced = true where id = v_boss;
+
+  perform t.assert(t.count_as_aal(v_boss, 'aal1', 'select 1 from public.organizations') = 0,
+    'Mot de passe seul (aal1) : un compte d''equipe soumis au second facteur ne voit AUCUN client');
+  perform t.assert(t.count_as_aal(v_boss, 'aal1',
+      format('select 1 from public.project_messages where project_id = %L', v_project)) = 0,
+    'aal1 : aucun message de client lisible');
+  perform t.assert(t.count_as_aal(v_boss, 'aal2', 'select 1 from public.organizations') > 0,
+    'Second facteur valide (aal2) : le meme compte retrouve le back-office');
+  perform t.assert(t.denied_as_aal(v_boss, 'aal1', format(
+      'update public.profiles set mfa_enforced = false where id = %L', v_boss)),
+    'aal1 : impossible de lever sa propre obligation de second facteur');
+  perform t.assert(t.denied_as_aal(v_boss, 'aal1', format(
+      'update public.profiles set platform_role = ''platform_owner'' where id = %L', v_boss)),
+    'aal1 : impossible de s''attribuer un role');
+  perform t.assert((select mfa_enforced and platform_role = 'platform_admin'
+                      from public.profiles where id = v_boss),
+    'Le profil du compte d''equipe est intact');
+  perform t.assert(t.count_as(staff, 'select 1 from public.organizations') > 0,
+    'Un compte d''equipe sans obligation de second facteur n''est pas affecte');
+
+  -- 2. Ce qu'un client ne choisit pas dans un message ---------------------------
+  perform t.assert(not t.denied_as(claire, format(
+    'insert into project_messages (project_id, author_id, author_side, body, created_at, read_by_staff_at, read_by_client_at, attachments)
+     values (%L, %L, ''client'', ''Message antidate'', ''2020-01-01'', now(), now(), ''[{"url":"javascript:alert(1)"}]'')',
+    v_project, claire)),
+    'Le client ecrit (champs systeme fournis par lui)');
+  perform set_config('request.jwt.claims', null, true);
+  select * into v_msg from public.project_messages
+   where project_id = v_project and body = 'Message antidate' order by created_at desc limit 1;
+  perform t.assert(v_msg.created_at = now(),
+    'La date d''un message est posee par la base, pas par l''auteur');
+  perform t.assert(v_msg.read_by_staff_at is null and v_msg.read_by_client_at is null,
+    'Un client ne peut pas marquer son propre message comme lu par l''equipe');
+  perform t.assert(v_msg.attachments = '[]'::jsonb,
+    'Aucune piece jointe arbitraire (lien javascript:) ne passe par l''API');
+
+  -- 3. Contenus malveillants : stockes comme du texte, jamais executes ----------
+  select count(*) into v_projects from public.projects;
+  perform t.assert(not t.denied_as(claire, format(
+    'insert into project_messages (project_id, author_id, author_side, body) values (%L, %L, ''client'', %L)',
+    v_project, claire,
+    E'Robert''); DROP TABLE public.projects; -- <script>alert(document.cookie)</script> <img src=x onerror=alert(1)> {{7*7}} ${7*7} $(rm -rf /) `id`')),
+    'Un message contenant du SQL, du HTML et des commandes est accepte comme texte');
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(to_regclass('public.projects') is not null
+                   and (select count(*) from public.projects) = v_projects,
+    'La table visee par l''injection SQL est intacte');
+  perform t.assert(exists (select 1 from public.project_messages
+                            where project_id = v_project
+                              and body = E'Robert''); DROP TABLE public.projects; -- <script>alert(document.cookie)</script> <img src=x onerror=alert(1)> {{7*7}} ${7*7} $(rm -rf /) `id`'),
+    'Le texte est conserve a l''identique (il sera affiche echappe, jamais interprete)');
+
+  perform t.assert(not t.denied_as(claire, format(
+    'insert into project_messages (project_id, author_id, author_side, body) values (%L, %L, ''client'', %L)',
+    v_project, claire,
+    E'Voir facture\u202Efdp.exe\u200B\u2066 ok\uFEFF\u0007\U000E0041\U000E0042\r\nfin\n\n\n\n\n\nsuite')),
+    'Un message avec caracteres invisibles est accepte');
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(exists (select 1 from public.project_messages
+                            where project_id = v_project
+                              and body = E'Voir facturefdp.exe ok\nfin\n\n\nsuite'),
+    'Marques de direction, largeur nulle, controles et caracteres « tag » sont retires');
+
+  perform t.assert(t.denied_as(claire, format(
+    'insert into project_messages (project_id, author_id, author_side, body) values (%L, %L, ''client'', %L)',
+    v_project, claire, repeat('a', 5001))),
+    'Un client ne depasse pas 5 000 caracteres, meme via l''API');
+  perform t.assert(t.denied_as(claire, format(
+    'insert into project_messages (project_id, author_id, author_side, body) values (%L, %L, ''client'', %L)',
+    v_project, claire, E'\u200B\u202E \n\t')),
+    'Un message invisible (que des caracteres invisibles) est refuse');
+
+  -- 4. Tickets : statut, priorite, assignation ----------------------------------
+  insert into auth.users (email) values ('robot@spam.test') returning id into v_flooder;
+  perform t.assert(not t.denied_as(v_flooder, format(
+    'insert into support_tickets (reference, opened_by, subject, category, status, priority, assigned_to, resolved_at)
+     values (''SUP-FLOOD1'', %L, %L, ''general'', ''closed'', ''urgent'', %L, now())',
+    v_flooder, E'Aide\u202E urgente\n\n!', staff)),
+    'Un utilisateur ouvre un ticket en fixant lui-meme statut, priorite et assignation');
+  perform set_config('request.jwt.claims', null, true);
+  select id into v_ticket from public.support_tickets where reference = 'SUP-FLOOD1';
+  perform t.assert((select status = 'open' and priority = 'normal' and assigned_to is null
+                           and resolved_at is null and subject = 'Aide urgente !'
+                      from public.support_tickets where id = v_ticket),
+    'Le ticket nait ouvert, priorite normale, non assigne, objet nettoye');
+
+  -- 5. Debit : un robot ne noie pas l'equipe ------------------------------------
+  for i in 1..10 loop
+    perform t.assert(not t.denied_as(v_flooder, format(
+      'insert into support_messages (ticket_id, author_id, author_side, body) values (%L, %L, ''client'', %L)',
+      v_ticket, v_flooder, 'spam ' || i)),
+      'Message ' || i || ' sur 10 accepte');
+  end loop;
+  perform t.assert(t.denied_as(v_flooder, format(
+    'insert into support_messages (ticket_id, author_id, author_side, body) values (%L, %L, ''client'', ''spam 11'')',
+    v_ticket, v_flooder)),
+    'Le 11e message dans la minute est refuse par la base');
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((select count(*) from public.support_messages where ticket_id = v_ticket) = 10,
+    'Seuls 10 messages ont ete enregistres');
+  perform t.assert(not t.denied_as(staff, format(
+    'insert into support_messages (ticket_id, author_id, author_side, body) values (%L, %L, ''stax'', ''Nous regardons.'')',
+    v_ticket, staff)),
+    'L''equipe peut toujours repondre');
+
+  -- 6. La reponse d'un client relance le ticket cote equipe ---------------------
+  update public.support_tickets set status = 'waiting_customer' where reference = 'SUP-TEST01';
+  perform t.assert(not t.denied_as(claire, format(
+    'insert into support_messages (ticket_id, author_id, author_side, body)
+     select id, %L, ''client'', ''Voici la precision demandee.'' from public.support_tickets where reference = ''SUP-TEST01''',
+    claire)),
+    'Le client repond sur son ticket');
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((select status = 'waiting_support' from public.support_tickets where reference = 'SUP-TEST01'),
+    'Le ticket repasse « en attente de l''equipe » a la reponse du client');
+
+  perform t.assert(not has_function_privilege('authenticated', 'app.clean_message_text(text)', 'execute')
+                   and not has_function_privilege('authenticated', 'app.guard_conversation_message()', 'execute'),
+    'Les fonctions internes de la messagerie ne sont pas exposees');
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+--  Balayage : TOUTES les fonctions exposees, appelees par un intrus
+--
+--  Chaque fonction que l'API permet d'appeler est invoquee par un compte
+--  etranger a tout client (second facteur valide), avec les identifiants REELS
+--  d'un client (organisation, site, projet, commande, proposition...), puis
+--  avec des valeurs nulles. Aucune ne doit modifier quoi que ce soit, ni
+--  renvoyer une donnee de ce client. Seul le journal peut garder trace de la
+--  tentative. Une fonction ajoutee demain est balayee automatiquement.
+-- -----------------------------------------------------------------------------
+\echo '--- Balayage de toutes les fonctions exposees par un intrus ---'
+
+create or replace function t.fingerprint()
+returns jsonb language plpgsql as $$
+declare r record; v jsonb := '{}'; h text;
+begin
+  for r in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'public' and c.relkind = 'r' order by 1 loop
+    execute format(
+      'select md5(coalesce(string_agg(md5(x::text), '''' order by md5(x::text)), '''')) from public.%I x',
+      r.relname) into h;
+    v := v || jsonb_build_object(r.relname, h);
+  end loop;
+  return v;
+end;
+$$;
+
+do $$
+declare
+  v_org    uuid := (select v from t.fixtures where k='org_x');
+  v_site   uuid := (select v from t.fixtures where k='site_x');
+  claire   uuid := (select v from t.fixtures where k='claire');
+  v_out    uuid;
+  v_ids    jsonb;
+  v_marks  text[];
+  r        record;
+  a        record;
+  v_pass   text;
+  v_args   text;
+  v_sql    text;
+  v_res    text;
+  v_before jsonb;
+  v_after  jsonb;
+  v_changed text;
+  v_calls  int := 0;
+begin
+  perform set_config('request.jwt.claims', null, true);
+  insert into auth.users (email) values ('intrus@ailleurs.test') returning id into v_out;
+  v_ids := jsonb_build_object(
+    'org',      v_org,
+    'site',     v_site,
+    'project',  (select id from public.projects where organization_id = v_org limit 1),
+    'order',    (select id from public.orders where organization_id = v_org limit 1),
+    'page',     (select id from public.site_pages where site_id = v_site limit 1),
+    'proposal', (select id from public.site_proposals limit 1),
+    'release',  (select id from public.site_releases where site_id = v_site limit 1),
+    'version',  (select id from public.site_versions where site_id = v_site limit 1),
+    'plan',     (select id from public.plans limit 1),
+    'customer', (select id from public.site_customers limit 1));
+  v_marks := array[(select name from public.organizations where id = v_org),
+                    (select email from public.profiles where id = claire)];
+
+  foreach v_pass in array array['identifiants reels', 'valeurs nulles'] loop
+    for r in
+      select p.proname, p.proargnames, p.proargtypes::oid[] as types, p.pronargs
+        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.prokind = 'f'
+         and has_function_privilege('authenticated', p.oid, 'execute')
+         and p.prorettype <> 'trigger'::regtype
+       order by p.proname
+    loop
+      v_args := '';
+      for a in select i, r.types[i + 1] as typ, coalesce(r.proargnames[i + 1], '') as nm
+                 from generate_series(0, r.pronargs - 1) i loop
+        v_args := v_args || case when a.i > 0 then ', ' else '' end ||
+          case
+            when v_pass = 'valeurs nulles' then 'null::' || format_type(a.typ, null)
+            when a.typ = 'uuid'::regtype then quote_literal(coalesce(
+               case when a.nm ~ 'org'      then v_ids ->> 'org'
+                    when a.nm ~ 'site'     then v_ids ->> 'site'
+                    when a.nm ~ 'project'  then v_ids ->> 'project'
+                    when a.nm ~ 'order'    then v_ids ->> 'order'
+                    when a.nm ~ 'page'     then v_ids ->> 'page'
+                    when a.nm ~ 'proposal' then v_ids ->> 'proposal'
+                    when a.nm ~ 'release'  then v_ids ->> 'release'
+                    when a.nm ~ 'version'  then v_ids ->> 'version'
+                    when a.nm ~ 'plan'     then v_ids ->> 'plan'
+                    when a.nm ~ 'customer' then v_ids ->> 'customer'
+               end, gen_random_uuid()::text)) || '::uuid'
+            when a.typ in ('text'::regtype, 'character varying'::regtype) then '''x''::text'
+            when a.typ in ('integer'::regtype, 'bigint'::regtype, 'smallint'::regtype, 'numeric'::regtype)
+              then '1::' || format_type(a.typ, null)
+            when a.typ = 'boolean'::regtype then 'true'
+            when a.typ in ('jsonb'::regtype, 'json'::regtype) then '''{}''::' || format_type(a.typ, null)
+            when a.typ = 'timestamptz'::regtype then '(now() + interval ''1 day'')'
+            else 'null::' || format_type(a.typ, null)
+          end;
+      end loop;
+      v_sql := format('select (public.%I(%s))::text', r.proname, v_args);
+
+      v_before := t.fingerprint();
+      v_res := null;
+      begin
+        perform set_config('request.jwt.claims',
+          json_build_object('sub', v_out, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+        set local role authenticated;
+        execute v_sql into v_res;
+        reset role;
+      exception when others then
+        reset role;
+      end;
+      perform set_config('request.jwt.claims', null, true);
+      v_after := t.fingerprint();
+      v_calls := v_calls + 1;
+
+      select string_agg(k, ', ') into v_changed
+        from jsonb_each_text(v_after) e(k, val)
+       where v_before ->> k is distinct from val
+         and k not in ('audit_logs', 'security_events');
+      if v_changed is not null then
+        raise exception 'ECHEC : % (%) a modifie % pour un intrus', r.proname, v_pass, v_changed;
+      end if;
+      if v_res is not null
+         and (position(v_marks[1] in v_res) > 0 or position(v_marks[2] in v_res) > 0) then
+        raise exception 'ECHEC : % (%) renvoie des donnees d''un client a un intrus', r.proname, v_pass;
+      end if;
+    end loop;
+  end loop;
+
+  perform t.assert(v_calls >= 100,
+    format('%s appels de fonctions exposees par un intrus : rien modifie, rien divulgue', v_calls));
+  perform t.assert(not exists (
+      select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.prokind = 'f'
+         and has_function_privilege('anon', p.oid, 'execute')
+         and p.prorettype <> 'trigger'::regtype),
+    'Aucune fonction de l''API n''est appelable sans compte (le schema app n''est pas expose)');
 end;
 $$;
 

@@ -155,7 +155,7 @@ l'administration de la plateforme peut décider.
 | **Personnes** | Contacts professionnels des entreprises prospectées |
 | **Données** | Nom de l'entreprise, nom, e-mail et téléphone professionnels du contact, offre et prix proposés, notes internes de l'équipe, dates d'envoi, de récupération et de paiement, nombre de saisies du code |
 | **Tables** | `site_proposals`, `audit_logs`, `email_log` (empreinte du destinataire) |
-| **Conservation** | Non conclue (expirée ou retirée) : coordonnées **anonymisées 3 ans** après le dernier échange (`app.apply_retention()`, 0054). Opposition du prospect (« STOP ») : proposition retirée puis coordonnées **effacées immédiatement** (`app.erase_site_proposal_contact`, 0056, bouton « Effacer les coordonnées » dans `/admin/propositions`). Conclue : comme A1 et A2 |
+| **Conservation** | Non conclue (expirée ou retirée) : coordonnées **anonymisées 3 ans** après le dernier échange (`app.apply_retention()`, 0054). Opposition du prospect (« STOP ») : proposition retirée puis coordonnées **effacées immédiatement** (`app.erase_site_proposal_contact`, 0057, bouton « Effacer les coordonnées » dans `/admin/propositions`). Conclue : comme A1 et A2 |
 
 Le code personnel n'est stocké que sous forme d'empreinte HMAC ; il ne vaut
 qu'avec l'adresse e-mail destinataire. Le prospect ne lit jamais la table

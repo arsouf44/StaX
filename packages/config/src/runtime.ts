@@ -76,6 +76,15 @@ export function isBrowser(): boolean {
   return scope.window !== undefined && scope.window.document !== undefined;
 }
 
+/**
+ * Vrai dans un Worker Cloudflare (production, apercu, `wrangler dev`) : le
+ * runtime y expose `navigator.userAgent === 'Cloudflare-Workers'`.
+ */
+export function isCloudflareWorker(): boolean {
+  const scope = globalThis as { navigator?: { userAgent?: string } };
+  return scope.navigator?.userAgent === 'Cloudflare-Workers';
+}
+
 export type DeployEnvironment = 'development' | 'preview' | 'production' | 'test';
 
 export function deployEnvironment(): DeployEnvironment {

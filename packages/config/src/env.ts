@@ -3,6 +3,7 @@ import {
   assertServerOnly,
   deployEnvironment,
   isBrowser,
+  isCloudflareWorker,
   isProduction,
   readAllEnv,
   readEnv,
@@ -31,7 +32,7 @@ const publicSchema = z.object({
 
 export type PublicEnv = z.infer<typeof publicSchema>;
 
-let publicCache: PublicEnv | null = null;
+let publicCache: { env: PublicEnv; platformConfigured: boolean } | null = null;
 
 /**
  * Sur un Worker Cloudflare, la configuration arrive a l'EXECUTION, pas au
@@ -55,7 +56,35 @@ function atRuntime(...keys: string[]): string | undefined {
  * replaced by `undefined` in the client bundle.
  */
 export function publicEnv(): PublicEnv {
-  if (publicCache) return publicCache;
+  const { env, platformConfigured } = publicCache ?? loadPublicEnv();
+  if (platformConfigured) return env;
+  const origin = workerRequestOrigin();
+  return origin ? { ...env, NEXT_PUBLIC_PLATFORM_URL: origin } : env;
+}
+
+/**
+ * Adresse publique d'un Worker dont `PLATFORM_URL` n'est pas encore posee.
+ *
+ * Sans elle, les URL canoniques, le plan du site et les retours de paiement
+ * pointeraient vers `http://localhost:3000`. L'adaptateur OpenNext inscrit
+ * l'origine de chaque requete dans `__NEXT_PRIVATE_ORIGIN` ; sur un Worker, ce
+ * nom d'hote n'est pas choisi par le visiteur : Cloudflare n'achemine vers le
+ * Worker que les requetes adressees a l'une de ses routes (workers.dev ou
+ * domaine rattache). Jamais mise en cache : elle suit la requete en cours.
+ * `PLATFORM_URL` reste obligatoire pour les e-mails envoyes hors requete.
+ */
+function workerRequestOrigin(): string | undefined {
+  if (isBrowser() || !isCloudflareWorker()) return undefined;
+  const origin = readEnv('__NEXT_PRIVATE_ORIGIN');
+  if (!origin?.startsWith('https://')) return undefined;
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+function loadPublicEnv(): { env: PublicEnv; platformConfigured: boolean } {
   const raw = {
     NEXT_PUBLIC_PLATFORM_URL:
       process.env.NEXT_PUBLIC_PLATFORM_URL || atRuntime('NEXT_PUBLIC_PLATFORM_URL', 'PLATFORM_URL'),
@@ -91,8 +120,12 @@ export function publicEnv(): PublicEnv {
   // Pas de cache tant que la configuration n'est pas arrivee : une lecture
   // faite avant l'installation des variables du Worker ne doit pas figer les
   // valeurs de repli locales pour toute la vie de l'isolat.
-  if (cleaned['NEXT_PUBLIC_SUPABASE_URL'] !== undefined) publicCache = parsed.data;
-  return parsed.data;
+  const loaded = {
+    env: parsed.data,
+    platformConfigured: cleaned['NEXT_PUBLIC_PLATFORM_URL'] !== undefined,
+  };
+  if (cleaned['NEXT_PUBLIC_SUPABASE_URL'] !== undefined) publicCache = loaded;
+  return loaded;
 }
 
 /* -------------------------------------------------------------------------- */

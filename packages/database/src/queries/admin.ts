@@ -201,6 +201,17 @@ export interface AdminSearchResult {
 }
 
 /**
+ * Valeur d'un filtre `or(...)` PostgREST : entre guillemets, `"` et `\`
+ * echappes. Sans guillemets, une virgule ou une parenthese saisie dans la
+ * recherche AJOUTAIT une condition au filtre (`x,id.not.is.null` renvoyait
+ * toutes les lignes visibles) : l'entree devient ici une valeur, jamais une
+ * condition.
+ */
+export function postgrestOrValue(value: string): string {
+  return `"${value.replace(/[\\"]/g, (c) => `\\${c}`)}"`;
+}
+
+/**
  * Recherche globale de l administration.
  * Les motifs sont echappes avant d etre passes a `ilike` pour qu un `%` saisi
  * par l operateur reste un caractere litteral.
@@ -250,7 +261,9 @@ export async function adminSearch(db: Db, rawQuery: string): Promise<AdminSearch
       (await db
         .from('quotes')
         .select('id, reference, contact_name, status')
-        .or(`reference.ilike.${pattern},contact_email.ilike.${pattern}`)
+        .or(
+          `reference.ilike.${postgrestOrValue(pattern)},contact_email.ilike.${postgrestOrValue(pattern)}`,
+        )
         .limit(5)) as never,
     ),
   ]);

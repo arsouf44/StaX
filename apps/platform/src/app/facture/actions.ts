@@ -10,6 +10,7 @@ import { TERMS_VERSION } from '~/content/legal';
 import { guardAction } from '~/lib/action-guard';
 import type { ActionState } from '~/lib/form-state';
 import { requireSession } from '~/lib/session';
+import { clientIp } from '~/lib/client-ip';
 
 /**
  * Rattachement d'une facture recue par e-mail.
@@ -73,13 +74,7 @@ export async function claimInvoiceAction(
 
   const db = createUserClient(session.user.accessToken);
 
-  const store = await headers();
-  const ip =
-    store.get('cf-connecting-ip') ??
-    store.get('x-real-ip') ??
-    store.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    null;
-  const ipHash = await hashIp(ip);
+  const ipHash = await hashIp(clientIp(await headers()));
 
   // L'organisation vient de l'appartenance reelle, jamais du formulaire. Si la
   // personne n'en a pas encore, on la cree ici : c'est sa premiere.

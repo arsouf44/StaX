@@ -3,8 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createUserClient, unwrapMaybe } from '@nemasus/database';
+import { cleanMessageText } from '@nemasus/security';
 import { uuidSchema } from '@nemasus/validation';
+import { guardAction } from '~/lib/action-guard';
 import { storeMediaFile } from '~/lib/media-store';
+import { messageRefusal, messageText } from '~/lib/message-text';
 import { requireSession } from '~/lib/session';
 import { alertTeam } from '~/lib/team-alerts';
 import { getWorkspace } from '~/lib/workspace';
@@ -21,7 +24,7 @@ import { getWorkspace } from '~/lib/workspace';
 const messageSchema = z
   .object({
     projectId: uuidSchema,
-    body: z.string().trim().min(2, 'Votre message est vide.').max(5000),
+    body: messageText(2, 5000, 'Votre message est vide.'),
   })
   .strict();
 
@@ -34,10 +37,18 @@ export async function sendProjectMessageAction(
     body: formData.get('body'),
   });
   if (!parsed.success) {
-    return { status: 'error', message: 'Écrivez votre message avant de l’envoyer.' };
+    return {
+      status: 'error',
+      message:
+        parsed.error.issues[0]?.code === 'too_big'
+          ? (parsed.error.issues[0]?.message ?? 'Votre message est trop long.')
+          : 'Écrivez votre message avant de l’envoyer.',
+    };
   }
 
   const session = await requireSession();
+  const guard = await guardAction({ limit: 'conversation', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
   const db = createUserClient(session.user.accessToken);
 
   // Le projet doit exister ET etre visible par cette personne. La RLS le
@@ -78,7 +89,10 @@ export async function sendProjectMessageAction(
   if (error) {
     return {
       status: 'error',
-      message: 'Votre message n’a pas pu être envoyé. Réessayez dans quelques instants.',
+      message: messageRefusal(
+        error,
+        'Votre message n’a pas pu être envoyé. Réessayez dans quelques instants.',
+      ),
     };
   }
 
@@ -113,7 +127,7 @@ const reviewSchema = z
   .object({
     projectId: uuidSchema,
     approved: z.boolean(),
-    message: z.string().trim().max(5000).optional(),
+    message: z.string().transform(cleanMessageText).pipe(z.string().max(5000)).optional(),
   })
   .strict();
 
@@ -129,6 +143,8 @@ export async function respondToReviewAction(
   const parsed = reviewSchema.safeParse(payload);
   if (!parsed.success) return { status: 'error', message: 'Réponse illisible.' };
   const session = await requireSession();
+  const guard = await guardAction({ limit: 'conversation', userId: session.user.id });
+  if (!guard.ok) return { status: 'error', message: guard.message };
   const db = createUserClient(session.user.accessToken);
   const { data, error } = await db.rpc('respond_to_project_review', {
     p_project: parsed.data.projectId,
@@ -141,7 +157,7 @@ export async function respondToReviewAction(
       message:
         error.code === '42501'
           ? 'Votre rôle ne permet pas de valider ce projet.'
-          : 'Votre réponse n’a pas pu être enregistrée.',
+          : messageRefusal(error, 'Votre réponse n’a pas pu être enregistrée.'),
     };
   }
   const result = (data ?? {}) as { ok?: boolean; code?: string };

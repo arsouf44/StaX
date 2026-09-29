@@ -188,7 +188,7 @@ livrés. Sans secret valide, la route répond **401**.
 
 **Qui l’appelle.** **Supabase** : `pg_cron` exécute
 `app.trigger_site_operations()` toutes les 5 minutes (migrations 0053 et
-0056), qui appelle la route avec `pg_net`. L’adresse de la
+0057), qui appelle la route avec `pg_net`. L’adresse de la
 plateforme et le secret sont lus dans Supabase Vault ; tant qu’ils sont
 absents, rien n’est envoyé. À faire une fois, dans l’éditeur SQL de Supabase,
 avec **la même valeur** que le secret `CRON_SECRET` du Worker :

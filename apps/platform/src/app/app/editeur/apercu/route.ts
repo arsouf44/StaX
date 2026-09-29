@@ -1,4 +1,4 @@
-import { readEnv, siteHostIdentity } from '@nemasus/config';
+import { platformUrl, readEnv, siteHostIdentity } from '@nemasus/config';
 import { resolveBusiness } from '@nemasus/business';
 import { mediaPublicUrl } from '@nemasus/database';
 import { generateNonce, issueCsrfToken } from '@nemasus/security';
@@ -241,9 +241,7 @@ export async function GET(request: Request): Promise<Response> {
   // au site public, dont les jetons sont lies au nom d hote.
   const token = await issueCsrfToken(`preview:${site.id}:${accessToken.slice(0, 8)}`);
 
-  const origin = site.primaryHostname
-    ? `https://${site.primaryHostname}`
-    : (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://nemasus.fr');
+  const origin = site.primaryHostname ? `https://${site.primaryHostname}` : platformUrl();
 
   const context: RenderContext = {
     origin,
@@ -257,7 +255,7 @@ export async function GET(request: Request): Promise<Response> {
     hasCustomerAccounts: false,
     theme,
     settings,
-    host: siteHostIdentity(readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? null),
+    host: siteHostIdentity(platformUrl()),
     pages: snapshot.pages,
     currentPath: normalizePath(page.path),
     enabledModules: new Set(site.enabledModules),

@@ -182,13 +182,51 @@ export function sanitizePlainText(input: string, maxLength = 5_000): string {
 
 /**
  * Neutralise l'injection de formule dans un export CSV : un tableur execute
- * une cellule commencant par =, +, - ou @.
+ * une cellule commencant par =, +, - ou @ — y compris precedes d'espaces, que
+ * certains tableurs ignorent avant d'evaluer la cellule.
  */
 export function csvCell(value: unknown): string {
   const raw = value == null ? '' : String(value);
   const escaped = raw.replace(/"/g, '""');
-  const needsGuard = /^[=+\-@\t\r]/.test(escaped);
+  const needsGuard = /^[\s]*[=+\-@]|^[\t\r\n]/.test(escaped);
   return `"${needsGuard ? `'${escaped}` : escaped}"`;
+}
+
+// Invisibles et trompeurs : controles (hors tabulation et saut de ligne),
+// C1, trait d'union conditionnel, marques et surcharges de direction (U+202E
+// retourne l'affichage : « facture\u202Efdp.exe » s'affiche « factureexe.pdf »),
+// espaces de largeur nulle, BOM, et caracteres « tag » (U+E0000–U+E007F),
+// invisibles, qui servent a cacher du texte dans un message. U+200C et U+200D
+// sont conserves : ils composent les emojis et certaines ecritures.
+const INVISIBLE_CHARS = new RegExp(
+  '[\\u0001-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F\\u00AD\\u061C' +
+    '\\u200B\\u200E\\u200F\\u202A-\\u202E\\u2060-\\u2064\\u2066-\\u2069\\uFEFF' +
+    '\\u{E0000}-\\u{E007F}]',
+  'gu',
+);
+
+/**
+ * Texte d'un message (discussion, ticket, reponse de l'equipe).
+ *
+ * Retire ce qui ne s'affiche pas mais trompe, normalise les fins de ligne et
+ * limite les lignes vides. Le texte VISIBLE est conserve tel quel, y compris
+ * `<script>` ou `'; drop table` : un message est du texte, stocke par requete
+ * parametree et affiche echappe, jamais interprete. La base applique la meme
+ * regle (`app.clean_message_text`) a tout message, meme ecrit via l'API.
+ */
+export function cleanMessageText(input: string): string {
+  return input
+    .normalize('NFC')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u2028\u2029]/g, '\n')
+    .replace(INVISIBLE_CHARS, '')
+    .replace(/\n[ \t]*\n(?:[ \t]*\n)+/g, '\n\n\n')
+    .replace(/^[ \t\n]+|[ \t\n]+$/g, '');
+}
+
+/** Ligne unique (objet d'un ticket, nom affiche) : memes regles, sans saut de ligne. */
+export function cleanSingleLine(input: string): string {
+  return cleanMessageText(input).replace(/\s+/g, ' ');
 }
 
 export function toCsv(rows: ReadonlyArray<ReadonlyArray<unknown>>): string {

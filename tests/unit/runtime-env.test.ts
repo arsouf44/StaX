@@ -22,11 +22,13 @@ const KEYS = [
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
   'PLATFORM_URL',
+  '__NEXT_PRIVATE_ORIGIN',
 ] as const;
 
 const saved = Object.fromEntries(KEYS.map((key) => [key, process.env[key]]));
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
   for (const key of KEYS) {
     if (saved[key] === undefined) delete process.env[key];
     else process.env[key] = saved[key];
@@ -91,5 +93,53 @@ describe('configuration publique sur un Worker', () => {
     expect(publicEnv().NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
     setEnvSource({ NEXT_PUBLIC_SUPABASE_URL: 'https://projet.supabase.co' });
     expect(publicEnv().NEXT_PUBLIC_SUPABASE_URL).toBe('https://projet.supabase.co');
+  });
+});
+
+describe('adresse de la plateforme sur un Worker sans PLATFORM_URL', () => {
+  const configured = {
+    NEXT_PUBLIC_SUPABASE_URL: 'https://projet.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'cle-anon-publique',
+  };
+
+  it('suit l origine de la requete au lieu de localhost', async () => {
+    clearAll();
+    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
+    const { platformUrl, publicEnv, setEnvSource } = await import('@nemasus/config');
+    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://nemasus.workers.dev' });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://nemasus.workers.dev');
+    expect(platformUrl()).toBe('https://nemasus.workers.dev');
+  });
+
+  it('ne fige pas l origine de la premiere requete', async () => {
+    clearAll();
+    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
+    const { publicEnv, setEnvSource } = await import('@nemasus/config');
+    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://a.example' });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://a.example');
+    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://b.example' });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://b.example');
+  });
+
+  it('prefere toujours PLATFORM_URL quand elle est posee', async () => {
+    clearAll();
+    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
+    const { publicEnv, setEnvSource } = await import('@nemasus/config');
+    setEnvSource({
+      ...configured,
+      PLATFORM_URL: 'https://nemasus.example',
+      __NEXT_PRIVATE_ORIGIN: 'https://autre.example',
+    });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://nemasus.example');
+  });
+
+  it('ignore cette origine hors d un Worker, ou en HTTP', async () => {
+    clearAll();
+    const { publicEnv, setEnvSource } = await import('@nemasus/config');
+    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://hote.example' });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('http://localhost:3000');
+    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
+    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'http://localhost:8787' });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('http://localhost:3000');
   });
 });
