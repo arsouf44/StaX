@@ -41,12 +41,12 @@ export const LEGAL_DOCUMENTS_REQUIRE_REVIEW = LEGAL_REVIEW_REQUIRED;
  * remboursement, exclusion des résultats de référencement, délai d'action ;
  * CGU acceptées à l'inscription ; prospection auprès des professionnels.
  */
-export const TERMS_VERSION = '2026-09-28';
-export const PRIVACY_VERSION = '2026-09-28';
-export const TERMS_OF_USE_VERSION = '2026-09-28';
-export const DPA_VERSION = '2026-09-28';
+export const TERMS_VERSION = '2026-09-29';
+export const PRIVACY_VERSION = '2026-09-29';
+export const TERMS_OF_USE_VERSION = '2026-09-29';
+export const DPA_VERSION = '2026-09-29';
 
-const UPDATED_AT = '2026-09-28';
+const UPDATED_AT = '2026-09-29';
 
 export interface LegalBlock {
   kind: 'paragraph' | 'list' | 'note' | 'definitions';
@@ -80,13 +80,15 @@ const defs = (definitions: { term: string; description: string }[]): LegalBlock 
   definitions,
 });
 
-/** Contact public : e-mail de support, et téléphone s'il est configuré. */
-function publicContact(): string {
-  const email = legalValue('SUPPORT_EMAIL');
-  return isLegalValueConfigured('SUPPORT_PHONE')
-    ? `${email} — ${legalValue('SUPPORT_PHONE')}`
-    : email;
-}
+/**
+ * Hébergeur des sites des clients, distinct de celui de la plateforme.
+ * Informations publiées par cette société elle-même.
+ */
+const SITES_HOST = {
+  name: 'Cloudflare, Inc.',
+  address: '101 Townsend Street, San Francisco, CA 94107, États-Unis',
+  phone: '+1 650 319 8930',
+} as const;
 
 /**
  * Prestataire de la base de données, nommé dans les mentions légales en plus
@@ -121,12 +123,12 @@ export function buildLegalNotice(): LegalDocument {
         title: 'Éditeur du site',
         blocks: [
           p(
-            `${brand} est un nom commercial et une branche d’activité de ${company}. Le présent ` +
-              'site est édité par :',
+            `${brand} (anciennement StaX) est un nom commercial et une branche d’activité de ` +
+              `${company}. Le présent site est édité par :`,
           ),
           defs([
             { term: 'Dénomination sociale', description: company },
-            { term: 'Nom commercial', description: brand },
+            { term: 'Nom commercial', description: `${brand} (anciennement StaX)` },
             { term: 'Forme juridique', description: legalValue('LEGAL_FORM') },
             { term: 'Capital social', description: legalValue('LEGAL_CAPITAL') },
             { term: 'Siège social', description: legalValue('LEGAL_ADDRESS') },
@@ -134,8 +136,17 @@ export function buildLegalNotice(): LegalDocument {
             { term: 'SIRET du siège', description: legalValue('LEGAL_SIRET') },
             { term: 'RCS', description: legalValue('LEGAL_RCS') },
             { term: 'TVA intracommunautaire', description: legalValue('LEGAL_VAT') },
+            ...(isLegalValueConfigured('LEGAL_REPRESENTATIVE')
+              ? [{ term: 'Représentant légal', description: legalValue('LEGAL_REPRESENTATIVE') }]
+              : []),
             { term: 'Directeur de la publication', description: legalValue('LEGAL_DIRECTOR') },
-            { term: 'Contact', description: publicContact() },
+            // Exigé par l'article 6 III de la LCEN. Tant qu'il manque, la page
+            // n'affiche pas de marqueur : l'avertissement de configuration
+            // incomplète et `pnpm legal:check` le signalent.
+            ...(isLegalValueConfigured('LEGAL_PHONE')
+              ? [{ term: 'Téléphone', description: legalValue('LEGAL_PHONE') }]
+              : []),
+            { term: 'E-mail', description: legalValue('SUPPORT_EMAIL') },
           ]),
         ],
       },
@@ -143,18 +154,24 @@ export function buildLegalNotice(): LegalDocument {
         id: 'hebergeur',
         title: 'Hébergement',
         blocks: [
-          p('Le présent site est hébergé par :'),
+          p(
+            'Le présent site, l’Espace client et l’éditeur (la « plateforme ») sont hébergés ' +
+              'par :',
+          ),
           defs([
             { term: 'Hébergeur', description: legalValue('LEGAL_HOST') },
             { term: 'Adresse', description: legalValue('LEGAL_HOST_ADDRESS') },
             { term: 'Téléphone', description: legalValue('LEGAL_HOST_PHONE') },
           ]),
           p(
-            'Le même prestataire héberge et diffuse les sites de nos clients. Les données ' +
-              'applicatives (comptes, contenus, messages, réservations) sont stockées par ' +
-              `${DATA_HOST.name}, ${DATA_HOST.address}, dans la ${DATA_HOST.location}. La liste ` +
-              'complète de nos sous-traitants, avec leur localisation, est publiée sur la page ' +
-              '« Sous-traitants ».',
+            'Les fonctions de la plateforme sont exécutées dans la région de Paris (France). ' +
+              'Les données applicatives (comptes, contenus, messages, réservations) sont stockées ' +
+              `par ${DATA_HOST.name}, ${DATA_HOST.address}, dans la ${DATA_HOST.location}.`,
+          ),
+          p(
+            `Les sites de nos clients sont diffusés par ${SITES_HOST.name}, ` +
+              `${SITES_HOST.address}, téléphone ${SITES_HOST.phone}. La liste complète de nos ` +
+              'sous-traitants, avec leur localisation, est publiée sur la page « Sous-traitants ».',
           ),
         ],
       },
@@ -490,9 +507,19 @@ export function buildTerms(): LegalDocument {
         title: 'Article 6 — Prix',
         blocks: [
           p(
-            'Les prix sont exprimés en euros hors taxes. La taxe sur la valeur ajoutée au taux en ' +
-              'vigueur est ajoutée et apparaît séparément sur le récapitulatif de commande, lors du ' +
-              'paiement et sur la facture.',
+            'Les prix sont exprimés en euros hors taxes. La taxe sur la valeur ajoutée est ' +
+              'appliquée selon la réglementation en vigueur et le lieu d’établissement du Client, ' +
+              'et apparaît séparément sur le récapitulatif de commande, lors du paiement et sur la ' +
+              'facture.',
+          ),
+          p(
+            'La commande en ligne est ouverte aux Clients établis en France, auxquels la TVA ' +
+              'française s’applique (20 % à ce jour). Un Client établi dans un autre État membre ' +
+              'de l’Union européenne ou hors de l’Union commande sur devis : s’il est assujetti et ' +
+              'communique un numéro de TVA valide, la facture est établie hors TVA française avec ' +
+              'la mention « Autoliquidation » (article 283-2 du Code général des impôts et ' +
+              'article 196 de la directive 2006/112/CE), la taxe étant due par le Client dans son ' +
+              'pays.',
           ),
           p('Le prix comprend deux composantes distinctes, présentées séparément :'),
           list([
@@ -655,7 +682,8 @@ export function buildTerms(): LegalDocument {
           p('La Maintenance comprend :'),
           list([
             'l’hébergement du Site sur l’infrastructure retenue par le Prestataire (à ce jour, ' +
-              'Cloudflare) et la mise à disposition de l’Espace client ;',
+              'Cloudflare pour le Site, Vercel pour l’Espace client) et la mise à disposition de ' +
+              'l’Espace client ;',
             'la connexion du nom de domaine et le certificat de sécurité (HTTPS), renouvelé ' +
               'automatiquement ;',
             'l’infrastructure de publication : l’enregistrement de chaque publication dans le ' +
@@ -716,14 +744,24 @@ export function buildTerms(): LegalDocument {
           ),
           p(
             `À l’issue de la dernière période payée, le Site demeure accessible pendant une ` +
-              `période de continuité de ${maintenance.gracePeriodDays} jours. Il peut ensuite être ` +
-              'suspendu : son accès public, son éditeur et ses fonctions interactives ' +
-              '(formulaires, réservations, paiements) sont interrompus, mais ni son code source ni ' +
-              `les données du Client ne sont supprimés ou altérés pendant ` +
-              `${maintenance.suspensionRetentionDays} jours ; ils sont ensuite archivés ` +
-              `${maintenance.archiveRetentionDays} jours, période pendant laquelle le Client peut ` +
-              'exporter ses données, demander la copie du code source prévue à l’article 12 ou ' +
-              'réactiver son abonnement.',
+              `période de continuité de ${maintenance.gracePeriodDays} jours, à l’issue de laquelle ` +
+              'la prestation prend fin. Le sort des données est alors celui que le Client a choisi ' +
+              'lors de la résiliation, et qu’il peut modifier jusqu’à la fin de la prestation :',
+          ),
+          list([
+            '« restitution puis suppression » (choix appliqué si le Client n’en exprime aucun) : ' +
+              'le Site est suspendu — accès public, éditeur et fonctions interactives interrompus ' +
+              `— et, pendant ${maintenance.exportWindowDays} jours, le Client peut encore exporter ` +
+              'ses données, obtenir la copie du code source prévue à l’article 12 ou réactiver son ' +
+              'abonnement ; les données sont ensuite supprimées définitivement ;',
+            '« suppression » : les données du Client et celles de ses propres clients et ' +
+              'visiteurs sont supprimées définitivement dès la fin de la prestation.',
+          ]),
+          p(
+            'Seules sont conservées, au-delà, les informations que le Prestataire doit garder ' +
+              'pour son propre compte en vertu d’une obligation légale (article 20 et accord de ' +
+              'traitement des données, article 9). Les copies de sauvegarde sont effacées par ' +
+              `rotation, au plus tard ${maintenance.backupRotationDays} jours après la suppression.`,
           ),
         ],
       },
@@ -741,9 +779,10 @@ export function buildTerms(): LegalDocument {
             `conserver son compte de paiement Stripe, ouvert à son nom, indépendamment de ${brand}.`,
           ]),
           p(
-            'À la fin du contrat, le Client à jour de ses paiements peut en outre obtenir, sur ' +
-              'demande, une copie du code source de son Site dans l’état de sa dernière version ' +
-              'publiée, dans les conditions de l’article 16.',
+            'Le Client ayant payé intégralement la Création obtient en outre, sur demande et au ' +
+              'plus tard à la fin du contrat, une copie complète du code source de son Site dans ' +
+              'l’état de sa dernière version publiée, avec ses fichiers de dépendances, dans les ' +
+              'conditions de l’article 16.',
           ),
           p(
             `L’usage de la plateforme ${brand} (Espace client, éditeur, formulaires, réservations, ` +
@@ -820,6 +859,9 @@ export function buildTerms(): LegalDocument {
               'respecter les règles applicables à ses clients ;',
             'de respecter la réglementation relative aux données personnelles de ses visiteurs, ' +
               'dont il est responsable du traitement, avec l’aide des outils fournis ;',
+            'de ne pas collecter de données de santé ni d’autres données sensibles par son Site, ' +
+              'dont l’infrastructure n’est pas certifiée pour les héberger (accord de traitement ' +
+              'des données, article 13) ;',
             'de respecter les règles propres à son activité et à sa profession (professions ' +
               'réglementées, publicité, accessibilité lorsqu’elle lui est imposée).',
           ]),
@@ -857,14 +899,51 @@ export function buildTerms(): LegalDocument {
               'paiement intégral, ils restent la propriété du Prestataire.',
           ),
           p(
-            'Le code source du Site est développé spécifiquement pour le Client et conservé dans ' +
-              'un dépôt qui lui est propre. La copie remise au Client en application de ' +
-              'l’article 12 s’accompagne d’un droit d’usage non exclusif et perpétuel sur les ' +
-              'composants génériques du Prestataire qu’elle contient, pour les seuls besoins de ce ' +
-              'Site ; les bibliothèques de tiers restent soumises à leurs propres licences. Le ' +
-              'Prestataire conserve le droit de réutiliser son savoir-faire, ses méthodes et ses ' +
-              'composants génériques pour d’autres clients, sans jamais reprendre les Éléments du ' +
-              'Client ni les créations qui lui ont été cédées.',
+            'Le code source du Site est conservé dans un dépôt qui lui est propre. Il comprend ' +
+              'trois catégories d’éléments, soumises à des régimes distincts :',
+          ),
+          defs([
+            {
+              term: 'Code spécifique',
+              description:
+                'Le code écrit pour le Site : structure et pages, mise en forme, composants ' +
+                'propres au Site et intégration de ses contenus. Ses droits patrimoniaux d’auteur ' +
+                'sont cédés au Client dès le paiement intégral de la Création, à titre exclusif, ' +
+                'pour le monde entier et pour toute la durée des droits : droits de reproduire, ' +
+                'représenter, modifier, adapter, corriger, traduire, faire évoluer, héberger chez ' +
+                'le prestataire de son choix, faire maintenir par un tiers, céder ou concéder, ' +
+                'sur tout support et pour tout usage lié à son activité.',
+            },
+            {
+              term: 'Composants génériques',
+              description:
+                `Les éléments que ${brand} a développés indépendamment du Site et réutilise ` +
+                'd’un projet à l’autre : bibliothèques internes, outils de publication, ' +
+                'intégration au contrat d’édition et à l’éditeur. Ils restent la propriété du ' +
+                'Prestataire. Le Client reçoit, dès le paiement intégral de la Création, une ' +
+                'licence non exclusive, gratuite, mondiale, perpétuelle et irrévocable de les ' +
+                'reproduire, modifier, corriger et héberger pour l’exploitation et les évolutions ' +
+                'du Site, y compris par un prestataire tiers agissant pour son compte, auquel il ' +
+                'peut sous-licencier ces droits dans cette seule limite. Il ne peut ni les ' +
+                'commercialiser séparément ni les réutiliser pour un autre site.',
+            },
+            {
+              term: 'Bibliothèques de tiers',
+              description:
+                'Les logiciels libres et polices utilisés (par exemple sous licences MIT, Apache ' +
+                '2.0 ou SIL Open Font License), identifiés dans les fichiers de dépendances du ' +
+                'dépôt. Ils restent soumis à leurs propres licences, que le Prestataire choisit ' +
+                'compatibles avec un usage commercial, la modification et le réhébergement.',
+            },
+          ]),
+          p(
+            'Les fonctions du Site reliées à la plateforme (Espace client, éditeur, formulaires, ' +
+              'réservations, paiements, statistiques) dépendent du service et cessent avec le ' +
+              'contrat (article 12) : le code remis affiche les pages de façon autonome, et ces ' +
+              'fonctions peuvent être rebranchées sur un autre service. Le Prestataire conserve le ' +
+              'droit de réutiliser son savoir-faire, ses méthodes et ses composants génériques pour ' +
+              'd’autres clients, sans jamais reprendre les Éléments du Client ni le code spécifique ' +
+              'et les créations qui lui ont été cédés.',
           ),
           p(
             `La plateforme ${brand} (Espace client, éditeur, outils de publication et interfaces) ` +
@@ -1197,8 +1276,8 @@ export function buildDataProcessingAgreement(): LegalDocument {
                 'Identité et coordonnées (nom, e-mail, téléphone, adresse), contenu des messages ' +
                 'et demandes, détails des réservations et commandes, données de compte client, ' +
                 'données techniques minimisées (empreinte d’adresse IP pour la lutte contre les ' +
-                'abus). Aucune donnée sensible n’est attendue : le Client s’engage à ne pas en ' +
-                'collecter via les formulaires standard.',
+                'abus). Aucune donnée sensible, notamment de santé, n’est attendue : le régime ' +
+                'applicable figure à l’article 13.',
             },
             {
               term: 'Durée',
@@ -1315,13 +1394,36 @@ export function buildDataProcessingAgreement(): LegalDocument {
         title: 'Article 9 — Sort des données en fin de contrat',
         blocks: [
           p(
-            'Pendant toute la durée du contrat et des délais de conservation qui suivent, le Client ' +
-              'peut exporter ses données en libre-service. À l’issue de la période de continuité ' +
-              `(${maintenance.gracePeriodDays} jours), de suspension ` +
-              `(${maintenance.suspensionRetentionDays} jours) et d’archivage ` +
-              `(${maintenance.archiveRetentionDays} jours), les données sont supprimées de manière ` +
-              'irréversible, sauf obligation légale de conservation. Le Client peut demander une ' +
-              'suppression anticipée.',
+            'Pendant toute la durée du contrat, le Client exporte ses données en libre-service, ' +
+              'dans des formats ouverts. Conformément à l’article 28, paragraphe 3, g) du RGPD, ' +
+              'il choisit, lors de la résiliation, le sort des données à caractère personnel à la ' +
+              'fin de la prestation ; ce choix vaut instruction documentée et peut être modifié ' +
+              'jusqu’à la fin de la prestation :',
+          ),
+          list([
+            '« restitution puis suppression » : les données restent exportables pendant ' +
+              `${maintenance.exportWindowDays} jours après la fin de la prestation, avec la copie ` +
+              'du code source du Site, puis sont supprimées définitivement. Ce choix s’applique à ' +
+              'défaut d’instruction contraire, afin qu’aucune donnée ne soit perdue sans que le ' +
+              'Client ait pu la récupérer ;',
+            '« suppression » : les données sont supprimées définitivement dès la fin de la ' +
+              `prestation, c’est-à-dire au terme de la période de continuité de ` +
+              `${maintenance.gracePeriodDays} jours suivant la dernière période payée.`,
+          ]),
+          p(
+            'La suppression porte sur toutes les données traitées pour le compte du Client : ' +
+              'contenus du Site, médias, messages, contacts, réservations, commandes et comptes de ' +
+              'ses propres clients. Les copies de sauvegarde sont effacées par rotation, au plus ' +
+              `tard ${maintenance.backupRotationDays} jours après. Le sous-traitant confirme la ` +
+              'suppression par écrit sur demande.',
+          ),
+          p(
+            'Ne sont conservées que les données que le sous-traitant doit garder pour son propre ' +
+              'compte, en qualité de responsable de traitement, en vertu d’une obligation légale : ' +
+              `factures et pièces comptables (${maintenance.financialRetentionYears} ans), et ` +
+              'données d’identification du titulaire du compte que la loi impose aux hébergeurs ' +
+              '(décret n° 2021-1362). Elles sont isolées, et ne comprennent aucune donnée des ' +
+              'clients ou visiteurs du Client.',
           ),
         ],
       },
@@ -1359,6 +1461,37 @@ export function buildDataProcessingAgreement(): LegalDocument {
               'dans les conditions de son article 82. Entre les parties, la responsabilité du ' +
               'sous-traitant au titre du présent accord est soumise aux limitations prévues par les ' +
               'conditions générales de vente, sauf lorsque la loi l’interdit.',
+          ),
+        ],
+      },
+      {
+        id: 'sante-dpa',
+        title: 'Article 13 — Données de santé et autres données sensibles',
+        blocks: [
+          p(
+            'L’infrastructure du sous-traitant n’est pas certifiée « hébergeur de données de ' +
+              'santé » (article L.1111-8 du Code de la santé publique) et n’est pas conçue pour ' +
+              'traiter les catégories particulières de données de l’article 9 du RGPD (santé, ' +
+              'opinions, orientation sexuelle, données biométriques…). En conséquence :',
+          ),
+          list([
+            'aucun champ des formulaires, réservations ou comptes du Site ne sollicite de telles ' +
+              'données : pas de motif médical, de symptôme, de traitement ni de pièce médicale ;',
+            'sur le Site d’un professionnel de santé, chaque champ libre affiche un avertissement ' +
+              'invitant le visiteur à ne transmettre aucune information de santé, et ce contrôle ' +
+              'fait partie de la vérification des formulaires avant la livraison ;',
+            'le Client s’engage à ne pas demander l’ajout de champs destinés à de telles données ' +
+              'et à ne pas les solliciter par les messages reçus. S’il doit en traiter (prise de ' +
+              'rendez-vous médical motivée, échanges avec des patients), il utilise un service ' +
+              'certifié à cet effet, vers lequel le Site peut renvoyer par un lien ;',
+            'une donnée de santé transmise spontanément par un visiteur malgré l’avertissement ' +
+              'n’est ni exploitée ni transmise par le sous-traitant ; le Client, responsable de ' +
+              'traitement, la supprime dès qu’il en a connaissance, et le sous-traitant l’y aide ' +
+              'sur simple demande.',
+          ]),
+          p(
+            'Le Client demeure seul juge de la base légale de ses propres traitements au titre de ' +
+              'l’article 9 du RGPD et, le cas échéant, de la nécessité d’une analyse d’impact.',
           ),
         ],
       },
@@ -1785,11 +1918,12 @@ export function buildPrivacyPolicy(): LegalDocument {
         title: 'Article 5 — Durées de conservation',
         blocks: [
           list([
-            'Données de compte et de projet : pendant la durée du contrat, puis ' +
-              `${maintenance.archiveRetentionDays} jours d’archivage permettant une réactivation ` +
-              'ou un export.',
-            `Site suspendu faute de maintenance : conservé ${maintenance.suspensionRetentionDays} ` +
-              'jours avant archivage, sans suppression automatique des contenus.',
+            'Données de compte et de projet : pendant la durée du contrat et la période de ' +
+              `continuité de ${maintenance.gracePeriodDays} jours qui suit, puis, selon le choix ` +
+              `fait à la résiliation, ${maintenance.exportWindowDays} jours pour les exporter ` +
+              '(« restitution puis suppression », choix par défaut) ou suppression immédiate ' +
+              '(« suppression ») ; les sauvegardes sont effacées par rotation au plus tard ' +
+              `${maintenance.backupRotationDays} jours après.`,
             `Documents comptables et factures : ${maintenance.financialRetentionYears} ans, ` +
               'durée imposée par le Code de commerce.',
             'Données d’identification que la loi impose aux hébergeurs de conserver (article 6 ' +
@@ -1823,8 +1957,9 @@ export function buildPrivacyPolicy(): LegalDocument {
           p(
             'Elles sont accessibles au personnel habilité et aux sous-traitants techniques ' +
               'strictement nécessaires au fonctionnement du service : hébergement de la ' +
-              'plateforme et des sites (Cloudflare), base de données et fichiers (Supabase), code ' +
-              'source des sites (GitHub), envoi des e-mails transactionnels (Resend). La liste ' +
+              'plateforme (Vercel), hébergement et diffusion des sites (Cloudflare), base de ' +
+              'données et fichiers (Supabase), code source des sites (GitHub), envoi des e-mails ' +
+              'transactionnels (Resend). La liste ' +
               'complète et à jour, avec la localisation et les garanties de chacun, est publiée ' +
               'sur la page « Sous-traitants ».',
           ),
@@ -1851,8 +1986,9 @@ export function buildPrivacyPolicy(): LegalDocument {
         blocks: [
           p(
             'La base de données et les fichiers de la plateforme sont hébergés en France (région ' +
-              'de Paris). La plateforme et les sites sont servis par le réseau mondial de ' +
-              'Cloudflare ; certains prestataires — hébergement et diffusion, code source des ' +
+              'de Paris), et les fonctions de la plateforme y sont exécutées (Vercel). Les sites ' +
+              'des clients sont servis par le réseau mondial de Cloudflare ; certains prestataires ' +
+              '— hébergement et diffusion, code source des ' +
               'sites, envoi des e-mails — sont des sociétés établies hors de l’Union européenne, ' +
               'principalement aux États-Unis.',
           ),
@@ -2374,15 +2510,18 @@ export function buildDataPolicy(): LegalDocument {
           list([
             `votre site reste en ligne pendant une période de continuité de ` +
               `${maintenance.gracePeriodDays} jours après la fin de la période payée ;`,
-            `il est ensuite suspendu, mais ni supprimé ni effacé, pendant ` +
-              `${maintenance.suspensionRetentionDays} jours ;`,
-            `les données sont ensuite archivées et conservées ${maintenance.archiveRetentionDays} ` +
-              'jours, période pendant laquelle une réactivation reste possible ;',
-            'l’export de vos données reste accessible pendant toute cette durée.',
+            'à la résiliation, vous choisissez le sort de vos données : « restitution puis ' +
+              `suppression » (le site est suspendu, vous exportez vos données et obtenez la ` +
+              `copie de son code pendant ${maintenance.exportWindowDays} jours, puis tout est ` +
+              'supprimé) ou « suppression » (dès la fin de la période de continuité) ;',
+            'sans choix de votre part, c’est la restitution puis la suppression qui s’applique : ' +
+              'rien n’est effacé avant que vous ayez pu tout récupérer ;',
+            'vous pouvez changer d’avis, ou réactiver votre maintenance, jusqu’à la suppression.',
           ]),
           p(
-            'Aucune suppression automatique n’intervient avant ces délais. Vous êtes informé ' +
-              'avant chaque changement d’état.',
+            'La date de suppression figure dans l’e-mail de confirmation de la résiliation. Les ' +
+              'sauvegardes chiffrées sont effacées par rotation au plus tard ' +
+              `${maintenance.backupRotationDays} jours après.`,
           ),
         ],
       },

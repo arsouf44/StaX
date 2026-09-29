@@ -58,6 +58,16 @@ export async function startCheckoutAction(
     };
   }
 
+  const established = formData.get('establishedInFrance');
+  if (established !== 'on' && established !== 'true') {
+    return {
+      status: 'error',
+      message:
+        'La commande en ligne est réservée aux entreprises et associations établies en France. ' +
+        'Établie ailleurs ? Demandez un devis : la TVA applicable dépend de votre pays.',
+    };
+  }
+
   const accepted = formData.get('acceptTerms');
   if (accepted !== 'on' && accepted !== 'true') {
     return {
@@ -177,7 +187,12 @@ export async function startCheckoutAction(
       ...draft.answers,
       // Preuve de l'acceptation (article 1127-2 du Code civil) : versions des
       // documents acceptes et declaration d'achat professionnel.
-      acceptedDocuments: { cgv: TERMS_VERSION, dpa: DPA_VERSION, professionalUse: true },
+      acceptedDocuments: {
+        cgv: TERMS_VERSION,
+        dpa: DPA_VERSION,
+        professionalUse: true,
+        establishedInFrance: true,
+      },
     },
     p_requested_domain: draft.domainHostname ?? draft.subdomain ?? null,
     p_domain_handling: draft.domainHandling ?? 'none',

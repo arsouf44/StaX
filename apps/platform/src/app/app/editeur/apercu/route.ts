@@ -1,5 +1,5 @@
 import { platformUrl, readEnv, siteHostIdentity } from '@nemasus/config';
-import { resolveBusiness } from '@nemasus/business';
+import { isHumanHealthBusiness, resolveBusiness } from '@nemasus/business';
 import { mediaPublicUrl } from '@nemasus/database';
 import { generateNonce, issueCsrfToken } from '@nemasus/security';
 import { loadSiteData, requiredCollections } from '@nemasus/site-data';
@@ -263,6 +263,7 @@ export async function GET(request: Request): Promise<Response> {
     nonce,
     formToken: token.value,
     turnstileSiteKey: null,
+    healthDataGuard: isHumanHealthBusiness(business),
     now: new Date(),
     ...(editorMode
       ? {

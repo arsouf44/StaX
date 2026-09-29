@@ -1,3 +1,4 @@
+import { isHumanHealthBusiness, resolveBusiness } from '@nemasus/business';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -205,13 +206,14 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
     organization_id: string;
     delivered_at: string | null;
     production_release_id: string | null;
+    business_type_slug: string | null;
     organizations: { name: string } | null;
   }>(
     (await db
       .from('sites')
       .select(
         'id, name, status, architecture, plan_slug, organization_id, delivered_at, ' +
-          'production_release_id, organizations ( name )',
+          'production_release_id, business_type_slug, organizations ( name )',
       )
       .eq('id', id)
       .maybeSingle()) as never,
@@ -933,7 +935,12 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
                   ) : null}
                 </div>
                 {canAdmin && (check.key === 'forms' || check.key === 'responsive') ? (
-                  <AttestForm siteId={site.id} checkKey={check.key} label={check.label} />
+                  <AttestForm
+                    siteId={site.id}
+                    checkKey={check.key}
+                    label={check.label}
+                    healthSector={isHumanHealthBusiness(resolveBusiness(site.business_type_slug))}
+                  />
                 ) : null}
               </li>
             );

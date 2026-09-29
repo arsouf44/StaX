@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   Alert,
@@ -39,6 +39,10 @@ function SubmitButton() {
 
 export function ContentReportForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [state, action] = useActionState<ReportState, FormData>(sendContentReportAction, IDLE);
+  // Règlement (UE) 2022/2065, art. 16 § 2 c : nom et e-mail obligatoires, sauf
+  // pour un contenu d'abus sexuel sur mineur, qui peut être signalé anonymement.
+  const [category, setCategory] = useState('illegal');
+  const anonymousAllowed = category === 'child_abuse';
 
   if (state.status === 'success') {
     return (
@@ -72,7 +76,12 @@ export function ContentReportForm({ turnstileSiteKey }: { turnstileSiteKey: stri
       </Field>
 
       <Field label="Motif" error={state.errors?.category} required>
-        <Select name="category" defaultValue="illegal" required>
+        <Select
+          name="category"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          required
+        >
           {CATEGORIES.map((category) => (
             <option key={category.value} value={category.value}>
               {category.label}
@@ -94,16 +103,26 @@ export function ContentReportForm({ turnstileSiteKey }: { turnstileSiteKey: stri
         <Field
           label="Votre nom"
           error={state.errors?.name}
-          hint="Facultatif uniquement pour un abus sur mineur."
+          hint={
+            anonymousAllowed
+              ? 'Facultatif pour un abus sur mineur : vous pouvez rester anonyme.'
+              : 'Obligatoire (règlement européen sur les services numériques, art. 16).'
+          }
+          required={!anonymousAllowed}
         >
-          <Input name="name" autoComplete="name" />
+          <Input name="name" autoComplete="name" required={!anonymousAllowed} />
         </Field>
         <Field
           label="Votre adresse e-mail"
           error={state.errors?.email}
-          hint="Pour recevoir l’accusé de réception et la décision."
+          hint={
+            anonymousAllowed
+              ? 'Facultative : sans elle, vous ne recevrez ni accusé de réception ni décision.'
+              : 'Obligatoire : vous y recevez l’accusé de réception et la décision.'
+          }
+          required={!anonymousAllowed}
         >
-          <Input name="email" type="email" autoComplete="email" />
+          <Input name="email" type="email" autoComplete="email" required={!anonymousAllowed} />
         </Field>
       </div>
 

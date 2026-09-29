@@ -23,7 +23,7 @@ permanence ce qui manque encore.
 | Maintenance mensuelle qui démarre à la livraison, résiliable en ligne | ✅ | [stripe.md](./stripe.md) |
 | Mot de passe oublié, confirmation d'inscription, invitations de collaborateurs | ✅ | corrigés (voir [GAP_AUDIT.md § 13](./GAP_AUDIT.md)) |
 
-Preuves : 567 assertions SQL, 365 tests unitaires et d'intégration, 66 tests
+Preuves : 572 assertions SQL, 392 tests unitaires et d'intégration, 66 tests
 navigateur (ordinateur + téléphone), 31 parcours complets contre une vraie
 pile, dont la vente par téléphone de bout en bout et une simulation
 d'intrusion (deux clients étrangers et un visiteur anonyme).
@@ -39,9 +39,8 @@ Le code, les textes, les e-mails et les documents juridiques disent
 « Nemasus ». Ce qui reste à faire est **hors du dépôt** :
 
 1. **Nom de domaine.** Achetez `nemasus.fr` (et, par précaution, `nemasus.com`)
-   — ou le domaine de votre choix —, de préférence chez Cloudflare
-   (*Domain Registration*) pour le rattacher au Worker en un clic. Voir
-   l'étape 3. Les valeurs `nemasus.fr` écrites dans le code ne sont que des
+   — ou le domaine de votre choix — puis rattachez-le au projet Vercel
+   (étape 3). Les valeurs `nemasus.fr` écrites dans le code ne sont que des
    exemples et des valeurs de repli.
 2. **Marque.** Vérifiez sur [data.inpi.fr](https://data.inpi.fr) que
    « Nemasus » n'est pas déjà déposé pour des services informatiques
@@ -54,9 +53,10 @@ Le code, les textes, les e-mails et les documents juridiques disent
 4. **Comptes des prestataires** : renommez l'application GitHub, le compte
    Stripe (*Paramètres → Informations publiques* : nom, libellé sur relevé
    bancaire « NEMASUS »), l'expéditeur des e-mails (`EMAIL_FROM=Nemasus <…>`),
-   le projet Supabase (nommé « StaX » dans le tableau de bord) et le Worker
-   Cloudflare `stax` → `nemasus` (étape 3). Si un ancien projet Vercel est
-   encore relié au dépôt, déconnectez-le : il n'est plus utilisé.
+   le projet Supabase (nommé « StaX » dans le tableau de bord) et le projet
+   Vercel `sta-x-platform` → `nemasus` (*Settings → General*). Le Worker
+   Cloudflare `stax`, qui a servi la plateforme quelques jours, doit être
+   **déconnecté puis supprimé** (étape 3).
 5. **Variables d'environnement** (facultatif) : `STAX_SECRET_KEY` et
    `STAX_ENV` peuvent être renommées `NEMASUS_SECRET_KEY` et `NEMASUS_ENV` **en
    gardant exactement la même valeur**. L'ancien nom reste lu tant que le
@@ -79,7 +79,8 @@ dépôt : fonctions, colonnes, contraintes, index et règles de sécurité
 La 0057 a réécrit les libellés « StaX » stockés en base (offres, messages
 d'erreur, notifications), renommé les tâches planifiées
 (`nemasus-site-operations`, `nemasus-retention`) et complété la liste publique
-des sous-traitants (Cloudflare héberge la plateforme ; Resend ajouté).
+des sous-traitants (Resend ajouté). La **0058** (2026-09-29) inscrit Vercel,
+hébergeur de la plateforme, et recentre Cloudflare sur les sites des clients.
 
 Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 
@@ -89,41 +90,55 @@ Tout est renseigné dans `packages/config/src/legal.ts` (valeurs publiques,
 remplaçables par variable d'environnement si elles changent) : LallianSe, SAS
 au capital de 3 000 €, siège, SIREN, SIRET, RCS, TVA ; nom commercial
 Nemasus ; directrice de la publication Julie Rachline Gomez ; contact et
-demandes RGPD `nemasus@lallianse.com` ; hébergeur Cloudflare, Inc. (adresse et
-téléphone). `pnpm legal:check` ne signale plus rien.
+demandes RGPD `nemasus@lallianse.com` ; hébergeur de la plateforme Vercel
+Inc. (adresse et téléphone) ; sites des clients chez Cloudflare, Inc.
 
-Facultatif : `SUPPORT_PHONE` (recommandé, affiché aux clients),
+**Reste une valeur à fournir (bloquant)** : le **téléphone de LallianSe**, que
+la LCEN (art. 6, III) exige dans les mentions légales d'une personne morale.
+Variable Vercel `LEGAL_PHONE` (par exemple `+33 1 23 45 67 89`), puis
+redéployez. Tant qu'elle manque, `pnpm legal:check` échoue et `/admin/sante`
+le signale.
+
+**À vérifier** : la directrice de la publication d'une société est son
+représentant légal (loi du 29 juillet 1982, art. 93-2). Si la présidente de
+LallianSe est une société (SELALLIAN), indiquez la chaîne exacte dans
+`LEGAL_REPRESENTATIVE` (par exemple « SELALLIAN, présidente, représentée par
+Julie Rachline Gomez ») et faites valider la formulation.
+
+Facultatif : `SUPPORT_PHONE` (affiché aux clients ; à défaut `LEGAL_PHONE`),
 `LEGAL_MEDIATOR` (voir étape 10).
 
 `nemasus@lallianse.com` a **deux rôles** : l'adresse affichée aux clients, et
 la boîte qui reçoit toutes les alertes de l'équipe. Elle doit être lue.
 
-## Étape 3 — Cloudflare : mettre la plateforme en ligne (bloquant)
+## Étape 3 — Vercel : la plateforme en ligne (bloquant)
 
-Le détail est dans [cloudflare.md § 0](./cloudflare.md). En bref, dans
-*Workers & Pages → Worker `stax`* :
+Le détail est dans [vercel.md](./vercel.md). En bref :
 
-1. **Offre Workers Paid** (5 $/mois) : le Worker dépasse la limite de taille
-   de l'offre gratuite ; sans elle, le déploiement est refusé.
-2. **Settings → Build** : build `pnpm run build`, déploiement
-   `npx wrangler deploy`, racine `/` — ce sont déjà vos réglages : le dépôt
-   s'y conforme désormais. Renommez le Worker en `nemasus` (*Settings →
-   General*).
-3. **Settings → Variables and Secrets** : les secrets
-   `SUPABASE_SERVICE_ROLE_KEY` et `NEMASUS_SECRET_KEY`, puis `PLATFORM_URL`
-   et `SITES_DOMAIN`. Les valeurs publiques de Supabase sont déjà dans
-   `wrangler.jsonc`.
-4. **Settings → Domains & Routes** : le domaine de la plateforme.
-5. **Relancer le build** (*Deployments → Retry*), puis vérifier `/tarifs`,
-   `/mentions-legales`, `/inscription` et `/admin/sante`.
+1. **Projet Vercel** (`sta-x-platform`, à renommer `nemasus`) : racine
+   `apps/platform`, « Include files outside the Root Directory » activé,
+   région Paris (`cdg1`, déjà dans `apps/platform/vercel.json`). **Offre Pro
+   obligatoire** (20 $/mois par membre) : les conditions de l'offre Hobby la
+   réservent à un usage personnel et non commercial.
+2. **Settings → Environment Variables** (Production) : `NEMASUS_ENV`,
+   `PLATFORM_URL` et `NEXT_PUBLIC_PLATFORM_URL`, les variables Supabase,
+   `SUPABASE_SERVICE_ROLE_KEY` et `NEMASUS_SECRET_KEY` (secrets), `LEGAL_PHONE`,
+   `SITES_DOMAIN`.
+3. **Settings → Domains** : le domaine de la plateforme.
+4. **Cloudflare → Workers & Pages → `stax`** : *Settings → Build →
+   Disconnect*, puis supprimez ce Worker. Il a servi la plateforme quelques
+   jours ; le dépôt n'en contient plus la configuration.
+5. Redéployez, puis vérifiez `/tarifs`, `/mentions-legales`, `/inscription` et
+   `/admin/sante`.
 
-**Supabase Pro** (≈ 25 $/mois) : l'offre gratuite n'a **pas de sauvegardes
-automatiques** et un projet inactif peut être **mis en pause**. Or la page
-Infrastructure et les CGV (article 10) annoncent des sauvegardes : elles
-doivent exister le jour du premier client.
+**Supabase reste sur l'offre gratuite** : pas de sauvegarde automatique
+téléchargeable, et un projet sans activité pendant 7 jours peut être mis en
+pause. Faites un export chaque semaine (voir
+[backup-recovery.md](./backup-recovery.md)) ; la tâche de fond qui tourne
+toutes les 5 minutes empêche la mise en pause.
 
 **Acceptez les accords de traitement (DPA)** de chaque prestataire
-(Cloudflare, Supabase, GitHub, Resend ; Stripe l'inclut) et gardez-en une
+(Vercel, Cloudflare, Supabase, GitHub, Resend ; Stripe l'inclut) et gardez-en une
 copie : la page `/sous-traitants` et le registre y renvoient.
 
 ## Étape 4 — E-mails (sans eux, le produit paraît cassé)
@@ -133,10 +148,10 @@ Deux choses distinctes, toutes deux nécessaires :
 1. **E-mails de Nemasus** (propositions, livraison, réponses de l'équipe,
    alertes). Créez un compte **Resend** (ou Postmark), vérifiez votre domaine
    d'envoi (enregistrements SPF et DKIM chez votre registrar), puis dans les
-   variables du Worker (étape 3) :
+   variables Vercel (étape 3) :
    ```
    EMAIL_PROVIDER=resend
-   EMAIL_API_KEY=re_…                          (type Secret)
+   EMAIL_API_KEY=re_…                          (secret)
    EMAIL_FROM=Nemasus <nemasus@lallianse.com>
    EMAIL_REPLY_TO=nemasus@lallianse.com
    ```
@@ -158,7 +173,7 @@ jusqu'au bout.
 ## Étape 5 — Stripe (encaisser)
 
 1. Activez le compte Stripe (identité, IBAN).
-2. Clé **live** en secret du Worker : `STRIPE_SECRET_KEY`.
+2. Clé **live** dans les variables Vercel : `STRIPE_SECRET_KEY`.
 3. **Développeurs → Webhooks → Ajouter un point de terminaison** :
    `https://votre-domaine/api/webhooks/stripe`, événements
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
@@ -171,9 +186,23 @@ jusqu'au bout.
 **Vérifier :** faites d'abord tout le parcours en **mode test** (carte
 `4242 4242 4242 4242`) — voir l'étape 9.
 
+## Étape 5 bis — Sauvegardes (bloquant avant le premier client)
+
+Supabase gratuit n'en fournit pas ; la page Infrastructure et les CGV en
+annoncent une par jour. L'export quotidien chiffré est prêt
+(`.github/workflows/backup.yml`) : posez dans *GitHub → Settings → Secrets and
+variables → Actions* `SUPABASE_DB_URL` (Supabase → Connect → **Session
+pooler**) et `BACKUP_PASSPHRASE` (`openssl rand -base64 32`, gardée aussi dans
+votre gestionnaire de mots de passe), puis lancez-le une fois à la main
+(*Actions → Sauvegarde de la base → Run workflow*). Détail :
+[backup-recovery.md](./backup-recovery.md).
+
 ## Étape 6 — GitHub, Cloudflare, tâche de fond (publier les sites)
 
-Voir [deployment.md § 7 à 9](./deployment.md) :
+**Administration → Intégrations** crée l'application GitHub en un clic et
+affiche les valeurs à copier ; le jeton Cloudflare se crée en deux minutes
+dans votre tableau de bord. Pas à pas : [integrations.md](./integrations.md).
+Variables Vercel :
 `GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 `GITHUB_APP_WEBHOOK_SECRET`, `CLOUDFLARE_SITES_API_TOKEN`,
 `CLOUDFLARE_SITES_ACCOUNT_ID`, `CLOUDFLARE_WEBHOOK_SECRET`, `CRON_SECRET`, et
@@ -194,8 +223,8 @@ Cloudflare **Turnstile** : `NEXT_PUBLIC_TURNSTILE_SITE_KEY`,
 limitation de débit et le champ piège, mais moins bien.
 
 La limitation de débit lit l'adresse IP du visiteur dans l'en-tête que
-Cloudflare Workers pose lui-même (`cf-connecting-ip`), détecté
-automatiquement : rien à configurer. `NEMASUS_CLIENT_IP_HEADER` ne sert que si
+Vercel pose lui-même (`x-real-ip`), détecté automatiquement : rien à
+configurer. `NEMASUS_CLIENT_IP_HEADER` ne sert que si
 un autre mandataire est placé devant la plateforme.
 
 ## Étape 8 — Comptes de l'équipe (et double facteur : bloquant)
@@ -242,8 +271,11 @@ Si une étape bloque, `/admin/sante` et `/admin/taches` disent pourquoi.
 
 ## Étape 10 — Juridique et administratif (avant d'encaisser)
 
-Les textes ont été revus et renforcés le 2026-09-28 (version `2026-09-28` des
-CGV, CGU, confidentialité et accord de traitement) : collaboration et
+Les textes ont été revus et renforcés le 2026-09-28, puis le 2026-09-29
+après un audit externe (version `2026-09-29` des CGV, CGU, confidentialité et
+accord de traitement : hébergeur Vercel, fin de contrat au choix du client,
+données de santé, TVA et autoliquidation, droits sur le code, signalements ;
+détail dans [GAP_AUDIT.md § 16](./GAP_AUDIT.md)) : collaboration et
 réception du site, garantie contre les réclamations de tiers, responsabilité
 d'hébergeur, absence de garantie de résultat en référencement, plafond et
 délai d'action d'un an entre professionnels, effets du remboursement, sous-
@@ -262,7 +294,9 @@ principe suivi ici. Reste à faire :
    Prestataire avec préavis de 3 mois), **18** (effets du remboursement),
    **21** (plafond de responsabilité, délai d'un an), **25** (rétractation : à
    revoir si vous vendez **en rendez-vous physique** à de très petites
-   entreprises) ; la politique de confidentialité (prospection, § 3 et 4) et le
+   entreprises), **6** (TVA, autoliquidation), **16** (droits sur le code) ;
+   l'accord de traitement (**articles 9 et 13** : fin de contrat, données de
+   santé) ; la politique de confidentialité (prospection, § 3 et 4) et le
    registre [REGISTRE_TRAITEMENTS.md](./REGISTRE_TRAITEMENTS.md) (§ A8, A9).
    Après relecture, passez `LEGAL_REVIEW_REQUIRED` à `false` dans
    `packages/config/src/legal.ts`.

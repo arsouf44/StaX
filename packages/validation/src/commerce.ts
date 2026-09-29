@@ -130,6 +130,14 @@ export const cancelSubscriptionSchema = z
       .optional()
       .or(z.literal('').transform(() => undefined)),
     comment: optionalText(2000),
+    // Sort des donnees a la fin de la prestation (RGPD art. 28 § 3 g) : choix
+    // du Client. A defaut, restitution puis suppression : rien n'est efface
+    // avant qu'il ait pu tout recuperer.
+    dataFate: z
+      .enum(['restitution', 'suppression'])
+      .optional()
+      .or(z.literal('').transform(() => undefined))
+      .transform((value) => value ?? 'restitution'),
     confirm: z.literal(true, { message: 'Confirmez la résiliation.' }),
   })
   .strict();

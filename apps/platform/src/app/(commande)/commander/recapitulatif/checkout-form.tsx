@@ -79,6 +79,21 @@ export function CheckoutForm({
       />
 
       <Checkbox
+        name="establishedInFrance"
+        required
+        label="Mon entreprise ou mon association est établie en France."
+        description={
+          <>
+            Établie ailleurs ?{' '}
+            <Link href="/devis" className="underline underline-offset-4">
+              Demandez un devis
+            </Link>{' '}
+            : la TVA dépend alors de votre pays (autoliquidation le cas échéant).
+          </>
+        }
+      />
+
+      <Checkbox
         name="acceptTerms"
         required
         label={

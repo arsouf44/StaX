@@ -2,7 +2,11 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { maintenancePolicyConfig } from '@nemasus/config';
+import {
+  endOfContractDeletionDate,
+  maintenancePolicyConfig,
+  type EndOfContractChoice,
+} from '@nemasus/config';
 import { tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
 import { sendEmail, subscriptionCancelledEmail } from '@nemasus/emails';
 import {
@@ -95,6 +99,7 @@ export async function requestCancellationAction(
     subscriptionId: formData.get('subscriptionId'),
     reason: formData.get('reason') ?? undefined,
     comment: formData.get('comment') || undefined,
+    dataFate: formData.get('dataFate') ?? undefined,
     confirm: formData.get('confirm') === 'on',
   });
 
@@ -143,9 +148,19 @@ export async function requestCancellationAction(
       metadata_safe: { reason: parsed.data.reason ?? null },
     });
 
+  // Instruction du Client sur le sort de ses donnees (RGPD art. 28 § 3 g),
+  // enregistree comme une demande a traiter a date fixe dans « Demandes
+  // RGPD » : la suppression promise par les CGV et l'accord de traitement a
+  // une echeance visible, et n'attend pas qu'on s'en souvienne.
+  const deletionDate = await recordEndOfContractInstruction(gate.value, parsed.data.dataFate);
+
   // Confirmation sur support durable (article L215-1-1 du Code de la
   // consommation) : la date de fin et ses effets, par e-mail.
-  const confirmation = await sendCancellationConfirmation(gate.value);
+  const confirmation = await sendCancellationConfirmation(
+    gate.value,
+    parsed.data.dataFate,
+    deletionDate,
+  );
 
   revalidatePath('/app/abonnement');
   return {
@@ -158,21 +173,92 @@ export async function requestCancellationAction(
 
 const LONG_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
 
-async function sendCancellationConfirmation(
-  context: WorkspaceContext & { subscriptionId: string },
-): Promise<boolean> {
+/** Marque des demandes creees par une resiliation, pour les retrouver a la reprise. */
+const END_OF_CONTRACT_MARK = '[fin de contrat]';
+
+const DATA_FATE_LABELS: Record<EndOfContractChoice, string> = {
+  restitution: 'restitution puis suppression',
+  suppression: 'suppression',
+};
+
+async function periodEnd(subscriptionId: string): Promise<Date | null> {
   const service = tryCreateServiceClient();
-  if (!service) return false;
+  if (!service) return null;
   const subscription = unwrapMaybe<{ current_period_end: string | null }>(
     (await service
       .from('subscriptions')
       .select('current_period_end')
-      .eq('id', context.subscriptionId)
+      .eq('id', subscriptionId)
       .maybeSingle()) as never,
   );
-  if (!subscription?.current_period_end) return false;
+  return subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
+}
 
-  const end = new Date(subscription.current_period_end);
+/**
+ * Enregistre la demande de suppression a echeance : fin de la periode payee,
+ * plus la periode de continuite, plus le delai d'export si le Client a choisi
+ * la restitution. Une resiliation repetee remplace la demande precedente.
+ */
+async function recordEndOfContractInstruction(
+  context: WorkspaceContext & { subscriptionId: string; userId: string },
+  choice: EndOfContractChoice,
+): Promise<Date | null> {
+  const service = tryCreateServiceClient();
+  if (!service) return null;
+  const end = (await periodEnd(context.subscriptionId)) ?? new Date();
+  const deletion = endOfContractDeletionDate(end, choice);
+  const organizationId = context.workspace.organization.id;
+
+  try {
+    await service
+      .from('privacy_requests')
+      .update({
+        status: 'refused',
+        response_note: 'Remplacée par une nouvelle instruction du client.',
+        completed_at: new Date().toISOString(),
+      })
+      .eq('organization_id', organizationId)
+      .eq('kind', 'deletion')
+      .in('status', ['received', 'verifying'])
+      .like('details', `${END_OF_CONTRACT_MARK}%`);
+
+    const { error } = await service.from('privacy_requests').insert({
+      reference: `FIN-${deletion.toISOString().slice(0, 10).replaceAll('-', '')}-${crypto
+        .randomUUID()
+        .slice(0, 6)
+        .toUpperCase()}`,
+      requester_id: context.userId,
+      requester_email: context.workspace.profile.email,
+      organization_id: organizationId,
+      kind: 'deletion',
+      status: 'received',
+      // L'identite est celle du titulaire connecte qui a resilie.
+      identity_verified_at: new Date().toISOString(),
+      due_at: deletion.toISOString(),
+      details:
+        `${END_OF_CONTRACT_MARK} Résiliation de la maintenance. Choix du client : ` +
+        `${DATA_FATE_LABELS[choice]}. Supprimer toutes les données de l’organisation ` +
+        `(site, médias, messages, contacts, réservations, commandes, comptes clients) le ` +
+        `${LONG_DATE.format(deletion)} ; conserver uniquement factures et données ` +
+        'd’identification légales du titulaire.',
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.error('[nemasus:subscription] instruction de fin de contrat non enregistree', error);
+  }
+  return deletion;
+}
+
+async function sendCancellationConfirmation(
+  context: WorkspaceContext & { subscriptionId: string },
+  choice: EndOfContractChoice,
+  deletionDate: Date | null,
+): Promise<boolean> {
+  const service = tryCreateServiceClient();
+  if (!service) return false;
+  const end = await periodEnd(context.subscriptionId);
+  if (!end) return false;
+
   const grace = new Date(end.getTime() + maintenancePolicyConfig().gracePeriodDays * 86_400_000);
   try {
     const result = await sendEmail(
@@ -182,6 +268,8 @@ async function sendCancellationConfirmation(
         endDate: LONG_DATE.format(end),
         gracePeriodEnd: LONG_DATE.format(grace),
         billingUrl: absolutePlatformUrl('/app/abonnement'),
+        dataFate: choice,
+        deletionDate: LONG_DATE.format(deletionDate ?? endOfContractDeletionDate(end, choice)),
       }),
       { db: service, organizationId: context.workspace.organization.id },
     );
@@ -211,7 +299,21 @@ export async function resumeSubscriptionAction(
 
   // Sans cle de service, l'action reste faite ; seule la trace manque, et
   // `tryCreateServiceClient` l'a journalise.
-  await tryCreateServiceClient()?.from('audit_logs').insert({
+  const service = tryCreateServiceClient();
+  // La maintenance continue : la suppression programmee a la resiliation n'a
+  // plus d'objet.
+  await service
+    ?.from('privacy_requests')
+    .update({
+      status: 'refused',
+      response_note: 'Résiliation annulée par le client : aucune suppression.',
+      completed_at: new Date().toISOString(),
+    })
+    .eq('organization_id', gate.value.workspace.organization.id)
+    .eq('kind', 'deletion')
+    .in('status', ['received', 'verifying'])
+    .like('details', `${END_OF_CONTRACT_MARK}%`);
+  await service?.from('audit_logs').insert({
     actor_id: gate.value.userId,
     actor_email: gate.value.workspace.profile.email,
     actor_type: 'user',

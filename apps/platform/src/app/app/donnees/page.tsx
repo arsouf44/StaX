@@ -55,10 +55,10 @@ export default async function DataPage() {
             </li>
             <li>
               <strong className="text-[var(--foreground)]">Si vous arrêtez la maintenance :</strong>{' '}
-              votre site reste en ligne {maintenance.gracePeriodDays} jours, puis il est suspendu —
-              ni supprimé, ni effacé — pendant {maintenance.suspensionRetentionDays} jours, puis
-              archivé {maintenance.archiveRetentionDays} jours. L’export reste possible pendant
-              toute cette durée.
+              votre site reste en ligne {maintenance.gracePeriodDays} jours. Vous choisissez
+              ensuite, à la résiliation : récupérer vos données (export et copie du code pendant{' '}
+              {maintenance.exportWindowDays} jours), puis les supprimer — c’est le choix par défaut
+              — ou les supprimer tout de suite.
             </li>
             <li>
               <strong className="text-[var(--foreground)]">

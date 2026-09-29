@@ -124,7 +124,13 @@ consommation). D'où ces règles, qui protègent la société :
 2. **Parler de son activité professionnelle** : l'offre (un site pour son
    entreprise) doit être en rapport avec elle.
 3. **Se présenter** dès le début de l'appel : votre prénom, « Nemasus », l'objet
-   de l'appel. Si l'appel est enregistré, le dire et demander l'accord.
+   de l'appel. Si l'appel est enregistré, le dire et demander l'accord. Si la
+   personne accepte la proposition, dire avant de raccrocher (information
+   RGPD, art. 14) :
+   > « Je vous envoie la proposition par e-mail. Nous avons trouvé le numéro
+   > de votre établissement dans un annuaire professionnel ; vos coordonnées
+   > ne servent qu'à cette proposition, et vous pouvez nous demander à tout
+   > moment de les effacer — il suffit de répondre STOP à l'e-mail. »
 4. **Respecter le refus immédiatement** : « pas intéressé » → on raccroche
    poliment et on inscrit l'entreprise dans la liste d'opposition (3 ans) ;
    « ne me rappelez plus » → idem, et on efface le reste.
@@ -138,8 +144,10 @@ consommation). D'où ces règles, qui protègent la société :
    contact ; le traitement est décrit dans
    [REGISTRE_TRAITEMENTS.md § A9](./REGISTRE_TRAITEMENTS.md).
 
-Chaque e-mail de proposition rappelle automatiquement au prospect qui traite
-ses coordonnées et qu'il peut s'y opposer en répondant « STOP ».
+Chaque e-mail de proposition porte automatiquement l'information complète due
+au prospect (RGPD, art. 14) : responsable du traitement, finalité, intérêt
+légitime, source des coordonnées, durée de conservation, droits, et
+opposition immédiate en répondant « STOP ».
 
 ---
 

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { formatMaintenance, SUBSCRIPTION_STATUS_LABELS } from '@nemasus/payments';
-import { refundPolicyConfig } from '@nemasus/config';
+import { maintenancePolicyConfig, refundPolicyConfig } from '@nemasus/config';
 import { EmptyState, Icon, Panel, PermissionDenied } from '@nemasus/ui';
 import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
@@ -111,7 +111,13 @@ export default async function SubscriptionPage() {
       />
 
       {view ? (
-        <SubscriptionPanel subscription={view} />
+        <SubscriptionPanel
+          subscription={view}
+          policy={{
+            gracePeriodDays: maintenancePolicyConfig().gracePeriodDays,
+            exportWindowDays: maintenancePolicyConfig().exportWindowDays,
+          }}
+        />
       ) : (
         <EmptyState
           icon={<Icon name="shield-check" size={24} />}

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
   coreConfigurationProblems,
@@ -109,8 +110,9 @@ export default async function AdminHealthPage() {
           <Alert tone="danger" live="alert" title="Informations légales incomplètes">
             {legal.missingRequired.length > 0 ? (
               <p>
-                Manquantes : {legal.missingRequired.join(', ')}. La production refusera de démarrer
-                tant qu’elles ne sont pas renseignées.
+                Manquantes : {legal.missingRequired.join(', ')}. Les pages légales publiques restent
+                incomplètes, avec un avertissement, tant qu’elles ne sont pas renseignées dans les
+                variables du déploiement.
               </p>
             ) : null}
             {legal.identityProblems.map((problem) => (
@@ -152,6 +154,14 @@ export default async function AdminHealthPage() {
                   </li>
                 ))}
               </ul>
+              {missing.includes('github_app') || missing.includes('cloudflare_sites') ? (
+                <p className="mt-4 text-sm">
+                  <Link href="/admin/integrations" className="underline underline-offset-4">
+                    Configurer GitHub et Cloudflare
+                  </Link>{' '}
+                  — l’application GitHub se crée en un clic.
+                </p>
+              ) : null}
             </Panel>
           )}
         </section>

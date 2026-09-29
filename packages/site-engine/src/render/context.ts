@@ -242,6 +242,12 @@ export interface RenderContext {
   formToken: string;
   /** Cle publique Turnstile, ou null si la protection est desactivee. */
   turnstileSiteKey: string | null;
+  /**
+   * Site d'un professionnel de sante : chaque champ libre avertit le visiteur
+   * de ne transmettre aucune information medicale (accord de traitement,
+   * article 13).
+   */
+  healthDataGuard?: boolean;
   /** Date de reference, injectee pour rester testable. */
   now: Date;
   /**

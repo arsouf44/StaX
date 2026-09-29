@@ -56,7 +56,9 @@ export default async function PricingPage() {
         <Container size="wide">
           <PricingCards plans={plans} />
           <p className="mt-6 text-center text-xs text-[var(--muted)]">
-            Tous les prix sont indiqués hors taxes. TVA française de 20 % applicable. Chaque offre
+            Tous les prix sont indiqués hors taxes. La TVA est appliquée selon la réglementation et
+            le lieu d’établissement du client : 20 % pour une entreprise établie en France ;
+            ailleurs, commande sur devis, avec autoliquidation le cas échéant. Chaque offre
             correspond à une quantité de travail — pages, design, fonctionnalités, accompagnement —,
             jamais à un modèle plus ou moins personnalisé.
           </p>

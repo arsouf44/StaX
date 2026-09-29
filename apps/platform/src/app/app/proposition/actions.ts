@@ -43,6 +43,15 @@ export async function startProposalCheckoutAction(
       message: 'Confirmez que vous achetez ce site pour votre activité professionnelle.',
     };
   }
+  const established = formData.get('establishedInFrance');
+  if (established !== 'on' && established !== 'true') {
+    return {
+      status: 'error',
+      message:
+        'La commande en ligne est réservée aux entreprises et associations établies en France. ' +
+        'Établie ailleurs ? Demandez un devis : la TVA applicable dépend de votre pays.',
+    };
+  }
   const accepted = formData.get('acceptTerms');
   if (accepted !== 'on' && accepted !== 'true') {
     return {

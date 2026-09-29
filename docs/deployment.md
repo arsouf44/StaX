@@ -1,17 +1,17 @@
 # Déploiement
 
-Deux applications, un seul dépôt, un seul pipeline.
+Deux applications, un seul dépôt.
 
 | Application | Cible | Rôle |
 | --- | --- | --- |
-| `apps/platform` | Worker Cloudflare `nemasus` (OpenNext, Workers Builds — [cloudflare.md § 0](./cloudflare.md)) | Site public, espace client, back-office, webhooks, tâche de fond |
-| `apps/site-runtime` | Worker Cloudflare | API des sites ; sites de l’ancien moteur |
+| `apps/platform` | **Vercel**, région Paris (`cdg1`) — [vercel.md](./vercel.md) | Site public, espace client, back-office, webhooks, tâche de fond |
+| `apps/site-runtime` | Worker Cloudflare `nemasus-sites` — [cloudflare.md § 0](./cloudflare.md) | API des sites clients ; sites de l’ancien moteur |
 
 Les **sites clients** ne sont pas déployés ici : chacun a son dépôt GitHub et
 son projet Cloudflare, et se déploie par son propre build
 ([site-delivery.md](./site-delivery.md)). La plateforme doit seulement être
 reliée à GitHub (application) et à Cloudflare (jeton d’API) — étapes 7 à 9
-ci-dessous.
+ci-dessous, et pas à pas dans [integrations.md](./integrations.md).
 
 ---
 
@@ -24,9 +24,9 @@ encore.
 ```
 1. Migrations SQL          (les colonnes et fonctions nouvelles arrivent d’abord)
 2. Types régénérés         (le build échoue sinon, ce qui est voulu)
-3. Build des deux Workers
-4. Déploiement de site-runtime
-5. Déploiement de platform
+3. Build                   (pnpm build : plateforme + Worker des sites)
+4. Déploiement de site-runtime (pnpm deploy:sites:production)
+5. Déploiement de platform (Vercel, à chaque fusion sur la branche de production)
 6. Vérification            (/status, un site client, un webhook de test)
 ```
 
@@ -51,56 +51,61 @@ pnpm db:types
 Vérifier ensuite :
 
 - RLS active sur toutes les tables multi-tenant ;
-- sauvegardes quotidiennes activées ;
-- restauration à un instant donné (PITR) activée.
+- sauvegardes : l’offre gratuite n’en fournit pas de téléchargeables ni de
+  PITR ; faire un export régulier ([backup-recovery.md](./backup-recovery.md)).
 
-### 2. Secrets Cloudflare
+### 2. Variables de la plateforme (Vercel)
 
-```bash
-cd apps/platform
-wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
-wrangler secret put NEMASUS_SECRET_KEY           --env production   # openssl rand -base64 48
-wrangler secret put STRIPE_SECRET_KEY         --env production
-wrangler secret put STRIPE_WEBHOOK_SECRET     --env production
-wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET --env production
-wrangler secret put TURNSTILE_SECRET_KEY      --env production
-# Sites livrés (étapes 7 à 9)
-wrangler secret put GITHUB_APP_ID              --env production
-wrangler secret put GITHUB_APP_PRIVATE_KEY     --env production
-wrangler secret put GITHUB_APP_WEBHOOK_SECRET  --env production
-wrangler secret put CLOUDFLARE_SITES_API_TOKEN --env production
-wrangler secret put CLOUDFLARE_WEBHOOK_SECRET  --env production
-wrangler secret put CRON_SECRET                --env production   # openssl rand -base64 32
+*Vercel → projet → Settings → Environment Variables*, environnement
+**Production**. La liste complète, avec les symptômes de chaque absence, est
+dans [vercel.md § 2](./vercel.md) :
 
-cd ../site-runtime
-wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
-wrangler secret put NEMASUS_SECRET_KEY           --env production   # LA MÊME valeur
-wrangler secret put TURNSTILE_SECRET_KEY      --env production
+```
+NEMASUS_ENV=production
+PLATFORM_URL / NEXT_PUBLIC_PLATFORM_URL       https://<domaine>
+SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL       https://<ref>.supabase.co
+SUPABASE_ANON_KEY / NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY                     (secret)
+NEMASUS_SECRET_KEY                            (secret — openssl rand -base64 48)
+STRIPE_SECRET_KEY  STRIPE_WEBHOOK_SECRET  STRIPE_CONNECT_WEBHOOK_SECRET
+TURNSTILE_SECRET_KEY  NEXT_PUBLIC_TURNSTILE_SITE_KEY
+# Sites livrés (étapes 7 à 9, integrations.md)
+GITHUB_APP_ID  GITHUB_APP_SLUG  GITHUB_APP_PRIVATE_KEY  GITHUB_APP_WEBHOOK_SECRET
+CLOUDFLARE_SITES_API_TOKEN  CLOUDFLARE_SITES_ACCOUNT_ID  CLOUDFLARE_WEBHOOK_SECRET
+CRON_SECRET                                   (openssl rand -base64 32)
+SITES_DOMAIN
 ```
 
-> `NEMASUS_SECRET_KEY` doit être **identique** dans les deux Workers : elle signe
-> les jetons de formulaire émis par le moteur des sites et vérifiés par lui.
-
-### 3. Informations légales
-
-```bash
-wrangler secret put LEGAL_COMPANY_NAME --env production
-# … et toutes les variables listées dans docs/legal-configuration.md
-pnpm legal:check
-```
-
-Sans elles, **la production refuse de démarrer**. C’est voulu.
-
-Le Worker des sites clients a aussi besoin de l’identité de Nemasus : Nemasus est
-l’**hébergeur** de chaque site client, et ses mentions légales doivent le
-nommer avec son adresse et son téléphone (article 6 III de la LCEN).
+Puis les secrets du Worker des sites (Cloudflare) :
 
 ```bash
 cd apps/site-runtime
-wrangler secret put LEGAL_COMPANY_NAME --env production
-wrangler secret put LEGAL_ADDRESS      --env production
-wrangler secret put SUPPORT_PHONE      --env production
-wrangler secret put SUPPORT_EMAIL      --env production
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
+wrangler secret put NEMASUS_SECRET_KEY        --env production   # LA MÊME valeur
+wrangler secret put TURNSTILE_SECRET_KEY      --env production
+```
+
+> `NEMASUS_SECRET_KEY` doit être **identique** sur Vercel et sur le Worker des
+> sites : elle signe les jetons de formulaire émis par l’un et vérifiés par
+> l’autre.
+
+### 3. Informations légales
+
+L’identité de LallianSe et de l’hébergeur est dans
+`packages/config/src/legal.ts`. Reste à fournir, sur Vercel, `LEGAL_PHONE`
+(téléphone de l’éditeur, exigé par la LCEN), puis :
+
+```bash
+pnpm legal:check
+```
+
+Le Worker des sites clients nomme Nemasus comme **hébergeur** de chaque site
+client (article 6 III de la LCEN) : les mêmes valeurs par défaut s’y
+appliquent, et `LEGAL_PHONE` doit y être posé aussi :
+
+```bash
+cd apps/site-runtime
+wrangler secret put LEGAL_PHONE --env production
 ```
 
 Les polices des sites clients sont servies par le Worker lui-même
@@ -110,10 +115,12 @@ n’est jamais envoyé vers Google Fonts.
 ### 4. Déploiement
 
 ```bash
-pnpm build:cf
-pnpm --filter @nemasus/site-runtime deploy:production
-pnpm --filter @nemasus/platform deploy:production
+pnpm build
+pnpm deploy:sites:production     # Worker des sites (Cloudflare)
 ```
+
+La plateforme est déployée par Vercel à chaque fusion sur la branche de
+production ; un aperçu est construit pour chaque autre branche.
 
 ### 5. Compte administrateur
 
@@ -191,7 +198,7 @@ livrés. Sans secret valide, la route répond **401**.
 0057), qui appelle la route avec `pg_net`. L’adresse de la
 plateforme et le secret sont lus dans Supabase Vault ; tant qu’ils sont
 absents, rien n’est envoyé. À faire une fois, dans l’éditeur SQL de Supabase,
-avec **la même valeur** que le secret `CRON_SECRET` du Worker :
+avec **la même valeur** que la variable `CRON_SECRET` de Vercel :
 
 ```sql
 select vault.create_secret('https://votre-domaine.fr', 'nemasus_platform_url');
@@ -201,7 +208,8 @@ select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');
 Pour changer une valeur : `select vault.update_secret(id, 'nouvelle valeur')`
 (l’`id` se lit dans `vault.secrets`). Pour vérifier les appels :
 `select status_code, created from net._http_response order by created desc limit 5;`
-(200 attendu).
+(200 attendu). En complément, Vercel Cron appelle la même route une fois par
+jour (`apps/platform/vercel.json`, 4 h UTC).
 
 Vérifier ensuite *Administration → Santé* : l’application GitHub, l’API
 Cloudflare des sites et les tâches de fond ne doivent plus figurer parmi les
@@ -232,9 +240,12 @@ Dans l’interface :
 
 ## Retour arrière
 
-**Le code.** Les Workers conservent leurs versions précédentes :
+**Le code.** Vercel conserve chaque déploiement : *Deployments → (un
+déploiement précédent) → ⋯ → Promote to Production* (ou `vercel rollback`).
+Le Worker des sites garde lui aussi ses versions :
 
 ```bash
+cd apps/site-runtime
 wrangler deployments list --env production
 wrangler rollback <deployment-id> --env production
 ```

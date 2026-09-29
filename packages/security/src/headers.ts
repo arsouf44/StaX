@@ -40,6 +40,11 @@ export interface SecurityHeaderOptions {
   imgSrc?: readonly string[];
   /** Desactive `upgrade-insecure-requests` en developpement local. */
   allowInsecure?: boolean;
+  /**
+   * Destinations de formulaire supplementaires. Sert a un seul ecran :
+   * l'envoi du manifeste de l'application GitHub (POST vers github.com).
+   */
+  formAction?: readonly string[];
   /** Le site autorise-t-il l'intégration d'une carte tierce ? */
   allowMaps?: boolean;
 }
@@ -103,7 +108,7 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
     `frame-src ${frame}`,
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    ["form-action 'self'", ...(options.formAction ?? [])].join(' '),
     // Interdit l'integration du tableau de bord dans un iframe tiers
     // (protection contre le clickjacking).
     isPlatform ? "frame-ancestors 'none'" : "frame-ancestors 'self'",

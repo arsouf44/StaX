@@ -30,7 +30,7 @@ export const PROCESS_STEPS: readonly ProcessStep[] = [
   {
     title: 'Développement',
     description:
-      'Notre équipe crée réellement votre site, dans un projet indépendant qui n’appartient qu’à lui : son propre code, son propre dépôt. Pas de modèle à personnaliser, pas de génération automatique.',
+      'Notre équipe crée réellement votre site, dans un projet indépendant qui n’appartient qu’à lui : son propre code, son propre dépôt. Pas de modèle à personnaliser : sa structure et son design sont conçus pour lui.',
     detail: 'Un projet par site',
   },
   {

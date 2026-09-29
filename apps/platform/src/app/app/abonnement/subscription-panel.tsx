@@ -8,6 +8,7 @@ import {
   Dialog,
   Field,
   Panel,
+  RadioCards,
   Select,
   StatusPill,
   Switch,
@@ -58,7 +59,18 @@ function SubmitButton({
   );
 }
 
-export function SubscriptionPanel({ subscription }: { subscription: SubscriptionView }) {
+export interface EndOfContractPolicy {
+  gracePeriodDays: number;
+  exportWindowDays: number;
+}
+
+export function SubscriptionPanel({
+  subscription,
+  policy,
+}: {
+  subscription: SubscriptionView;
+  policy: EndOfContractPolicy;
+}) {
   const [cancelling, setCancelling] = useState(false);
   const [cancelState, setCancelState] = useState<ActionState>(IDLE_STATE);
   const [rowState, setRowState] = useState<ActionState>(IDLE_STATE);
@@ -171,13 +183,41 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
               </li>
               <li>Vous pouvez revenir en arrière à tout moment jusqu’à cette date.</li>
               <li>
-                Ensuite, après une période de continuité, votre site peut être suspendu : vos
-                données restent conservées et exportables, et vous pouvez demander une copie du code
-                source de votre site.
+                Il reste ensuite en ligne {policy.gracePeriodDays} jours (période de continuité).
+                Vos données deviennent alors ce que vous choisissez ci-dessous.
               </li>
               <li>Votre nom de domaine vous appartient : vous le gardez.</li>
             </ul>
           </div>
+
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">
+              À la fin du contrat, que deviennent vos données ?
+            </legend>
+            <RadioCards
+              name="dataFate"
+              defaultValue="restitution"
+              columns={1}
+              options={[
+                {
+                  value: 'restitution',
+                  label: 'Les récupérer, puis les supprimer',
+                  description: `Votre site est suspendu ; pendant ${policy.exportWindowDays} jours, vous exportez vos données et demandez la copie du code de votre site. Ensuite, tout est supprimé.`,
+                },
+                {
+                  value: 'suppression',
+                  label: 'Les supprimer à la fin du contrat',
+                  description:
+                    'Site, messages, contacts, réservations et comptes de vos clients sont supprimés dès la fin de la période de continuité. Pensez à exporter avant.',
+                },
+              ]}
+            />
+            <p className="text-xs leading-relaxed text-[var(--muted)]">
+              Vous pouvez changer d’avis jusqu’à la date de suppression, indiquée dans l’e-mail de
+              confirmation. Seules les factures et les données que la loi nous impose de garder sont
+              conservées.
+            </p>
+          </fieldset>
 
           <Field
             label="Pourquoi nous quittez-vous ?"

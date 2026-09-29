@@ -1,106 +1,23 @@
-# Cloudflare
+# Cloudflare — les sites des clients
 
-Tout Nemasus tourne sur Cloudflare : la plateforme (site public, espace
-client, administration), l’API des sites et chaque site client. La base est
-chez Supabase, les paiements chez Stripe, le code sur GitHub.
+La **plateforme** Nemasus (site public, espace client, administration, API)
+est déployée par **Vercel** : voir [vercel.md](./vercel.md). Cloudflare
+n’héberge que **les sites des clients** et le Worker `nemasus-sites`, qui
+porte l’API de ces sites. La base est chez Supabase, les paiements chez
+Stripe, le code sur GitHub.
 
-## 0. Mettre la plateforme en ligne (Workers Builds)
+> **Ancien Worker de la plateforme.** Si un Worker `stax` (ou `nemasus`) relié
+> à ce dépôt par Workers Builds existe encore dans Cloudflare, déconnectez-le
+> (*Workers & Pages → stax → Settings → Build → Disconnect*) puis
+> supprimez-le : le dépôt ne contient plus sa configuration, chaque envoi de
+> code y produirait un build en échec, et la plateforme ne doit être servie
+> qu’à une seule adresse.
 
-Le Worker de la plateforme est construit et déployé par **Workers Builds**,
-relié au dépôt GitHub. Réglages, dans *Workers & Pages → (le Worker) →
-Settings → Build* :
-
-| Réglage | Valeur |
-| --- | --- |
-| Dépôt, branche de production | ce dépôt, `main` |
-| Root directory | `/` (la racine du dépôt) |
-| Build command | `pnpm run build` |
-| Deploy command | `npx wrangler deploy` |
-| Version command (autres branches) | `npx wrangler versions upload` |
-
-`pnpm run build` produit le Worker avec OpenNext (`apps/platform/.open-next`)
-et `npx wrangler deploy` le publie d’après [`wrangler.jsonc`](../wrangler.jsonc)
-**à la racine** du dépôt. Aucune variable n’est nécessaire au build : la
-configuration est lue à l’exécution.
-
-**Nom du Worker.** Le fichier le nomme `nemasus`. Si le Worker s’appelle
-encore `stax` dans Cloudflare, le build le signale (« Failed to match Worker
-name ») mais déploie quand même sur `stax` ; renommez-le en `nemasus`
-(*Settings → General → Name*) pour faire disparaître l’avertissement — les
-domaines rattachés suivent.
-
-**Offre Workers Paid obligatoire** (5 $/mois, *Workers & Pages → Plans*) : le
-Worker compressé pèse environ 4,1 Mo, au-delà de la limite de 3 Mo de l’offre
-gratuite, et une page rendue dépasse les 10 ms de calcul qu’elle accorde.
-
-### Variables et secrets du Worker
-
-*Settings → Variables and Secrets*. Les valeurs publiques (URL du projet
-Supabase et sa clé « anon », `NEMASUS_ENV=production`) sont déjà dans
-`wrangler.jsonc`, et l’identité légale dans `packages/config/src/legal.ts`.
-Les variables posées ici survivent aux déploiements (`keep_vars`).
-
-**Secrets (type « Secret ») — sans eux, la plateforme ne fonctionne pas :**
-
-```
-SUPABASE_SERVICE_ROLE_KEY   Supabase → Project Settings → API keys (clé secrète)
-NEMASUS_SECRET_KEY          openssl rand -base64 48 — ou la valeur de l’ancienne
-                            STAX_SECRET_KEY si elle existait déjà (les deux noms sont lus)
-```
-
-**Adresse publique (type « Text ») :**
-
-```
-PLATFORM_URL        https://<domaine de la plateforme>, sans / final
-SITES_DOMAIN        domaine parent des adresses temporaires des sites, ex. sites.nemasus.fr
-```
-
-Tant que `PLATFORM_URL` manque, les pages prennent l’adresse par laquelle le
-Worker est appelé (`https://stax.<compte>.workers.dev`, puis votre domaine) pour
-leurs URL canoniques, le plan du site et les retours de paiement. Les e-mails
-envoyés hors d’une visite (tâches planifiées) exigent, eux, `PLATFORM_URL`.
-
-Les **aperçus** de branche (`wrangler versions upload`) peuvent ne recevoir
-aucune de ces variables : le catalogue y apparaît « momentanément
-indisponible ». Vérifiez le site sur l’adresse de production, pas sur un aperçu.
-
-**Selon les fonctions** (chaque fonction non configurée se déclare
-indisponible au lieu d’échouer ; `/admin/sante` liste ce qui manque) :
-
-```
-STRIPE_SECRET_KEY  STRIPE_WEBHOOK_SECRET          (Secret)  paiements
-STRIPE_CONNECT_WEBHOOK_SECRET  STRIPE_CONNECT_CLIENT_ID     encaissements des clients
-EMAIL_PROVIDER=resend  EMAIL_API_KEY (Secret)  EMAIL_FROM=Nemasus <…>  EMAIL_REPLY_TO
-NEXT_PUBLIC_TURNSTILE_SITE_KEY  TURNSTILE_SECRET_KEY (Secret)  anti-robot des formulaires
-GITHUB_APP_ID  GITHUB_APP_SLUG  GITHUB_APP_PRIVATE_KEY (Secret)  GITHUB_APP_WEBHOOK_SECRET (Secret)
-CLOUDFLARE_SITES_API_TOKEN (Secret)  CLOUDFLARE_SITES_ACCOUNT_ID  CLOUDFLARE_WEBHOOK_SECRET (Secret)
-CRON_SECRET (Secret)
-```
-
-### Domaine
-
-*Settings → Domains & Routes → Add → Custom domain* : le domaine de la
-plateforme (par exemple `nemasus.fr`), s’il est géré par Cloudflare. Mettez
-ensuite la même adresse dans `PLATFORM_URL`, dans Supabase
-(*Authentication → URL Configuration*) et dans les webhooks Stripe
-(`https://<domaine>/api/webhooks/stripe`).
-
-### Vérifier après chaque déploiement
-
-```
-/tarifs              les offres s’affichent avec leurs prix
-/mentions-legales    aucun marqueur « [A CONFIGURER — … ] »
-/inscription         créer un compte de test
-/admin/sante         ce qui manque encore, en clair
-```
-
-Journaux : *Workers & Pages → nemasus → Logs* (activés par `observability`).
-
-### L’API des sites : un second Worker
+## 0. L’API des sites : le Worker `nemasus-sites`
 
 `apps/site-runtime` (formulaires, réservations, boutique, comptes des sites
-clients ; sites de l’ancien moteur) est un Worker distinct, `nemasus-sites`.
-Créez un second projet Workers Builds sur le même dépôt :
+clients ; sites de l’ancien moteur) est un Worker, `nemasus-sites`. Projet
+Workers Builds sur ce dépôt :
 
 | Réglage | Valeur |
 | --- | --- |
@@ -108,8 +25,12 @@ Créez un second projet Workers Builds sur le même dépôt :
 | Build command | *(vide)* |
 | Deploy command | `npx wrangler deploy -c apps/site-runtime/wrangler.jsonc --env production` |
 
-avec les mêmes secrets Supabase et `NEMASUS_SECRET_KEY`. Il n’est utile que
-lorsque des sites livrés utilisent ces fonctions.
+Secrets (*Settings → Variables and Secrets*, type « Secret ») :
+`SUPABASE_SERVICE_ROLE_KEY`, `NEMASUS_SECRET_KEY` (la même valeur que sur
+Vercel). Variables : `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`NEXT_PUBLIC_PLATFORM_URL` (adresse de la plateforme, pour le lien de
+signalement des contenus). Il n’est utile que lorsque des sites livrés
+utilisent ces fonctions. Déploiement manuel : `pnpm deploy:sites:production`.
 
 ---
 
@@ -120,8 +41,9 @@ Cloudflare joue deux rôles, à ne pas confondre :
    construit et sert le site. Nemasus ne déploie pas à sa place : il **lit l’état
    réel** des déploiements pour savoir, sans le supposer, si une version est
    en ligne.
-2. **Nemasus a ses propres Workers** : la plateforme (`nemasus`, § 0) et
-   `apps/site-runtime`, qui porte l’API des sites et l’ancien moteur.
+2. **Nemasus a un Worker** : `apps/site-runtime` (`nemasus-sites`, § 0), qui
+   porte l’API des sites et l’ancien moteur. La plateforme, elle, est sur
+   Vercel.
 
 Code : `packages/infrastructure/src/cloudflare-sites.ts` (client API),
 `apps/platform/src/app/api/webhooks/cloudflare/route.ts` (notifications),
@@ -225,12 +147,14 @@ depuis son historique : cela crée une nouvelle version et un nouveau commit.
 
 ---
 
-## 6. Les Workers de Nemasus
+## 6. Le Worker de Nemasus
 
 | Worker | Nom | Sert |
 | --- | --- | --- |
-| `apps/platform` | `nemasus` (déployé par Workers Builds, `wrangler.jsonc` à la racine) | le domaine de la plateforme, par exemple `nemasus.fr` |
 | `apps/site-runtime` | `nemasus-sites` | API des sites ; sites de l’ancien moteur (`*.sites.nemasus.fr`, domaines rattachés) |
+
+La plateforme (`apps/platform`) n’est pas un Worker : elle est déployée par
+Vercel ([vercel.md](./vercel.md)).
 
 `compatibility_date` : `2026-09-01`. Indicateurs : `nodejs_compat`,
 `global_fetch_strictly_public`. Ce dernier interdit à un Worker d’atteindre
