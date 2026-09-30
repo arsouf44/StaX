@@ -51,9 +51,9 @@ function secretKeyMaterial(): Uint8Array {
   // refuser bruyamment que signer avec une cle devinable.
   if (isProduction()) {
     throw new Error(
-      '[Nemasus] NEMASUS_SECRET_KEY absent ou trop court (32 caracteres minimum). ' +
+      '[Nemasus] NEMASUS_SECRET_KEY absent ou trop court (32 caractères minimum). ' +
         'Generez-le avec : openssl rand -base64 48, puis ajoutez-le aux secrets ' +
-        'de deploiement. Sans cette cle, aucun formulaire ne peut fonctionner.',
+        'de déploiement. Sans cette clé, aucun formulaire ne peut fonctionner.',
     );
   }
 

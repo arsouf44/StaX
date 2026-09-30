@@ -153,7 +153,7 @@ export function translateDatabaseError(error: PostgrestLikeError): DatabaseError
       return new DatabaseError('Cette valeur existe déjà.', code, error.details);
     case '23503':
       return new DatabaseError(
-        'Cet élément est lie a d autres données et ne peut pas être supprime.',
+        'Cet élément est lié à d’autres données et ne peut pas être supprimé.',
         code,
         error.details,
       );
@@ -169,7 +169,7 @@ export function translateDatabaseError(error: PostgrestLikeError): DatabaseError
       return new DatabaseError('Élément introuvable.', code, error.details);
     default:
       return new DatabaseError(
-        'Une erreur est survenue lors de l enregistrement. Réessayez dans un instant.',
+        'Une erreur est survenue lors de l’enregistrement. Réessayez dans un instant.',
         code,
         error.details,
       );

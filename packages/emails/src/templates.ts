@@ -299,7 +299,7 @@ export function previewReadyEmail(
     to: ctx.to,
     template: 'preview_ready',
     subject: 'Votre site est prêt à être relu',
-    preheader: 'Decouvrez votre site avant sa mise en ligne.',
+    preheader: 'Découvrez votre site avant sa mise en ligne.',
     heading: 'Votre site est prêt à être relu',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
@@ -646,7 +646,7 @@ export function refundRequestedEmail(
           : []),
       ]),
       paragraph(
-        'Ce montant est une estimation : il sera confirme après vérification. ' +
+        'Ce montant est une estimation : il sera confirmé après vérification. ' +
           'Cette garantie commerciale ne remplacé pas vos droits légaux.',
       ),
     ].join(''),

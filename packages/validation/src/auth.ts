@@ -38,7 +38,7 @@ export const passwordSchema = z
   .string()
   .min(
     PASSWORD_MIN_LENGTH,
-    `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caracteres.`,
+    `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères.`,
   )
   .max(PASSWORD_MAX_LENGTH, 'Mot de passe trop long.')
   .refine((value) => !FORBIDDEN_PASSWORDS.has(value.toLowerCase()), {
@@ -50,7 +50,7 @@ export const passwordSchema = z
 
 export const signUpSchema = z
   .object({
-    firstName: boundedText(1, 60, 'Le prenom'),
+    firstName: boundedText(1, 60, 'Le prénom'),
     lastName: boundedText(1, 60, 'Le nom'),
     email: emailSchema,
     password: passwordSchema,
@@ -112,7 +112,7 @@ export const passwordChangeSchema = z
     path: ['confirmPassword'],
   })
   .refine((data) => data.password !== data.currentPassword, {
-    message: 'Le nouveau mot de passe doit être different de l ancien.',
+    message: 'Le nouveau mot de passe doit être différent de l’ancien.',
     path: ['password'],
   });
 
@@ -140,7 +140,7 @@ export const activationCompleteSchema = z
   .object({
     code: activationCodeSchema,
     email: emailSchema,
-    firstName: boundedText(1, 60, 'Le prenom'),
+    firstName: boundedText(1, 60, 'Le prénom'),
     lastName: boundedText(1, 60, 'Le nom'),
     password: passwordSchema,
     acceptTerms: consentCheckbox('Vous devez accepter les conditions générales d’utilisation.'),
@@ -181,7 +181,7 @@ export function passwordStrength(password: string): {
   let score = 0;
 
   if (password.length >= PASSWORD_MIN_LENGTH) score += 1;
-  else hints.push(`Au moins ${PASSWORD_MIN_LENGTH} caracteres.`);
+  else hints.push(`Au moins ${PASSWORD_MIN_LENGTH} caractères.`);
 
   if (password.length >= 16) score += 1;
   else if (password.length >= PASSWORD_MIN_LENGTH)

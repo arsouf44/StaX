@@ -150,7 +150,7 @@ export const openingHourSchema = z
   })
   .strict()
   .refine((data) => data.closesAt > data.opensAt, {
-    message: 'L heure de fermeture doit suivre l heure d ouverture.',
+    message: 'L’heure de fermeture doit suivre l’heure d’ouverture.',
     path: ['closesAt'],
   });
 
@@ -165,7 +165,7 @@ export const closureSchema = z
   })
   .strict()
   .refine((data) => data.endsOn >= data.startsOn, {
-    message: 'La date de fin doit suivre la date de debut.',
+    message: 'La date de fin doit suivre la date de début.',
     path: ['endsOn'],
   });
 
@@ -202,7 +202,7 @@ export const availabilityRuleSchema = z
   })
   .strict()
   .refine((data) => data.endsAt > data.startsAt, {
-    message: 'L heure de fin doit suivre l heure de debut.',
+    message: 'L’heure de fin doit suivre l’heure de début.',
     path: ['endsAt'],
   });
 

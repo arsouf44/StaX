@@ -31,12 +31,12 @@ export function requireAuthenticated(context: {
 }): AuthContext {
   if (!context.user || !context.profile) {
     throw new AuthorizationError(
-      appError('unauthenticated', 'Vous devez être connecte pour acceder a cette page.'),
+      appError('unauthenticated', 'Vous devez être connecté pour accéder à cette page.'),
     );
   }
   if (context.profile.disabled_at) {
     throw new AuthorizationError(
-      appError('forbidden', 'Votre compte a ete désactivé. Contactez le support.'),
+      appError('forbidden', 'Votre compte a été désactivé. Contactez le support.'),
     );
   }
   return {

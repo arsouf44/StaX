@@ -77,7 +77,7 @@ export const updateMemberRoleSchema = z
 
 export const profileSchema = z
   .object({
-    firstName: boundedText(1, 60, 'Le prenom'),
+    firstName: boundedText(1, 60, 'Le prénom'),
     lastName: boundedText(1, 60, 'Le nom'),
     phone: phoneSchema.optional().or(z.literal('')),
     locale: z.enum(['fr', 'en']).default('fr'),

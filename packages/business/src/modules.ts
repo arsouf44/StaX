@@ -71,7 +71,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   faq: {
     id: 'faq',
     label: 'Questions fréquentes',
-    description: 'Répondez une fois aux questions recurrentes, gagnez du temps chaque semaine.',
+    description: 'Répondez une fois aux questions récurrentes, gagnez du temps chaque semaine.',
     icon: 'help-circle',
     category: 'content',
     requiredFeature: null,
@@ -119,7 +119,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   portfolio: {
     id: 'portfolio',
     label: 'Réalisations',
-    description: 'Un portfolio avant/apres qui prouve votre savoir-faire.',
+    description: 'Un portfolio avant/après qui prouve votre savoir-faire.',
     icon: 'layout-grid',
     category: 'content',
     requiredFeature: null,
@@ -156,7 +156,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   booking: {
     id: 'booking',
     label: 'Réservations',
-    description: 'Creneaux, capacites, confirmations et rappels automatiques.',
+    description: 'Créneaux, capacités, confirmations et rappels automatiques.',
     icon: 'calendar-check',
     category: 'booking',
     requiredFeature: 'bookings',
@@ -227,7 +227,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   rooms: {
     id: 'rooms',
     label: 'Chambres & hébergements',
-    description: 'Chambres, équipements, tarifs et demandes de sejour.',
+    description: 'Chambres, équipements, tarifs et demandes de séjour.',
     icon: 'bed-double',
     category: 'content',
     requiredFeature: null,
@@ -240,7 +240,7 @@ export const MODULES: Readonly<Record<ModuleId, ModuleDefinition>> = {
   events: {
     id: 'events',
     label: 'Événements',
-    description: 'Agenda, dates et inscriptions a vos événements.',
+    description: 'Agenda, dates et inscriptions à vos événements.',
     icon: 'calendar-days',
     category: 'content',
     requiredFeature: null,
