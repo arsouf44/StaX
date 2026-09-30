@@ -50,6 +50,8 @@ export type LegalKey =
   | 'LEGAL_RCS'
   | 'LEGAL_VAT'
   | 'LEGAL_DIRECTOR'
+  | 'LEGAL_REPRESENTATIVE'
+  | 'LEGAL_PHONE'
   | 'LEGAL_HOST'
   | 'LEGAL_HOST_ADDRESS'
   | 'LEGAL_HOST_PHONE'
@@ -137,22 +139,40 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     required: true,
     placeholder: '[A CONFIGURER — directeur de la publication]',
     defaultValue: 'Julie Rachline Gomez',
-    hint: 'Personne physique responsable au sens de la loi du 21 juin 2004 (LCEN). Pour une SAS, le président, sauf désignation expresse.',
+    hint: 'Personne physique responsable au sens de la loi du 29 juillet 1982 (art. 93-2) et de la LCEN : le représentant légal de la société. La présidente de LallianSe étant une personne morale (SELALLIAN), c’est la représentante légale de celle-ci.',
+  },
+  {
+    key: 'LEGAL_REPRESENTATIVE',
+    label: 'Représentant légal',
+    required: false,
+    placeholder: '[A CONFIGURER — representant legal]',
+    // Registre national des entreprises : SELALLIAN présidente de LallianSe
+    // depuis le 30 juin 2025 ; Julie Gomez (née Rachline) gérante de SELALLIAN.
+    defaultValue:
+      'SELALLIAN (EURL, RCS Saint-Nazaire 938 435 849), présidente, représentée par sa gérante, Julie Rachline Gomez',
+    hint: 'Chaîne de représentation telle qu’elle figure au registre : présidente de la société, et personne physique qui la représente.',
+  },
+  {
+    key: 'LEGAL_PHONE',
+    label: 'Téléphone de l’éditeur',
+    required: true,
+    placeholder: '[A CONFIGURER — telephone de l’editeur]',
+    hint: 'Exigé pour une personne morale par l’article 6 III de la LCEN, avec la dénomination et le siège. À défaut, SUPPORT_PHONE est utilisé.',
   },
   {
     key: 'LEGAL_HOST',
     label: 'Hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — hebergeur]',
-    defaultValue: 'Cloudflare, Inc.',
-    hint: 'Raison sociale du prestataire qui héberge la plateforme et les sites des clients (article 6 III de la LCEN). La base de données a son propre prestataire, nommé dans les mentions légales.',
+    defaultValue: 'Vercel Inc.',
+    hint: 'Raison sociale du prestataire qui héberge la plateforme (article 6 III de la LCEN). Les sites des clients et la base de données ont leurs propres prestataires, nommés dans les mentions légales.',
   },
   {
     key: 'LEGAL_HOST_ADDRESS',
     label: 'Adresse de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — adresse de l’hebergeur]',
-    defaultValue: '101 Townsend Street, San Francisco, CA 94107, États-Unis',
+    defaultValue: '440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis',
     hint: 'Adresse postale de l’hébergeur, telle qu’il la publie.',
   },
   {
@@ -160,7 +180,8 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Téléphone de l’hébergeur',
     required: true,
     placeholder: '[A CONFIGURER — telephone de l’hebergeur]',
-    defaultValue: '+1 650 319 8930',
+    // Numéro publié par Vercel Inc. (vercel.com/legal/dmca-policy).
+    defaultValue: '+1 559 288 7060',
     hint: 'Exigé par l’article 6 III de la LCEN (modifié par la loi du 21 mai 2024) : numéro de téléphone du prestataire d’hébergement, tel qu’il le publie.',
   },
   {
@@ -191,9 +212,23 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Téléphone de support',
     required: false,
     placeholder: '[A CONFIGURER — telephone de support]',
-    hint: 'Facultatif mais recommande pour la confiance client.',
+    hint: 'Facultatif mais recommande pour la confiance client. À défaut, LEGAL_PHONE est affiché.',
   },
 ] as const;
+
+/**
+ * Un meme numero sert souvent aux deux usages : le telephone de l'editeur
+ * (obligation LCEN) et celui du support. L'un tient lieu de l'autre.
+ */
+const LEGAL_ALIASES: Partial<Record<LegalKey, LegalKey>> = {
+  LEGAL_PHONE: 'SUPPORT_PHONE',
+  SUPPORT_PHONE: 'LEGAL_PHONE',
+};
+
+function configuredValue(key: LegalKey): string | undefined {
+  const alias = LEGAL_ALIASES[key];
+  return readEnv(key) ?? (alias ? readEnv(alias) : undefined);
+}
 
 export type LegalConfig = Record<LegalKey, string>;
 
@@ -231,12 +266,12 @@ export function legalConfig(): LegalConfig {
  */
 export function legalValue(key: LegalKey): string {
   const field = fieldFor(key);
-  return readEnv(key) ?? field.defaultValue ?? field.placeholder;
+  return configuredValue(key) ?? field.defaultValue ?? field.placeholder;
 }
 
 export function isLegalValueConfigured(key: LegalKey): boolean {
   const field = fieldFor(key);
-  return readEnv(key) !== undefined || field.defaultValue !== undefined;
+  return configuredValue(key) !== undefined || field.defaultValue !== undefined;
 }
 
 export function legalStatus(): LegalStatus {
@@ -367,12 +402,17 @@ export function deliveryPolicyConfig(): DeliveryPolicyConfig {
 }
 
 export interface MaintenancePolicyConfig {
-  /** Days a site stays online after maintenance ends before suspension. */
+  /** Days a site stays online after the last paid period (service continues). */
   gracePeriodDays: number;
-  /** Days a suspended site is kept before archival. */
-  suspensionRetentionDays: number;
-  /** Days archived data is kept before deletion is permitted. */
-  archiveRetentionDays: number;
+  /**
+   * Days, after the end of the service, during which the Client who chose
+   * « restitution » can still export its data and obtain the source code,
+   * before final deletion (RGPD art. 28 § 3 g : restitution OR deletion, at
+   * the controller's choice).
+   */
+  exportWindowDays: number;
+  /** Days after which deleted data has also left the encrypted backups. */
+  backupRotationDays: number;
   /** Accounting retention imposed by French commercial law (10 years). */
   financialRetentionYears: number;
 }
@@ -384,10 +424,24 @@ export function maintenancePolicyConfig(): MaintenancePolicyConfig {
   };
   return {
     gracePeriodDays: int('MAINTENANCE_GRACE_PERIOD_DAYS', 30),
-    suspensionRetentionDays: int('MAINTENANCE_SUSPENSION_RETENTION_DAYS', 90),
-    archiveRetentionDays: int('MAINTENANCE_ARCHIVE_RETENTION_DAYS', 365),
+    exportWindowDays: int('MAINTENANCE_EXPORT_WINDOW_DAYS', 90),
+    backupRotationDays: 30,
     financialRetentionYears: 10,
   };
+}
+
+/** Sort des données choisi par le Client à la résiliation. */
+export type EndOfContractChoice = 'restitution' | 'suppression';
+
+/**
+ * Date de suppression définitive, à partir de la fin de la dernière période
+ * payée : période de continuité, puis, si le Client a choisi la restitution,
+ * délai d'export.
+ */
+export function endOfContractDeletionDate(periodEnd: Date, choice: EndOfContractChoice): Date {
+  const policy = maintenancePolicyConfig();
+  const days = policy.gracePeriodDays + (choice === 'restitution' ? policy.exportWindowDays : 0);
+  return new Date(periodEnd.getTime() + days * 86_400_000);
 }
 
 /**
@@ -412,7 +466,7 @@ export function siteHostIdentity(platformBaseUrl: string | null): SiteHostIdenti
   return {
     name: configured('LEGAL_COMPANY_NAME') ?? 'Nemasus',
     address: configured('LEGAL_ADDRESS'),
-    phone: configured('SUPPORT_PHONE'),
+    phone: configured('LEGAL_PHONE'),
     email: configured('SUPPORT_EMAIL'),
     reportUrl: platformBaseUrl
       ? `${platformBaseUrl.replace(/\/+$/, '')}/signaler-un-contenu`

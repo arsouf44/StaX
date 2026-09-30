@@ -36,6 +36,12 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
       { href: '/admin', label: 'Vue d’ensemble', icon: 'layout-dashboard', minimum: 'support' },
       { href: '/admin/activite', label: 'Journal', icon: 'history', minimum: 'platform_admin' },
       { href: '/admin/sante', label: 'État des services', icon: 'activity', minimum: 'support' },
+      {
+        href: '/admin/integrations',
+        label: 'Intégrations',
+        icon: 'key-round',
+        minimum: 'platform_owner',
+      },
     ],
   },
   {

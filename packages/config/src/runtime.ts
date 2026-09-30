@@ -2,7 +2,7 @@
  * Runtime environment access.
  *
  * Nemasus runs on two different runtimes:
- *  - Next.js on Cloudflare Workers (OpenNext), where `process.env` is populated.
+ *  - Next.js on Vercel (the platform), where `process.env` is populated.
  *  - A plain Cloudflare Worker (the tenant site runtime), where variables and secrets
  *    arrive as the `env` argument of `fetch(request, env, ctx)`.
  *
@@ -74,15 +74,6 @@ export function isBrowser(): boolean {
   // une erreur de compilation alors que le test doit rester valable partout.
   const scope = globalThis as { window?: { document?: unknown } };
   return scope.window !== undefined && scope.window.document !== undefined;
-}
-
-/**
- * Vrai dans un Worker Cloudflare (production, apercu, `wrangler dev`) : le
- * runtime y expose `navigator.userAgent === 'Cloudflare-Workers'`.
- */
-export function isCloudflareWorker(): boolean {
-  const scope = globalThis as { navigator?: { userAgent?: string } };
-  return scope.navigator?.userAgent === 'Cloudflare-Workers';
 }
 
 export type DeployEnvironment = 'development' | 'preview' | 'production' | 'test';

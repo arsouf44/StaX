@@ -107,7 +107,7 @@ jobs:
           scripts/db-test.sh "postgresql://postgres@127.0.0.1:5432/postgres" nemasus_ci
 
   build:
-    name: Build production et Cloudflare
+    name: Build production (plateforme Vercel, Worker des sites)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: [qualite]
@@ -125,11 +125,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build Next.js
+      - name: Build Next.js (plateforme, déployée par Vercel)
         run: pnpm build:platform
 
-      - name: Build Cloudflare (les deux Workers)
-        run: pnpm build:cf
+      - name: Build du Worker des sites clients (Cloudflare)
+        run: pnpm build:sites
 
   # Le déploiement n'est PAS automatique. Une mise en production suppose que
   # les migrations ont été appliquées dans le bon ordre et que les informations

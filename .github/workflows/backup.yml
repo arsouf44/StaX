@@ -1,0 +1,88 @@
+name: Sauvegarde de la base
+
+# Supabase, offre gratuite : aucune sauvegarde téléchargeable, aucune
+# restauration à un instant donné. Cette tâche en tient lieu : chaque nuit, un
+# export des DONNÉES de production (le schéma, lui, est dans les migrations du
+# dépôt), chiffré en AES-256 avec une phrase secrète que GitHub ne connaît pas
+# en clair ailleurs que dans ses secrets, conservé 30 jours comme artefact.
+#
+# Secrets du dépôt (Settings → Secrets and variables → Actions) :
+#   SUPABASE_DB_URL     chaîne « Session pooler » du projet (Supabase → Connect),
+#                       mot de passe compris. Le « Direct connection » est en
+#                       IPv6 seulement : les machines de GitHub ne l'atteignent pas.
+#   BACKUP_PASSPHRASE   phrase secrète longue, conservée AUSSI hors de GitHub
+#                       (gestionnaire de mots de passe) : sans elle, rien ne se
+#                       restaure.
+#
+# Restauration : docs/backup-recovery.md.
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sauvegarde-base
+  cancel-in-progress: false
+
+jobs:
+  sauvegarde:
+    name: Export chiffré des données de production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Configuration présente
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::SUPABASE_DB_URL ou BACKUP_PASSPHRASE absent : aucune sauvegarde n'a été faite. Voir docs/backup-recovery.md."
+            exit 1
+          fi
+          if [ "${#BACKUP_PASSPHRASE}" -lt 24 ]; then
+            echo "::error::BACKUP_PASSPHRASE doit compter au moins 24 caractères."
+            exit 1
+          fi
+
+      - name: Export (pg_dump 17, données seulement)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p out
+          # Même version majeure que le serveur (PostgreSQL 17) : un pg_dump plus
+          # ancien refuse d'exporter.
+          docker run --rm -e SUPABASE_DB_URL -v "$PWD/out:/out" postgres:17 \
+            pg_dump --dbname="$SUPABASE_DB_URL" \
+              --format=custom --compress=9 --data-only --no-owner --no-privileges \
+              --schema=public --schema=app --schema=auth --schema=storage \
+              --exclude-table-data='app.schema_migrations' \
+              --exclude-table-data='auth.schema_migrations' \
+              --exclude-table-data='storage.migrations' \
+              --exclude-table-data='public.rate_limit_counters' \
+              --file=/out/nemasus.dump
+          test -s out/nemasus.dump
+          ls -l out/nemasus.dump
+
+      - name: Chiffrement (AES-256)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 --symmetric --cipher-algo AES256 \
+            --output "out/nemasus-$(date -u +%Y-%m-%dT%H%MZ).dump.gpg" out/nemasus.dump
+          # Le clair ne quitte jamais la machine, et n'y reste pas.
+          shred -u out/nemasus.dump
+          ls -l out
+
+      - name: Conservation 30 jours
+        uses: actions/upload-artifact@v4
+        with:
+          name: sauvegarde-${{ github.run_id }}
+          path: out/*.dump.gpg
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0

@@ -2257,6 +2257,22 @@ begin
   perform t.assert(exists (select 1 from public.content_reports
                             where id = v_report and status = 'actioned' and decided_by = staff),
     'La decision motivee est enregistree avec son auteur');
+
+  -- 0058 : la base elle-meme refuse un signalement anonyme hors abus sur
+  -- mineurs, meme ecrit sans passer par la fonction.
+  begin
+    insert into public.content_reports
+      (reference, content_url, category, explanation, good_faith)
+    values ('SIG-TEST-ANON', 'https://x.test/', 'fraud', 'Une arnaque evidente ici.', true);
+    perform t.assert(false, '0058 : un signalement anonyme hors abus sur mineurs est refuse');
+  exception when check_violation then
+    perform t.assert(true, '0058 : un signalement anonyme hors abus sur mineurs est refuse');
+  end;
+  insert into public.content_reports
+    (reference, content_url, category, explanation, good_faith)
+  values ('SIG-TEST-MIN', 'https://x.test/', 'child_abuse', 'Contenu visible sur la page.', true);
+  perform t.assert(exists (select 1 from public.content_reports where reference = 'SIG-TEST-MIN'),
+    '0058 : un signalement d''abus sur mineurs reste possible sans identite');
 end;
 $$;
 
@@ -3942,6 +3958,23 @@ begin
          and has_function_privilege('anon', p.oid, 'execute')
          and p.prorettype <> 'trigger'::regtype),
     'Aucune fonction de l''API n''est appelable sans compte (le schema app n''est pas expose)');
+end;
+$$;
+
+\echo '--- 0058 : la liste des sous-traitants dit qui heberge quoi ---'
+do $$
+begin
+  perform t.assert(exists (select 1 from public.subprocessors
+                            where name = 'Vercel Inc.' and is_active
+                              and purpose like '%plateforme%'),
+    '0058 : Vercel, hebergeur de la plateforme, figure parmi les sous-traitants');
+  perform t.assert(exists (select 1 from public.subprocessors
+                            where name = 'Cloudflare, Inc.' and purpose like '%sites des clients%'
+                              and purpose not like '%plateforme%'),
+    '0058 : Cloudflare n''est plus presente comme hebergeur de la plateforme');
+  perform t.assert(exists (select 1 from public.subprocessors
+                            where name like '%Resend%' and is_active),
+    '0058 : Resend, qui envoie les e-mails, figure parmi les sous-traitants');
 end;
 $$;
 

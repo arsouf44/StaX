@@ -3,7 +3,6 @@ import {
   assertServerOnly,
   deployEnvironment,
   isBrowser,
-  isCloudflareWorker,
   isProduction,
   readAllEnv,
   readEnv,
@@ -58,27 +57,30 @@ function atRuntime(...keys: string[]): string | undefined {
 export function publicEnv(): PublicEnv {
   const { env, platformConfigured } = publicCache ?? loadPublicEnv();
   if (platformConfigured) return env;
-  const origin = workerRequestOrigin();
+  const origin = vercelOrigin();
   return origin ? { ...env, NEXT_PUBLIC_PLATFORM_URL: origin } : env;
 }
 
 /**
- * Adresse publique d'un Worker dont `PLATFORM_URL` n'est pas encore posee.
+ * Adresse publique d'un deploiement Vercel dont `PLATFORM_URL` n'est pas posee.
  *
  * Sans elle, les URL canoniques, le plan du site et les retours de paiement
- * pointeraient vers `http://localhost:3000`. L'adaptateur OpenNext inscrit
- * l'origine de chaque requete dans `__NEXT_PRIVATE_ORIGIN` ; sur un Worker, ce
- * nom d'hote n'est pas choisi par le visiteur : Cloudflare n'achemine vers le
- * Worker que les requetes adressees a l'une de ses routes (workers.dev ou
- * domaine rattache). Jamais mise en cache : elle suit la requete en cours.
- * `PLATFORM_URL` reste obligatoire pour les e-mails envoyes hors requete.
+ * pointeraient vers `http://localhost:3000`. Vercel fournit lui-meme ces
+ * variables systeme : l'adresse de production du projet
+ * (`VERCEL_PROJECT_PRODUCTION_URL`, domaine personnalise compris) et celle d'un
+ * apercu (`VERCEL_BRANCH_URL`, `VERCEL_URL`). Elles ne dependent pas de la
+ * requete : aucun visiteur ne peut les choisir. `PLATFORM_URL` reste
+ * prioritaire, et doit etre posee des qu'un domaine est rattache.
  */
-function workerRequestOrigin(): string | undefined {
-  if (isBrowser() || !isCloudflareWorker()) return undefined;
-  const origin = readEnv('__NEXT_PRIVATE_ORIGIN');
-  if (!origin?.startsWith('https://')) return undefined;
+function vercelOrigin(): string | undefined {
+  if (isBrowser() || readEnv('VERCEL') !== '1') return undefined;
+  const host =
+    readEnv('VERCEL_ENV') === 'production'
+      ? readEnv('VERCEL_PROJECT_PRODUCTION_URL')
+      : (readEnv('VERCEL_BRANCH_URL') ?? readEnv('VERCEL_URL'));
+  if (!host) return undefined;
   try {
-    return new URL(origin).origin;
+    return new URL(`https://${host.replace(/^https?:\/\//, '')}`).origin;
   } catch {
     return undefined;
   }

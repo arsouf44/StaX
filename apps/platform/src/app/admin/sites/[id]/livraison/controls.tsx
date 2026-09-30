@@ -506,10 +506,13 @@ export function AttestForm({
   siteId,
   checkKey,
   label,
+  healthSector = false,
 }: {
   siteId: string;
   checkKey: 'forms' | 'responsive';
   label: string;
+  /** Site d'un professionnel de sante : controle des donnees de sante en plus. */
+  healthSector?: boolean;
 }) {
   const { pending, error, run } = useAction();
   const [open, setOpen] = useState(false);
@@ -549,13 +552,23 @@ export function AttestForm({
         }
       >
         <div className="grid gap-3">
+          {checkKey === 'forms' && healthSector ? (
+            <Alert tone="warning" title="Site d’un professionnel de santé">
+              Vérifiez aussi qu’aucun champ ne demande de donnée de santé (motif médical, symptôme,
+              traitement, pièce médicale) et que chaque champ libre affiche l’avertissement «
+              N’indiquez aucune information sur votre santé ». Mentionnez-le dans l’attestation
+              (accord de traitement, article 13).
+            </Alert>
+          ) : null}
           <Field label="Ce qui a été vérifié">
             <Textarea
               rows={4}
               value={note}
               placeholder={
                 checkKey === 'forms'
-                  ? 'Ex. : formulaire de contact envoyé depuis le site en ligne, reçu dans la messagerie Nemasus.'
+                  ? healthSector
+                    ? 'Ex. : formulaires envoyés depuis le site en ligne et reçus ; aucun champ de santé, avertissement présent sous chaque champ libre.'
+                    : 'Ex. : formulaire de contact envoyé depuis le site en ligne, reçu dans la messagerie Nemasus.'
                   : 'Ex. : vérifié sur iPhone 15, Pixel 8, iPad et écran 1440 px.'
               }
               onChange={(event) => setNote(event.target.value)}

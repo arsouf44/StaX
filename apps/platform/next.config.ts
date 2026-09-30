@@ -66,9 +66,9 @@ const PUBLIC_CSP = [
 /**
  * Configuration Next.js de la plateforme Nemasus.
  *
- * Cible : Cloudflare Workers via OpenNext. Les paquets de l espace de travail
- * sont compiles par Next (ils sont publies en TypeScript source), et les
- * en-tetes de securite sont poses ici pour couvrir TOUTES les reponses, y
+ * Cible : Vercel (region de Paris, `vercel.json`). Les paquets de l espace de
+ * travail sont compiles par Next (ils sont publies en TypeScript source), et
+ * les en-tetes de securite sont poses ici pour couvrir TOUTES les reponses, y
  * compris les ressources statiques et les pages d erreur.
  */
 const nextConfig: NextConfig = {
@@ -98,8 +98,8 @@ const nextConfig: NextConfig = {
   // Le lint tourne dans son propre job de CI, pas pendant le build.
 
   images: {
-    // Sur Workers, l optimiseur d images Next n est pas disponible : les
-    // ressources passent par Cloudflare Images / le CDN.
+    // Pas d optimiseur d images : les photos sont servies telles quelles par
+    // le stockage et le CDN (ni quota Vercel, ni domaine tiers a autoriser).
     unoptimized: true,
     formats: ['image/avif', 'image/webp'],
   },

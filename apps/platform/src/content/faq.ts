@@ -21,7 +21,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'general',
     question: 'Est-ce que je construis mon site moi-même ?',
     answer:
-      'Non. Nous créons votre site, vous le gérez ensuite. Notre équipe le conçoit et le développe pour votre entreprise, dans un projet qui lui est propre : pas de modèle à personnaliser, pas de générateur automatique. Vous suivez l’avancement depuis votre espace ; l’éditeur s’ouvre une fois votre site livré, déjà en ligne.',
+      'Non. Nous créons votre site, vous le gérez ensuite. Notre équipe le conçoit et le développe pour votre entreprise, dans un projet qui lui est propre : vous n’avez ni modèle à choisir ni générateur à remplir. Vous suivez l’avancement depuis votre espace ; l’éditeur s’ouvre une fois votre site livré, déjà en ligne.',
   },
   {
     category: 'general',
@@ -87,13 +87,13 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'tarifs',
     question: 'Puis-je arrêter la maintenance ?',
     answer:
-      'Oui, à tout moment, en ligne depuis votre espace, sans justification ni durée minimale. La résiliation prend effet à la fin du mois en cours : aucun prélèvement n’intervient ensuite. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vos données ne sont pas supprimées : vous pouvez les exporter ou réactiver la maintenance.',
+      'Oui, à tout moment, en ligne depuis votre espace, sans justification ni durée minimale. La résiliation prend effet à la fin du mois en cours : aucun prélèvement n’intervient ensuite. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vous choisissez en résiliant ce que deviennent vos données : les récupérer puis les supprimer (choix par défaut), ou les supprimer tout de suite.',
   },
   {
     category: 'tarifs',
     question: 'Que devient mon site si j’arrête la maintenance ?',
     answer:
-      'À la fin de la période payée, votre site reste accessible pendant une période de continuité. Il peut ensuite être suspendu — ni supprimé ni effacé. Vous pouvez exporter vos contenus, vos messages et vos contacts, demander une copie du code source de votre site, ou réactiver la maintenance plus tard.',
+      'À la fin de la période payée, votre site reste accessible pendant une période de continuité. Ensuite, selon votre choix : il est suspendu et, pendant un délai de restitution, vous exportez vos contenus, vos messages et vos contacts, obtenez une copie du code source de votre site ou réactivez la maintenance ; puis tout est supprimé. Vous pouvez aussi demander la suppression dès la fin de la période de continuité.',
   },
   {
     category: 'technique',

@@ -167,6 +167,10 @@ export async function createCheckoutSession(
     cancel_url: `${base}${input.cancelPath ?? '/commander/recapitulatif?paiement=annule'}`,
     automatic_tax: { enabled: false },
     billing_address_collection: 'required',
+    // Numero de TVA intracommunautaire du client, repris sur la facture. La
+    // commande en ligne est reservee aux clients etablis en France (TVA
+    // francaise) : les autres commandent sur devis (CGV, article 6).
+    tax_id_collection: { enabled: true },
     invoice_creation: {
       enabled: true,
       invoice_data: {

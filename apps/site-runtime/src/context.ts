@@ -1,5 +1,5 @@
 import { readEnv, siteHostIdentity } from '@nemasus/config';
-import { resolveBusiness } from '@nemasus/business';
+import { isHumanHealthBusiness, resolveBusiness } from '@nemasus/business';
 import { mediaPublicUrl } from '@nemasus/database';
 import { generateNonce, issueCsrfToken } from '@nemasus/security';
 import {
@@ -82,6 +82,7 @@ export async function buildPageContext(
     nonce: generateNonce(),
     formToken: token.value,
     turnstileSiteKey: readEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY') ?? null,
+    healthDataGuard: isHumanHealthBusiness(business),
     now: new Date(),
   };
 

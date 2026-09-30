@@ -38,6 +38,9 @@ export default function proxy(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/app/editeur') || request.nextUrl.pathname === '/app'
         ? ['https://*.pages.dev', 'https://*.workers.dev']
         : [],
+    // Creation de l'application GitHub : le manifeste part en POST vers
+    // github.com, depuis ce seul ecran reserve au proprietaire.
+    formAction: request.nextUrl.pathname === '/admin/integrations' ? ['https://github.com'] : [],
     // En developpement, `upgrade-insecure-requests` casserait http://localhost.
     allowInsecure: !isProduction(),
   });

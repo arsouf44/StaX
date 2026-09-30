@@ -70,14 +70,27 @@ function shell(params: {
  * coordonnees, pourquoi, et comment s'y opposer. Figure sur chaque message
  * adresse a une entreprise qui n'est pas encore cliente.
  */
+/**
+ * Information du prospect au premier message (RGPD, art. 14 : ses coordonnees
+ * n'ont pas ete collectees aupres de lui, mais dans une source publique puis
+ * au telephone). Tout y est : responsable, finalite, base legale, source,
+ * duree, droits, opposition immediate.
+ */
 function prospectPrivacyNotice(): string {
   const company = legalValue('LEGAL_COMPANY_NAME');
+  const address = legalValue('LEGAL_ADDRESS');
+  const contact = legalValue('LEGAL_DPO_CONTACT');
   return (
-    `Vous recevez ce message parce que vous avez accepté, lors de notre échange, de recevoir ` +
-    `cette proposition. ${company} (Nemasus) utilise vos coordonnées professionnelles pour vous ` +
-    'l’adresser et en assurer le suivi. Vous pouvez vous y opposer à tout moment en répondant ' +
-    '« STOP » à ce message : vos coordonnées seront alors supprimées. En savoir plus : ' +
-    `${platformUrl()}/confidentialite.`
+    'Pourquoi ce message : lors de notre échange téléphonique, vous avez accepté de recevoir ' +
+    `cette proposition. Responsable du traitement : ${company} (Nemasus), ${address}. Nous ` +
+    'utilisons vos coordonnées professionnelles (nom, entreprise, téléphone, e-mail) pour vous ' +
+    'adresser cette proposition et en assurer le suivi, sur le fondement de notre intérêt ' +
+    'légitime à présenter nos services aux entreprises (RGPD, art. 6.1.f). Le numéro de votre ' +
+    'établissement provient d’une source publique professionnelle (registre, annuaire ou site ' +
+    'de votre entreprise). Ces données sont conservées trois ans après notre dernier contact. ' +
+    'Vous pouvez vous y opposer à tout moment, sans motif, en répondant « STOP » : elles seront ' +
+    `supprimées. Vous pouvez aussi y accéder, les faire rectifier ou effacer (${contact}) et ` +
+    `saisir la CNIL. En savoir plus : ${platformUrl()}/confidentialite.`
   );
 }
 
@@ -572,8 +585,19 @@ export function salesInvoiceIssuedEmail(
 }
 
 export function subscriptionCancelledEmail(
-  ctx: BaseContext & { endDate: string; gracePeriodEnd: string; billingUrl: string },
+  ctx: BaseContext & {
+    endDate: string;
+    gracePeriodEnd: string;
+    billingUrl: string;
+    /** Choix du Client pour ses données (RGPD art. 28 § 3 g). */
+    dataFate: 'restitution' | 'suppression';
+    deletionDate: string;
+  },
 ): EmailMessage {
+  const fate =
+    ctx.dataFate === 'suppression'
+      ? `Vous avez choisi la suppression de vos données : elles seront supprimées définitivement le ${ctx.deletionDate}.`
+      : `Vous avez choisi de récupérer vos données : jusqu’au ${ctx.deletionDate}, vous pouvez les exporter depuis votre espace et demander la copie du code de votre site. Elles seront ensuite supprimées définitivement.`;
   return shell({
     to: ctx.to,
     template: 'subscription_cancelled',
@@ -586,14 +610,17 @@ export function subscriptionCancelledEmail(
         `Votre maintenance prendra fin le ${ctx.endDate}. Votre site reste accessible ` +
           `jusqu’à cette date, puis pendant une période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
       ),
+      paragraph(fate),
       paragraph(
-        'Vos données ne sont pas supprimées à l’échéance : vous pouvez les exporter ou ' +
-          'réactiver votre maintenance à tout moment.',
+        'Vous pouvez changer d’avis, ou réactiver votre maintenance, jusqu’à cette date : ' +
+          'répondez simplement à cet e-mail.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Maintenance résiliée au ${ctx.endDate}. Période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
+      fate,
+      'Vous pouvez changer d’avis, ou réactiver votre maintenance, jusqu’à cette date.',
     ],
     action: { label: 'Gérer mon abonnement', url: ctx.billingUrl },
   });

@@ -125,7 +125,7 @@ export default async function HomePage() {
             id="accueil-titre"
             className="max-w-[17ch] font-serif text-[clamp(3rem,7vw,6.6rem)] leading-[1.01] font-normal tracking-[-0.018em] text-balance text-[var(--ink)]"
           >
-            Un site fait à la main, à la hauteur de votre <em>entreprise.</em>
+            Un site fait pour vous, à la hauteur de votre <em>entreprise.</em>
           </h1>
 
           <div className="mt-[clamp(40px,6vh,64px)] grid items-end gap-x-16 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
@@ -388,7 +388,7 @@ const SERVICES = [
   },
   {
     title: 'Développement',
-    body: 'Un site codé à la main dans son propre dépôt, déployé sur Cloudflare, relié à votre domaine en HTTPS. Pas de modèle à personnaliser, pas d’extensions à mettre à jour.',
+    body: 'Un site développé pour vous dans son propre dépôt, déployé sur Cloudflare, relié à votre domaine en HTTPS. Pas de modèle à personnaliser, pas d’extensions à mettre à jour.',
     href: '/fonctionnalites',
     icon: 'M93.31,70,28,128l65.27,58a8,8,0,1,1-10.62,12l-72-64a8,8,0,0,1,0-12l72-64A8,8,0,1,1,93.31,70Zm152,52-72-64a8,8,0,0,0-10.62,12L228,128l-65.27,58a8,8,0,1,0,10.62,12l72-64a8,8,0,0,0,0-12Z',
   },

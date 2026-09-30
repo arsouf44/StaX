@@ -1016,3 +1016,16 @@ export function fallbackBusiness(): BusinessDefinition {
 export function resolveBusiness(id: string | null | undefined): BusinessDefinition {
   return getBusiness(id) ?? fallbackBusiness();
 }
+
+/**
+ * Metier de sante humaine : ses visiteurs sont des patients, et un champ libre
+ * peut recevoir une information medicale. L'infrastructure n'etant pas
+ * certifiee pour les donnees de sante (accord de traitement, article 13), les
+ * formulaires de ces sites l'annoncent au visiteur. Un veterinaire soigne des
+ * animaux : ses formulaires ne sont pas concernes.
+ */
+export function isHumanHealthBusiness(
+  business: Pick<BusinessDefinition, 'id' | 'sector'>,
+): boolean {
+  return business.sector === 'sante' && business.id !== 'veterinaire';
+}

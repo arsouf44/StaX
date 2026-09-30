@@ -6,8 +6,9 @@ import { retryProposalDeliveries } from '~/lib/proposals';
 /**
  * Tache de fond des sites livres : publications programmees, suivi des
  * deploiements, apercus, surveillance. Appelee toutes les 5 minutes par
- * Supabase (`pg_cron` + `pg_net`, migrations 0053 et 0057) ; tout
- * ordonnanceur qui presente `Authorization: Bearer <CRON_SECRET>` convient.
+ * Supabase (`pg_cron` + `pg_net`, migrations 0053 et 0057) et une fois par
+ * jour par Vercel Cron (`vercel.json`) ; tout ordonnanceur qui presente
+ * `Authorization: Bearer <CRON_SECRET>` convient.
  */
 
 export const runtime = 'nodejs';

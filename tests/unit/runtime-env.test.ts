@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * Configuration lue a l'execution, comme sur un Worker Cloudflare.
+ * Configuration lue a l'execution, et non figee au build.
  *
  * Deux incidents possibles que ces tests verrouillent :
  *  - le renommage StaX -> Nemasus : une cle deja posee sous l'ancien nom
  *    (`STAX_SECRET_KEY`) doit rester lue, sinon tous les jetons signes
  *    deviennent invalides au premier deploiement ;
- *  - le build Cloudflare n'a pas les variables `NEXT_PUBLIC_*` : Next les
- *    remplace alors par `undefined`, et la plateforme retomberait sur ses
- *    valeurs locales (catalogue « indisponible ») si le serveur ne relisait pas
- *    la configuration du Worker a l'execution.
+ *  - un build sans les variables `NEXT_PUBLIC_*` : Next les remplace alors par
+ *    `undefined`, et la plateforme retomberait sur ses valeurs locales
+ *    (catalogue « indisponible ») si le serveur ne relisait pas sa
+ *    configuration a l'execution.
  */
 
 const KEYS = [
@@ -22,13 +22,16 @@ const KEYS = [
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
   'PLATFORM_URL',
-  '__NEXT_PRIVATE_ORIGIN',
+  'VERCEL',
+  'VERCEL_ENV',
+  'VERCEL_URL',
+  'VERCEL_BRANCH_URL',
+  'VERCEL_PROJECT_PRODUCTION_URL',
 ] as const;
 
 const saved = Object.fromEntries(KEYS.map((key) => [key, process.env[key]]));
 
 afterEach(async () => {
-  vi.unstubAllGlobals();
   for (const key of KEYS) {
     if (saved[key] === undefined) delete process.env[key];
     else process.env[key] = saved[key];
@@ -65,7 +68,7 @@ describe('noms de variables apres le renommage', () => {
   });
 });
 
-describe('configuration publique sur un Worker', () => {
+describe('configuration publique relue a l execution', () => {
   it('relit a l execution une valeur absente au build', async () => {
     clearAll();
     const { publicEnv, setEnvSource } = await import('@nemasus/config');
@@ -96,50 +99,57 @@ describe('configuration publique sur un Worker', () => {
   });
 });
 
-describe('adresse de la plateforme sur un Worker sans PLATFORM_URL', () => {
+describe('adresse de la plateforme sur Vercel sans PLATFORM_URL', () => {
   const configured = {
     NEXT_PUBLIC_SUPABASE_URL: 'https://projet.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'cle-anon-publique',
   };
 
-  it('suit l origine de la requete au lieu de localhost', async () => {
+  it('prend l adresse de production du projet au lieu de localhost', async () => {
     clearAll();
-    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
     const { platformUrl, publicEnv, setEnvSource } = await import('@nemasus/config');
-    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://nemasus.workers.dev' });
-    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://nemasus.workers.dev');
-    expect(platformUrl()).toBe('https://nemasus.workers.dev');
+    setEnvSource({
+      ...configured,
+      VERCEL: '1',
+      VERCEL_ENV: 'production',
+      VERCEL_PROJECT_PRODUCTION_URL: 'sta-x-platform.vercel.app',
+      VERCEL_URL: 'sta-x-platform-abc123.vercel.app',
+    });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://sta-x-platform.vercel.app');
+    expect(platformUrl()).toBe('https://sta-x-platform.vercel.app');
   });
 
-  it('ne fige pas l origine de la premiere requete', async () => {
+  it('prend l adresse de la branche sur un apercu', async () => {
     clearAll();
-    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
     const { publicEnv, setEnvSource } = await import('@nemasus/config');
-    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://a.example' });
-    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://a.example');
-    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://b.example' });
-    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://b.example');
+    setEnvSource({
+      ...configured,
+      VERCEL: '1',
+      VERCEL_ENV: 'preview',
+      VERCEL_BRANCH_URL: 'sta-x-platform-git-branche.vercel.app',
+    });
+    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe(
+      'https://sta-x-platform-git-branche.vercel.app',
+    );
   });
 
   it('prefere toujours PLATFORM_URL quand elle est posee', async () => {
     clearAll();
-    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
     const { publicEnv, setEnvSource } = await import('@nemasus/config');
     setEnvSource({
       ...configured,
       PLATFORM_URL: 'https://nemasus.example',
-      __NEXT_PRIVATE_ORIGIN: 'https://autre.example',
+      VERCEL: '1',
+      VERCEL_ENV: 'production',
+      VERCEL_PROJECT_PRODUCTION_URL: 'sta-x-platform.vercel.app',
     });
     expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('https://nemasus.example');
   });
 
-  it('ignore cette origine hors d un Worker, ou en HTTP', async () => {
+  it('ignore ces variables hors de Vercel', async () => {
     clearAll();
     const { publicEnv, setEnvSource } = await import('@nemasus/config');
-    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'https://hote.example' });
-    expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('http://localhost:3000');
-    vi.stubGlobal('navigator', { userAgent: 'Cloudflare-Workers' });
-    setEnvSource({ ...configured, __NEXT_PRIVATE_ORIGIN: 'http://localhost:8787' });
+    setEnvSource({ ...configured, VERCEL_PROJECT_PRODUCTION_URL: 'hote.example' });
     expect(publicEnv().NEXT_PUBLIC_PLATFORM_URL).toBe('http://localhost:3000');
   });
 });

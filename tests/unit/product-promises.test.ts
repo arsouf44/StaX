@@ -103,7 +103,10 @@ describe('formulations interdites', () => {
 describe('le vrai produit, dit clairement', () => {
   it('« Nous créons votre site. Vous le gérez ensuite. » ouvre l’accueil, sous le titre', () => {
     const home = readFileSync(join(ROOT, 'apps/platform/src/app/(marketing)/page.tsx'), 'utf8');
-    expect(home).toContain('Un site fait à la main');
+    // « fait à la main » promettait un mode de production invérifiable : le
+    // titre dit ce que le client reçoit (audit du 2026-09-29).
+    expect(home).toContain('Un site fait pour vous');
+    expect(home).not.toContain('fait à la main');
     expect(home).toContain('Nous créons votre site.');
     expect(home).toContain('Vous le gérez ensuite.');
     expect(home).toContain('Pas de modèle à personnaliser');

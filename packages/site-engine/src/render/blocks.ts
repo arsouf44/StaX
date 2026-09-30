@@ -554,17 +554,32 @@ function checkIcon(): RawHtml {
 
 const INPUT_TYPES = new Set(['text', 'email', 'tel', 'number', 'date', 'time', 'datetime']);
 
-function formField(field: {
-  name: string;
-  label: string;
-  type: string;
-  placeholder: string | null;
-  helpText: string | null;
-  isRequired: boolean;
-  options: Array<{ value: string; label: string }>;
-}): RawHtml {
+/**
+ * Avertissement des champs libres sur le site d'un professionnel de sante :
+ * l'infrastructure n'est pas certifiee pour heberger des donnees de sante.
+ */
+export const HEALTH_DATA_NOTICE =
+  'N’indiquez aucune information sur votre santé (symptômes, motif médical, traitement) : ' +
+  'ce formulaire n’est pas prévu pour la recevoir. Vous en parlerez directement avec le praticien.';
+
+function formField(
+  field: {
+    name: string;
+    label: string;
+    type: string;
+    placeholder: string | null;
+    helpText: string | null;
+    isRequired: boolean;
+    options: Array<{ value: string; label: string }>;
+  },
+  healthGuard = false,
+): RawHtml {
   const id = `f-${field.name}`;
-  const describedBy = field.helpText ? `${id}-hint` : undefined;
+  const warnHealth = healthGuard && field.type === 'textarea';
+  const describedBy =
+    [field.helpText ? `${id}-hint` : null, warnHealth ? `${id}-health` : null]
+      .filter(Boolean)
+      .join(' ') || undefined;
   const common = attrs({
     id,
     name: field.name,
@@ -591,7 +606,11 @@ function formField(field: {
   }
 
   if (field.type === 'textarea') {
-    return html`<div class="field">${label}<textarea ${common} rows="5"></textarea>${hint}</div>`;
+    return html`<div class="field">
+      ${label}<textarea ${common} rows="5"></textarea>${hint}${
+        warnHealth ? html`<p class="hint" id="${id}-health">${HEALTH_DATA_NOTICE}</p>` : ''
+      }
+    </div>`;
   }
 
   if (field.type === 'select' || field.type === 'multiselect') {
@@ -700,7 +719,7 @@ function renderForm(
           autocomplete="off"
         />
       </div>
-      ${join(form.fields.map(formField))}
+      ${join(form.fields.map((field) => formField(field, context.healthDataGuard === true)))}
       ${
         form.requireCaptcha && context.turnstileSiteKey
           ? html`<div
@@ -1226,7 +1245,17 @@ function renderBooking(props: Props, context: RenderContext): RawHtml {
       </div>
       <div class="field">
         <label for="bk-note">Précision (facultatif)</label>
-        <textarea id="bk-note" name="note" rows="3"></textarea>
+        <textarea
+          id="bk-note"
+          name="note"
+          rows="3"
+          ${attrs({ 'aria-describedby': context.healthDataGuard ? 'bk-note-health' : false })}
+        ></textarea>
+        ${
+          context.healthDataGuard
+            ? html`<p class="hint" id="bk-note-health">${HEALTH_DATA_NOTICE}</p>`
+            : ''
+        }
       </div>
       ${
         context.turnstileSiteKey
@@ -1405,7 +1434,18 @@ function renderCart(props: Props, context: RenderContext): RawHtml {
 
         <div class="field">
           <label for="nemasus-order-note">Précisions <span class="muted">(facultatif)</span></label>
-          <textarea id="nemasus-order-note" name="note" rows="3" maxlength="1000"></textarea>
+          <textarea
+            id="nemasus-order-note"
+            name="note"
+            rows="3"
+            maxlength="1000"
+            ${attrs({ 'aria-describedby': context.healthDataGuard ? 'nemasus-order-note-health' : false })}
+          ></textarea>
+          ${
+            context.healthDataGuard
+              ? html`<p class="hint" id="nemasus-order-note-health">${HEALTH_DATA_NOTICE}</p>`
+              : ''
+          }
         </div>
 
         <input type="hidden" name="_token" value="${context.formToken}" />

@@ -73,7 +73,7 @@ transaction.
 | **Données** | Contenus fournis par le client, images, coordonnées professionnelles publiées |
 | **Tables** | `sites`, `site_pages`, `page_blocks`, `site_versions`, `media`, `team_members` |
 | **Conservation** | Durée du contrat + 90 jours de rétention technique |
-| **Destinataires** | Cloudflare (hébergement de la plateforme et des sites), Supabase (base et stockage), GitHub (code des sites) |
+| **Destinataires** | Vercel (hébergement de la plateforme), Cloudflare (hébergement des sites), Supabase (base et stockage), GitHub (code des sites) |
 
 Le contenu publié relève de la responsabilité éditoriale du client. Quand ce
 contenu comporte des données personnelles (photo d'un salarié, coordonnées d'un
@@ -227,7 +227,8 @@ Obligations tenues au titre de l'article 28 :
 | Prestataire | Rôle | Localisation | Garanties |
 | --- | --- | --- | --- |
 | Supabase Pte. Ltd. | Base PostgreSQL, authentification, stockage | Paris (`eu-west-3`) ; société à Singapour | Données dans l'UE ; accès support encadrés par les CCT (DPA Supabase) |
-| Cloudflare, Inc. | Hébergement et exécution de la plateforme ; hébergement et diffusion des sites clients ; CDN, TLS, anti-robot (Turnstile) | Société américaine ; réseau mondial | Clauses contractuelles types + DPA Cloudflare |
+| Vercel Inc. | Hébergement et exécution de la plateforme (site public, espace client, administration, API) ; journaux techniques | Fonctions en région de Paris (`cdg1`) ; société américaine, réseau de diffusion mondial | Cadre UE–États-Unis (certification de Vercel) + clauses contractuelles types du DPA Vercel |
+| Cloudflare, Inc. | Hébergement et diffusion des sites clients ; API des sites ; CDN, TLS, anti-robot (Turnstile) | Société américaine ; réseau mondial | Cadre UE–États-Unis + clauses contractuelles types du DPA Cloudflare |
 | GitHub, Inc. | Code source et contenus publiés des sites clients | États-Unis | Clauses contractuelles types + DPA GitHub |
 | Plus Five Five, Inc. (Resend) | E-mails transactionnels | États-Unis | Clauses contractuelles types + DPA Resend |
 | Stripe Payments Europe, Ltd. | Paiement et facturation | Irlande (UE) | Responsable autonome pour la lutte anti-fraude |
@@ -249,8 +250,11 @@ cadre UE–États-Unis) :
   (textes, noms d'entreprise, parfois des noms de personnes) ;
 - **Resend** achemine les e-mails transactionnels (adresse du destinataire,
   contenu du message) ;
-- **Cloudflare** exécute la plateforme et diffuse les sites sur son réseau
-  mondial, depuis des points de présence qui peuvent être hors de l'Union ;
+- **Vercel** exécute la plateforme (fonctions dans la région de Paris ; la
+  société et une partie de son réseau de diffusion sont hors de l'Union :
+  adresses IP, journaux techniques) ;
+- **Cloudflare** diffuse les sites des clients sur son réseau mondial, depuis
+  des points de présence qui peuvent être hors de l'Union ;
 - **Supabase**, société établie hors de l'Union, peut accéder aux données pour
   son support ou sa sécurité.
 

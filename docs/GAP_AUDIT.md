@@ -546,6 +546,31 @@ Supabase en offre gratuite (pas de sauvegardes, alors que les CGV et la page
 Infrastructure en annoncent) ; relecture par un avocat. La migration 0057 est
 appliquée en production (2026-09-28).
 
+**Retour sur Vercel (2026-09-29).** La plateforme est de nouveau déployée par
+Vercel (région de Paris) ; Cloudflare ne sert plus que les sites des clients et
+leur API (`nemasus-sites`). Configuration OpenNext et `wrangler.jsonc` de la
+plateforme retirés ; `vercel.json` restauré (région, tâche quotidienne).
+
+## 16. Audit juridique du 2026-09-29
+
+| # | Constat | Correction |
+|---|---|---|
+| 1 | Téléphone de l’éditeur absent des mentions légales (LCEN, art. 6 III) | Champ `LEGAL_PHONE` obligatoire ; affiché dès qu’il est posé ; `pnpm legal:check` et *État des services* le réclament d’ici là |
+| 2 | Hébergeur déclaré (Cloudflare) différent de celui qui sert la plateforme (Vercel) | Vercel Inc. (adresse et téléphone publiés par Vercel) pour la plateforme ; Cloudflare, Inc. nommé pour les sites des clients ; Supabase pour les données |
+| 3 | Sous-traitants : Resend et Vercel absents | Resend en base depuis la 0057 ; Vercel ajouté et Cloudflare recentré par la 0058 ; registre et politique alignés |
+| 4 | Fin de contrat : 30 + 90 + 365 jours de conservation imposés, sans choix du client (RGPD, art. 28 § 3 g) | Choix du client à la résiliation : « restitution puis suppression » (90 jours, par défaut) ou « suppression » ; demande datée créée dans *Demandes RGPD* ; annulée si le client reprend ; sauvegardes effacées par rotation (30 jours) ; seules factures et identification légale du titulaire restent |
+| 5 | Données de santé seulement « interdites » sur le papier | Accord de traitement, art. 13 (infrastructure non HDS, aucun champ de santé, service certifié si besoin) ; avertissement sous chaque champ libre des sites de praticiens ; contrôle exigé à la livraison |
+| 6 | Directeur de la publication : SELALLIAN est présidente de LallianSe | Chaîne de représentation affichée (SELALLIAN, représentée par sa gérante, Julie Rachline Gomez), d’après le registre |
+| 7 | « StaX » dans la page des tarifs | Déjà corrigé en production (0057) ; « anciennement StaX » ajouté aux mentions légales |
+| 8 | « TVA française de 20 % applicable » | TVA selon le lieu d’établissement ; commande en ligne réservée aux clients établis en France (case obligatoire) ; ailleurs sur devis, autoliquidation ; numéro de TVA collecté par Stripe |
+| 9 | Signalement : nom et e-mail présentés comme facultatifs | Obligatoires sauf abus sur mineurs (DSA, art. 16 § 2 c), dans le formulaire et en base (0058) |
+| 10 | Prospection : information art. 14 incomplète | Chaque e-mail : responsable, finalité, intérêt légitime, source, durée, droits, opposition ; phrase à dire au téléphone |
+| 11 | Droits sur le code remis flous | CGV art. 16 : code spécifique cédé, composants génériques sous licence perpétuelle (modifier, réhéberger, sous-licencier au prestataire), bibliothèques de tiers sous leurs licences ; copie remise sur demande |
+| 12 | Promesses absolues (« fait à la main », « le code réalisé pour vous ») | Formulations exactes ; preuves : version des CGV par commande, attestations de la checklist de livraison |
+
+Sauvegardes : Supabase gratuit n’en fournit pas ; export quotidien chiffré par
+GitHub Actions (`backup.yml`), actif dès que ses deux secrets sont posés.
+
 ## Ce qui reste non terminé, sans détour
 
 00. ~~Migration 0056 (durcissement de sécurité) à appliquer en production~~ —

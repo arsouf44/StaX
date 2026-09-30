@@ -35,12 +35,12 @@ const LAYERS = [
   },
   {
     name: 'Plateforme',
-    provider: 'Cloudflare Workers',
-    role: 'Exécute le site Nemasus, votre espace client et l’éditeur sur le réseau de Cloudflare, placé automatiquement au plus près de la base de données qui conserve vos informations.',
+    provider: 'Vercel',
+    role: 'Exécute le site Nemasus, votre espace client et l’éditeur, dans la région de Paris : au plus près de la base de données qui conserve vos informations.',
     facts: [
-      'Chaque mise à jour de la plateforme est une version distincte, activée d’un seul coup',
+      'Exécution dans la région de Paris',
+      'Chaque mise à jour de la plateforme est un déploiement distinct, activé d’un seul coup',
       'Secrets et clés conservés côté serveur, jamais dans le navigateur',
-      'Protection réseau et HTTPS de bout en bout',
     ],
   },
   {
@@ -49,7 +49,7 @@ const LAYERS = [
     role: 'Conserve vos brouillons, vos médias, vos messages, vos réservations et vos contacts dans une base relationnelle hébergée en France, dans la région de Paris.',
     facts: [
       'Isolation entre clients imposée par la base elle-même',
-      'Sauvegardes quotidiennes de la base',
+      'Sauvegarde quotidienne chiffrée de la base, conservée hors de Supabase',
       'Chiffrement au repos et en transit',
     ],
   },
@@ -142,7 +142,7 @@ export default function InfrastructurePage() {
               <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
                 Le code de chaque site est versionné, et chaque version publiée reste restaurable
                 depuis votre espace : la restauration est un vrai redéploiement. La base de votre
-                espace est sauvegardée quotidiennement.
+                espace est sauvegardée chaque jour, chiffrée, hors de Supabase.
               </p>
             </Panel>
             <Panel level={1} padding="lg">

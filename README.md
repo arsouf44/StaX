@@ -123,7 +123,7 @@ GitHub (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 > l'application, et les scripts `tsx` n'en lisent aucun. `@nemasus/config/dotenv`
 > comble cet ecart : `next.config.ts` et chaque script chargent le `.env.local`
 > (puis le `.env`) de la racine avant toute autre chose. Une variable deja
-> definie — `VAR=... pnpm <script>`, secret Cloudflare, variable de CI — n'est
+> definie — `VAR=... pnpm <script>`, variable Vercel, variable de CI — n'est
 > jamais ecrasee.
 >
 > Le moteur des sites clients fait exception : c'est un Worker Cloudflare, sa
@@ -133,17 +133,17 @@ GitHub (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 
 ```bash
 pnpm verify                # format + lint + typecheck + tests
-scripts/db-test.sh         # 567 assertions SQL (échoue au premier échec)
-pnpm build:cf              # build Cloudflare des deux applications
+scripts/db-test.sh         # 572 assertions SQL (échoue au premier échec)
+pnpm build                 # build de production (plateforme + Worker des sites)
 ```
 
 ### Où tourne quoi
 
-| Application         | Cible                             | Note                                                                                                                                        |
-| ------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/platform`     | **Cloudflare Worker** `nemasus`   | Workers Builds : `pnpm run build` puis `npx wrangler deploy` à la racine (`wrangler.jsonc`). Voir [cloudflare.md § 0](./docs/cloudflare.md) |
-| `apps/site-runtime` | Cloudflare Worker `nemasus-sites` | API des sites et sites de l’ancien moteur ; second projet Workers Builds                                                                    |
-| Chaque site client  | **son** projet Cloudflare         | Construit depuis **son** dépôt GitHub ; voir [site-delivery.md](./docs/site-delivery.md)                                                    |
+| Application         | Cible                             | Note                                                                                              |
+| ------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `apps/platform`     | **Vercel** (région Paris, `cdg1`) | Racine du projet Vercel : `apps/platform`. Voir [vercel.md](./docs/vercel.md)                     |
+| `apps/site-runtime` | Cloudflare Worker `nemasus-sites` | API des sites clients et sites de l’ancien moteur. Voir [cloudflare.md § 0](./docs/cloudflare.md) |
+| Chaque site client  | **son** projet Cloudflare         | Construit depuis **son** dépôt GitHub ; voir [site-delivery.md](./docs/site-delivery.md)          |
 
 ---
 
@@ -186,7 +186,9 @@ Documentation détaillée dans [`docs/`](./docs) :
 | [database.md](./docs/database.md)                             | Schéma, RLS, fonctions, invariants                                 |
 | [security.md](./docs/security.md)                             | Modèle de menace et défenses                                       |
 | [deployment.md](./docs/deployment.md)                         | Mise en production, étape par étape                                |
-| [cloudflare.md](./docs/cloudflare.md)                         | Projets Cloudflare des sites, jeton, webhook ; Workers de Nemasus  |
+| [vercel.md](./docs/vercel.md)                                 | Déploiement de la plateforme sur Vercel, variables                 |
+| [integrations.md](./docs/integrations.md)                     | Créer l’application GitHub et le jeton Cloudflare                  |
+| [cloudflare.md](./docs/cloudflare.md)                         | Sites des clients : projets Cloudflare, jeton, webhook ; API       |
 | [supabase.md](./docs/supabase.md)                             | Projet, rôles, sauvegardes                                         |
 | [stripe.md](./docs/stripe.md)                                 | Offres, paiement, maintenance mensuelle à la livraison             |
 | [stripe-connect.md](./docs/stripe-connect.md)                 | Encaissements des clients                                          |
@@ -247,7 +249,7 @@ Documentation détaillée dans [`docs/`](./docs) :
 | Tests unitaires et d’intégration           | `pnpm test`           | ✅   |
 | Assertions de sécurité SQL                 | `scripts/db-test.sh`  | ✅   |
 | Build production                           | `pnpm build:platform` | ✅   |
-| Build Cloudflare (= `pnpm build`)          | `pnpm build:cf`       | ✅   |
+| Build du Worker des sites                  | `pnpm build:sites`    | ✅   |
 | Parcours navigateur                        | `pnpm test:e2e`       | ✅   |
 | Parcours complets contre une vraie pile    | `pnpm test:e2e:stack` | ✅   |
 
