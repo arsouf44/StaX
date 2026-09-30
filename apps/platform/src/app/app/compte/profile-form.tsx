@@ -21,12 +21,14 @@ export function ProfileForm({
   phone,
   email,
   marketingOptIn,
+  monthlyReportOptIn,
 }: {
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
   marketingOptIn: boolean;
+  monthlyReportOptIn: boolean;
 }) {
   const [state, action] = useActionState<ActionState, FormData>(updateProfileAction, IDLE_STATE);
 
@@ -62,6 +64,13 @@ export function ProfileForm({
       >
         <Input value={email} readOnly disabled />
       </Field>
+
+      <Checkbox
+        name="monthlyReportOptIn"
+        defaultChecked={monthlyReportOptIn}
+        label="Recevoir chaque mois le bilan de mon site par e-mail."
+        description="Visiteurs, prises de contact, disponibilité et bilan qualité du mois écoulé. Envoyé aux propriétaires et administrateurs du site."
+      />
 
       <Checkbox
         name="marketingOptIn"

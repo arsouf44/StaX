@@ -53,6 +53,14 @@ const EXTERNAL_ENTRIES: readonly DashboardEntry[] = [
     sortOrder: 15,
     secondary: true,
   },
+  {
+    href: '/app/site/sante',
+    label: 'Bilan de santé',
+    icon: 'activity',
+    capability: 'content.view',
+    group: 'site',
+    sortOrder: 60,
+  },
 ];
 
 /** Entrees qui ne portent pas sur le site : proposees meme pendant sa construction. */

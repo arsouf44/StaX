@@ -318,6 +318,9 @@ importers:
       '@nemasus/config':
         specifier: workspace:*
         version: link:../config
+      '@nemasus/database':
+        specifier: workspace:*
+        version: link:../database
       '@nemasus/security':
         specifier: workspace:*
         version: link:../security

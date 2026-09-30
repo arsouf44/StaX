@@ -267,7 +267,7 @@ export function ErrorState({
 
 /** Refus d acces : formulation neutre, sans reveler ce qui existe. */
 export function PermissionDenied({
-  message = "Vous n'avez pas accès a cette page avec votre role actuel.",
+  message = 'Vous n’avez pas accès à cette page avec votre rôle actuel.',
   action,
 }: {
   message?: string;

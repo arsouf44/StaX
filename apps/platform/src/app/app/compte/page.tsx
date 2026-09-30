@@ -29,6 +29,7 @@ export default async function AccountPage() {
               phone={profile.phone ?? ''}
               email={profile.email}
               marketingOptIn={profile.marketing_opt_in}
+              monthlyReportOptIn={profile.monthly_report_opt_in !== false}
             />
           </div>
         </Panel>

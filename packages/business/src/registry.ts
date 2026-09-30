@@ -49,8 +49,8 @@ const RESTAURANT_VOCAB: BusinessVocabulary = {
   offeringPlural: 'plats',
   customer: 'client',
   customerPlural: 'clients',
-  booking: 'reservation',
-  bookingPlural: 'reservations',
+  booking: 'réservation',
+  bookingPlural: 'réservations',
 };
 
 const SHOP_VOCAB: BusinessVocabulary = {
@@ -279,7 +279,7 @@ const SPECS: readonly BusinessSpec[] = [
     icon: 'wrench',
     schemaOrgType: 'Plumber',
     sortOrder: 10,
-    seoKeywords: ['plombier', 'depannage', 'urgence plomberie', 'devis gratuit'],
+    seoKeywords: ['plombier', 'dépannage', 'urgence plomberie', 'devis gratuit'],
   },
   {
     id: 'electricien',
@@ -589,8 +589,8 @@ const SPECS: readonly BusinessSpec[] = [
     vocabulary: {
       offering: 'chambre',
       offeringPlural: 'chambres',
-      booking: 'sejour',
-      bookingPlural: 'sejours',
+      booking: 'séjour',
+      bookingPlural: 'séjours',
     },
   },
   {
@@ -605,8 +605,8 @@ const SPECS: readonly BusinessSpec[] = [
     vocabulary: {
       offering: 'chambre',
       offeringPlural: 'chambres',
-      booking: 'sejour',
-      bookingPlural: 'sejours',
+      booking: 'séjour',
+      bookingPlural: 'séjours',
     },
   },
   {
@@ -619,10 +619,10 @@ const SPECS: readonly BusinessSpec[] = [
     sortOrder: 30,
     extraModules: ['booking'],
     vocabulary: {
-      offering: 'hebergement',
-      offeringPlural: 'hebergements',
-      booking: 'sejour',
-      bookingPlural: 'sejours',
+      offering: 'hébergement',
+      offeringPlural: 'hébergements',
+      booking: 'séjour',
+      bookingPlural: 'séjours',
     },
   },
   {
@@ -908,7 +908,7 @@ const SPECS: readonly BusinessSpec[] = [
     schemaOrgType: 'NGO',
     sortOrder: 10,
     extraModules: ['donations'],
-    vocabulary: { customer: 'adherent', customerPlural: 'adherents' },
+    vocabulary: { customer: 'adhérent', customerPlural: 'adhérents' },
   },
   {
     id: 'club',

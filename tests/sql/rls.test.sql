@@ -985,12 +985,12 @@ begin
       'execute'),
     'authenticated ne peut PAS enumerer les creneaux d un site');
   perform t.assert(
-    not has_function_privilege('anon', 'public.record_page_view(uuid, text, text, text, char, text)',
-      'execute'),
+    not has_function_privilege('anon',
+      'public.record_page_view(uuid, text, text, text, char, text, text)', 'execute'),
     'anon ne peut PAS injecter de mesure d audience');
   perform t.assert(
     has_function_privilege('service_role',
-      'public.record_page_view(uuid, text, text, text, char, text)', 'execute'),
+      'public.record_page_view(uuid, text, text, text, char, text, text)', 'execute'),
     'service_role peut enregistrer une vue de page');
 end;
 $$;
@@ -3975,6 +3975,426 @@ begin
   perform t.assert(exists (select 1 from public.subprocessors
                             where name like '%Resend%' and is_active),
     '0058 : Resend, qui envoie les e-mails, figure parmi les sous-traitants');
+end;
+$$;
+
+\echo '--- 0059 : statistiques des sites reellement calculees ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_site_b uuid := (select v from t.fixtures where k = 'site_b');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_bob    uuid := (select v from t.fixtures where k = 'bob');
+  v_day    date := (now() at time zone 'Europe/Paris')::date;
+  v_row    public.daily_site_metrics;
+  v_before public.daily_site_metrics;
+  v_n      integer;
+begin
+  update public.sites set timezone = 'Europe/Paris' where id in (v_site_a, v_site_b);
+  delete from public.analytics_events where site_id in (v_site_a, v_site_b);
+  delete from public.daily_site_metrics where site_id in (v_site_a, v_site_b);
+
+  -- Trois visiteurs, cinq pages vues, deux sources, deux types d'appareil.
+  perform public.record_page_view(v_site_a, '/', 'v1', 'www.Google.com', 'fr', 'pageview', 'mobile');
+  perform public.record_page_view(v_site_a, '/carte', 'v1', null, 'fr', 'pageview', 'mobile');
+  perform public.record_page_view(v_site_a, '/', 'v2', 'google.com', 'FR', 'pageview', 'desktop');
+  perform public.record_page_view(v_site_a, '/carte', 'v3', 'instagram.com', 'be', 'pageview', 'desktop');
+  perform public.record_page_view(v_site_a, '/carte', 'v3', null, 'be', 'pageview', 'imprimante');
+  -- Appel a six arguments (moteur des sites deja deploye) : toujours accepte.
+  perform public.record_page_view(v_site_b, '/', 'w1', null, 'fr', 'pageview');
+
+  select * into v_before from public.daily_site_metrics where site_id = v_site_a and day = v_day;
+  perform t.assert(v_before.pageviews = 5 and v_before.visitors = 0,
+    'Avant agregation : les pages vues sont comptees, les visiteurs pas encore');
+  perform t.assert(
+    (select count(*) from public.analytics_events where site_id = v_site_a and device is null) = 1,
+    'Un type d''appareil inconnu n''est pas enregistre');
+  perform t.assert(
+    (select count(*) from public.analytics_events where site_id = v_site_a
+      and referrer_host = 'google.com') = 2,
+    'La source est normalisee (minuscules, sans www.)');
+
+  -- Un message recu (hors indesirable) et un indesirable, le meme jour.
+  update public.form_submissions set status = 'unread', created_at = now() where site_id = v_site_a;
+  insert into public.form_submissions (form_id, site_id, organization_id, data, status)
+  select f.id, f.site_id, f.organization_id, '{"message":"achetez"}'::jsonb, 'spam'
+    from public.forms f where f.site_id = v_site_a;
+
+  v_n := app.rollup_recent_site_metrics();
+  perform t.assert(v_n >= 2, 'L''agregation horaire traite les sites actifs');
+  select * into v_row from public.daily_site_metrics where site_id = v_site_a and day = v_day;
+  perform t.assert(v_row.visitors = 3, 'Visiteurs distincts calcules : 3');
+  perform t.assert(v_row.pageviews = 5, 'Pages vues inchangees par l''agregation : 5');
+  perform t.assert(
+    v_row.form_submissions = (select count(*) from public.form_submissions
+                               where site_id = v_site_a and status <> 'spam'
+                                 and (created_at at time zone 'Europe/Paris')::date = v_day)
+    and v_row.form_submissions < (select count(*) from public.form_submissions
+                                   where site_id = v_site_a
+                                     and (created_at at time zone 'Europe/Paris')::date = v_day),
+    'Messages recus comptes depuis leur table, indesirables exclus');
+  perform t.assert(v_row.breakdown -> 'top_pages' -> 0 ->> 'path' = '/carte'
+                   and (v_row.breakdown -> 'top_pages' -> 0 ->> 'views')::int = 3,
+    'Page la plus vue : /carte (3 vues)');
+  perform t.assert(v_row.breakdown -> 'sources' -> 0 ->> 'source' = 'google.com'
+                   and (v_row.breakdown -> 'sources' -> 0 ->> 'visits')::int = 2,
+    'Premiere source : google.com (2 visites)');
+  perform t.assert((v_row.breakdown -> 'devices' ->> 'desktop')::int = 2
+                   and (v_row.breakdown -> 'devices' ->> 'mobile')::int = 1,
+    'Appareils : 2 ordinateurs, 1 telephone (visiteurs distincts)');
+  perform t.assert(v_row.breakdown -> 'countries' -> 0 ->> 'country' = 'FR',
+    'Pays normalises en majuscules');
+
+  -- Idempotente : un second passage donne exactement la meme ligne.
+  perform app.rollup_recent_site_metrics();
+  perform t.assert((select visitors from public.daily_site_metrics
+                     where site_id = v_site_a and day = v_day) = 3
+                   and (select pageviews from public.daily_site_metrics
+                     where site_id = v_site_a and day = v_day) = 5,
+    'L''agregation est idempotente');
+
+  perform t.assert((select status from public.system_health where key = 'analytics_rollup')
+                   = 'healthy', 'L''etat reel de l''agregation est publie (healthy)');
+
+  -- Une journee dont les evenements sont purges n'est jamais recalculee.
+  perform t.assert(app.rollup_site_metrics(current_date - 40) = 0,
+    'Une journee purgee (plus de 28 jours) n''est pas ecrasee');
+
+  -- Isolation : chaque client ne lit que ses propres chiffres.
+  perform t.assert(t.count_as(v_bob, format(
+      'select 1 from public.daily_site_metrics where site_id = %L', v_site_a)) = 0,
+    'Un autre client ne lit pas les statistiques du site A');
+  perform t.assert(t.count_as(v_alice, format(
+      'select 1 from public.daily_site_metrics where site_id = %L', v_site_a)) >= 1,
+    'Le client lit les statistiques de son site');
+
+  perform t.assert(not has_function_privilege('authenticated',
+      'app.rollup_site_metrics(date)', 'execute')
+    and not has_function_privilege('anon', 'app.rollup_recent_site_metrics()', 'execute'),
+    'L''agregation n''est appelable ni par un client ni par un visiteur');
+end;
+$$;
+
+\echo '--- 0060 : chaque indicateur de la page d''etat dit la verite ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_row    public.system_health;
+begin
+  delete from public.email_log;
+  delete from public.webhook_events where provider in ('stripe', 'stripe_connect');
+
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'database') = 'healthy',
+    'La base se declare saine quand elle repond');
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'unknown', 'Aucun e-mail envoye : etat inconnu, jamais « sain » par defaut');
+  perform t.assert((select status from public.system_health where key = 'stripe_webhooks')
+                   = 'unknown', 'Aucun evenement Stripe : etat inconnu');
+
+  -- Fournisseur « console » : les messages ne partent pas, et c'est dit.
+  insert into public.email_log (template, to_hash, provider, status)
+  values ('welcome', 'h', 'console', 'sent');
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'not_configured', 'E-mails sans fournisseur : « non configure »');
+
+  -- Vrai fournisseur, un envoi sur deux en echec : degrade ; tous : en panne.
+  insert into public.email_log (template, to_hash, provider, status, created_at) values
+    ('welcome', 'h', 'resend', 'sent', now()), ('welcome', 'h', 'resend', 'failed', now());
+  delete from public.email_log where provider = 'console';
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'degraded', 'Des envois en echec : « degrade »');
+  delete from public.email_log where status = 'sent';
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'failing', 'Tous les envois en echec : « en panne »');
+
+  insert into public.webhook_events (provider, event_id, event_type, status)
+  values ('stripe', 'evt_test_ok', 'checkout.session.completed', 'processed');
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'stripe_webhooks')
+                   = 'healthy', 'Evenement Stripe traite : sain, avec sa date');
+  insert into public.webhook_events (provider, event_id, event_type, status)
+  values ('stripe', 'evt_test_ko', 'invoice.paid', 'failed');
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'stripe_webhooks')
+                   = 'degraded', 'Evenement Stripe en echec : degrade');
+
+  -- Une tache de fond arretee ne reste pas « saine ».
+  update public.system_health set status = 'healthy', observed_at = now() - interval '3 hours'
+   where key = 'site_monitoring';
+  perform app.refresh_system_health();
+  select * into v_row from public.system_health where key = 'site_monitoring';
+  perform t.assert(v_row.status = 'degraded' and v_row.detail like 'Dernière exécution le %',
+    'Tache de fond arretee depuis 3 h : degradee, avec la date du dernier passage');
+  perform t.assert(v_row.observed_at < now() - interval '2 hours',
+    'La date de la derniere execution reelle est conservee');
+
+  -- Sauvegarde : resultat inscrit, puis perime au bout de 36 h.
+  perform app.record_backup_result(true);
+  perform t.assert((select status from public.system_health where key = 'backups') = 'healthy',
+    'Sauvegarde reussie inscrite');
+  update public.system_health set observed_at = now() - interval '2 days' where key = 'backups';
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'backups') = 'degraded',
+    'Aucune sauvegarde depuis 36 h : degradee');
+  perform app.record_backup_result(false);
+  perform t.assert((select status from public.system_health where key = 'backups') = 'failing',
+    'Sauvegarde en echec inscrite');
+
+  perform t.assert(not has_function_privilege('authenticated', 'app.record_backup_result(boolean, text)', 'execute')
+                   and not has_function_privilege('authenticated', 'app.refresh_system_health()', 'execute'),
+    'Ni un client ni un visiteur ne peut ecrire l''etat des services');
+  perform t.assert(t.denied_as(v_alice,
+      'update public.system_health set status = ''healthy'' where key = ''backups'''),
+    'Un client ne peut pas maquiller l''etat des services');
+  delete from public.email_log;
+  delete from public.webhook_events where event_id in ('evt_test_ok', 'evt_test_ko');
+end;
+$$;
+
+do $$
+declare
+  v_alice uuid := (select v from t.fixtures where k = 'alice');
+  v_staff uuid := (select v from t.fixtures where k = 'staff');
+  v_res   jsonb;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_res := public.scheduler_overview();
+  reset role;
+  perform t.assert(v_res is null, 'Un client ne voit pas les taches planifiees ni l''etat de Vault');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_staff, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  v_res := public.scheduler_overview();
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(v_res ? 'jobs' and v_res -> 'vault' ? 'cronSecret'
+                   and jsonb_typeof(v_res -> 'vault' -> 'cronSecret') = 'boolean'
+                   and jsonb_typeof(v_res -> 'vault' -> 'platformUrl') = 'boolean',
+    'L''equipe voit les taches planifiees et la PRESENCE des secrets (booleen), jamais leur valeur');
+end;
+$$;
+
+\echo '--- 0062 : pilotage de l''equipe (file a traiter, tableau de production) ---'
+do $$
+declare
+  v_org_a  uuid := (select v from t.fixtures where k = 'org_a');
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_staff  uuid := (select v from t.fixtures where k = 'staff');
+  v_project uuid;
+  v_queue  jsonb;
+  v_board  jsonb;
+  v_card   jsonb;
+begin
+  insert into public.projects (reference, organization_id, site_id, status, title, due_at)
+  values ('PRJ-TEST-RETARD', v_org_a, v_site_a, 'assets_pending', 'Projet en retard',
+          now() - interval '2 days')
+  returning id into v_project;
+  insert into public.project_messages (project_id, author_side, body)
+  values (v_project, 'client', 'Bonjour, où en est mon site ?');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_queue := public.staff_work_queue();
+  v_board := public.staff_production_board();
+  reset role;
+  perform t.assert(v_queue is null and v_board is null,
+    'Un client ne lit ni la file de l''equipe ni le tableau de production');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_staff, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  v_queue := public.staff_work_queue();
+  v_board := public.staff_production_board();
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert((v_queue ->> 'lateProjects')::int >= 1
+                   and (v_queue ->> 'unreadConversations')::int >= 1
+                   and (v_queue ->> 'waitingOnClient')::int >= 1,
+    'La file de l''equipe compte projets en retard, messages sans reponse, attentes client');
+  select c into v_card from jsonb_array_elements(v_board) c where c ->> 'id' = v_project::text;
+  perform t.assert(v_card is not null
+                   and (v_card ->> 'late')::boolean
+                   and v_card ->> 'waiting_on' = 'client'
+                   and (v_card ->> 'unread_messages')::int = 1
+                   and v_card ->> 'site_name' = 'Site A',
+    'Le tableau de production montre le projet : en retard, attend le client, 1 message non lu');
+
+  update public.projects set status = 'cancelled' where id = v_project;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_staff, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  v_board := public.staff_production_board();
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(not exists (select 1 from jsonb_array_elements(v_board) c
+                                where c ->> 'id' = v_project::text),
+    'Un projet annule quitte le tableau de production');
+  delete from public.project_messages where project_id = v_project;
+  delete from public.projects where id = v_project;
+end;
+$$;
+
+\echo '--- 0063 : bilan de sante des sites livres (disponibilite, qualite) ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_bob    uuid := (select v from t.fixtures where k = 'bob');
+  v_avail  jsonb;
+  v_i      int;
+begin
+  delete from public.site_health_checks where site_id = v_site_a;
+  insert into public.site_health_checks (site_id, url, ok, status_code, response_ms, checked_at)
+  select v_site_a, 'https://site-a.example/', g <> 3, case when g = 3 then 503 else 200 end,
+         100 + g, now() - make_interval(hours => g)
+    from generate_series(0, 9) g;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_avail := public.site_availability(v_site_a, 30);
+  reset role;
+  perform t.assert((v_avail ->> 'checks')::int = 10 and (v_avail ->> 'up')::int = 9
+                   and (v_avail ->> 'uptimeBps')::int = 9000
+                   and v_avail ->> 'lastDownAt' is not null
+                   and jsonb_array_length(v_avail -> 'series') >= 1,
+    'Disponibilite reelle : 9 verifications reussies sur 10 = 90,00 %');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_bob, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_avail := public.site_availability(v_site_a, 30);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(v_avail is null, 'Un autre client ne lit pas la disponibilite du site A');
+
+  -- Bilans : ecrits par la tache de fond seulement, lus par le client.
+  set local role service_role;
+  for v_i in 1..28 loop
+    perform public.record_site_quality(v_site_a, 'https://site-a.example/', null, 30, 34, 120,
+                                       12000, '[{"key":"title","status":"pass"}]'::jsonb);
+  end loop;
+  reset role;
+  perform t.assert((select count(*) from public.site_quality_reports where site_id = v_site_a) = 26,
+    'Six mois de bilans conserves par site (26), les plus anciens effaces');
+  perform t.assert(t.count_as(v_alice, format(
+      'select 1 from public.site_quality_reports where site_id = %L', v_site_a)) = 26,
+    'Le client lit les bilans de son site');
+  perform t.assert(t.count_as(v_bob, format(
+      'select 1 from public.site_quality_reports where site_id = %L', v_site_a)) = 0,
+    'Un autre client ne lit pas les bilans du site A');
+  perform t.assert(t.denied_as(v_alice, format(
+      'insert into public.site_quality_reports (site_id, url, score, max_score) values (%L, ''https://x.example/'', 34, 34)',
+      v_site_a)),
+    'Un client ne peut pas s''ecrire un bilan parfait');
+  perform t.assert(not has_function_privilege('authenticated',
+      'public.record_site_quality(uuid, text, text, int, int, int, int, jsonb)', 'execute'),
+    'Seule la tache de fond enregistre un bilan');
+  delete from public.site_quality_reports where site_id = v_site_a;
+  delete from public.site_health_checks where site_id = v_site_a;
+end;
+$$;
+
+\echo '--- 0064 : bilan mensuel du site ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_bob    uuid := (select v from t.fixtures where k = 'bob');
+  v_eve    uuid := (select v from t.fixtures where k = 'eve');
+  v_month  date := date_trunc('month', current_date - interval '1 month')::date;
+  v_payload jsonb;
+  v_due    boolean;
+  v_first  boolean;
+  v_second boolean;
+begin
+  delete from public.daily_site_metrics where site_id = v_site_a;
+  insert into public.daily_site_metrics (site_id, day, pageviews, visitors, form_submissions, breakdown)
+  values (v_site_a, v_month + 2, 40, 12, 3,
+          '{"top_pages":[{"path":"/carte","views":25},{"path":"/","views":15}],
+            "sources":[{"source":"google.com","visits":9}]}'::jsonb),
+         (v_site_a, v_month + 3, 20, 8, 1,
+          '{"top_pages":[{"path":"/","views":20}],"sources":"oups"}'::jsonb),
+         (v_site_a, (v_month - interval '1 month')::date + 5, 10, 5, 0, '{}'::jsonb);
+  update public.sites set delivered_at = v_month - interval '2 months' where id = v_site_a;
+
+  set local role service_role;
+  select exists (select 1 from public.sites_due_for_monthly_report(v_month, 100) d
+                  where d.site_id = v_site_a) into v_due;
+  v_payload := public.monthly_report_payload(v_site_a, v_month);
+  reset role;
+
+  perform t.assert(v_due, 'Le bilan du mois ecoule est du pour un site livre');
+  perform t.assert((v_payload -> 'current' ->> 'visitors')::int = 20
+                   and (v_payload -> 'current' ->> 'contacts')::int = 4
+                   and (v_payload -> 'previous' ->> 'visitors')::int = 5,
+    'Chiffres du mois et du mois precedent lus dans les statistiques agregees');
+  perform t.assert(v_payload -> 'topPages' -> 0 ->> 'path' = '/'
+                   and (v_payload -> 'topPages' -> 0 ->> 'views')::int = 35
+                   and v_payload -> 'topSources' -> 0 ->> 'source' = 'google.com',
+    'Pages et sources du mois fusionnees, detail mal forme ignore');
+  perform t.assert(exists (select 1 from jsonb_array_elements(v_payload -> 'recipients') r
+                            where r ->> 'email' = 'alice@tenant-a.test')
+                   and not exists (select 1 from jsonb_array_elements(v_payload -> 'recipients') r
+                                    where r ->> 'email' in ('eve@tenant-a.test', 'viewer@tenant-a.test',
+                                                            'bob@tenant-b.test')),
+    'Destinataires : proprietaires et administrateurs du site seulement');
+
+  -- Chacun peut refuser le bilan, pour lui-meme.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.profiles set monthly_report_opt_in = false where id = v_alice;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((select not monthly_report_opt_in from public.profiles where id = v_alice),
+    'Un client peut refuser le bilan mensuel depuis son compte');
+  perform t.assert(t.denied_as(v_bob, format(
+      'update public.profiles set monthly_report_opt_in = true where id = %L', v_alice)),
+    'Personne ne peut changer ce choix a la place d''un autre');
+  perform set_config('request.jwt.claims', null, true);
+  set local role service_role;
+  v_payload := public.monthly_report_payload(v_site_a, v_month);
+  reset role;
+  perform t.assert(not exists (select 1 from jsonb_array_elements(v_payload -> 'recipients') r
+                                where r ->> 'email' = 'alice@tenant-a.test'),
+    'Qui a refuse le bilan ne le recoit plus');
+  update public.profiles set monthly_report_opt_in = true where id = v_alice;
+
+  -- Un bilan par site et par mois, jamais deux.
+  set local role service_role;
+  v_first := public.record_monthly_report(v_site_a, v_month, 'sent', 1, '{}'::jsonb, null);
+  v_second := public.record_monthly_report(v_site_a, v_month, 'sent', 1, '{}'::jsonb, null);
+  select exists (select 1 from public.sites_due_for_monthly_report(v_month, 100) d
+                  where d.site_id = v_site_a) into v_due;
+  reset role;
+  perform t.assert(v_first, 'Le premier envoi du mois est inscrit');
+  perform t.assert(not v_second, 'Un second envoi du meme mois est refuse (idempotence)');
+  perform t.assert(not v_due, 'Un site deja servi n''est plus du ce mois-ci');
+
+  perform t.assert(t.count_as(v_alice, format(
+      'select 1 from public.site_monthly_reports where site_id = %L', v_site_a)) = 1,
+    'Le client voit la trace de l''envoi');
+  perform t.assert(t.count_as(v_bob, format(
+      'select 1 from public.site_monthly_reports where site_id = %L', v_site_a)) = 0,
+    'Un autre client ne la voit pas');
+  perform t.assert(not has_function_privilege('authenticated',
+      'public.monthly_report_payload(uuid, date)', 'execute'),
+    'Le contenu du bilan (et ses destinataires) n''est lisible que par la tache de fond');
+
+  delete from public.site_monthly_reports where site_id = v_site_a;
+  delete from public.daily_site_metrics where site_id = v_site_a;
 end;
 $$;
 

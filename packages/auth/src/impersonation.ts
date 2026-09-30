@@ -110,7 +110,7 @@ export async function startImpersonation(
 
   if (error || !data) {
     return err(
-      appError('internal', 'Impossible d ouvrir la session d assistance.', { cause: error }),
+      appError('internal', 'Impossible d’ouvrir la session d’assistance.', { cause: error }),
     );
   }
 

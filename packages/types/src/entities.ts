@@ -56,6 +56,8 @@ export interface Profile {
   unlimited_sites: boolean;
   all_features: boolean;
   marketing_opt_in: boolean;
+  /** Bilan mensuel des sites dont on est responsable (0064). */
+  monthly_report_opt_in?: boolean;
   onboarding_step: string | null;
   last_seen_at: Timestamp | null;
   disabled_at: Timestamp | null;

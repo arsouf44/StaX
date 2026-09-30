@@ -80,3 +80,18 @@ select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');
 ```
 
 Détails et vérification : [deployment.md](./deployment.md) § 9.
+
+## Tâches planifiées par la base elle-même
+
+Trois autres tâches `pg_cron` tournent **sans dépendre de la plateforme** (ni
+adresse, ni secret) : elles ne font que lire et écrire la base.
+
+| Tâche | Cadence | Rôle | Migration |
+| --- | --- | --- | --- |
+| `nemasus-analytics-rollup` | chaque heure (`7 * * * *`) | recalcule les statistiques des sites (visiteurs distincts, pages, sources, appareils, pays, contacts, commandes, encaissé) des journées encore ouvertes | 0059 |
+| `nemasus-system-health` | toutes les 10 minutes | dérive l’état réel de la page d’état (webhooks Stripe, e-mails, domaines, sauvegardes, dernier passage de chaque tâche) | 0060 |
+| `nemasus-retention` | chaque nuit (3 h 17) | purge de conservation (ci-dessus) | 0039 |
+
+**Administration → État des services** liste ces tâches, leur dernier passage
+et son résultat, et dit si les secrets Vault de `nemasus-site-operations` sont
+présents (jamais leur valeur).

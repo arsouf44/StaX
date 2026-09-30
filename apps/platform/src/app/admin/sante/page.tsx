@@ -84,6 +84,26 @@ export default async function AdminHealthPage() {
   );
   const failedWebhooks = recentWebhooks.filter((row) => row.status === 'failed').length;
 
+  // Taches planifiees par la base : actives, dernier passage, secrets Vault
+  // presents (jamais leur valeur). `null` si la fonction n'existe pas encore.
+  const schedulerResult = await db.rpc('scheduler_overview');
+  const scheduler = (schedulerResult.error ? null : schedulerResult.data) as {
+    jobs: Array<{
+      name: string;
+      schedule: string;
+      active: boolean;
+      lastStatus: string | null;
+      lastRunAt: string | null;
+      lastMessage: string | null;
+    }>;
+    vault: { platformUrl: boolean; cronSecret: boolean };
+    vaultAvailable: boolean;
+    cronAvailable: boolean;
+  } | null;
+  const vaultMissing =
+    scheduler?.vaultAvailable === true &&
+    (!scheduler.vault.platformUrl || !scheduler.vault.cronSecret);
+
   return (
     <>
       <PageHeader
@@ -209,6 +229,73 @@ export default async function AdminHealthPage() {
           </TableWrapper>
         </section>
 
+        {scheduler?.cronAvailable ? (
+          <section aria-labelledby="planification" className="space-y-3">
+            <h2 id="planification" className="text-base font-medium">
+              Tâches planifiées par la base
+            </h2>
+            {vaultMissing ? (
+              <Alert tone="warning" title="La tâche de fond toutes les 5 minutes ne part pas">
+                <p>
+                  Publications programmées, suivi des déploiements, livraisons automatiques après
+                  paiement et surveillance des sites ne tournent qu’une fois par jour (tâche de
+                  secours de l’hébergeur). Pour la cadence de 5 minutes, dans Supabase → SQL Editor,
+                  une seule fois, avec l’adresse de la plateforme et la valeur exacte de{' '}
+                  <code>CRON_SECRET</code> :
+                </p>
+                <pre className="mt-2 overflow-x-auto rounded-[var(--radius-sm)] bg-[var(--surface-hover)] p-3 text-2xs">
+                  {`select vault.create_secret('https://votre-domaine', 'nemasus_platform_url');
+select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');`}
+                </pre>
+                <p className="mt-2">
+                  Manquant :{' '}
+                  {[
+                    scheduler.vault.platformUrl ? null : 'nemasus_platform_url',
+                    scheduler.vault.cronSecret ? null : 'nemasus_cron_secret',
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}
+                  .
+                </p>
+              </Alert>
+            ) : null}
+            <TableWrapper label="Tâches planifiées par la base">
+              <Table>
+                <THead>
+                  <TR>
+                    <TH scope="col">Tâche</TH>
+                    <TH scope="col">Cadence</TH>
+                    <TH scope="col">Dernier passage</TH>
+                    <TH scope="col">Résultat</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {scheduler.jobs.map((job) => (
+                    <TR key={job.name}>
+                      <TD className="font-mono text-xs">{job.name}</TD>
+                      <TD className="font-mono text-xs">
+                        {job.active ? job.schedule : 'désactivée'}
+                      </TD>
+                      <TD className="text-[var(--foreground-muted)]">
+                        {job.lastRunAt ? DATE_TIME.format(new Date(job.lastRunAt)) : 'jamais'}
+                      </TD>
+                      <TD>
+                        {job.lastStatus === 'succeeded' ? (
+                          <StatusPill tone="success">Réussi</StatusPill>
+                        ) : job.lastStatus === 'failed' ? (
+                          <StatusPill tone="danger">{job.lastMessage ?? 'Échec'}</StatusPill>
+                        ) : (
+                          <StatusPill tone="neutral">{job.lastStatus ?? '—'}</StatusPill>
+                        )}
+                      </TD>
+                    </TR>
+                  ))}
+                </TBody>
+              </Table>
+            </TableWrapper>
+          </section>
+        ) : null}
+
         <section aria-labelledby="webhooks" className="space-y-3">
           <h2 id="webhooks" className="text-base font-medium">
             Webhooks Stripe
@@ -235,9 +322,11 @@ export default async function AdminHealthPage() {
         <Panel level={1} padding="lg">
           <h2 className="text-sm font-medium">Sauvegardes</h2>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Les sauvegardes PostgreSQL sont assurées par Supabase selon le plan du projet. Nemasus
-            n’affiche pas d’état de sauvegarde tant qu’une sonde ne le remonte pas réellement :
-            annoncer une sauvegarde inexistante serait la pire erreur possible sur cet écran.
+            L’offre gratuite de Supabase ne sauvegarde pas la base. Une tâche GitHub Actions (
+            <code>.github/workflows/backup.yml</code>) en exporte chaque nuit les données, chiffrées
+            en AES-256, conservées 30 jours, et inscrit son résultat dans la sonde « Sauvegardes de
+            la base » ci-dessus. Sans les secrets <code>SUPABASE_DB_URL</code> et{' '}
+            <code>BACKUP_PASSPHRASE</code> du dépôt, elle échoue et le dit.
           </p>
           <p className="mt-3 text-xs text-[var(--muted)]">
             Procédure de restauration : <code>docs/backup-recovery.md</code>.

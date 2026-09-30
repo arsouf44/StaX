@@ -91,6 +91,53 @@ export function parseUserAgent(userAgent: string | null): {
   return { device: isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop', browser, os };
 }
 
+export type DeviceKind = 'mobile' | 'tablet' | 'desktop';
+
+/**
+ * Ce que la mesure retient d'une vue de page, et rien de plus : le chemin
+ * (sans requete ni fragment, qui portent parfois une adresse e-mail ou un
+ * jeton), la source (hote du referent seulement) et le type d'appareil.
+ *
+ * `null` pour un robot : un moteur d'indexation n'est pas un visiteur.
+ */
+export function pageViewSignal(input: {
+  path: unknown;
+  referrer: unknown;
+  userAgent: string | null;
+  ownHosts: readonly string[];
+}): { path: string; referrerHost: string | null; device: DeviceKind } | null {
+  if (isBot(input.userAgent)) return null;
+  const raw = typeof input.path === 'string' ? input.path.slice(0, 512) : '/';
+  return {
+    path: normalizeAnalyticsPath(raw.startsWith('/') ? raw : '/'),
+    referrerHost: sourceHost(input.referrer, input.ownHosts),
+    device: parseUserAgent(input.userAgent).device,
+  };
+}
+
+/**
+ * Hote d'un referent transmis par le navigateur, qu'il arrive sous forme
+ * d'adresse complete (`document.referrer`) ou d'hote seul. Un referent interne
+ * (le site lui-meme) n'est pas une source.
+ */
+export function sourceHost(referrer: unknown, ownHosts: readonly string[]): string | null {
+  if (typeof referrer !== 'string') return null;
+  const value = referrer.trim().slice(0, 300);
+  if (!value) return null;
+  let host: string;
+  try {
+    host = /^[a-z][a-z0-9+.-]*:\/\//i.test(value)
+      ? new URL(value).hostname
+      : (value.split('/')[0] ?? '');
+  } catch {
+    return null;
+  }
+  host = host.toLowerCase().replace(/^www\./, '');
+  if (!/^[a-z0-9.-]{1,120}$/.test(host) || !host.includes('.')) return null;
+  const own = ownHosts.map((entry) => entry.toLowerCase().replace(/^www\./, ''));
+  return own.includes(host) ? null : host;
+}
+
 /** Hote du referent uniquement : jamais l URL complete, souvent porteuse de donnees. */
 export function referrerHost(referrer: string | null, ownHost: string): string | null {
   if (!referrer) return null;

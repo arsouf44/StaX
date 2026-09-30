@@ -141,6 +141,32 @@ Types de base : `text`, `textarea`, `email`, `tel`, `consent`. Types avancés
 `POST https://<api>/v1/sites/<clé publique>/forms/<slug>` ; Nemasus revalide
 chaque réponse contre cette déclaration (champs inconnus rejetés).
 
+### Mesure d’audience (`integrations.analytics`)
+
+Déclarez `"integrations": { "analytics": true }`, puis ajoutez **une ligne**
+dans le `<head>` de chaque page du site (la ligne exacte, avec la clé du site,
+est affichée dans *Administration → Sites → Infrastructure & livraison*) :
+
+```html
+<script defer src="https://<api>/v1/sites/<clé publique>/mesure.js"></script>
+```
+
+Le script (moins de 1 Ko, mis en cache une heure) envoie à chaque page
+affichée — y compris les changements de page d’une application monopage — le
+chemin et l’hôte du référent à `POST /v1/sites/<clé publique>/collect`. Il
+**n’écrit ni cookie ni stockage local**, ne mesure pas l’aperçu de l’éditeur
+(page affichée dans un cadre), ni un navigateur piloté par un robot, ni un
+visiteur qui a activé *Global Privacy Control*. Côté Nemasus : robots écartés,
+chemin sans requête ni fragment, type d’appareil seul (jamais le navigateur),
+empreinte de visiteur salée et renouvelée chaque jour. Les chiffres du client
+(visiteurs, pages, sources, appareils, pays) sont recalculés chaque heure par
+la base.
+
+Un site qui préfère son propre code peut appeler l’API directement :
+`navigator.sendBeacon(url, JSON.stringify({ path: location.pathname, ref:
+document.referrer }))` — une chaîne, donc `text/plain`, sans requête préalable
+CORS.
+
 ## 3. Types de champs
 
 | Type | Valeur éditée par le client | Dans le fichier de contenu |

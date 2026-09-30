@@ -63,7 +63,7 @@ export async function issueActivationCode(
 
   if (error || !data) {
     return err(
-      appError('internal', 'Impossible de générer le code d activation.', { cause: error }),
+      appError('internal', 'Impossible de générer le code d’activation.', { cause: error }),
     );
   }
 

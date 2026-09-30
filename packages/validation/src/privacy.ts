@@ -45,7 +45,7 @@ export const privacyRequestSchema = z
     details: boundedText(10, 4000, 'Votre demande'),
     organizationId: uuidSchema.optional(),
     confirmIdentity: z.literal(true, {
-      message: 'Confirmez que vous etes bien la personne concernee.',
+      message: 'Confirmez que vous êtes bien la personne concernée.',
     }),
     website: honeypotSchema,
   })

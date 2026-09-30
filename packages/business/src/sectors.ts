@@ -371,7 +371,7 @@ export const SECTORS: readonly SectorDefinition[] = [
         type: 'select',
         required: true,
         options: [
-          { value: 'request', label: 'Demandes de sejour a valider' },
+          { value: 'request', label: 'Demandes de séjour à valider' },
           { value: 'instant', label: 'Réservation directe avec acompte' },
           { value: 'external', label: 'Je passe par une plateforme externe' },
         ],

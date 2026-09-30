@@ -10,6 +10,7 @@ import {
   githubAppConfigured,
   githubAppInstallUrl,
 } from '@nemasus/infrastructure';
+import { sitesApiOrigin } from '@nemasus/config';
 import { CONTRACT_VERSION, MANIFEST_SCHEMA_URL } from '@nemasus/site-contract';
 import { PROJECT_STATUS_LABELS, formatMoney } from '@nemasus/payments';
 import { Alert, Badge, DescriptionList, Panel, StatusPill, type StatusTone } from '@nemasus/ui';
@@ -196,6 +197,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
   const { db, session } = await requireAdminRole('support');
   const canAdmin = hasPlatformRole(session.profile, 'platform_admin');
   const canBuild = hasPlatformRole(session.profile, 'designer');
+  const apiOrigin = sitesApiOrigin();
 
   const site = unwrapMaybe<{
     id: string;
@@ -207,13 +209,14 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
     delivered_at: string | null;
     production_release_id: string | null;
     business_type_slug: string | null;
+    public_key: string;
     organizations: { name: string } | null;
   }>(
     (await db
       .from('sites')
       .select(
         'id, name, status, architecture, plan_slug, organization_id, delivered_at, ' +
-          'production_release_id, business_type_slug, organizations ( name )',
+          'production_release_id, business_type_slug, public_key, organizations ( name )',
       )
       .eq('id', id)
       .maybeSingle()) as never,
@@ -884,6 +887,48 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
               ) : null}
             </div>
           ) : null}
+        </Panel>
+
+        {/* API des sites : ce que le developpeur branche dans le code du site */}
+        <Panel level={1} padding="lg" data-testid="panel-sites-api">
+          <h2 className="text-sm font-medium">API des sites · mesure d’audience</h2>
+          <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+            Formulaires, réservations, boutique et statistiques passent par l’API des sites,
+            identifiée par la clé publique du site (elle n’ouvre aucun droit seule). Pour que le
+            client voie ses statistiques, déclarez{' '}
+            <code>
+              &quot;integrations&quot;: {'{'}
+              &quot;analytics&quot;: true {'}'}
+            </code>{' '}
+            dans le manifeste et ajoutez cette ligne dans le <code>&lt;head&gt;</code> de chaque
+            page :
+          </p>
+          <pre className="mt-3 overflow-x-auto rounded-[var(--radius-sm)] bg-[var(--surface-hover)] p-3 text-2xs leading-relaxed">
+            <code>{`<script defer src="${apiOrigin ?? 'https://<API des sites>'}/v1/sites/${site.public_key}/mesure.js"></script>`}</code>
+          </pre>
+          <DescriptionList
+            className="mt-3"
+            items={[
+              { term: 'Clé publique', description: <code>{site.public_key}</code> },
+              {
+                term: 'Mesure déclarée',
+                description:
+                  activeManifest?.manifest &&
+                  (activeManifest.manifest as { integrations?: { analytics?: unknown } })
+                    .integrations?.analytics === true ? (
+                    <StatusPill tone="success">Oui</StatusPill>
+                  ) : (
+                    <StatusPill tone="warning">Non — statistiques vides pour le client</StatusPill>
+                  ),
+              },
+            ]}
+          />
+          {apiOrigin ? null : (
+            <p className="mt-3 text-xs text-[var(--warning)]">
+              <code>SITES_API_URL</code> n’est pas renseignée : remplacez l’adresse par celle du
+              Worker <code>nemasus-sites</code>.
+            </p>
+          )}
         </Panel>
       </div>
 

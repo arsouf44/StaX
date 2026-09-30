@@ -366,3 +366,306 @@ export async function checkSiteHealth(url: string, fetchImpl?: FetchImpl) {
   const probe = await probeUrl(url, { fetchImpl, timeoutMs: 10_000 });
   return { ok: probe.ok, status: probe.status, responseMs: probe.responseMs, error: probe.error };
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Bilan qualite d'un site livre (hebdomadaire, et a la demande)              */
+/* -------------------------------------------------------------------------- */
+
+export type QualityStatus = 'pass' | 'warn' | 'fail';
+
+export interface QualityCheck {
+  key: string;
+  label: string;
+  status: QualityStatus;
+  /** Ce qui a ete constate, en francais courant. */
+  detail: string;
+  /** Ce qu'il faut faire, quand ce n'est pas bon. */
+  advice: string | null;
+}
+
+export interface QualityReport {
+  url: string;
+  finalUrl: string | null;
+  score: number;
+  maxScore: number;
+  responseMs: number | null;
+  pageBytes: number | null;
+  checks: QualityCheck[];
+}
+
+const POINTS: Record<QualityStatus, number> = { pass: 2, warn: 1, fail: 0 };
+
+function check(
+  key: string,
+  label: string,
+  status: QualityStatus,
+  detail: string,
+  advice: string | null = null,
+): QualityCheck {
+  return { key, label, status, detail, advice: status === 'pass' ? null : advice };
+}
+
+/** Balises <link> d'un type donne (icone, feuille de style…). */
+function linkTags(html: string, rel: RegExp): string[] {
+  return (html.match(/<link\b[^>]*>/gi) ?? []).filter((tag) =>
+    rel.test(tag.match(/\brel=["']([^"']+)["']/i)?.[1] ?? ''),
+  );
+}
+
+/**
+ * Bilan d'une page d'accueil publiee : ce qu'un visiteur, un moteur de
+ * recherche et un reseau social en voient. Chaque controle donne sa preuve
+ * et, s'il echoue, ce qu'il faut faire. Aucun controle n'est « suppose » :
+ * une page injoignable donne un bilan en echec, pas un bilan vide.
+ */
+export async function runQualityAudit(url: string, fetchImpl?: FetchImpl): Promise<QualityReport> {
+  const page = await probeUrl(url, { fetchImpl, readBody: true, timeoutMs: 15_000 });
+  const checks: QualityCheck[] = [];
+
+  if (!page.ok) {
+    checks.push(
+      check(
+        'reachable',
+        'Le site répond en HTTPS',
+        'fail',
+        page.error ?? `Réponse ${page.status ?? 'absente'}.`,
+        'Le site doit répondre en HTTPS avant tout autre contrôle : l’équipe Nemasus est prévenue.',
+      ),
+    );
+    return {
+      url,
+      finalUrl: page.finalUrl,
+      score: 0,
+      maxScore: POINTS.pass,
+      responseMs: page.responseMs,
+      pageBytes: null,
+      checks,
+    };
+  }
+
+  const html = page.body ?? '';
+  const bytes = new TextEncoder().encode(html).length;
+  const seo = analyzeHtml(html);
+  const origin = new URL(page.finalUrl ?? url).origin;
+  const metas = metaTags(html.slice(0, 200_000));
+  const property = (name: string) =>
+    metas.find((meta) => (meta['property'] ?? meta['name'])?.toLowerCase() === name)?.['content'];
+
+  const [plain, robots, sitemap] = await Promise.all([
+    probeUrl(origin.replace(/^https:/, 'http:') + '/', { fetchImpl, allowHttp: true }),
+    probeUrl(`${origin}/robots.txt`, { fetchImpl, readBody: true }),
+    probeUrl(`${origin}/sitemap.xml`, { fetchImpl }),
+  ]);
+
+  checks.push(
+    check('reachable', 'Le site répond en HTTPS', 'pass', `Réponse ${page.status} en HTTPS.`),
+  );
+
+  const redirectsToHttps = (plain.redirects[0] ?? '').startsWith('https://');
+  checks.push(
+    check(
+      'http_redirect',
+      'L’adresse sans « s » mène à la version sécurisée',
+      redirectsToHttps ? 'pass' : 'warn',
+      redirectsToHttps
+        ? 'http:// redirige vers https://.'
+        : 'http:// ne redirige pas vers https:// : un visiteur peut arriver sur une page non chiffrée.',
+      'Activer « Always Use HTTPS » dans le projet Cloudflare du site.',
+    ),
+  );
+
+  const hsts = page.headers['strict-transport-security'];
+  checks.push(
+    check(
+      'hsts',
+      'Le navigateur retient la connexion sécurisée (HSTS)',
+      hsts ? 'pass' : 'warn',
+      hsts ? `En-tête présent : ${hsts}.` : 'En-tête Strict-Transport-Security absent.',
+      'Activer HSTS dans le projet Cloudflare du site (SSL/TLS → Edge Certificates).',
+    ),
+  );
+
+  const ms = page.responseMs ?? 0;
+  checks.push(
+    check(
+      'speed',
+      'La page répond vite',
+      ms < 800 ? 'pass' : ms < 2_000 ? 'warn' : 'fail',
+      `Première réponse en ${ms} ms.`,
+      'Réponse lente : vérifier le cache et le poids de la page d’accueil.',
+    ),
+  );
+
+  checks.push(
+    check(
+      'weight',
+      'La page d’accueil reste légère',
+      bytes < 150_000 ? 'pass' : bytes < 400_000 ? 'warn' : 'fail',
+      `${Math.round(bytes / 1024)} Ko de HTML.`,
+      'Page lourde : alléger le HTML (scripts ou styles intégrés, contenus dupliqués).',
+    ),
+  );
+
+  const titleLength = seo.title?.length ?? 0;
+  checks.push(
+    check(
+      'title',
+      'Titre de la page (affiché par Google)',
+      !seo.title ? 'fail' : titleLength >= 10 && titleLength <= 65 ? 'pass' : 'warn',
+      seo.title ? `« ${seo.title} » (${titleLength} caractères).` : 'Aucun titre.',
+      seo.title
+        ? 'Un titre de 10 à 65 caractères s’affiche en entier dans les résultats de recherche.'
+        : 'Ajouter un titre à la page d’accueil (référencement de l’éditeur).',
+    ),
+  );
+
+  const descriptionLength = seo.description?.length ?? 0;
+  checks.push(
+    check(
+      'description',
+      'Description (le texte sous le titre dans Google)',
+      !seo.description
+        ? 'fail'
+        : descriptionLength >= 50 && descriptionLength <= 160
+          ? 'pass'
+          : 'warn',
+      seo.description ? `${descriptionLength} caractères.` : 'Aucune description.',
+      seo.description
+        ? 'Une description de 50 à 160 caractères donne envie de cliquer sans être coupée.'
+        : 'Écrire une description de la page d’accueil dans l’éditeur (référencement).',
+    ),
+  );
+
+  checks.push(
+    check(
+      'h1',
+      'Un titre principal unique',
+      seo.h1 === 1 ? 'pass' : seo.h1 === 0 ? 'fail' : 'warn',
+      seo.h1 === 0 ? 'Aucun titre <h1>.' : `${seo.h1} titre(s) <h1>.`,
+      'Une page doit avoir exactement un titre principal (<h1>).',
+    ),
+  );
+
+  checks.push(
+    check(
+      'mobile',
+      'Adaptée aux téléphones',
+      seo.viewport ? 'pass' : 'fail',
+      seo.viewport ? 'Balise viewport présente.' : 'Balise viewport absente.',
+      'Sans balise viewport, la page s’affiche en miniature sur téléphone.',
+    ),
+  );
+
+  checks.push(
+    check(
+      'lang',
+      'Langue déclarée',
+      seo.lang ? 'pass' : 'warn',
+      seo.lang ? `Langue : ${seo.lang}.` : 'Aucune langue déclarée.',
+      'Déclarer la langue (<html lang="fr">) : lecteurs d’écran et moteurs de recherche s’en servent.',
+    ),
+  );
+
+  const noindexHeader = /noindex/i.test(page.headers['x-robots-tag'] ?? '');
+  const robotsText = robots.ok ? (robots.body ?? '') : '';
+  const blocked = robots.ok && robotsBlocksAll(robotsText);
+  const indexable = !seo.noindex && !noindexHeader && !blocked;
+  checks.push(
+    check(
+      'indexable',
+      'Visible dans les moteurs de recherche',
+      indexable ? 'pass' : 'fail',
+      indexable
+        ? 'Aucune consigne n’interdit l’indexation.'
+        : blocked
+          ? 'robots.txt interdit l’accès à tous les moteurs.'
+          : 'La page demande à ne pas être indexée (noindex).',
+      'Le site n’apparaîtra pas dans Google tant que cette consigne reste en place.',
+    ),
+  );
+
+  const sitemapDeclared = /^\s*sitemap\s*:/im.test(robotsText);
+  checks.push(
+    check(
+      'sitemap',
+      'Plan du site pour les moteurs',
+      sitemap.ok || sitemapDeclared ? 'pass' : 'warn',
+      sitemap.ok
+        ? 'sitemap.xml disponible.'
+        : sitemapDeclared
+          ? 'Plan du site déclaré dans robots.txt.'
+          : 'Aucun sitemap.xml trouvé.',
+      'Publier un sitemap.xml aide les moteurs à trouver toutes les pages.',
+    ),
+  );
+
+  const ogTitle = property('og:title');
+  const ogImage = property('og:image');
+  checks.push(
+    check(
+      'social',
+      'Aperçu lors d’un partage (Facebook, WhatsApp, LinkedIn)',
+      ogTitle && ogImage ? 'pass' : 'warn',
+      ogTitle && ogImage
+        ? 'Titre et image de partage présents.'
+        : ogTitle
+          ? 'Titre de partage présent, image absente.'
+          : 'Aucune balise Open Graph.',
+      'Ajouter une image de partage : un lien partagé sans image est bien moins cliqué.',
+    ),
+  );
+
+  let favicon = linkTags(html, /(^|\s)(shortcut\s+)?icon(\s|$)|apple-touch-icon/i).length > 0;
+  if (!favicon) favicon = (await probeUrl(`${origin}/favicon.ico`, { fetchImpl })).ok;
+  checks.push(
+    check(
+      'favicon',
+      'Icône dans l’onglet du navigateur',
+      favicon ? 'pass' : 'warn',
+      favicon ? 'Icône présente.' : 'Aucune icône (favicon).',
+      'Ajouter une icône : elle identifie le site dans les onglets et les favoris.',
+    ),
+  );
+
+  const images = html.match(/<img\b[^>]*>/gi) ?? [];
+  const withoutAlt = images.filter((tag) => !/\balt\s*=/i.test(tag)).length;
+  checks.push(
+    check(
+      'images_alt',
+      'Images décrites pour les personnes malvoyantes',
+      withoutAlt === 0 ? 'pass' : 'warn',
+      images.length === 0
+        ? 'Aucune image sur la page d’accueil.'
+        : withoutAlt === 0
+          ? `${images.length} image(s), toutes décrites.`
+          : `${withoutAlt} image(s) sur ${images.length} sans texte alternatif.`,
+      'Renseigner le texte alternatif de chaque photo dans l’éditeur.',
+    ),
+  );
+
+  const insecure = (html.match(/\b(?:src|href)\s*=\s*["']http:\/\/[^"']+/gi) ?? []).filter(
+    (attribute) => !/^href/i.test(attribute) || /\.(css|js)(\?|["']|$)/i.test(attribute),
+  ).length;
+  checks.push(
+    check(
+      'mixed_content',
+      'Aucune ressource chargée sans chiffrement',
+      insecure === 0 ? 'pass' : 'fail',
+      insecure === 0
+        ? 'Toutes les ressources sont en HTTPS.'
+        : `${insecure} ressource(s) en http:// : le navigateur les bloque.`,
+      'Remplacer les adresses http:// des images, scripts et styles par https://.',
+    ),
+  );
+
+  const score = checks.reduce((total, item) => total + POINTS[item.status], 0);
+  return {
+    url,
+    finalUrl: page.finalUrl,
+    score,
+    maxScore: checks.length * POINTS.pass,
+    responseMs: page.responseMs,
+    pageBytes: bytes,
+    checks,
+  };
+}

@@ -529,7 +529,7 @@ const SITE_PREVIEWS: Record<
     name: 'Atelier Camille',
     nav: ['Prestations', 'L’équipe', 'Rendez-vous', 'Contact'],
     title: 'Votre coupe,\npensée pour vous.',
-    subtitle: 'Diagnostic personnalise, produits soignes, rendez-vous en ligne 7j/7.',
+    subtitle: 'Diagnostic personnalisé, produits soignés, rendez-vous en ligne 7j/7.',
     cta: 'Prendre rendez-vous',
     accent: '#B08D6A',
     bg: '#FDFCFB',

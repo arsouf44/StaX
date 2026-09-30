@@ -1,3 +1,4 @@
+import { pageViewSignal } from '@nemasus/analytics';
 import { createServiceClient } from '@nemasus/database';
 import { visitorHash } from '@nemasus/security';
 import { jsonResponse } from '../responses';
@@ -21,8 +22,14 @@ export async function handleCollect(request: Request, site: ResolvedSite): Promi
   try {
     const raw: unknown = await request.json();
     const body = (raw ?? {}) as { path?: unknown; ref?: unknown };
-    const path = typeof body.path === 'string' ? body.path.slice(0, 512) : '/';
-    const referrer = typeof body.ref === 'string' ? body.ref.slice(0, 120) : null;
+    // Robots ecartes, chemin sans requete ni fragment, source reduite a un hote.
+    const signal = pageViewSignal({
+      path: body.path,
+      referrer: body.ref,
+      userAgent: request.headers.get('user-agent'),
+      ownHosts: [site.hostname.hostname],
+    });
+    if (!signal) return new Response(null, { status: 204 });
 
     const hash = await visitorHash({
       ip: clientIp(request),
@@ -32,12 +39,12 @@ export async function handleCollect(request: Request, site: ResolvedSite): Promi
 
     await createServiceClient().rpc('record_page_view', {
       p_site: site.siteId,
-      p_path: path,
+      p_path: signal.path,
       p_visitor_hash: hash,
-      // Un referent interne n est pas une source : on ne le compte pas.
-      p_referrer_host: referrer === site.hostname.hostname ? null : referrer,
+      p_referrer_host: signal.referrerHost,
       p_country: request.headers.get('cf-ipcountry'),
       p_kind: 'pageview',
+      p_device: signal.device,
     });
   } catch {
     // Silencieux par conception.

@@ -148,7 +148,7 @@ export interface BreadcrumbItem {
 
 export function Breadcrumb({ items, className }: { items: BreadcrumbItem[]; className?: string }) {
   return (
-    <nav aria-label="Fil d Ariane" className={className}>
+    <nav aria-label="Fil d’Ariane" className={className}>
       <ol className="flex flex-wrap items-center gap-1.5 text-sm text-[var(--muted)]">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

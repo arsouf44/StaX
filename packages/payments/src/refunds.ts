@@ -87,8 +87,8 @@ export function computeRefundEligibility(input: RefundEligibilityInput): RefundE
     return {
       eligible: null,
       reason:
-        "Votre site n'a pas encore ete mis en ligne : la période de garantie n'a pas commence. " +
-        'Contactez-nous, nous etudierons votre demande au cas par cas.',
+        'Votre site n’a pas encore été mis en ligne : la période de garantie n’a pas commencé. ' +
+        'Contactez-nous, nous étudierons votre demande au cas par cas.',
       deadlineAt: null,
       daysRemaining: null,
       amountPaidCents,

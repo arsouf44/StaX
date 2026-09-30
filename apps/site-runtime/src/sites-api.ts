@@ -5,6 +5,7 @@ import {
   unwrapList,
   unwrapMaybe,
 } from '@nemasus/database';
+import { AUDIENCE_SCRIPT_DISABLED, audienceScript, pageViewSignal } from '@nemasus/analytics';
 import { customerLoginEmail, sendEmail } from '@nemasus/emails';
 import { createConnectCheckoutSession } from '@nemasus/payments';
 import {
@@ -240,6 +241,7 @@ export async function handleSitesApi(request: Request): Promise<Response> {
     return refuse('Origine non autorisée pour ce site.', 403, 'bad_origin', null);
 
   try {
+    if (resource === 'mesure.js' && isRead) return audienceScriptResponse(url, publicKey, site);
     if (resource === 'collect' && request.method === 'POST')
       return await collect(request, site, replyOrigin);
     if (resource.startsWith('forms/') && request.method === 'POST') {
@@ -268,24 +270,50 @@ export async function handleSitesApi(request: Request): Promise<Response> {
 /*  Mesure d'audience (sans cookie)                                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Script de mesure en une ligne (`<script defer src=".../mesure.js">`). Public
+ * et mis en cache : il ne contient que l'adresse de collecte de ce site.
+ */
+function audienceScriptResponse(url: URL, publicKey: string, site: ApiSite): Response {
+  const body = site.integration.analytics
+    ? audienceScript(`${url.origin}/v1/sites/${publicKey}/collect`)
+    : AUDIENCE_SCRIPT_DISABLED;
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'content-type': 'application/javascript; charset=utf-8',
+      'cache-control': 'public, max-age=3600',
+      'cross-origin-resource-policy': 'cross-origin',
+      'x-content-type-options': 'nosniff',
+    },
+  });
+}
+
 async function collect(request: Request, site: ApiSite, origin: string | null): Promise<Response> {
   if (!site.integration.analytics)
     return new Response(null, { status: 204, headers: cors(origin) });
   const body = (await readBody(request)) ?? {};
-  const path = typeof body['path'] === 'string' ? body['path'].slice(0, 512) : '/';
-  const referrer = typeof body['ref'] === 'string' ? body['ref'].slice(0, 120) : null;
+  // Robots ecartes, chemin sans requete ni fragment, source reduite a un hote.
+  const signal = pageViewSignal({
+    path: body['path'],
+    referrer: body['ref'],
+    userAgent: request.headers.get('user-agent'),
+    ownHosts: site.hosts,
+  });
+  if (!signal) return new Response(null, { status: 204, headers: cors(origin) });
   try {
     await createServiceClient().rpc('record_page_view', {
       p_site: site.siteId,
-      p_path: path.startsWith('/') ? path : '/',
+      p_path: signal.path,
       p_visitor_hash: await visitorHash({
         ip: clientIp(request),
         userAgent: request.headers.get('user-agent'),
         siteId: site.siteId,
       }),
-      p_referrer_host: referrer && !site.hosts.includes(referrer) ? referrer : null,
+      p_referrer_host: signal.referrerHost,
       p_country: request.headers.get('cf-ipcountry'),
       p_kind: 'pageview',
+      p_device: signal.device,
     });
   } catch {
     // Jamais bloquant pour le visiteur.

@@ -41,7 +41,7 @@ const helpSchema = z.string().trim().max(300).optional();
 /** Chemin de fichier DANS le depot : relatif, sans remontee. */
 const repoPathSchema = z
   .string()
-  .regex(/^(?!\/)(?!.*\.\.)[A-Za-z0-9._/-]{1,200}$/, 'Chemin relatif au depot, sans « .. ».');
+  .regex(/^(?!\/)(?!.*\.\.)[A-Za-z0-9._/-]{1,200}$/, 'Chemin relatif au dépôt, sans « .. ».');
 
 const localeSchema = z
   .string()
@@ -454,7 +454,7 @@ export const manifestSchema = z
       context.addIssue({
         code: 'custom',
         path: ['site', 'defaultLocale'],
-        message: 'La langue par defaut doit figurer dans la liste des langues.',
+        message: 'La langue par défaut doit figurer dans la liste des langues.',
       });
     }
 
@@ -515,7 +515,7 @@ export const manifestSchema = z
             context.addIssue({
               code: 'custom',
               path: [...path, 'fields', index],
-              message: 'min doit etre inferieur ou egal a max.',
+              message: 'min doit être inférieur ou égal à max.',
             });
           }
         }
@@ -524,7 +524,7 @@ export const manifestSchema = z
             context.addIssue({
               code: 'custom',
               path: [...path, 'fields', index],
-              message: 'min doit etre inferieur ou egal a max.',
+              message: 'min doit être inférieur ou égal à max.',
             });
           }
         }

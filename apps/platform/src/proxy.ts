@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isProduction, readEnv } from '@nemasus/config';
 import { buildContentSecurityPolicy, generateNonce } from '@nemasus/security';
+import { hasSessionCookie, isProtectedPath, loginRedirect } from '~/lib/session-cookie';
 
 /**
  * Politique de securite du contenu, par requete.
@@ -21,6 +22,20 @@ import { buildContentSecurityPolicy, generateNonce } from '@nemasus/security';
  */
 
 export default function proxy(request: NextRequest) {
+  // Sans session, une page protegee repond une VRAIE redirection (307) avant
+  // tout rendu. Auparavant, la page repondait 200 et redirigeait pendant le
+  // streaming : aucun contenu ne fuyait, mais un robot, un outil de
+  // surveillance ou un navigateur sans JavaScript lisait « 200 » sur une page
+  // d'administration.
+  const { pathname, search } = request.nextUrl;
+  if (
+    (request.method === 'GET' || request.method === 'HEAD') &&
+    isProtectedPath(pathname) &&
+    !hasSessionCookie(request.cookies.getAll())
+  ) {
+    return NextResponse.redirect(loginRedirect(request.url, pathname, search), 307);
+  }
+
   const nonce = generateNonce();
 
   const csp = buildContentSecurityPolicy({

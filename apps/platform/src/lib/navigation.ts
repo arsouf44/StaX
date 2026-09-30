@@ -22,7 +22,7 @@ export const FEATURE_LINKS: NavLink[] = [
   {
     label: 'Noms de domaine',
     href: '/fonctionnalites/domaines',
-    description: 'Votre domaine, connecte et sécurisé en HTTPS.',
+    description: 'Votre domaine, connecté et sécurisé en HTTPS.',
   },
   {
     label: 'Formulaires',
@@ -52,7 +52,7 @@ export const FEATURE_LINKS: NavLink[] = [
   {
     label: 'Réservations',
     href: '/fonctionnalites/reservations',
-    description: 'Creneaux, capacites et confirmations automatiques.',
+    description: 'Créneaux, capacités et confirmations automatiques.',
   },
   {
     label: 'Vente en ligne',
@@ -67,7 +67,7 @@ export const FEATURE_LINKS: NavLink[] = [
 ];
 
 export const COMPANY_LINKS: NavLink[] = [
-  { label: 'A propos', href: '/a-propos', description: 'Qui construit Nemasus, et pourquoi.' },
+  { label: 'À propos', href: '/a-propos', description: 'Qui construit Nemasus, et pourquoi.' },
   { label: 'Sécurité', href: '/securite', description: 'Ce que nous protegeons, et comment.' },
   {
     label: 'Infrastructure',
@@ -80,11 +80,11 @@ export const COMPANY_LINKS: NavLink[] = [
 
 export const RESOURCE_LINKS: NavLink[] = [
   {
-    label: 'Comment ca marche',
+    label: 'Comment ça marche',
     href: '/comment-ca-marche',
     description: 'Le parcours, étape par étape.',
   },
-  { label: 'Centre d aide', href: '/aide', description: 'Guides et réponses pratiques.' },
+  { label: 'Centre d’aide', href: '/aide', description: 'Guides et réponses pratiques.' },
   {
     label: 'Questions fréquentes',
     href: '/faq',
