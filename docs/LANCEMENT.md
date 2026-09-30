@@ -22,11 +22,17 @@ permanence ce qui manque encore.
 | Alertes e-mail à l'équipe : message, ticket, contact, devis, prospect, paiement, site en panne | ✅ | envoyées à `SUPPORT_EMAIL` (à défaut `ADMIN_EMAIL`) |
 | Maintenance mensuelle qui démarre à la livraison, résiliable en ligne | ✅ | [stripe.md](./stripe.md) |
 | Mot de passe oublié, confirmation d'inscription, invitations de collaborateurs | ✅ | corrigés (voir [GAP_AUDIT.md § 13](./GAP_AUDIT.md)) |
+| Statistiques réelles des sites (visiteurs, sources, appareils, contacts, encaissé), recalculées chaque heure | ✅ | `/app/statistiques` ; mesure en une ligne pour les sites indépendants ([contrat](./editable-site-contract.md)) |
+| Bilan de santé du site : disponibilité sur 30 jours, bilan qualité hebdomadaire | ✅ | `/app/site/sante` |
+| Bilan mensuel envoyé aux clients le 1er du mois | ✅ | part dès que Resend est branché (étape 4) |
+| Tableau de production de l'équipe, file « à traiter » complète | ✅ | `/admin/production`, `/admin` |
+| Page d'état qui dit la vérité (sauvegardes, e-mails, paiements, tâches) | ✅ | `/status`, `/admin/sante` |
 
-Preuves : 572 assertions SQL, 392 tests unitaires et d'intégration, 66 tests
+Preuves : 630 assertions SQL, 423 tests unitaires et d'intégration, 66 tests
 navigateur (ordinateur + téléphone), 31 parcours complets contre une vraie
 pile, dont la vente par téléphone de bout en bout et une simulation
-d'intrusion (deux clients étrangers et un visiteur anonyme).
+d'intrusion (deux clients étrangers et un visiteur anonyme). Détail de
+l'audit opérationnel du 2026-09-30 : [GAP_AUDIT.md § 17](./GAP_AUDIT.md).
 
 **Sécurité :** audit complet du 2026-09-27 — voir
 [security.md § 16](./security.md#16-audit-du-2026-09-27--ce-qui-a-été-trouvé-et-corrigé).
@@ -81,6 +87,20 @@ d'erreur, notifications), renommé les tâches planifiées
 (`nemasus-site-operations`, `nemasus-retention`) et complété la liste publique
 des sous-traitants (Resend ajouté). La **0058** (2026-09-29) inscrit Vercel,
 hébergeur de la plateforme, et recentre Cloudflare sur les sites des clients.
+
+**À faire : migrations 0060 à 0064** (2026-09-30). La **0059** (statistiques
+réellement calculées) est appliquée en production et inscrite avec son
+empreinte ; l'agrégation horaire y tourne déjà. Les suivantes sont prêtes et
+toutes additives — état des services dérivé des journaux (0060), libellés
+accentués (0061), pilotage de l'équipe (0062), bilan de santé des sites
+(0063), bilan mensuel des clients (0064) :
+
+```
+DATABASE_URL="postgresql://…" pnpm db:migrate
+```
+
+Le code tolère leur absence (les écrans concernés s'annoncent indisponibles),
+mais appliquez-les **avant** de fusionner : c'est l'ordre sûr.
 
 Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 
@@ -186,6 +206,11 @@ jusqu'au bout.
 **Vérifier :** faites d'abord tout le parcours en **mode test** (carte
 `4242 4242 4242 4242`) — voir l'étape 9.
 
+**Téléphone de l'éditeur (bloquant, obligatoire — LCEN art. 6 III).** La
+variable `LEGAL_PHONE` n'est pas posée sur Vercel : les mentions légales en
+ligne affichent « Identité de l'éditeur non configurée ». Ajoutez-la
+(*Vercel → Settings → Environment Variables*), puis redéployez.
+
 ## Étape 5 bis — Sauvegardes (bloquant avant le premier client)
 
 Supabase gratuit n'en fournit pas ; la page Infrastructure et les CGV en
@@ -212,6 +237,24 @@ la tâche de fond toutes les 5 minutes.
 La tâche de fond fait aussi la **reprise des livraisons automatiques** et la
 **surveillance** des sites livrés : sans elle, un paiement dont la livraison a
 échoué n'est pas retenté.
+
+**Constaté le 2026-09-30 : ces deux secrets Vault n'existent pas en
+production.** La tâche `nemasus-site-operations` tourne toutes les 5 minutes
+mais ne fait rien ; seule la tâche quotidienne de Vercel passe. Dans Supabase →
+*SQL Editor*, une fois :
+
+```sql
+select vault.create_secret('https://sta-x-platform.vercel.app', 'nemasus_platform_url');
+select vault.create_secret('<valeur exacte de CRON_SECRET sur Vercel>', 'nemasus_cron_secret');
+```
+
+(Remplacez l'adresse par votre domaine quand il sera branché.)
+*Administration → État des services → Tâches planifiées par la base* dit si
+ces secrets sont présents — jamais leur valeur.
+
+**API des sites :** posez `SITES_API_URL` (adresse du Worker `nemasus-sites`,
+par exemple `https://api.nemasus.fr`) : l'écran de livraison affiche alors la
+ligne exacte de mesure d'audience à ajouter dans chaque site.
 
 **Vérifier :** `/admin/sante` : « Application GitHub », « API Cloudflare des
 sites », « Suivi des déploiements » et « Surveillance » au vert.
@@ -328,7 +371,8 @@ principe suivi ici. Reste à faire :
 | **Propositions** (`/admin/propositions`) | Envoyer, relancer, retirer ; voir qui a créé son compte, qui a payé |
 | **Messages clients** (`/admin/messages`) | Répondre aux clients et prospects (pastille = en attente) |
 | **Tickets** (`/admin/support`) | Demandes d'assistance ouvertes depuis « Aide & support » |
-| **Sites** → fiche → *Infrastructure & livraison* | Checklist, livraison, domaine |
+| **Production** (`/admin/production`) | Chaque projet dans son étape, les retards, ce qui attend le client, les sites en panne |
+| **Sites** → fiche → *Infrastructure & livraison* | Checklist, livraison, domaine, ligne de mesure d'audience |
 | **État des services** (`/admin/sante`) | Ce qui n'est pas configuré ou ne répond pas |
 
 Toutes les alertes arrivent aussi par e-mail sur `SUPPORT_EMAIL`.

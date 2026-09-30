@@ -61,6 +61,12 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 | Historique, Voir, Restaurer (redéploiement réel), Republier         | ✅   | `/app/site/versions`, `site_releases`                            |
 | Webhooks GitHub, Cloudflare, Stripe signés ; tâche de fond          | ✅   | `api/webhooks/*`, `api/cron/sites`                               |
 | Surveillance HTTPS des sites livrés                                 | ✅   | `site_health_checks`                                             |
+| Statistiques réelles (visiteurs, sources, appareils, contacts)      | ✅   | `app.rollup_site_metrics` (horaire), `/app/statistiques`         |
+| Mesure d’audience des sites indépendants en une ligne               | ✅   | `/v1/sites/<clé>/mesure.js`, sans cookie                         |
+| Bilan de santé : disponibilité 30 jours, bilan qualité hebdo        | ✅   | `/app/site/sante`, `site_quality_reports`                        |
+| Bilan mensuel envoyé aux clients le 1er du mois                     | ✅   | `lib/monthly-report.ts`, `site_monthly_reports`                  |
+| Tableau de production de l’équipe, file « à traiter »               | ✅   | `/admin/production`, `staff_work_queue()`                        |
+| Page d’état dérivée des journaux, jamais « saine » par défaut       | ✅   | `app.refresh_system_health` (10 min)                             |
 | API des sites : formulaires, réservations, boutique, comptes        | ✅   | `apps/site-runtime/src/sites-api.ts`                             |
 | Espace client (messages, réservations, factures, abonnement)        | ✅   | `apps/platform/src/app/app`                                      |
 | Encaissements sur les sites clients                                 | ✅   | Stripe Connect, commission à zéro                                |
@@ -133,7 +139,7 @@ GitHub (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`,
 
 ```bash
 pnpm verify                # format + lint + typecheck + tests
-scripts/db-test.sh         # 572 assertions SQL (échoue au premier échec)
+scripts/db-test.sh         # 630 assertions SQL (échoue au premier échec)
 pnpm build                 # build de production (plateforme + Worker des sites)
 ```
 
@@ -169,7 +175,7 @@ packages/
   emails/          Modèles et interface d’envoi indépendante du fournisseur
   analytics/       Mesure d’audience sans cookie
   ui/              Système de design, primitives, icônes, mouvement
-supabase/migrations/   57 migrations SQL versionnées (jamais réécrites)
+supabase/migrations/   64 migrations SQL versionnées (jamais réécrites)
 tests/                 unitaires, intégration, sécurité, SQL, E2E
 ```
 

@@ -19,6 +19,11 @@ Mise à jour : 2026-09-28 (**StaX devient Nemasus**, revue juridique de toutes
 les pages, déploiement Cloudflare, migration 0057 — § 15) · Branche :
 `claude/relaxed-allen-29o1o2`
 
+Mise à jour : 2026-09-30 (**audit opérationnel** : statistiques réellement
+calculées, état des services véridique, pilotage de l’équipe, bilan de santé
+et bilan mensuel des clients, migrations 0059 à 0064 — § 17) · Branche :
+`claude/confident-planck-bmbp9h`
+
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
 
@@ -571,7 +576,61 @@ plateforme retirés ; `vercel.json` restauré (région, tâche quotidienne).
 Sauvegardes : Supabase gratuit n’en fournit pas ; export quotidien chiffré par
 GitHub Actions (`backup.yml`), actif dès que ses deux secrets sont posés.
 
+## 17. Audit opérationnel du 2026-09-30 — ce qui ne tournait pas vraiment
+
+Question posée : **qu’est-ce qui, en production, ne fait pas ce que l’écran
+laisse croire ?** Le produit a été relu contre la base de production (Supabase),
+la plateforme en ligne (Vercel) et une pile locale complète.
+
+### 17.1 Pannes silencieuses trouvées et corrigées
+
+| # | Panne | Conséquence réelle | Correction | Preuve |
+|---|---|---|---|---|
+| 1 | L’agrégation des statistiques n’était **appelée nulle part** (`rollupDay` existait, jamais utilisé) | Visiteurs, pages les plus vues, sources, commandes, encaissé : **zéro pour toujours** ; « 0 visiteur » à côté de centaines de pages vues | 0059 : `app.rollup_site_metrics` (fuseau du site, idempotente), `pg_cron` chaque heure, état publié | 17 assertions SQL |
+| 2 | La mesure d’audience des sites indépendants n’était **documentée nulle part** | Aucun développeur ne pouvait la brancher : statistiques vides pour tout nouveau site | `GET /v1/sites/<clé>/mesure.js` (une ligne, sans cookie), contrat documenté, ligne à copier sur l’écran de livraison | 13 tests unitaires |
+| 3 | Les collecteurs du Worker n’utilisaient pas les filtres de `@nemasus/analytics` | Robots comptés comme visiteurs ; requête d’URL (parfois une adresse e-mail) conservée dans le chemin | Robots écartés, chemin sans requête ni fragment, type d’appareil seul | tests unitaires |
+| 4 | 5 indicateurs de la page d’état sur 11 n’étaient **jamais mis à jour** ; « sauvegarde assurée par Supabase » alors que l’offre gratuite n’en fait pas | Page d’état publique fausse ou figée | 0060 : état dérivé des journaux toutes les 10 min ; la sauvegarde inscrit son résultat ; une tâche arrêtée devient « dégradée » | 18 assertions SQL |
+| 5 | `email_log` n’était **jamais alimenté** (aucun appel ne passait la base) | Impossible de savoir si les e-mails partaient | `sendEmail` journalise toujours | assertions SQL (état des e-mails) |
+| 6 | Accents perdus : « Comment ca marche », « Centre d aide », « A propos », « Creneaux, capacites », « 3 reservations à confirmer », « Le prenom », « caracteres », « vous etes »… | Image d’un produit bâclé, sur le site public et dans l’espace client | Code + 0061 (libellés en base) ; `tests/unit/french-text.test.ts` balaie les chaînes et le texte JSX | test |
+| 7 | `/admin/*` et `/app/*` répondaient **200** à un visiteur sans session (redirection pendant le streaming) | Aucune fuite, mais « 200 » sur une page d’administration pour un robot ou un outil de surveillance | Redirection 307 par le proxy sans cookie de session | test unitaire + vérifié sur le build |
+| 8 | La tâche de fond toutes les 5 minutes ne part pas : secrets Vault absents en production | Publications programmées, suivi des déploiements, surveillance, livraisons automatiques : une fois par jour seulement (tâche Vercel de secours) | Constat affiché dans *État des services* avec la commande à exécuter | — (action du propriétaire) |
+
+### 17.2 Ce qui a été ajouté
+
+| Fonctionnalité | Pour qui | Où |
+|---|---|---|
+| **Statistiques utiles** : 7/30/90 jours, variation sur la période précédente, graphique jour par jour, sources nommées, appareils, pays | client | `/app/statistiques` |
+| **Tableau de production** : chaque projet dans l’étape que voit le client, retards en tête, attente client/équipe, messages non lus, sites en panne | équipe | `/admin/production` (0062) |
+| **File « à traiter » complète** : clients sans réponse, sites en panne, livraisons automatiques en échec, projets en retard, propositions qui expirent, tickets | équipe | `/admin` |
+| **Bilan de santé** : disponibilité réelle sur 30 jours (bande jour par jour), temps de réponse, bilan qualité hebdomadaire en 17 contrôles avec la marche à suivre, « Vérifier maintenant » | client | `/app/site/sante` (0063) |
+| **Bilan mensuel par e-mail** le 1er du mois (visiteurs, contacts, disponibilité, qualité, comparaison au mois précédent), réglable par chacun | client | tâche de fond (0064), `/app/compte` |
+| **Tâches planifiées** visibles, secrets Vault présents ou non (jamais leur valeur) | équipe | `/admin/sante` |
+
+### 17.3 Preuves
+
+| Contrôle | Résultat |
+|---|---|
+| Assertions SQL (`scripts/db-test.sh`) | 630, toutes passées (dont le balayage d’intrusion : 140 appels, rien modifié, rien divulgué) |
+| Tests unitaires, intégration, sécurité (`pnpm test`) | 423 passés |
+| Tests navigateur (`pnpm test:e2e`, ordinateur + téléphone) | 66 passés |
+| Parcours complets contre une vraie pile (`pnpm test:e2e:stack`) | 31 passés, dont toutes les pages (nouveaux écrans compris) |
+| Build de production | OK |
+| Production | 0059 appliquée le 2026-09-30, empreinte inscrite ; agrégation « saine », tâche horaire planifiée |
+
 ## Ce qui reste non terminé, sans détour
+
+000. **Migrations 0060 à 0064 à appliquer en production** (la 0059 l’est
+   depuis le 2026-09-30). Toutes additives, compatibles avec le code déployé :
+   `DATABASE_URL="postgresql://…" pnpm db:migrate`. Tant qu’elles ne le sont
+   pas, les écrans *Production*, *Bilan de santé* et l’état des services
+   dérivé annoncent leur indisponibilité au lieu d’échouer.
+
+000 bis. **Téléphone de l’éditeur** (`LEGAL_PHONE`, variable Vercel) : exigé
+   par la LCEN, il manque ; les mentions légales en ligne affichent « Identité
+   de l’éditeur non configurée ».
+
+000 ter. **Secrets Vault de la tâche de fond** (`nemasus_platform_url`,
+   `nemasus_cron_secret`) : absents en production — voir § 17.1, point 8.
 
 00. ~~Migration 0056 (durcissement de sécurité) à appliquer en production~~ —
    **fait** : 56 migrations tracées dans `app.schema_migrations`, empreinte du
