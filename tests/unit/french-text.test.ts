@@ -68,6 +68,35 @@ const MISSPELLINGS = [
   'personnalise',
   'agregation',
   'execution',
+  'creation',
+  'creations',
+  'reinitialisation',
+  'verifier',
+  'verifiez',
+  'activite',
+  'telecharger',
+  'numero',
+  'categorie',
+  'quantite',
+  'societe',
+  'systeme',
+  'probleme',
+  'reponse',
+  'reponses',
+  'acces',
+  'deconnexion',
+  'electronique',
+  'delai',
+  'recu',
+  'resultat',
+  'reseau',
+  'precedente',
+  'frequentes',
+  'necessaire',
+  'modele',
+  'echeance',
+  'annee',
+  'duree',
 ];
 
 // Limites de mot Unicode (« vôtres » ne contient pas « tres »), hors chemins d'URL.
@@ -77,6 +106,7 @@ const ELISION =
   /(?<![\w’'-])(?:d|l|qu) (?=[aeiouyhéèêàâîôû])|(?<![\w’'])a (?:cette|partir|venir|jour|vos|votre)\b/;
 const STRING = /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g;
 const JSX_TEXT = />([^<>{}\n][^<>{}]*)</g;
+const JSX_PROSE = /^[A-Za-zÀ-ÿ«“’(][^{}<>;=`]*\s[^{}<>;=`]*\s[^{}<>;=`]*$/u;
 
 function files(dir: string): string[] {
   const out: string[] = [];
@@ -119,6 +149,10 @@ describe('orthographe des textes visibles', () => {
             ...[...line.matchAll(STRING)].map((match) => match[0].slice(1, -1)),
             ...[...line.matchAll(JSX_TEXT)].map((match) => match[1] ?? ''),
           ];
+          // Texte JSX sur plusieurs lignes : une ligne de prose, sans code.
+          const prose = line.trim();
+          if (file.endsWith('.tsx') && JSX_PROSE.test(prose) && !/\?\.|\?\?|&&|\|\||,$/.test(prose))
+            chunks.push(prose);
           for (const chunk of chunks) {
             if (isTechnical(chunk)) continue;
             const hit = WORD.exec(chunk) ?? ELISION.exec(chunk);

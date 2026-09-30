@@ -32,13 +32,13 @@ export const RATE_LIMITS = {
     bucket: 'auth.signup',
     windowSeconds: 3600,
     max: 5,
-    message: 'Trop de creations de compte depuis cette connexion. Réessayez plus tard.',
+    message: 'Trop de créations de compte depuis cette connexion. Réessayez plus tard.',
   },
   passwordReset: {
     bucket: 'auth.password_reset',
     windowSeconds: 3600,
     max: 5,
-    message: 'Trop de demandes de reinitialisation. Réessayez dans une heure.',
+    message: 'Trop de demandes de réinitialisation. Réessayez dans une heure.',
   },
   activation: {
     bucket: 'auth.activation',
