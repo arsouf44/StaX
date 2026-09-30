@@ -30,15 +30,17 @@ export async function runQualityCheckAction(
     return { status: 'error', message: 'Le bilan est disponible une fois le site livré.' };
   }
 
-  const latest = unwrapMaybe<{ checked_at: string }>(
-    (await db
-      .from('site_quality_reports')
-      .select('checked_at')
-      .eq('site_id', site.id)
-      .order('checked_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()) as never,
-  );
+  const lastReport = await db
+    .from('site_quality_reports')
+    .select('checked_at')
+    .eq('site_id', site.id)
+    .order('checked_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (lastReport.error) {
+    return { status: 'error', message: 'Le bilan qualité n’est pas encore disponible.' };
+  }
+  const latest = unwrapMaybe<{ checked_at: string }>(lastReport as never);
   if (latest && Date.now() - new Date(latest.checked_at).getTime() < FRESH_MS) {
     return { status: 'success', message: 'Le bilan a moins d’un quart d’heure : il est à jour.' };
   }

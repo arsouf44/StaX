@@ -51,16 +51,20 @@ export async function updateProfileAction(
 
   // La policy de mise a jour des profils restreint la ligne a soi-meme : un
   // identifiant d autrui ne correspondrait a rien.
-  const { error } = await db
+  const fields = {
+    first_name: parsed.data.firstName,
+    last_name: parsed.data.lastName,
+    phone: parsed.data.phone || null,
+    marketing_opt_in: parsed.data.marketingOptIn,
+  };
+  let { error } = await db
     .from('profiles')
-    .update({
-      first_name: parsed.data.firstName,
-      last_name: parsed.data.lastName,
-      phone: parsed.data.phone || null,
-      marketing_opt_in: parsed.data.marketingOptIn,
-      monthly_report_opt_in: parsed.data.monthlyReportOptIn,
-    })
+    .update({ ...fields, monthly_report_opt_in: parsed.data.monthlyReportOptIn })
     .eq('id', session.user.id);
+  // Base pas encore migree (0064) : le reste du profil s'enregistre quand meme.
+  if (error && /monthly_report_opt_in/.test(error.message ?? '')) {
+    ({ error } = await db.from('profiles').update(fields).eq('id', session.user.id));
+  }
 
   if (error) {
     return { status: 'error', message: 'Vos informations n’ont pas pu être enregistrées.' };

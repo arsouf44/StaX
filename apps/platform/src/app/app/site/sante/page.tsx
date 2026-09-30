@@ -99,7 +99,8 @@ export default async function SiteHealthPage() {
   const availability = (
     availabilityResult.error ? null : availabilityResult.data
   ) as Availability | null;
-  const history = unwrapList<Report>(reports as never);
+  // Table absente (migration 0063 pas encore appliquée) : pas de bilan, pas d'erreur.
+  const history = reports.error ? [] : unwrapList<Report>(reports as never);
   const latest = history[0] ?? null;
   const checks = Array.isArray(latest?.checks) ? latest.checks : [];
   const failing = checks.filter((item) => item.status === 'fail');
