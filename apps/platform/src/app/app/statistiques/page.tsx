@@ -395,7 +395,12 @@ export default async function StatisticsPage({
           visiteurs qui appellent valent mieux que dix mille qui passent.
         </p>
         <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
-          Chiffres recalculés chaque heure. Vous pouvez désactiver entièrement la mesure depuis{' '}
+          Chiffres recalculés chaque heure. Le 1er de chaque mois, le bilan du mois écoulé vous est
+          envoyé par e-mail (réglable dans{' '}
+          <Link href="/app/compte" className="underline underline-offset-4">
+            Mon compte
+          </Link>
+          ). Vous pouvez désactiver entièrement la mesure depuis{' '}
           <Link href="/app/entreprise" className="underline underline-offset-4">
             les réglages de votre entreprise
           </Link>

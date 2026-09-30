@@ -4306,6 +4306,98 @@ begin
 end;
 $$;
 
+\echo '--- 0064 : bilan mensuel du site ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_bob    uuid := (select v from t.fixtures where k = 'bob');
+  v_eve    uuid := (select v from t.fixtures where k = 'eve');
+  v_month  date := date_trunc('month', current_date - interval '1 month')::date;
+  v_payload jsonb;
+  v_due    boolean;
+  v_first  boolean;
+  v_second boolean;
+begin
+  delete from public.daily_site_metrics where site_id = v_site_a;
+  insert into public.daily_site_metrics (site_id, day, pageviews, visitors, form_submissions, breakdown)
+  values (v_site_a, v_month + 2, 40, 12, 3,
+          '{"top_pages":[{"path":"/carte","views":25},{"path":"/","views":15}],
+            "sources":[{"source":"google.com","visits":9}]}'::jsonb),
+         (v_site_a, v_month + 3, 20, 8, 1,
+          '{"top_pages":[{"path":"/","views":20}],"sources":"oups"}'::jsonb),
+         (v_site_a, (v_month - interval '1 month')::date + 5, 10, 5, 0, '{}'::jsonb);
+  update public.sites set delivered_at = v_month - interval '2 months' where id = v_site_a;
+
+  set local role service_role;
+  select exists (select 1 from public.sites_due_for_monthly_report(v_month, 100) d
+                  where d.site_id = v_site_a) into v_due;
+  v_payload := public.monthly_report_payload(v_site_a, v_month);
+  reset role;
+
+  perform t.assert(v_due, 'Le bilan du mois ecoule est du pour un site livre');
+  perform t.assert((v_payload -> 'current' ->> 'visitors')::int = 20
+                   and (v_payload -> 'current' ->> 'contacts')::int = 4
+                   and (v_payload -> 'previous' ->> 'visitors')::int = 5,
+    'Chiffres du mois et du mois precedent lus dans les statistiques agregees');
+  perform t.assert(v_payload -> 'topPages' -> 0 ->> 'path' = '/'
+                   and (v_payload -> 'topPages' -> 0 ->> 'views')::int = 35
+                   and v_payload -> 'topSources' -> 0 ->> 'source' = 'google.com',
+    'Pages et sources du mois fusionnees, detail mal forme ignore');
+  perform t.assert(exists (select 1 from jsonb_array_elements(v_payload -> 'recipients') r
+                            where r ->> 'email' = 'alice@tenant-a.test')
+                   and not exists (select 1 from jsonb_array_elements(v_payload -> 'recipients') r
+                                    where r ->> 'email' in ('eve@tenant-a.test', 'viewer@tenant-a.test',
+                                                            'bob@tenant-b.test')),
+    'Destinataires : proprietaires et administrateurs du site seulement');
+
+  -- Chacun peut refuser le bilan, pour lui-meme.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update public.profiles set monthly_report_opt_in = false where id = v_alice;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert((select not monthly_report_opt_in from public.profiles where id = v_alice),
+    'Un client peut refuser le bilan mensuel depuis son compte');
+  perform t.assert(t.denied_as(v_bob, format(
+      'update public.profiles set monthly_report_opt_in = true where id = %L', v_alice)),
+    'Personne ne peut changer ce choix a la place d''un autre');
+  perform set_config('request.jwt.claims', null, true);
+  set local role service_role;
+  v_payload := public.monthly_report_payload(v_site_a, v_month);
+  reset role;
+  perform t.assert(not exists (select 1 from jsonb_array_elements(v_payload -> 'recipients') r
+                                where r ->> 'email' = 'alice@tenant-a.test'),
+    'Qui a refuse le bilan ne le recoit plus');
+  update public.profiles set monthly_report_opt_in = true where id = v_alice;
+
+  -- Un bilan par site et par mois, jamais deux.
+  set local role service_role;
+  v_first := public.record_monthly_report(v_site_a, v_month, 'sent', 1, '{}'::jsonb, null);
+  v_second := public.record_monthly_report(v_site_a, v_month, 'sent', 1, '{}'::jsonb, null);
+  select exists (select 1 from public.sites_due_for_monthly_report(v_month, 100) d
+                  where d.site_id = v_site_a) into v_due;
+  reset role;
+  perform t.assert(v_first, 'Le premier envoi du mois est inscrit');
+  perform t.assert(not v_second, 'Un second envoi du meme mois est refuse (idempotence)');
+  perform t.assert(not v_due, 'Un site deja servi n''est plus du ce mois-ci');
+
+  perform t.assert(t.count_as(v_alice, format(
+      'select 1 from public.site_monthly_reports where site_id = %L', v_site_a)) = 1,
+    'Le client voit la trace de l''envoi');
+  perform t.assert(t.count_as(v_bob, format(
+      'select 1 from public.site_monthly_reports where site_id = %L', v_site_a)) = 0,
+    'Un autre client ne la voit pas');
+  perform t.assert(not has_function_privilege('authenticated',
+      'public.monthly_report_payload(uuid, date)', 'execute'),
+    'Le contenu du bilan (et ses destinataires) n''est lisible que par la tache de fond');
+
+  delete from public.site_monthly_reports where site_id = v_site_a;
+  delete from public.daily_site_metrics where site_id = v_site_a;
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

@@ -13,6 +13,7 @@ import {
   syncHostingDeployments,
   type StepOutcome,
 } from './publisher';
+import { sendMonthlyReports } from '../monthly-report';
 import { alertTeam } from '../team-alerts';
 
 /**
@@ -23,7 +24,8 @@ import { alertTeam } from '../team-alerts';
  *  3. apercus jamais construits -> expires ;
  *  4. surveillance HTTPS des sites livres ;
  *  5. bilan qualite hebdomadaire de leur page d'accueil ;
- *  6. etat reel de ces services dans `system_health`.
+ *  6. bilan mensuel envoye aux clients (le 1er du mois) ;
+ *  7. etat reel de ces services dans `system_health`.
  *
  * Chaque etape est independante : l'echec de l'une n'empeche pas les autres.
  */
@@ -35,6 +37,7 @@ export interface OperationsReport {
   previewsExpired: number;
   healthChecks: number;
   qualityAudits: number;
+  monthlyReports: number;
   errors: string[];
 }
 
@@ -58,6 +61,7 @@ export async function runSiteOperations(
     previewsExpired: 0,
     healthChecks: 0,
     qualityAudits: 0,
+    monthlyReports: 0,
     errors: [],
   };
   const withinBudget = () => Date.now() - started < budget;
@@ -195,6 +199,15 @@ export async function runSiteOperations(
     }
   } catch (error) {
     report.errors.push(`bilan qualite : ${error instanceof Error ? error.message : 'erreur'}`);
+  }
+
+  // 6. Bilan mensuel des clients : quelques sites par passage, une fois par mois.
+  if (withinBudget()) {
+    try {
+      report.monthlyReports = (await sendMonthlyReports(db, { limit: 5 })).sent;
+    } catch (error) {
+      report.errors.push(`bilan mensuel : ${error instanceof Error ? error.message : 'erreur'}`);
+    }
   }
 
   await setHealth(

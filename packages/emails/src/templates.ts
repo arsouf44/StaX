@@ -1046,3 +1046,115 @@ export function staffAlertEmail(ctx: {
     action: { label: ctx.actionLabel ?? 'Ouvrir dans l’administration', url: ctx.actionUrl },
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Bilan mensuel du site                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface MonthlyReportFigures {
+  siteName: string;
+  /** Mois couvert, AAAA-MM-01. */
+  month: string;
+  visitors: number;
+  pageviews: number;
+  contacts: number;
+  orders: number;
+  /** Montant encaissé, déjà formaté (`formatMoney`), `null` sans commande. */
+  revenueLabel: string | null;
+  /** Mois précédent, `null` s'il n'a aucune mesure (pas de variation inventée). */
+  previousVisitors: number | null;
+  previousContacts: number | null;
+  uptimeBps: number | null;
+  avgResponseMs: number | null;
+  qualityScore: number | null;
+  topPages: Array<{ path: string; views: number }>;
+  topSources: Array<{ source: string; visits: number }>;
+}
+
+const MONTH_NAME = new Intl.DateTimeFormat('fr-FR', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const INTEGER = new Intl.NumberFormat('fr-FR');
+
+/** « +12 % », « −8 % », « stable » ; `null` sans mois précédent mesuré. */
+export function monthOverMonth(current: number, previous: number | null): string | null {
+  if (previous === null || previous <= 0) return null;
+  const change = Math.round(((current - previous) / previous) * 100);
+  if (change === 0) return 'stable';
+  return `${change > 0 ? '+' : '−'}${Math.abs(change)} % par rapport au mois précédent`;
+}
+
+/**
+ * Bilan du mois écoulé, envoyé aux responsables d'un site livré. Tous les
+ * chiffres viennent de la base ; une valeur non mesurée n'apparaît pas (on
+ * n'écrit jamais « 0 % de disponibilité » pour un mois sans vérification).
+ */
+export function siteMonthlyReportEmail(
+  ctx: BaseContext & { figures: MonthlyReportFigures; appUrl: string; preferencesUrl: string },
+): EmailMessage {
+  const f = ctx.figures;
+  const monthLabel = MONTH_NAME.format(new Date(`${f.month}T12:00:00Z`));
+  const visitorsTrend = monthOverMonth(f.visitors, f.previousVisitors);
+  const contactsTrend = monthOverMonth(f.contacts, f.previousContacts);
+
+  const rows: Array<[string, string]> = [
+    ['Visiteurs', `${INTEGER.format(f.visitors)}${visitorsTrend ? ` (${visitorsTrend})` : ''}`],
+    ['Pages vues', INTEGER.format(f.pageviews)],
+    [
+      'Prises de contact',
+      `${INTEGER.format(f.contacts)}${contactsTrend ? ` (${contactsTrend})` : ''}`,
+    ],
+  ];
+  if (f.orders > 0) {
+    rows.push([
+      'Commandes payées',
+      `${INTEGER.format(f.orders)}${f.revenueLabel ? ` — ${f.revenueLabel}` : ''}`,
+    ]);
+  }
+  if (f.uptimeBps !== null) {
+    rows.push([
+      'Disponibilité',
+      `${(f.uptimeBps / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} %${
+        f.avgResponseMs !== null ? ` · réponse moyenne ${INTEGER.format(f.avgResponseMs)} ms` : ''
+      }`,
+    ]);
+  }
+  if (f.qualityScore !== null) rows.push(['Bilan qualité', `${f.qualityScore} / 100`]);
+
+  const pages = f.topPages.map((page) => `${page.path} (${INTEGER.format(page.views)} vues)`);
+  const sources = f.topSources.map(
+    (source) => `${source.source} (${INTEGER.format(source.visits)})`,
+  );
+
+  return shell({
+    to: ctx.to,
+    template: 'site_monthly_report',
+    subject: `${f.siteName} : votre bilan de ${monthLabel}`,
+    preheader: `${INTEGER.format(f.visitors)} visiteurs et ${INTEGER.format(f.contacts)} prises de contact en ${monthLabel}.`,
+    heading: `Votre site en ${monthLabel}`,
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(`Voici le bilan de ${f.siteName} pour le mois écoulé.`),
+      definitionList(rows),
+      pages.length > 0 ? paragraph(`Pages les plus consultées : ${pages.join(', ')}.`) : '',
+      sources.length > 0 ? paragraph(`D’où viennent vos visiteurs : ${sources.join(', ')}.`) : '',
+      paragraph(
+        'Mesure sans cookie ni suivi : un visiteur est une personne distincte sur une journée. ' +
+          'Le détail, jour par jour, est dans votre espace.',
+      ),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Voici le bilan de ${f.siteName} pour ${monthLabel}.`,
+      ...rows.map(([label, value]) => `${label} : ${value}.`),
+      pages.length > 0 ? `Pages les plus consultées : ${pages.join(', ')}.` : '',
+      sources.length > 0 ? `D’où viennent vos visiteurs : ${sources.join(', ')}.` : '',
+    ],
+    action: { label: 'Voir mes statistiques', url: ctx.appUrl },
+    footerNote:
+      'Vous recevez ce bilan parce que vous êtes responsable de ce site sur Nemasus. ' +
+      `Pour ne plus le recevoir : ${ctx.preferencesUrl}`,
+  });
+}

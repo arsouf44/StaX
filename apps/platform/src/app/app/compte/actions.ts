@@ -16,8 +16,9 @@ import type { ActionState } from '~/lib/form-state';
 /**
  * Informations personnelles.
  *
- * Liste blanche stricte : seuls le prenom, le nom, le telephone et le choix de
- * recevoir nos actualites sont modifiables ici. L adresse e-mail, le role et
+ * Liste blanche stricte : seuls le prenom, le nom, le telephone, le choix de
+ * recevoir nos actualites et celui de recevoir le bilan mensuel du site sont
+ * modifiables ici. L adresse e-mail, le role et
  * l etat du compte n y figurent PAS — ils exigent une verification ou un droit
  * que ce formulaire n accorde pas.
  */
@@ -27,6 +28,7 @@ const profileSchema = z
     lastName: boundedText(1, 60, 'Le nom'),
     phone: phoneSchema.optional().or(z.literal('')),
     marketingOptIn: checkboxSchema,
+    monthlyReportOptIn: checkboxSchema,
   })
   .strict();
 
@@ -56,6 +58,7 @@ export async function updateProfileAction(
       last_name: parsed.data.lastName,
       phone: parsed.data.phone || null,
       marketing_opt_in: parsed.data.marketingOptIn,
+      monthly_report_opt_in: parsed.data.monthlyReportOptIn,
     })
     .eq('id', session.user.id);
 
