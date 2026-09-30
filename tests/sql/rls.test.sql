@@ -4075,6 +4075,113 @@ begin
 end;
 $$;
 
+\echo '--- 0060 : chaque indicateur de la page d''etat dit la verite ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_row    public.system_health;
+begin
+  delete from public.email_log;
+  delete from public.webhook_events where provider in ('stripe', 'stripe_connect');
+
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'database') = 'healthy',
+    'La base se declare saine quand elle repond');
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'unknown', 'Aucun e-mail envoye : etat inconnu, jamais « sain » par defaut');
+  perform t.assert((select status from public.system_health where key = 'stripe_webhooks')
+                   = 'unknown', 'Aucun evenement Stripe : etat inconnu');
+
+  -- Fournisseur « console » : les messages ne partent pas, et c'est dit.
+  insert into public.email_log (template, to_hash, provider, status)
+  values ('welcome', 'h', 'console', 'sent');
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'not_configured', 'E-mails sans fournisseur : « non configure »');
+
+  -- Vrai fournisseur, un envoi sur deux en echec : degrade ; tous : en panne.
+  insert into public.email_log (template, to_hash, provider, status, created_at) values
+    ('welcome', 'h', 'resend', 'sent', now()), ('welcome', 'h', 'resend', 'failed', now());
+  delete from public.email_log where provider = 'console';
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'degraded', 'Des envois en echec : « degrade »');
+  delete from public.email_log where status = 'sent';
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'email_provider')
+                   = 'failing', 'Tous les envois en echec : « en panne »');
+
+  insert into public.webhook_events (provider, event_id, event_type, status)
+  values ('stripe', 'evt_test_ok', 'checkout.session.completed', 'processed');
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'stripe_webhooks')
+                   = 'healthy', 'Evenement Stripe traite : sain, avec sa date');
+  insert into public.webhook_events (provider, event_id, event_type, status)
+  values ('stripe', 'evt_test_ko', 'invoice.paid', 'failed');
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'stripe_webhooks')
+                   = 'degraded', 'Evenement Stripe en echec : degrade');
+
+  -- Une tache de fond arretee ne reste pas « saine ».
+  update public.system_health set status = 'healthy', observed_at = now() - interval '3 hours'
+   where key = 'site_monitoring';
+  perform app.refresh_system_health();
+  select * into v_row from public.system_health where key = 'site_monitoring';
+  perform t.assert(v_row.status = 'degraded' and v_row.detail like 'Dernière exécution le %',
+    'Tache de fond arretee depuis 3 h : degradee, avec la date du dernier passage');
+  perform t.assert(v_row.observed_at < now() - interval '2 hours',
+    'La date de la derniere execution reelle est conservee');
+
+  -- Sauvegarde : resultat inscrit, puis perime au bout de 36 h.
+  perform app.record_backup_result(true);
+  perform t.assert((select status from public.system_health where key = 'backups') = 'healthy',
+    'Sauvegarde reussie inscrite');
+  update public.system_health set observed_at = now() - interval '2 days' where key = 'backups';
+  perform app.refresh_system_health();
+  perform t.assert((select status from public.system_health where key = 'backups') = 'degraded',
+    'Aucune sauvegarde depuis 36 h : degradee');
+  perform app.record_backup_result(false);
+  perform t.assert((select status from public.system_health where key = 'backups') = 'failing',
+    'Sauvegarde en echec inscrite');
+
+  perform t.assert(not has_function_privilege('authenticated', 'app.record_backup_result(boolean, text)', 'execute')
+                   and not has_function_privilege('authenticated', 'app.refresh_system_health()', 'execute'),
+    'Ni un client ni un visiteur ne peut ecrire l''etat des services');
+  perform t.assert(t.denied_as(v_alice,
+      'update public.system_health set status = ''healthy'' where key = ''backups'''),
+    'Un client ne peut pas maquiller l''etat des services');
+  delete from public.email_log;
+  delete from public.webhook_events where event_id in ('evt_test_ok', 'evt_test_ko');
+end;
+$$;
+
+do $$
+declare
+  v_alice uuid := (select v from t.fixtures where k = 'alice');
+  v_staff uuid := (select v from t.fixtures where k = 'staff');
+  v_res   jsonb;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_res := public.scheduler_overview();
+  reset role;
+  perform t.assert(v_res is null, 'Un client ne voit pas les taches planifiees ni l''etat de Vault');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_staff, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  v_res := public.scheduler_overview();
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(v_res ? 'jobs' and v_res -> 'vault' ? 'cronSecret'
+                   and jsonb_typeof(v_res -> 'vault' -> 'cronSecret') = 'boolean'
+                   and jsonb_typeof(v_res -> 'vault' -> 'platformUrl') = 'boolean',
+    'L''equipe voit les taches planifiees et la PRESENCE des secrets (booleen), jamais leur valeur');
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'
