@@ -4182,6 +4182,69 @@ begin
 end;
 $$;
 
+\echo '--- 0062 : pilotage de l''equipe (file a traiter, tableau de production) ---'
+do $$
+declare
+  v_org_a  uuid := (select v from t.fixtures where k = 'org_a');
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_staff  uuid := (select v from t.fixtures where k = 'staff');
+  v_project uuid;
+  v_queue  jsonb;
+  v_board  jsonb;
+  v_card   jsonb;
+begin
+  insert into public.projects (reference, organization_id, site_id, status, title, due_at)
+  values ('PRJ-TEST-RETARD', v_org_a, v_site_a, 'assets_pending', 'Projet en retard',
+          now() - interval '2 days')
+  returning id into v_project;
+  insert into public.project_messages (project_id, author_side, body)
+  values (v_project, 'client', 'Bonjour, où en est mon site ?');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_queue := public.staff_work_queue();
+  v_board := public.staff_production_board();
+  reset role;
+  perform t.assert(v_queue is null and v_board is null,
+    'Un client ne lit ni la file de l''equipe ni le tableau de production');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_staff, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  v_queue := public.staff_work_queue();
+  v_board := public.staff_production_board();
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  perform t.assert((v_queue ->> 'lateProjects')::int >= 1
+                   and (v_queue ->> 'unreadConversations')::int >= 1
+                   and (v_queue ->> 'waitingOnClient')::int >= 1,
+    'La file de l''equipe compte projets en retard, messages sans reponse, attentes client');
+  select c into v_card from jsonb_array_elements(v_board) c where c ->> 'id' = v_project::text;
+  perform t.assert(v_card is not null
+                   and (v_card ->> 'late')::boolean
+                   and v_card ->> 'waiting_on' = 'client'
+                   and (v_card ->> 'unread_messages')::int = 1
+                   and v_card ->> 'site_name' = 'Site A',
+    'Le tableau de production montre le projet : en retard, attend le client, 1 message non lu');
+
+  update public.projects set status = 'cancelled' where id = v_project;
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_staff, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  v_board := public.staff_production_board();
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(not exists (select 1 from jsonb_array_elements(v_board) c
+                                where c ->> 'id' = v_project::text),
+    'Un projet annule quitte le tableau de production');
+  delete from public.project_messages where project_id = v_project;
+  delete from public.projects where id = v_project;
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

@@ -4,6 +4,7 @@ import { loadAdminOverview } from '@nemasus/database';
 import { formatMoney } from '@nemasus/payments';
 import { Alert, Card, Icon, Panel, Stat } from '@nemasus/ui';
 import { getAdminContext } from '~/lib/admin';
+import { loadWorkQueue } from '~/lib/staff-board';
 
 export const metadata: Metadata = { title: 'Vue d’ensemble' };
 
@@ -24,6 +25,8 @@ export default async function AdminHomePage() {
   } catch {
     overview = null;
   }
+  // Ce qui fait qu'un client attend : lu par une fonction reservee a l'equipe.
+  const work = await loadWorkQueue(db);
 
   if (!overview) {
     return (
@@ -38,6 +41,54 @@ export default async function AdminHomePage() {
   }
 
   const queue = [
+    {
+      href: '/admin/messages',
+      label: 'client attend une réponse',
+      plural: 'clients attendent une réponse',
+      count: work?.unreadConversations ?? 0,
+      icon: 'message-circle',
+      tone: 'danger' as const,
+    },
+    {
+      href: '/admin/production#sites-en-panne',
+      label: 'site livré en panne',
+      plural: 'sites livrés en panne',
+      count: work?.sitesDown ?? 0,
+      icon: 'alert-triangle',
+      tone: 'danger' as const,
+    },
+    {
+      href: '/admin/propositions',
+      label: 'livraison automatique en échec après paiement',
+      plural: 'livraisons automatiques en échec après paiement',
+      count: work?.deliveriesFailed ?? 0,
+      icon: 'zap',
+      tone: 'danger' as const,
+    },
+    {
+      href: '/admin/production?filtre=retard',
+      label: 'projet en retard sur sa date de livraison',
+      plural: 'projets en retard sur leur date de livraison',
+      count: work?.lateProjects ?? 0,
+      icon: 'clock',
+      tone: 'warning' as const,
+    },
+    {
+      href: '/admin/propositions',
+      label: 'proposition qui expire dans 3 jours',
+      plural: 'propositions qui expirent dans 3 jours',
+      count: work?.proposalsExpiring ?? 0,
+      icon: 'send',
+      tone: 'warning' as const,
+    },
+    {
+      href: '/admin/support',
+      label: 'ticket attend l’équipe',
+      plural: 'tickets attendent l’équipe',
+      count: work?.ticketsWaiting ?? 0,
+      icon: 'life-buoy',
+      tone: 'accent' as const,
+    },
     {
       href: '/admin/commandes?filtre=a_traiter',
       label: 'commande à traiter',
@@ -114,7 +165,7 @@ export default async function AdminHomePage() {
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {queue.map((entry) => (
-              <Link key={entry.href} href={entry.href}>
+              <Link key={entry.label} href={entry.href}>
                 <Card interactive className="h-full">
                   <div className="flex items-start gap-3">
                     <Icon name={entry.icon} size={18} className="mt-0.5 text-[var(--muted)]" />

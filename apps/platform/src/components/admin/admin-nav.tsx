@@ -34,6 +34,7 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
     label: 'Pilotage',
     items: [
       { href: '/admin', label: 'Vue d’ensemble', icon: 'layout-dashboard', minimum: 'support' },
+      { href: '/admin/production', label: 'Production', icon: 'columns-2', minimum: 'support' },
       { href: '/admin/activite', label: 'Journal', icon: 'history', minimum: 'platform_admin' },
       { href: '/admin/sante', label: 'État des services', icon: 'activity', minimum: 'support' },
       {
