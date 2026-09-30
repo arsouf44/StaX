@@ -82,10 +82,12 @@ describe('site indépendant (dépôt GitHub + projet Cloudflare)', () => {
     expect(entries).not.toContain('/app/site/versions');
   });
 
-  it('après la livraison : l’éditeur du contrat et l’historique des versions', () => {
+  it('après la livraison : l’éditeur du contrat, l’historique des versions et le bilan de santé', () => {
     const entries = hrefs(true, 'external_repository');
     expect(entries).toContain('/app/editeur');
     expect(entries).toContain('/app/site/versions');
+    expect(entries).toContain('/app/site/sante');
+    expect(hrefs(false, 'external_repository')).not.toContain('/app/site/sante');
   });
 
   it('jamais les écrans de l’ancien moteur : pages, apparence, navigation, formulaires', () => {

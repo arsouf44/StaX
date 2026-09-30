@@ -4,6 +4,7 @@ import {
   checkSiteHealth,
   cloudflareSitesConfigured,
   githubAppConfigured,
+  runQualityAudit,
 } from '@nemasus/infrastructure';
 import {
   expireStalePreviews,
@@ -21,7 +22,8 @@ import { alertTeam } from '../team-alerts';
  *  2. versions en attente, bloquees ou en deploiement -> traitees / suivies ;
  *  3. apercus jamais construits -> expires ;
  *  4. surveillance HTTPS des sites livres ;
- *  5. etat reel de ces services dans `system_health`.
+ *  5. bilan qualite hebdomadaire de leur page d'accueil ;
+ *  6. etat reel de ces services dans `system_health`.
  *
  * Chaque etape est independante : l'echec de l'une n'empeche pas les autres.
  */
@@ -32,6 +34,7 @@ export interface OperationsReport {
   hostingsSynced: number;
   previewsExpired: number;
   healthChecks: number;
+  qualityAudits: number;
   errors: string[];
 }
 
@@ -54,6 +57,7 @@ export async function runSiteOperations(
     hostingsSynced: 0,
     previewsExpired: 0,
     healthChecks: 0,
+    qualityAudits: 0,
     errors: [],
   };
   const withinBudget = () => Date.now() - started < budget;
@@ -177,6 +181,22 @@ export async function runSiteOperations(
     await setHealth(db, 'site_monitoring', 'failing', 'La surveillance des sites a échoué.');
   }
 
+  // 5. Bilan qualite : au plus trois sites par passage, chacun une fois par
+  // semaine. Un echec n'arrete pas la tache : le site sera repris au passage
+  // suivant (aucun bilan n'est enregistre sans avoir ete mesure).
+  try {
+    const due = unwrapList<{ site_id: string; url: string | null }>(
+      (await db.rpc('sites_due_for_quality_audit', { p_limit: 3 })) as never,
+    );
+    for (const site of due) {
+      if (!withinBudget() || !site.url) continue;
+      await recordQualityAudit(db, site.site_id, site.url);
+      report.qualityAudits += 1;
+    }
+  } catch (error) {
+    report.errors.push(`bilan qualite : ${error instanceof Error ? error.message : 'erreur'}`);
+  }
+
   await setHealth(
     db,
     'github_app',
@@ -195,4 +215,24 @@ export async function runSiteOperations(
   );
 
   return report;
+}
+
+/**
+ * Mesure puis enregistre le bilan qualite d'un site (clé de service). Utilise
+ * par la tache de fond et par le bouton « Vérifier maintenant » du client.
+ */
+export async function recordQualityAudit(db: Db, siteId: string, url: string) {
+  const audit = await runQualityAudit(url);
+  const { error } = await db.rpc('record_site_quality', {
+    p_site: siteId,
+    p_url: url,
+    p_final_url: audit.finalUrl,
+    p_score: audit.score,
+    p_max_score: audit.maxScore,
+    p_response_ms: audit.responseMs,
+    p_page_bytes: audit.pageBytes,
+    p_checks: audit.checks,
+  });
+  if (error) throw new Error(error.message);
+  return audit;
 }

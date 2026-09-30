@@ -130,6 +130,7 @@ const CLIENT_PAGES = [
   '/app/site/navigation',
   '/app/site/pages',
   '/app/site/referencement',
+  '/app/site/sante',
   '/app/site/versions',
   '/app/statistiques',
   '/app/statistiques?periode=7',

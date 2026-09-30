@@ -915,6 +915,7 @@ async function ManagedSiteDashboard({
     orders,
     metrics,
     platformOrder,
+    availabilityResult,
   ] = await Promise.all([
     db.rpc('site_management_overview', { p_site: site.id }),
     loadReleaseViews(db, site.id, 5),
@@ -957,7 +958,15 @@ async function ManagedSiteDashboard({
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Disponibilite reelle sur 30 jours (verifications HTTPS).
+    db.rpc('site_availability', { p_site: site.id, p_days: 30 }),
   ]);
+  const uptimeBps =
+    (
+      (availabilityResult.error ? null : availabilityResult.data) as {
+        uptimeBps?: number | null;
+      } | null
+    )?.uptimeBps ?? null;
 
   const overview = (overviewResult.data ?? {}) as {
     productionUrl?: string | null;
@@ -1067,7 +1076,15 @@ async function ManagedSiteDashboard({
             {check ? (
               <p className="text-xs text-[var(--foreground-muted)]">
                 Vérifié le {SHORT_DATE_TIME.format(new Date(check.checked_at))}
+                {uptimeBps !== null
+                  ? ` · disponible ${(uptimeBps / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} % sur 30 jours`
+                  : ''}
               </p>
+            ) : null}
+            {site.deliveredAt ? (
+              <Link href="/app/site/sante" className="text-xs underline underline-offset-4">
+                Voir le bilan de santé
+              </Link>
             ) : null}
           </div>
           <div>

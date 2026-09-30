@@ -4245,6 +4245,67 @@ begin
 end;
 $$;
 
+\echo '--- 0063 : bilan de sante des sites livres (disponibilite, qualite) ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_bob    uuid := (select v from t.fixtures where k = 'bob');
+  v_avail  jsonb;
+  v_i      int;
+begin
+  delete from public.site_health_checks where site_id = v_site_a;
+  insert into public.site_health_checks (site_id, url, ok, status_code, response_ms, checked_at)
+  select v_site_a, 'https://site-a.example/', g <> 3, case when g = 3 then 503 else 200 end,
+         100 + g, now() - make_interval(hours => g)
+    from generate_series(0, 9) g;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_alice, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_avail := public.site_availability(v_site_a, 30);
+  reset role;
+  perform t.assert((v_avail ->> 'checks')::int = 10 and (v_avail ->> 'up')::int = 9
+                   and (v_avail ->> 'uptimeBps')::int = 9000
+                   and v_avail ->> 'lastDownAt' is not null
+                   and jsonb_array_length(v_avail -> 'series') >= 1,
+    'Disponibilite reelle : 9 verifications reussies sur 10 = 90,00 %');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_bob, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_avail := public.site_availability(v_site_a, 30);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  perform t.assert(v_avail is null, 'Un autre client ne lit pas la disponibilite du site A');
+
+  -- Bilans : ecrits par la tache de fond seulement, lus par le client.
+  set local role service_role;
+  for v_i in 1..28 loop
+    perform public.record_site_quality(v_site_a, 'https://site-a.example/', null, 30, 34, 120,
+                                       12000, '[{"key":"title","status":"pass"}]'::jsonb);
+  end loop;
+  reset role;
+  perform t.assert((select count(*) from public.site_quality_reports where site_id = v_site_a) = 26,
+    'Six mois de bilans conserves par site (26), les plus anciens effaces');
+  perform t.assert(t.count_as(v_alice, format(
+      'select 1 from public.site_quality_reports where site_id = %L', v_site_a)) = 26,
+    'Le client lit les bilans de son site');
+  perform t.assert(t.count_as(v_bob, format(
+      'select 1 from public.site_quality_reports where site_id = %L', v_site_a)) = 0,
+    'Un autre client ne lit pas les bilans du site A');
+  perform t.assert(t.denied_as(v_alice, format(
+      'insert into public.site_quality_reports (site_id, url, score, max_score) values (%L, ''https://x.example/'', 34, 34)',
+      v_site_a)),
+    'Un client ne peut pas s''ecrire un bilan parfait');
+  perform t.assert(not has_function_privilege('authenticated',
+      'public.record_site_quality(uuid, text, text, int, int, int, int, jsonb)', 'execute'),
+    'Seule la tache de fond enregistre un bilan');
+  delete from public.site_quality_reports where site_id = v_site_a;
+  delete from public.site_health_checks where site_id = v_site_a;
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'
