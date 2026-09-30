@@ -198,6 +198,8 @@ const serverSchema = z.object({
   NEMASUS_SECRET_KEY: z.string().min(32),
 
   PLATFORM_URL: z.string().url().optional(),
+  /** Origine publique de l'API des sites (Worker `nemasus-sites`), sans chemin. */
+  SITES_API_URL: z.string().url().optional(),
   SITES_DOMAIN: z.string().optional(),
   PREVIEW_DOMAIN: z.string().optional(),
 });
@@ -418,6 +420,24 @@ export function publicSiteUrl(hostname: string, path = '/'): string {
   const port = readEnv('SITES_PUBLIC_PORT');
   const suffix = port && /^[0-9]{2,5}$/.test(port) ? `:${port}` : '';
   return `${scheme}://${hostname}${suffix}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+/**
+ * Origine de l'API des sites (`https://api.exemple.fr`), telle que les sites
+ * indépendants l'appellent. `null` tant que `SITES_API_URL` n'est pas posée :
+ * l'écran l'affiche comme « à configurer » plutôt que d'inventer une adresse.
+ */
+export function sitesApiOrigin(): string | null {
+  const value = readEnv('SITES_API_URL');
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+      ? url.origin
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export function previewDomain(): string {

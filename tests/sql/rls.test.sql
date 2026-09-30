@@ -985,12 +985,12 @@ begin
       'execute'),
     'authenticated ne peut PAS enumerer les creneaux d un site');
   perform t.assert(
-    not has_function_privilege('anon', 'public.record_page_view(uuid, text, text, text, char, text)',
-      'execute'),
+    not has_function_privilege('anon',
+      'public.record_page_view(uuid, text, text, text, char, text, text)', 'execute'),
     'anon ne peut PAS injecter de mesure d audience');
   perform t.assert(
     has_function_privilege('service_role',
-      'public.record_page_view(uuid, text, text, text, char, text)', 'execute'),
+      'public.record_page_view(uuid, text, text, text, char, text, text)', 'execute'),
     'service_role peut enregistrer une vue de page');
 end;
 $$;
@@ -3975,6 +3975,103 @@ begin
   perform t.assert(exists (select 1 from public.subprocessors
                             where name like '%Resend%' and is_active),
     '0058 : Resend, qui envoie les e-mails, figure parmi les sous-traitants');
+end;
+$$;
+
+\echo '--- 0059 : statistiques des sites reellement calculees ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_site_b uuid := (select v from t.fixtures where k = 'site_b');
+  v_alice  uuid := (select v from t.fixtures where k = 'alice');
+  v_bob    uuid := (select v from t.fixtures where k = 'bob');
+  v_day    date := (now() at time zone 'Europe/Paris')::date;
+  v_row    public.daily_site_metrics;
+  v_before public.daily_site_metrics;
+  v_n      integer;
+begin
+  update public.sites set timezone = 'Europe/Paris' where id in (v_site_a, v_site_b);
+  delete from public.analytics_events where site_id in (v_site_a, v_site_b);
+  delete from public.daily_site_metrics where site_id in (v_site_a, v_site_b);
+
+  -- Trois visiteurs, cinq pages vues, deux sources, deux types d'appareil.
+  perform public.record_page_view(v_site_a, '/', 'v1', 'www.Google.com', 'fr', 'pageview', 'mobile');
+  perform public.record_page_view(v_site_a, '/carte', 'v1', null, 'fr', 'pageview', 'mobile');
+  perform public.record_page_view(v_site_a, '/', 'v2', 'google.com', 'FR', 'pageview', 'desktop');
+  perform public.record_page_view(v_site_a, '/carte', 'v3', 'instagram.com', 'be', 'pageview', 'desktop');
+  perform public.record_page_view(v_site_a, '/carte', 'v3', null, 'be', 'pageview', 'imprimante');
+  -- Appel a six arguments (moteur des sites deja deploye) : toujours accepte.
+  perform public.record_page_view(v_site_b, '/', 'w1', null, 'fr', 'pageview');
+
+  select * into v_before from public.daily_site_metrics where site_id = v_site_a and day = v_day;
+  perform t.assert(v_before.pageviews = 5 and v_before.visitors = 0,
+    'Avant agregation : les pages vues sont comptees, les visiteurs pas encore');
+  perform t.assert(
+    (select count(*) from public.analytics_events where site_id = v_site_a and device is null) = 1,
+    'Un type d''appareil inconnu n''est pas enregistre');
+  perform t.assert(
+    (select count(*) from public.analytics_events where site_id = v_site_a
+      and referrer_host = 'google.com') = 2,
+    'La source est normalisee (minuscules, sans www.)');
+
+  -- Un message recu (hors indesirable) et un indesirable, le meme jour.
+  update public.form_submissions set status = 'unread', created_at = now() where site_id = v_site_a;
+  insert into public.form_submissions (form_id, site_id, organization_id, data, status)
+  select f.id, f.site_id, f.organization_id, '{"message":"achetez"}'::jsonb, 'spam'
+    from public.forms f where f.site_id = v_site_a;
+
+  v_n := app.rollup_recent_site_metrics();
+  perform t.assert(v_n >= 2, 'L''agregation horaire traite les sites actifs');
+  select * into v_row from public.daily_site_metrics where site_id = v_site_a and day = v_day;
+  perform t.assert(v_row.visitors = 3, 'Visiteurs distincts calcules : 3');
+  perform t.assert(v_row.pageviews = 5, 'Pages vues inchangees par l''agregation : 5');
+  perform t.assert(
+    v_row.form_submissions = (select count(*) from public.form_submissions
+                               where site_id = v_site_a and status <> 'spam'
+                                 and (created_at at time zone 'Europe/Paris')::date = v_day)
+    and v_row.form_submissions < (select count(*) from public.form_submissions
+                                   where site_id = v_site_a
+                                     and (created_at at time zone 'Europe/Paris')::date = v_day),
+    'Messages recus comptes depuis leur table, indesirables exclus');
+  perform t.assert(v_row.breakdown -> 'top_pages' -> 0 ->> 'path' = '/carte'
+                   and (v_row.breakdown -> 'top_pages' -> 0 ->> 'views')::int = 3,
+    'Page la plus vue : /carte (3 vues)');
+  perform t.assert(v_row.breakdown -> 'sources' -> 0 ->> 'source' = 'google.com'
+                   and (v_row.breakdown -> 'sources' -> 0 ->> 'visits')::int = 2,
+    'Premiere source : google.com (2 visites)');
+  perform t.assert((v_row.breakdown -> 'devices' ->> 'desktop')::int = 2
+                   and (v_row.breakdown -> 'devices' ->> 'mobile')::int = 1,
+    'Appareils : 2 ordinateurs, 1 telephone (visiteurs distincts)');
+  perform t.assert(v_row.breakdown -> 'countries' -> 0 ->> 'country' = 'FR',
+    'Pays normalises en majuscules');
+
+  -- Idempotente : un second passage donne exactement la meme ligne.
+  perform app.rollup_recent_site_metrics();
+  perform t.assert((select visitors from public.daily_site_metrics
+                     where site_id = v_site_a and day = v_day) = 3
+                   and (select pageviews from public.daily_site_metrics
+                     where site_id = v_site_a and day = v_day) = 5,
+    'L''agregation est idempotente');
+
+  perform t.assert((select status from public.system_health where key = 'analytics_rollup')
+                   = 'healthy', 'L''etat reel de l''agregation est publie (healthy)');
+
+  -- Une journee dont les evenements sont purges n'est jamais recalculee.
+  perform t.assert(app.rollup_site_metrics(current_date - 40) = 0,
+    'Une journee purgee (plus de 28 jours) n''est pas ecrasee');
+
+  -- Isolation : chaque client ne lit que ses propres chiffres.
+  perform t.assert(t.count_as(v_bob, format(
+      'select 1 from public.daily_site_metrics where site_id = %L', v_site_a)) = 0,
+    'Un autre client ne lit pas les statistiques du site A');
+  perform t.assert(t.count_as(v_alice, format(
+      'select 1 from public.daily_site_metrics where site_id = %L', v_site_a)) >= 1,
+    'Le client lit les statistiques de son site');
+
+  perform t.assert(not has_function_privilege('authenticated',
+      'app.rollup_site_metrics(date)', 'execute')
+    and not has_function_privilege('anon', 'app.rollup_recent_site_metrics()', 'execute'),
+    'L''agregation n''est appelable ni par un client ni par un visiteur');
 end;
 $$;
 
