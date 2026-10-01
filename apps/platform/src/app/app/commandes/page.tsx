@@ -21,8 +21,12 @@ const TRANSITION_LABELS: Record<string, string> = {
   cancelled: 'Annuler',
 };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
 
 interface AddressShape {
   line1?: unknown;

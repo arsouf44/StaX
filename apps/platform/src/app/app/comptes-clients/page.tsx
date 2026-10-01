@@ -8,8 +8,12 @@ import { CustomerList, type CustomerView } from './customer-list';
 
 export const metadata: Metadata = { title: 'Comptes clients' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 /**
  * Les comptes que vos clients ont ouverts sur VOTRE site.

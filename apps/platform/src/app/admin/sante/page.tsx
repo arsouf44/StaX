@@ -53,7 +53,11 @@ const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
   cron: 'Tâches de fond planifiées (CRON_SECRET)',
 };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 export default async function AdminHealthPage() {
   const { db } = await getAdminContext();

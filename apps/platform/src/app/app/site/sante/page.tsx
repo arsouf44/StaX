@@ -9,8 +9,16 @@ import { countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Bilan de santé' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' });
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'Europe/Paris',
+});
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 const PERCENT = new Intl.NumberFormat('fr-FR', {
   style: 'percent',
   minimumFractionDigits: 1,

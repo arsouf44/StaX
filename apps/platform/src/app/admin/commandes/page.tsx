@@ -148,9 +148,10 @@ export default async function AdminOrdersPage({
                     </TD>
                     <TD className="text-[var(--foreground-muted)]">
                       <time dateTime={row.paid_at ?? row.created_at}>
-                        {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-                          new Date(row.paid_at ?? row.created_at),
-                        )}
+                        {new Intl.DateTimeFormat('fr-FR', {
+                          dateStyle: 'medium',
+                          timeZone: 'Europe/Paris',
+                        }).format(new Date(row.paid_at ?? row.created_at))}
                       </time>
                     </TD>
                   </TR>

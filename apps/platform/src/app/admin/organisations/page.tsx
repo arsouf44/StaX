@@ -119,9 +119,10 @@ export default async function AdminOrganizationsPage({
                   <TD className="text-[var(--foreground-muted)]">{row.city ?? '—'}</TD>
                   <TD className="text-[var(--foreground-muted)]">
                     <time dateTime={row.created_at}>
-                      {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-                        new Date(row.created_at),
-                      )}
+                      {new Intl.DateTimeFormat('fr-FR', {
+                        dateStyle: 'medium',
+                        timeZone: 'Europe/Paris',
+                      }).format(new Date(row.created_at))}
                     </time>
                   </TD>
                 </TR>

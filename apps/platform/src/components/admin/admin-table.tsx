@@ -33,8 +33,12 @@ import { auditActionLabel } from '~/lib/audit-labels';
  * `ilike` : un `%` tape par erreur reste un caractere, pas un joker.
  */
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 function escapeLike(term: string): string {
   return term.replace(/[%_\\]/g, (character) => `\\${character}`);

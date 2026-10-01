@@ -20,8 +20,17 @@ const MAX_BAR = 24;
 const GAP = 2;
 const RADIUS = 4;
 
-const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
-const LONG = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const SHORT = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'Europe/Paris',
+});
+const LONG = new Intl.DateTimeFormat('fr-FR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'Europe/Paris',
+});
 const NUMBER = new Intl.NumberFormat('fr-FR');
 
 function asDate(day: string) {

@@ -121,9 +121,10 @@ export function SupportForms({ tickets }: { tickets: TicketView[] }) {
                       <p className="mt-0.5 text-xs text-[var(--muted)]">
                         <span className="font-mono">{ticket.reference}</span> ·{' '}
                         <time dateTime={ticket.createdAt}>
-                          {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-                            new Date(ticket.createdAt),
-                          )}
+                          {new Intl.DateTimeFormat('fr-FR', {
+                            dateStyle: 'medium',
+                            timeZone: 'Europe/Paris',
+                          }).format(new Date(ticket.createdAt))}
                         </time>
                       </p>
                     </div>

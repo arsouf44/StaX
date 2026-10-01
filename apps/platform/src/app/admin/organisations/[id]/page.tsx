@@ -37,8 +37,12 @@ export const metadata: Metadata = { title: 'Organisation' };
  * simplement vide.
  */
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 const ORDER_TONES: Record<string, StatusTone> = {
   draft: 'neutral',

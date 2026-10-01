@@ -21,7 +21,7 @@ const TONES: Record<string, StatusTone> = {
   incomplete: 'warning',
 };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
 
 /** Aucun abonnement Stripe encore enregistre : ce que la situation reelle permet d'annoncer. */
 function emptyStateCopy(

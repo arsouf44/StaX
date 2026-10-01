@@ -67,8 +67,12 @@ const DOMAIN_TONES: Record<string, StatusTone> = {
   expired: 'danger',
 };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
 
 function when(value: string | null | undefined, formatter = DATE_TIME): string {
   return value ? formatter.format(new Date(value)) : 'Jamais';

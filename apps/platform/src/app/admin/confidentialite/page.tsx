@@ -6,7 +6,7 @@ import { PrivacyRequestPanel, type PrivacyRequestView } from './request-panel';
 
 export const metadata: Metadata = { title: 'Demandes RGPD' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' });
 
 const KIND_LABELS: Record<string, string> = {
   export: 'Accès / portabilité',

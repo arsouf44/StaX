@@ -9,7 +9,7 @@ import { TeamManager, type InvitationRow, type MemberRow } from './team-manager'
 
 export const metadata: Metadata = { title: 'Collaborateurs' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
 
 export default async function TeamPage() {
   const { workspace, db, userId } = await getWorkspace();

@@ -19,7 +19,11 @@ import { auditActionLabel } from '~/lib/audit-labels';
 
 export const metadata: Metadata = { title: 'Journal d’activité' };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 /** Les actions sont traduites par `~/lib/audit-labels`, commun au back-office. */
 const ACTOR_LABELS: Record<string, string> = {

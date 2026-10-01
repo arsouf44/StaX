@@ -7,7 +7,7 @@ import { CouponActions, type ActiveCoupon } from './coupon-form';
 
 export const metadata: Metadata = { title: 'Codes promotionnels' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
 
 const SCOPES: Record<string, string> = {
   setup: 'création du site',

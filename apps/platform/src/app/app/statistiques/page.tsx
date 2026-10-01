@@ -38,7 +38,7 @@ import { countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Statistiques' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
 const NUMBER = new Intl.NumberFormat('fr-FR');
 const PERCENT = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 0 });
 
