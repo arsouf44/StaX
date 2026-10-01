@@ -20,6 +20,7 @@ import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
 import { loadReleaseViews } from './editeur/contract/data';
 import { loadClientProposal, ProposalDashboard } from './proposition/proposal-dashboard';
 import { FirstSteps } from '~/components/app/first-steps';
+import { ReleaseWatcher } from '~/components/app/release-watcher';
 
 export const metadata: Metadata = { title: 'Accueil' };
 
@@ -1108,8 +1109,9 @@ async function ManagedSiteDashboard({
           live="status"
           title={`Publication de la version ${inFlight.version} en cours`}
         >
-          Votre site est en cours de mise à jour. La version précédente reste en ligne jusqu’à la
-          confirmation de la mise en ligne.
+          <ReleaseWatcher releaseId={inFlight.id} />
+          Votre site est en cours de mise à jour (une à deux minutes en général). La version
+          précédente reste en ligne jusqu’à la confirmation ; cette page s’actualise d’elle-même.
         </Alert>
       ) : failed ? (
         <Alert

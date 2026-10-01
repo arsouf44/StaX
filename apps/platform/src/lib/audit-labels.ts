@@ -1,0 +1,103 @@
+/**
+ * Libellés des actions du journal.
+ *
+ * Le journal stocke des identifiants stables (`member.role_changed`) pour rester
+ * exploitable dans le temps ; on affiche des phrases françaises. Une action
+ * inconnue reste affichée telle quelle plutôt que masquée : un journal qui
+ * cache ce qu'il ne comprend pas n'est plus un journal.
+ */
+export const AUDIT_ACTION_LABELS: Record<string, string> = {
+  // Site et publication
+  'site.provisioned': 'Site créé',
+  'site.admin_created': 'Site créé par l’équipe Nemasus',
+  'site.withdrawn': 'Site retiré',
+  'site.rollback_requested': 'Retour à une version précédente demandé',
+  'site.published': 'Site publié',
+  'site.rolled_back': 'Retour à une version précédente',
+  'site.suspended': 'Site suspendu',
+  'site.reactivated': 'Site réactivé',
+  'site.status_changed': 'État du site modifié',
+  'site.delivered': 'Site livré au client',
+  'site.release_requested': 'Publication demandée',
+  'site.release_committed': 'Nouvelle version enregistrée dans le code du site',
+  'site.release_published': 'Nouvelle version en ligne',
+  'site.release_failed': 'Publication en échec',
+  'site.release_cancelled': 'Publication programmée annulée',
+  'site.version_restored_to_draft': 'Ancienne version reprise en brouillon',
+  'site.checkpoint_restored': 'Point de sauvegarde restauré',
+  'site.content_initialized': 'Contenus initialisés',
+  'site.manifest_imported': 'Contrat d’édition importé',
+  'site.manifest_changed_in_repository': 'Contrat d’édition modifié dans le dépôt',
+  'site.integrations_synced': 'Modules du site synchronisés',
+  'site.repository_connected': 'Dépôt GitHub rattaché',
+  'site.repository_disconnected': 'Dépôt GitHub détaché',
+  'site.repository_refused': 'Dépôt GitHub refusé',
+  'site.hosting_connected': 'Hébergement Cloudflare rattaché',
+  'site.hosting_disconnected': 'Hébergement Cloudflare détaché',
+  'site.hosting_refused': 'Hébergement Cloudflare refusé',
+  'site.deployment_retried': 'Déploiement relancé',
+  'site.delivery_checks_run': 'Vérifications de livraison lancées',
+  'site.delivery_check_attested': 'Point de livraison attesté',
+  'site.domain_attached': 'Nom de domaine rattaché',
+  'site.cache_purged': 'Cache du site vidé',
+  'site.health_down': 'Site injoignable détecté',
+  'page.trashed': 'Page mise à la corbeille',
+  'page.restored': 'Page restaurée',
+  'trash.purged': 'Corbeille vidée',
+  // Équipe et accès
+  'member.invited': 'Collaborateur invité',
+  'member.joined': 'Collaborateur arrivé',
+  'member.invitation_accepted': 'Invitation acceptée',
+  'member.role_changed': 'Accès d’un collaborateur modifié',
+  'member.removed': 'Accès d’un collaborateur retiré',
+  'activation_code.issued': 'Code d’activation émis',
+  'impersonation.started': 'Accès d’assistance ouvert par l’équipe Nemasus',
+  'impersonation.ended': 'Accès d’assistance refermé',
+  'client.impersonation_started': 'Accès d’assistance ouvert par l’équipe Nemasus',
+  'client.impersonation_ended': 'Accès d’assistance refermé',
+  'auth.password_changed': 'Mot de passe modifié',
+  'auth.mfa_enabled': 'Double authentification activée',
+  'auth.mfa_disabled': 'Double authentification désactivée',
+  // Commandes, paiements, maintenance
+  'order.created': 'Commande créée',
+  'order.internal_created': 'Commande interne créée',
+  'order.paid': 'Commande payée',
+  'order.refunded': 'Commande remboursée',
+  'refund.requested': 'Remboursement demandé',
+  'proposal.created': 'Proposition créée',
+  'proposal.renewed': 'Proposition prolongée',
+  'proposal.withdrawn': 'Proposition retirée',
+  'proposal.contact_erased': 'Coordonnées du prospect effacées',
+  'proposal.paid': 'Proposition payée',
+  'proposal.claimed': 'Proposition rattachée au compte',
+  'proposal.claim_failed': 'Rattachement de proposition refusé',
+  'invoice.issued': 'Facture émise',
+  'invoice.claimed': 'Facture rattachée au compte',
+  'invoice.claim_failed': 'Rattachement de facture refusé',
+  'invoice.cancelled': 'Facture annulée',
+  'maintenance.start_failed': 'Démarrage de la maintenance en échec',
+  'subscription.created': 'Maintenance souscrite',
+  'subscription.refused_before_delivery': 'Maintenance refusée avant livraison',
+  'subscription.cancel_requested': 'Résiliation demandée',
+  'subscription.cancel_reverted': 'Résiliation annulée',
+  'payments.stripe_account_linked': 'Compte de paiement relié',
+  // Domaines et données
+  'domain.attached': 'Nom de domaine rattaché',
+  'domain.verified': 'Nom de domaine vérifié',
+  'domain.detached': 'Nom de domaine retiré',
+  'data.exported': 'Export de données',
+  'data.deletion_requested': 'Suppression de données demandée',
+  'site_customer.erased': 'Données d’un client du site effacées',
+  'content_report.received': 'Signalement de contenu reçu',
+  // Plateforme
+  'project.phase_changed': 'Étape du projet modifiée',
+  'project.client_approved': 'Site validé par le client',
+  'integration.github_app_created': 'Application GitHub créée',
+  'github.installation_synced': 'Application GitHub synchronisée',
+  'github.installation_removed': 'Application GitHub retirée',
+  'feature_flag.toggled': 'Activation progressive modifiée',
+};
+
+export function auditActionLabel(action: string): string {
+  return AUDIT_ACTION_LABELS[action] ?? action;
+}

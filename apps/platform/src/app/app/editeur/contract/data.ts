@@ -83,7 +83,7 @@ export async function loadReleaseViews(db: Db, siteId: string, limit = 30): Prom
     const author = authors.find((entry) => entry.id === row.created_by);
     const authorName =
       row.actor_kind === 'stax'
-        ? 'L’équipe Nemasus'
+        ? 'l’équipe Nemasus'
         : author
           ? author.first_name?.trim() || author.full_name?.trim() || null
           : null;

@@ -1,3 +1,4 @@
+import type { BrowserContext } from '@playwright/test';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   buildContentBundle,
@@ -101,6 +102,44 @@ async function providers<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`Faux fournisseurs ${path} : ${response.status} ${await response.text()}`);
   }
   return (await response.json()) as T;
+}
+
+/**
+ * Branche le navigateur sur l'hebergement simule des faux fournisseurs : les
+ * adresses `*.pages.dev` (production, apercus) et les domaines
+ * `*.example.test` des clients affichent la vraie page du site, rendue a partir
+ * du contenu deploye, avec le pont d'apercu de l'editeur.
+ */
+export async function routeSiteHosting(
+  context: BrowserContext,
+  platformUrl = 'http://127.0.0.1:3100',
+): Promise<void> {
+  await context.route(/^https:\/\/[^/]+\.(pages\.dev|example\.test)\//, async (route) => {
+    const url = new URL(route.request().url());
+    const target =
+      `${PROVIDERS_URL}/__fake/render?host=${encodeURIComponent(url.hostname)}` +
+      `&path=${encodeURIComponent(url.pathname)}` +
+      `&bridge=${encodeURIComponent('https://bridge.nemasus.test/bridge/v1.js')}`;
+    const response = await fetch(target);
+    await route.fulfill({
+      status: response.status,
+      headers: { 'content-type': response.headers.get('content-type') ?? 'text/html' },
+      body: Buffer.from(await response.arrayBuffer()),
+    });
+  });
+  // Le pont d'apercu est servi par la plateforme. En production elle est en
+  // HTTPS ; ici elle ecoute en http://127.0.0.1, qu'un site en HTTPS n'a pas le
+  // droit de joindre (acces au reseau local). Une origine HTTPS de test le
+  // relaie, sans rien changer au script.
+  await context.route('https://bridge.nemasus.test/**', async (route) => {
+    const url = new URL(route.request().url());
+    const response = await fetch(`${platformUrl}${url.pathname}`);
+    await route.fulfill({
+      status: response.status,
+      headers: { 'content-type': 'application/javascript; charset=utf-8' },
+      body: await response.text(),
+    });
+  });
 }
 
 export interface SiteInfrastructure {

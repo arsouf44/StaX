@@ -215,7 +215,7 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
   trialing: 'Période d’essai',
   active: 'Actif',
   past_due: 'Paiement en retard',
-  unpaid: 'Impaye',
+  unpaid: 'Impayé',
   cancel_at_period_end: 'Résiliation programmée',
   canceled: 'Résilié',
   paused: 'Suspendu',

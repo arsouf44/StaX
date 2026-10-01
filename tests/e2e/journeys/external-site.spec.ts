@@ -14,6 +14,7 @@ import {
   failNextDeployment,
   liveContent,
   repositoryState,
+  routeSiteHosting,
   type SiteInfrastructure,
 } from './support/external-site';
 import { userClient } from './support/stack';
@@ -38,6 +39,7 @@ const BUSINESS = `Boulangerie Lumière ${suffix}`;
 const INITIAL_TITLE = `Le pain de Lumière ${suffix}`;
 const PUBLISHED_TITLE = `Fournée du matin ${suffix}`;
 const FAILED_TITLE = `Titre jamais publié ${suffix}`;
+const LAST_TITLE = `Fournée du soir ${suffix}`;
 
 let customer: CustomerSite;
 let infra: SiteInfrastructure;
@@ -165,6 +167,8 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
   browser,
 }) => {
   const page = await login(browser, customer.email, customer.password);
+  // Le site est réellement servi (rendu du dernier déploiement), avec son pont d'aperçu.
+  await routeSiteHosting(page.context());
   await page.goto('/app/editeur');
 
   await test.step('l’aperçu encadre le projet Cloudflare, pas le domaine du client', async () => {
@@ -172,6 +176,17 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
       'src',
       /^https:\/\/[a-z0-9-]+\.pages\.dev\//,
     );
+  });
+
+  await test.step('aperçu réel : un clic ouvre le champ, la saisie s’y affiche aussitôt', async () => {
+    const frame = page.frameLocator('iframe[title="Aperçu de votre site"]');
+    await expect(frame.locator('h1')).toHaveText(INITIAL_TITLE);
+    await frame.locator('[data-nemasus="pages.accueil.hero.titre"]').click();
+    const title = page.getByRole('complementary', { name: 'Champs' }).getByLabel('Titre');
+    await expect(title).toBeFocused();
+    await title.fill(`${PUBLISHED_TITLE} (essai)`);
+    await expect(frame.locator('h1')).toHaveText(`${PUBLISHED_TITLE} (essai)`);
+    await title.fill(INITIAL_TITLE);
   });
 
   await test.step('le brouillon ne change rien en ligne', async () => {
@@ -263,6 +278,40 @@ test('restaurer la version 1 la redéploie réellement', async ({ browser }) => 
   expect(JSON.stringify(live.content)).toContain(INITIAL_TITLE);
   const repo = await repositoryState(infra.repository);
   expect(repo.writes.every((write) => !write.force || write.branch !== 'main')).toBe(true);
+  await page.context().close();
+});
+
+test('publier puis quitter l’éditeur : l’accueil suit la mise en ligne jusqu’au bout', async ({
+  browser,
+}) => {
+  const page = await login(browser, customer.email, customer.password);
+  await page.goto('/app/editeur');
+  await page
+    .getByRole('navigation', { name: 'Zones modifiables' })
+    .getByRole('button', { name: 'Bandeau d’accueil' })
+    .click();
+  await page.getByRole('complementary', { name: 'Champs' }).getByLabel('Titre').fill(LAST_TITLE);
+  await page.getByRole('button', { name: 'Enregistrer le brouillon' }).click();
+  await expect(page.getByText(/Brouillon enregistré à/)).toBeVisible();
+  await page.getByRole('button', { name: 'Publier' }).first().click();
+  await page
+    .getByRole('dialog', { name: /Publier la version \d+/ })
+    .getByRole('button', { name: 'Publier' })
+    .click();
+
+  // Le client part dès que la publication est lancée : l'accueil, sans être
+  // rechargé, suit la publication et cesse de l'annoncer « en cours » une
+  // fois en ligne.
+  await expect(page.getByText(/Publication de la version \d+…/)).toBeVisible();
+  await page.goto('/app');
+  await expect(page.getByText(/Publication de la version \d+ en cours/)).toHaveCount(0, {
+    timeout: 60_000,
+  });
+  await expect
+    .poll(async () => JSON.stringify((await liveContent(infra.project)).content), {
+      timeout: 30_000,
+    })
+    .toContain(LAST_TITLE);
   await page.context().close();
 });
 

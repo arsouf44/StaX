@@ -277,7 +277,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             <>
               {' · '}
               <Link
-                href={`/admin/organisations?q=${encodeURIComponent(site.organizations.name)}`}
+                href={`/admin/organisations/${site.organization_id}`}
                 className="underline underline-offset-4"
               >
                 {site.organizations.name}

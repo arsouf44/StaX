@@ -16,7 +16,16 @@ import type { PlatformRole } from '@nemasus/types';
  */
 
 export type AdminColumnKind =
-  'text' | 'mono' | 'money' | 'date' | 'datetime' | 'status' | 'boolean' | 'relation';
+  | 'text'
+  | 'mono'
+  | 'money'
+  | 'date'
+  | 'datetime'
+  | 'status'
+  | 'boolean'
+  | 'relation'
+  /** Action du journal : libellé français, identifiant en infobulle. */
+  | 'audit';
 
 export interface AdminColumn {
   key: string;
@@ -86,6 +95,11 @@ export const PROJECT_STATUSES: Record<string, StatusLabel> = {
   ordered: label('Commandé', 'info'),
   questionnaire_pending: label('Questionnaire attendu', 'warning'),
   assets_pending: label('Éléments attendus', 'warning'),
+  design: label('Conception', 'accent'),
+  development: label('Développement', 'accent'),
+  verification: label('Vérifications', 'info'),
+  deploying: label('Mise en ligne', 'info'),
+  delivered: label('Livré', 'success'),
   in_progress: label('En création', 'accent'),
   internal_review: label('Relecture interne', 'info'),
   client_review: label('Chez le client', 'warning'),
@@ -655,7 +669,7 @@ export const ADMIN_VIEWS = {
     ],
     columns: [
       { key: 'created_at', label: 'Quand', kind: 'datetime' },
-      { key: 'action', label: 'Action', kind: 'mono' },
+      { key: 'action', label: 'Action', kind: 'audit' },
       { key: 'actor_email', label: 'Par qui', kind: 'text' },
       { key: 'actor_type', label: 'Type', kind: 'text', secondary: true },
       { key: 'target_type', label: 'Cible', kind: 'text', secondary: true },

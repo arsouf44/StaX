@@ -19,6 +19,7 @@ import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getAdminContext } from '~/lib/admin';
 import { getAdminView, type AdminColumn, type AdminViewId } from '~/lib/admin-views';
+import { auditActionLabel } from '~/lib/audit-labels';
 
 /**
  * Tableau du back-office.
@@ -63,6 +64,10 @@ function renderCell(column: AdminColumn, row: Record<string, unknown>) {
     const cents = typeof raw === 'number' ? raw : Number(raw);
     if (!Number.isFinite(cents)) return '—';
     return formatMoney(Math.trunc(cents), 'EUR', { hideDecimalsWhenRound: true });
+  }
+
+  if (column.kind === 'audit') {
+    return <span title={String(raw)}>{auditActionLabel(String(raw))}</span>;
   }
 
   if (column.kind === 'date') return DATE.format(new Date(String(raw)));

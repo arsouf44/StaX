@@ -65,6 +65,25 @@ function Counter({ length, max }: { length: number; max: number }) {
   );
 }
 
+/** Titre d'un groupe de champs, avec la même marque d'obligation que `Field`. */
+function Legend({ label, required }: { label: string; required?: boolean }) {
+  return (
+    <legend className="mb-1 text-sm font-medium">
+      {label}
+      {required ? (
+        <>
+          <span className="ml-1 text-[var(--danger)]" aria-hidden="true">
+            *
+          </span>
+          <span className="sr-only"> (obligatoire)</span>
+        </>
+      ) : null}
+    </legend>
+  );
+}
+
+const isRequired = (field: { required?: boolean }) => field.required === true;
+
 /* -------------------------------------------------------------------------- */
 /*  Images                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -89,6 +108,8 @@ function ImageControl({
   help,
   aspectRatio,
   error,
+  required = false,
+  altRequired = true,
 }: {
   label: string;
   value: unknown;
@@ -97,13 +118,16 @@ function ImageControl({
   help?: string;
   aspectRatio?: string;
   error?: string;
+  required?: boolean;
+  /** Le contrat exige une description de la photo, sauf `altRequired: false`. */
+  altRequired?: boolean;
 }) {
   const [picking, setPicking] = useState(false);
   const url = imageUrl(value, env);
   const image = isRecord(value) ? value : null;
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{label}</legend>
+      <Legend label={label} required={required} />
       {help ? <p className="text-xs text-[var(--muted)]">{help}</p> : null}
       <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)]">
         {url ? (
@@ -134,6 +158,7 @@ function ImageControl({
         <Field
           label="Que montre cette photo ?"
           hint="Lu par les personnes malvoyantes et par Google."
+          required={altRequired}
         >
           <Input
             value={text(image['alt'])}
@@ -176,7 +201,7 @@ function GalleryControl({
   };
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       <ul className="grid grid-cols-2 gap-2">
         {images.map((image, index) => {
           const url = imageUrl(image, env);
@@ -366,7 +391,7 @@ function LinkControl({
   const link = isRecord(value) ? value : { label: '', href: '' };
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       <Field label="Texte du bouton">
         <Input
           value={text(link['label'])}
@@ -628,7 +653,7 @@ function OpeningHoursControl({
 
   return (
     <fieldset className="space-y-3">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       <ul className="space-y-2">
         {WEEK_DAYS.map((day) => {
           const slots = week[day] ?? [];
@@ -791,7 +816,7 @@ function NavigationControl({
   };
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       {items.map((item, index) => (
         <div
           key={text(item['id']) || index}
@@ -869,7 +894,7 @@ function SeoControl({
   const description = text(seo['description']);
   return (
     <fieldset className="space-y-3">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       <Field label="Titre dans Google" hint={<Counter length={title.length} max={titleMax} />}>
         <Input
           value={title}
@@ -923,7 +948,7 @@ function AddressControl({
   const set = (key: string, next: string) => onChange({ ...address, [key]: next });
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       <Field label="Adresse">
         <Input
           value={text(address['line1'])}
@@ -994,7 +1019,7 @@ function RepeaterControl({
   };
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{field.label}</legend>
+      <Legend label={field.label} required={isRequired(field)} />
       {items.map((item, index) => {
         const id = text(item['_id']) || String(index);
         const expanded = open === id;
@@ -1099,6 +1124,7 @@ export function FieldControl({
   path: string;
 }) {
   const error = env.issueFor(path);
+  const required = isRequired(field as { required?: boolean });
   switch (field.type) {
     case 'text': {
       const max = field.maxLength ?? (field.multiline ? 2000 : 300);
@@ -1108,6 +1134,7 @@ export function FieldControl({
           label={field.label}
           hint={field.help ?? <Counter length={current.length} max={max} />}
           error={error}
+          required={required}
         >
           {field.multiline ? (
             <Textarea
@@ -1140,6 +1167,8 @@ export function FieldControl({
           onChange={onChange}
           env={env}
           error={error ?? env.issueFor(`${path}.alt`)}
+          required={required}
+          altRequired={field.altRequired !== false}
         />
       );
     case 'gallery':
@@ -1150,7 +1179,7 @@ export function FieldControl({
       return <LinkControl field={field} value={value} onChange={onChange} env={env} path={path} />;
     case 'url':
       return (
-        <Field label={field.label} hint={field.help} error={error}>
+        <Field label={field.label} hint={field.help} error={error} required={required}>
           <Input
             type="url"
             value={text(value)}
@@ -1161,7 +1190,7 @@ export function FieldControl({
       );
     case 'phone':
       return (
-        <Field label={field.label} hint={field.help} error={error}>
+        <Field label={field.label} hint={field.help} error={error} required={required}>
           <Input
             type="tel"
             inputMode="tel"
@@ -1172,7 +1201,7 @@ export function FieldControl({
       );
     case 'email':
       return (
-        <Field label={field.label} hint={field.help} error={error}>
+        <Field label={field.label} hint={field.help} error={error} required={required}>
           <Input
             type="email"
             value={text(value)}
@@ -1186,6 +1215,7 @@ export function FieldControl({
           label={`${field.label}${field.unit ? ` (${field.unit})` : ''}`}
           hint={field.help}
           error={error}
+          required={required}
         >
           <Input
             type="number"
@@ -1211,7 +1241,7 @@ export function FieldControl({
       );
     case 'select':
       return (
-        <Field label={field.label} hint={field.help} error={error}>
+        <Field label={field.label} hint={field.help} error={error} required={required}>
           <Select value={text(value)} onChange={(event) => onChange(event.target.value || null)}>
             <option value="">Choisir…</option>
             {field.options.map((option) => (
@@ -1224,7 +1254,7 @@ export function FieldControl({
       );
     case 'date':
       return (
-        <Field label={field.label} hint={field.help} error={error}>
+        <Field label={field.label} hint={field.help} error={error} required={required}>
           <Input
             type="date"
             value={text(value)}

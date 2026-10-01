@@ -539,6 +539,168 @@ async function cloudflare(request, response, path, url) {
   return send(response, 404, { success: false, errors: [{ message: 'Not Found' }] });
 }
 
+/* ---------------------------- Hebergement ---------------------------------- */
+//
+// Ce que le navigateur recoit en ouvrant le site : la page rendue a partir du
+// fichier de contenu du deploiement, comme le ferait le build du site (balises
+// `data-nemasus` sur chaque element modifiable, pont d'apercu de l'editeur),
+// et les medias publies dans le depot. Les tests de parcours y branchent le
+// navigateur (`*.pages.dev`, domaines `*.example.test`).
+
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+const MEDIA_TYPES = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  pdf: 'application/pdf',
+};
+
+function deploymentForHost(host) {
+  for (const project of projects.values()) {
+    const suffix = `.${project.subdomain}`;
+    if (host === project.subdomain || project.domains.some((domain) => domain.name === host)) {
+      return {
+        project,
+        deployment: project.deployments.find(
+          (deployment) =>
+            deployment.environment === 'production' &&
+            deployment.outcome === 'success' &&
+            deployment.reads > 1,
+        ),
+      };
+    }
+    if (host.endsWith(suffix)) {
+      const label = host.slice(0, -suffix.length);
+      return {
+        project,
+        deployment: project.deployments.find(
+          (deployment) =>
+            deployment.id.startsWith(label) ||
+            (deployment.aliases ?? []).includes(`https://${host}`),
+        ),
+      };
+    }
+  }
+  return null;
+}
+
+function renderValue(value) {
+  if (value === null || value === undefined || value === '') return '';
+  if (typeof value === 'string' || typeof value === 'number') return escapeHtml(value);
+  if (typeof value === 'object' && typeof value.html === 'string') return value.html;
+  if (typeof value === 'object' && typeof value.display === 'string') return escapeHtml(value.display);
+  if (typeof value === 'object' && typeof value.label === 'string') return escapeHtml(value.label);
+  return escapeHtml(JSON.stringify(value));
+}
+
+function renderField(address, value, tag = 'p') {
+  if (value && typeof value === 'object' && typeof value.src === 'string') {
+    return `<img data-nemasus="${address}" src="${escapeHtml(value.src)}" alt="${escapeHtml(value.alt ?? '')}" style="max-width:100%;height:auto;border-radius:8px">`;
+  }
+  if (value && typeof value === 'object' && typeof value.href === 'string') {
+    return `<p><a data-nemasus="${address}" href="${escapeHtml(value.href)}">${escapeHtml(value.label ?? value.href)}</a></p>`;
+  }
+  return `<${tag} data-nemasus="${address}">${renderValue(value)}</${tag}>`;
+}
+
+function renderSite(repository, deployment, path, bridge) {
+  const manifestFile = fileAt(repository, deployment.commit, 'nemasus.manifest.json');
+  if (!manifestFile) return null;
+  const manifest = JSON.parse(manifestFile.toString('utf8'));
+  const bundleFile = fileAt(repository, deployment.commit, manifest.content.file);
+  const bundle = bundleFile ? JSON.parse(bundleFile.toString('utf8')) : null;
+  const locale = bundle?.locales?.[bundle.defaultLocale] ?? { globals: {}, pages: {}, collections: {} };
+  const page = manifest.pages.find((entry) => entry.path === path);
+  if (!page) return { status: 404, html: '<!doctype html><title>Page introuvable</title><h1>404</h1>' };
+  const content = locale.pages?.[page.id] ?? { sections: {}, seo: null };
+  let first = true;
+  const sections = page.sections
+    .map((section) => {
+      const values = content.sections?.[section.id] ?? {};
+      const fields = section.fields
+        .map((field) => {
+          const tag = first && field.type === 'text' ? 'h1' : 'p';
+          if (tag === 'h1') first = false;
+          return renderField(`pages.${page.id}.${section.id}.${field.id}`, values[field.id], tag);
+        })
+        .join('\n');
+      return `<section aria-label="${escapeHtml(section.label)}">${fields}</section>`;
+    })
+    .join('\n');
+  const footer = (manifest.globals ?? [])
+    .map((group) =>
+      group.fields
+        .map((field) =>
+          renderField(`globals.${group.id}.${field.id}`, locale.globals?.[group.id]?.[field.id]),
+        )
+        .join(''),
+    )
+    .join('');
+  const seo = content.seo ?? {};
+  const title = seo.title || manifest.site.name;
+  const nav = manifest.pages
+    .map((entry) => `<a href="${escapeHtml(entry.path)}">${escapeHtml(entry.label)}</a>`)
+    .join(' · ');
+  const html = `<!doctype html>
+<html lang="${escapeHtml(bundle?.defaultLocale ?? 'fr')}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+${seo.description ? `<meta name="description" content="${escapeHtml(seo.description)}">` : ''}
+<style>body{font-family:system-ui,sans-serif;margin:0;color:#1d2328}header,main,footer{max-width:760px;margin:0 auto;padding:24px}
+header{display:flex;justify-content:space-between;border-bottom:1px solid #ddd}h1{font-size:2.4rem;margin:.2em 0}
+section{padding:24px 0;border-bottom:1px solid #eee}footer{color:#555;font-size:.9rem}</style></head>
+<body data-version="${escapeHtml(bundle?.nemasus?.version ?? '')}" data-preview="${bundle?.nemasus?.preview ? 'oui' : 'non'}">
+<header><strong>${escapeHtml(manifest.site.name)}</strong><nav>${nav}</nav></header>
+<main>${sections}</main><footer>${footer}</footer>
+${bridge ? `<script src="${escapeHtml(bridge)}" defer></script>` : ''}
+</body></html>`;
+  return { status: 200, html };
+}
+
+function hosting(response, url) {
+  const host = (url.searchParams.get('host') ?? '').toLowerCase();
+  const path = url.searchParams.get('path') || '/';
+  const bridge = url.searchParams.get('bridge');
+  const found = deploymentForHost(host);
+  if (!found || !found.deployment) {
+    return send(response, 404, '<!doctype html><title>Site introuvable</title>', {
+      'content-type': 'text/html; charset=utf-8',
+    });
+  }
+  const repository = repositories.get(found.project.repository);
+  const manifestFile = fileAt(repository, found.deployment.commit, 'nemasus.manifest.json');
+  const manifest = manifestFile ? JSON.parse(manifestFile.toString('utf8')) : null;
+  const mediaUrl = manifest?.content?.mediaUrl?.replace(/\/+$/, '');
+  if (manifest && mediaUrl && path.startsWith(`${mediaUrl}/`)) {
+    const name = path.slice(mediaUrl.length + 1);
+    const file = fileAt(
+      repository,
+      found.deployment.commit,
+      `${manifest.content.mediaDir.replace(/\/+$/, '')}/${name}`,
+    );
+    if (!file) return send(response, 404, 'media');
+    const extension = name.split('.').pop()?.toLowerCase() ?? '';
+    return send(response, 200, file, {
+      'content-type': MEDIA_TYPES[extension] ?? 'application/octet-stream',
+    });
+  }
+  const rendered = renderSite(repository, found.deployment, path.replace(/\/+$/, '') || '/', bridge);
+  if (!rendered) return send(response, 500, 'manifest absent');
+  return send(response, rendered.status, rendered.html, {
+    'content-type': 'text/html; charset=utf-8',
+  });
+}
+
 /* ---------------------------- Controle ------------------------------------ */
 
 async function control(request, response, path) {
@@ -641,6 +803,7 @@ if (process.argv[2] === 'serve') {
       const url = new URL(request.url ?? '/', `http://127.0.0.1:${PORT}`);
       const path = url.pathname;
       if (path === '/health') return send(response, 200, { ok: true });
+      if (path === '/__fake/render') return hosting(response, url);
       if (path.startsWith('/__fake/')) return await control(request, response, path);
       if (path.startsWith('/github/')) return await github(request, response, path.slice(7), url);
       if (path.startsWith('/cloudflare/client/v4/')) {

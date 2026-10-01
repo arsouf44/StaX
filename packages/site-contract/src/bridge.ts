@@ -15,6 +15,11 @@
  * Dans l'editeur, un clic sur un element ouvre le champ correspondant ; une
  * saisie de texte s'affiche aussitot dans l'apercu, en attendant le build.
  *
+ * Poignee de main : l'apercu peut finir de charger avant que l'editeur ecoute
+ * (page rendue cote serveur, hydratation plus lente). Le pont annonce donc
+ * `ready` a plusieurs reprises jusqu'au premier message de l'editeur, et
+ * repond a tout `hello` de l'editeur par un nouveau `ready`.
+ *
  * Securite : le pont n'ecoute que l'origine de l'editeur Nemasus (inscrite dans
  * le script au moment ou Nemasus le sert), n'execute jamais de code recu, et ne
  * fait que remplacer du texte ou des attributs d'image et de lien.
@@ -28,6 +33,7 @@ export type BridgeMessage =
   | { source: 'nemasus-bridge'; version: 1; type: 'select'; address: string };
 
 export type EditorMessage =
+  | { source: 'nemasus-editor'; version: 1; type: 'hello' }
   | { source: 'nemasus-editor'; version: 1; type: 'mode'; editing: boolean }
   | { source: 'nemasus-editor'; version: 1; type: 'highlight'; address: string | null }
   | {
@@ -99,6 +105,7 @@ export function bridgeScript(editorOrigin: string): string {
   var ATTR = ${JSON.stringify(BRIDGE_ATTRIBUTE)};
   var editing = true;
   var selected = null;
+  var heard = false;
 
   function post(message) {
     message.source = 'nemasus-bridge';
@@ -157,16 +164,48 @@ export function bridgeScript(editorOrigin: string): string {
     place(box, editable(event.target));
   }, true);
 
+  function choose(element) {
+    selected = element.getAttribute(ATTR);
+    place(focus, element);
+    post({ type: 'select', address: selected });
+  }
+
   document.addEventListener('click', function (event) {
     if (!editing) return;
     var element = editable(event.target);
     if (!element) return;
     event.preventDefault();
     event.stopPropagation();
-    selected = element.getAttribute(ATTR);
-    place(focus, element);
-    post({ type: 'select', address: selected });
+    choose(element);
   }, true);
+
+  // Telephones : un toucher bref (sans glisser) choisit l'element, meme quand
+  // le navigateur n'en fait pas un clic (iOS ne le fait pas pour un texte
+  // ordinaire ecoute depuis le document). Glisser fait defiler, rien d'autre.
+  var touch = null;
+  document.addEventListener('touchstart', function (event) {
+    touch = editing && event.touches.length === 1
+      ? { x: event.touches[0].clientX, y: event.touches[0].clientY, at: Date.now() }
+      : null;
+  }, { capture: true, passive: true });
+  document.addEventListener('touchmove', function (event) {
+    if (!touch || !event.touches.length) return;
+    var t = event.touches[0];
+    if (Math.abs(t.clientX - touch.x) > 10 || Math.abs(t.clientY - touch.y) > 10) touch = null;
+  }, { capture: true, passive: true });
+  document.addEventListener('touchend', function (event) {
+    var start = touch;
+    touch = null;
+    if (!editing || !start || Date.now() - start.at > 600) return;
+    var element = editable(event.target);
+    if (!element) return;
+    event.preventDefault();
+    choose(element);
+  }, { capture: true, passive: false });
+
+  // Elements modifiables signales comme cliquables tant que l'edition est active.
+  var hint = document.createElement('style');
+  hint.textContent = '[' + ATTR + ']{cursor:pointer}';
 
   function refresh() {
     place(box, null);
@@ -191,8 +230,11 @@ export function bridgeScript(editorOrigin: string): string {
     if (event.origin !== ORIGIN || event.source !== window.parent) return;
     var data = event.data;
     if (!data || data.source !== 'nemasus-editor' || data.version !== ${BRIDGE_VERSION}) return;
+    heard = true;
+    if (data.type === 'hello') { announce(); return; }
     if (data.type === 'mode') {
       editing = data.editing === true;
+      hint.media = editing ? 'all' : 'not all';
       if (!editing) { place(box, null); place(focus, null); }
       return;
     }
@@ -221,10 +263,23 @@ export function bridgeScript(editorOrigin: string): string {
     }
   });
 
+  function announce() {
+    post({ type: 'ready', path: location.pathname, fields: addresses() });
+  }
+
+  // L'editeur peut ne pas encore ecouter : on repete l'annonce jusqu'a sa
+  // premiere reponse (vite au debut, puis chaque seconde, une minute au plus).
   function ready() {
     document.body.appendChild(box);
     document.body.appendChild(focus);
-    post({ type: 'ready', path: location.pathname, fields: addresses() });
+    document.body.appendChild(hint);
+    var tries = 0;
+    (function again() {
+      if (heard || tries >= 60) return;
+      tries += 1;
+      announce();
+      setTimeout(again, tries < 8 ? 250 : 1000);
+    })();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
   else ready();

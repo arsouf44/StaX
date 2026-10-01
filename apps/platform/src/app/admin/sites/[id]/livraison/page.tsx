@@ -457,7 +457,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
         </Panel>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0">
         {/* GitHub */}
         <Panel level={1} padding="lg" data-testid="panel-github">
           <div className="flex flex-wrap items-center justify-between gap-2">
