@@ -648,13 +648,18 @@ départ de l’éditeur, formulaires, réglages.
 | 11 | « Mon entreprise » d’un site livré via son dépôt promettait que téléphone, adresse et mentions légales « sont repris partout » | Rien ne changeait sur le site | Page honnête : renvoi vers l’éditeur et l’équipe, seuls les réglages utiles | exploration |
 | 12 | « 1 élément(s) attendent », « 3 visiteur(s) »… | Ton de formulaire administratif | Accords réels ; un test interdit les « (s) » | test |
 | 13 | Débordements sur téléphone (livraison, intégrations) ; formulaire inconnu = « Service indisponible » (503) | Écrans coupés ; erreur trompeuse pour le développeur du site | Valeurs longues coupées proprement ; 404 « Formulaire inconnu » | exploration, parcours e2e |
+| 14 | Un produit (élément de collection) ajouté était créé **masqué** ; un élément masqué bloquait pourtant la publication | Le client publie, son produit n’apparaît pas | Visible d’office ; un élément masqué ne bloque plus | test + scénario photo/collection |
+| 15 | « Publier » refusé sans dire **quel** champ compléter | Le client cherche | « Accueil › Bandeau d’accueil › Bouton : … » | test |
+| 16 | Photos publiées sans largeur ni hauteur | Saut de mise en page au chargement | Dimensions lues à l’envoi (PNG, JPEG, GIF, WebP, AVIF) | test + scénario |
+| 17 | Horaires : chaque jour à régler séparément ; interrupteurs tous nommés « Fermé » | Saisie fastidieuse ; inutilisable au lecteur d’écran | Un jour ouvert reprend le précédent, « Appliquer à tous les jours ouverts », « Ouvert le lundi » | scénario |
+| 18 | Fiche client sans accès depuis les listes de l’administration | Navigation à l’aveugle | Nom du client cliquable partout ; 203 liens suivis, aucun mort | parcours automatique |
 
 ### 18.2 Preuves
 
 | Contrôle | Résultat |
 |---|---|
 | Assertions SQL (`scripts/db-test.sh`) | toutes passées, dont les 13 de la 0065 |
-| Tests unitaires, intégration, sécurité (`pnpm test`) | 437 passés |
+| Tests unitaires, intégration, sécurité (`pnpm test`) | 441 passés |
 | Parcours complets contre une vraie pile (`pnpm test:e2e:stack`) | 33 passés (aperçu réel, publication suivie depuis l’accueil, message d’un visiteur → e-mail) |
 | Exploration de chaque écran, client et équipe, ordinateur et téléphone | aucune erreur JavaScript, aucune réponse 4xx/5xx, aucun débordement |
 
