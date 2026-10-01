@@ -293,7 +293,9 @@ export function DescriptionList({
           )}
         >
           <dt className="text-sm text-[var(--foreground-muted)]">{item.term}</dt>
-          <dd className="text-sm font-medium text-[var(--foreground)]">{item.description}</dd>
+          <dd className="max-w-full min-w-0 text-sm font-medium [overflow-wrap:anywhere] text-[var(--foreground)]">
+            {item.description}
+          </dd>
         </div>
       ))}
     </dl>

@@ -14,7 +14,10 @@ import type { ClientField } from './form-fields';
  * que ce soit — ils ne servent qu'a ne pas rapatrier des lignes inutiles.
  */
 
-const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeZone: 'Europe/Paris',
+});
 const NUMBER_FORMAT = new Intl.NumberFormat('fr-FR');
 
 function selectColumns(descriptor: CollectionDescriptor): string {

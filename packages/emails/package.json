@@ -15,6 +15,7 @@
   "dependencies": {
     "@nemasus/config": "workspace:*",
     "@nemasus/database": "workspace:*",
+    "@nemasus/payments": "workspace:*",
     "@nemasus/security": "workspace:*",
     "@nemasus/types": "workspace:*",
     "@supabase/supabase-js": "2.116.0",

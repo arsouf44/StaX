@@ -151,6 +151,7 @@ export default async function AdminWebhooksPage({
                         {new Intl.DateTimeFormat('fr-FR', {
                           dateStyle: 'short',
                           timeStyle: 'short',
+                          timeZone: 'Europe/Paris',
                         }).format(new Date(row.received_at))}
                       </time>
                     </TD>

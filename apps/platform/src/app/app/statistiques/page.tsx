@@ -34,10 +34,11 @@ import {
   type MetricsRow,
 } from '~/lib/audience';
 import { getWorkspace } from '~/lib/workspace';
+import { countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Statistiques' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
 const NUMBER = new Intl.NumberFormat('fr-FR');
 const PERCENT = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 0 });
 
@@ -197,7 +198,7 @@ export default async function StatisticsPage({
             <Stat
               label="Encaissé sur le site"
               value={formatMoney(totals.revenueCents, 'EUR', { hideDecimalsWhenRound: true })}
-              hint={`${NUMBER.format(totals.orders)} commande(s) payée(s)`}
+              hint={countOf(totals.orders, 'commande payée', 'commandes payées')}
             />
           </div>
           {previousMeasured ? (
@@ -295,7 +296,7 @@ export default async function StatisticsPage({
                         {PERCENT.format(device.share)}
                       </p>
                       <p className="text-xs text-[var(--muted)]">
-                        {NUMBER.format(device.visitors)} visiteur(s)
+                        {countOf(device.visitors, 'visiteur')}
                       </p>
                     </li>
                   ))}

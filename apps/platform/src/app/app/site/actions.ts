@@ -173,6 +173,43 @@ export async function saveBusinessIdentityAction(
   return SAVED;
 }
 
+/**
+ * Site livré via son dépôt : ses textes viennent de l'éditeur, pas de ces
+ * réglages. Seuls comptent ici les destinataires des messages, réservations
+ * et commandes, et la mesure d'audience ; rien d'autre n'est écrit.
+ */
+export async function saveSiteAlertsAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const gate = await requireSiteEditor();
+  if (!gate.ok) return gate.state;
+
+  const emails = lines(formData, 'notificationEmails', 5).map((entry) => entry.toLowerCase());
+  const invalid = emails.filter((entry) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(entry));
+  if (invalid.length > 0) {
+    return {
+      status: 'error',
+      message: 'Certaines informations doivent être corrigées.',
+      errors: { notificationEmails: [`Adresse non valide : ${invalid.join(', ')}`] },
+    };
+  }
+
+  const { error } = await gate.value.db.from('site_settings').upsert(
+    {
+      site_id: gate.value.siteId,
+      notification_emails: emails,
+      analytics_enabled: checkbox(formData, 'analyticsEnabled'),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'site_id' },
+  );
+  if (error) return failure();
+
+  revalidatePath('/app/entreprise');
+  return SAVED;
+}
+
 /* --- Mentions legales ------------------------------------------------------ */
 
 const LEGAL_KEYS = [

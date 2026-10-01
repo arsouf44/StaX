@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import {
   bridgeScript,
@@ -8,6 +9,7 @@ import {
   collectMediaIds,
   contentFromBundle,
   contentHash,
+  describeFieldAddress,
   formatFieldAddress,
   integrationsFromManifest,
   manifestJsonSchema,
@@ -446,6 +448,46 @@ describe('offre et contrat', () => {
   });
 });
 
+describe('éléments masqués d’une collection', () => {
+  it('un élément masqué ne bloque pas la publication, un élément visible oui', () => {
+    const manifest = loadManifest();
+    const collection = manifest.collections?.find((entry) => entry.id === 'actualites');
+    const required = collection?.fields.find((field) => field.required);
+    expect(required).toBeDefined();
+    const content = (hidden: boolean) => ({
+      globals: {},
+      pages: {},
+      collections: {
+        actualites: [{ id: '0190a7b2-3c4d-7e8f-9a0b-1c2d3e4f5a01', values: {}, hidden }],
+      },
+    });
+    const blocking = (hidden: boolean) =>
+      validateContent(manifest, content(hidden), { mode: 'publish' }).issues.filter(
+        (issue) => issue.severity === 'error' && issue.path.startsWith('collections.actualites.'),
+      );
+    expect(blocking(true)).toEqual([]);
+    expect(blocking(false).length).toBeGreaterThan(0);
+  });
+});
+
+describe('emplacement d’un champ, en mots du client', () => {
+  it('nomme la page, la section et le champ', () => {
+    const manifest = loadManifest();
+    expect(describeFieldAddress(manifest, 'pages.accueil.hero.titre@fr')).toBe(
+      'Accueil › Bandeau d’accueil › Titre',
+    );
+    expect(describeFieldAddress(manifest, 'globals.coordonnees.telephone')).toBe(
+      'Coordonnées › Téléphone',
+    );
+    expect(describeFieldAddress(manifest, 'pages.accueil._seo')).toBe('Accueil › Référencement');
+    expect(describeFieldAddress(manifest, 'collections.actualites.0190a7b2-item.titre.extra')).toBe(
+      'Actualités › Titre',
+    );
+    expect(describeFieldAddress(manifest, 'pages.inconnue.hero.titre')).toBeNull();
+    expect(describeFieldAddress(manifest, 'n’importe quoi')).toBeNull();
+  });
+});
+
 describe('pont d’apercu', () => {
   it('n’accepte que des messages bien formes', () => {
     expect(
@@ -478,5 +520,139 @@ describe('pont d’apercu', () => {
     expect(script).not.toContain('eval(');
     expect(script).not.toContain('innerHTML');
     expect(() => bridgeScript('pas une url')).toThrow();
+  });
+
+  /** Execute le script du pont dans une fausse page incluse dans l'editeur. */
+  function runBridge() {
+    const sent: Array<{ message: Record<string, unknown>; origin: string }> = [];
+    const listeners: Array<(event: unknown) => void> = [];
+    const timers: Array<() => void> = [];
+    const parent = {
+      postMessage: (message: Record<string, unknown>, origin: string) =>
+        sent.push({ message: { ...message }, origin }),
+    };
+    const element = (): Record<string, unknown> => ({
+      style: {},
+      setAttribute: () => undefined,
+      cloneNode: () => element(),
+    });
+    const window = {
+      parent,
+      addEventListener: (type: string, listener: (event: unknown) => void) => {
+        if (type === 'message') listeners.push(listener);
+      },
+    };
+    const domListeners: Record<string, Array<(event: unknown) => void>> = {};
+    const document: Record<string, unknown> = {
+      readyState: 'complete',
+      body: { appendChild: () => undefined },
+      createElement: element,
+      addEventListener: (type: string, listener: (event: unknown) => void) => {
+        (domListeners[type] ??= []).push(listener);
+      },
+      querySelectorAll: () => [{ getAttribute: () => 'pages.accueil.hero.titre', nodeType: 1 }],
+    };
+    document['documentElement'] = {};
+    // Un titre modifiable, dans une section qui ne l'est pas.
+    const section = {
+      nodeType: 1,
+      hasAttribute: () => false,
+      parentNode: document['documentElement'],
+    };
+    const title = {
+      nodeType: 1,
+      hasAttribute: () => true,
+      getAttribute: () => 'pages.accueil.hero.titre',
+      getBoundingClientRect: () => ({ top: 0, left: 0, width: 100, height: 20 }),
+      parentNode: section,
+    };
+    const fire = (type: string, event: Record<string, unknown>) => {
+      let prevented = false;
+      const full = { target: title, preventDefault: () => (prevented = true), ...event };
+      (domListeners[type] ?? []).forEach((listener) => listener(full));
+      return prevented;
+    };
+    const finger = (x: number, y: number) => ({ touches: [{ clientX: x, clientY: y }] });
+    runInNewContext(bridgeScript('https://app.nemasus.fr'), {
+      window,
+      document,
+      location: { pathname: '/' },
+      setTimeout: (callback: () => void) => timers.push(callback),
+    });
+    const tick = () => timers.shift()?.();
+    const receive = (data: unknown, origin = 'https://app.nemasus.fr') =>
+      listeners.forEach((listener) => listener({ origin, source: parent, data }));
+    const readies = () => sent.filter((entry) => entry.message['type'] === 'ready').length;
+    const selects = () => sent.filter((entry) => entry.message['type'] === 'select');
+    return { sent, tick, receive, readies, selects, fire, finger, section };
+  }
+
+  it('repete son annonce tant que l’editeur ne repond pas, puis s’arrete', () => {
+    const bridge = runBridge();
+    expect(bridge.readies()).toBe(1);
+    expect(bridge.sent[0]).toMatchObject({
+      origin: 'https://app.nemasus.fr',
+      message: { type: 'ready', path: '/', fields: ['pages.accueil.hero.titre'] },
+    });
+    bridge.tick();
+    bridge.tick();
+    expect(bridge.readies()).toBe(3);
+
+    // Un message d'une autre origine ne compte pas comme une reponse.
+    bridge.receive(
+      { source: 'nemasus-editor', version: 1, type: 'mode', editing: true },
+      'https://pirate.example',
+    );
+    bridge.tick();
+    expect(bridge.readies()).toBe(4);
+
+    bridge.receive({ source: 'nemasus-editor', version: 1, type: 'mode', editing: true });
+    bridge.tick();
+    bridge.tick();
+    expect(bridge.readies()).toBe(4);
+  });
+
+  it('repond a un « hello » de l’editeur par une nouvelle annonce', () => {
+    const bridge = runBridge();
+    bridge.receive({ source: 'nemasus-editor', version: 1, type: 'hello' });
+    expect(bridge.readies()).toBe(2);
+    expect(bridge.sent.every((entry) => entry.origin === 'https://app.nemasus.fr')).toBe(true);
+  });
+
+  it('un toucher bref choisit l’element sur telephone, un glissement non', () => {
+    const bridge = runBridge();
+    bridge.fire('touchstart', bridge.finger(10, 10));
+    bridge.fire('touchmove', bridge.finger(10, 60));
+    bridge.fire('touchend', { touches: [] });
+    expect(bridge.selects()).toHaveLength(0);
+
+    bridge.fire('touchstart', bridge.finger(10, 10));
+    const prevented = bridge.fire('touchend', { touches: [] });
+    expect(prevented).toBe(true);
+    expect(bridge.selects()).toEqual([
+      expect.objectContaining({
+        origin: 'https://app.nemasus.fr',
+        message: expect.objectContaining({ address: 'pages.accueil.hero.titre' }),
+      }),
+    ]);
+
+    // Edition coupee : le toucher redevient un toucher ordinaire.
+    bridge.receive({ source: 'nemasus-editor', version: 1, type: 'mode', editing: false });
+    bridge.fire('touchstart', bridge.finger(10, 10));
+    expect(bridge.fire('touchend', { touches: [] })).toBe(false);
+    expect(bridge.selects()).toHaveLength(1);
+  });
+
+  it('un toucher hors des elements modifiables ne choisit rien', () => {
+    const bridge = runBridge();
+    bridge.fire('touchstart', { ...bridge.finger(10, 10), target: bridge.section });
+    expect(bridge.fire('touchend', { touches: [], target: bridge.section })).toBe(false);
+    expect(bridge.selects()).toHaveLength(0);
+  });
+
+  it('cesse d’annoncer au bout d’une minute sans editeur', () => {
+    const bridge = runBridge();
+    for (let index = 0; index < 200; index += 1) bridge.tick();
+    expect(bridge.readies()).toBe(60);
   });
 });

@@ -4398,6 +4398,122 @@ begin
 end;
 $$;
 
+\echo '--- 0065 : le commercant est prevenu de ce qui arrive par son site ---'
+do $$
+declare
+  v_site_a uuid := (select v from t.fixtures where k = 'site_a');
+  v_org_a  uuid := (select v from t.fixtures where k = 'org_a');
+  v_form   uuid;
+  v_ok     uuid;
+  v_old    uuid;
+  v_items  jsonb;
+  v_item   jsonb;
+  v_first  boolean;
+  v_second boolean;
+begin
+  -- Point de depart connu : tout ce qui existe deja sur le site A est signale.
+  update public.form_submissions set owner_notified_at = now() where site_id = v_site_a;
+  update public.bookings set owner_notified_at = now() where site_id = v_site_a;
+  update public.shop_orders set owner_notified_at = now() where site_id = v_site_a;
+
+  insert into public.forms (site_id, organization_id, slug, name, kind)
+  values (v_site_a, v_org_a, 'notif-0065', 'Demande de devis', 'contact')
+  returning id into v_form;
+  insert into public.form_fields (form_id, name, label, type, is_required, sort_order)
+  values (v_form, 'email', 'E-mail', 'email', true, 1),
+         (v_form, 'message', 'Message', 'textarea', true, 2);
+
+  insert into public.form_submissions (form_id, site_id, organization_id, data, status)
+  values (v_form, v_site_a, v_org_a,
+          '{"email":"Jeanne@Visiteur.test","message":"Bonjour, une question"}', 'unread')
+  returning id into v_ok;
+  insert into public.form_submissions (form_id, site_id, organization_id, data, status)
+  values (v_form, v_site_a, v_org_a, '{"email":"spam@x.test","message":"promo"}', 'spam');
+  insert into public.form_submissions (form_id, site_id, organization_id, data, status, created_at)
+  values (v_form, v_site_a, v_org_a, '{"message":"ancien"}', 'unread', now() - interval '3 days')
+  returning id into v_old;
+
+  set local role service_role;
+  v_items := public.site_activity_to_notify(v_site_a, 50, 0);
+  reset role;
+  perform t.assert(jsonb_array_length(v_items) = 1,
+    'Un seul element a signaler : ni l''indesirable, ni le message de plus de 48 heures');
+  v_item := v_items -> 0;
+  perform t.assert(v_item ->> 'kind' = 'message' and (v_item ->> 'id')::uuid = v_ok,
+    'Le message recu est a signaler');
+  perform t.assert(v_item -> 'detail' ->> 'excerpt' = 'Bonjour, une question'
+                   and v_item -> 'detail' ->> 'replyTo' = 'jeanne@visiteur.test'
+                   and v_item -> 'detail' ->> 'formName' = 'Demande de devis',
+    'Extrait, adresse du visiteur (pour repondre) et formulaire d''origine');
+  perform t.assert(v_item -> 'recipients' ? 'alice@tenant-a.test'
+                   and not (v_item -> 'recipients' ?| array['eve@tenant-a.test',
+                                                            'viewer@tenant-a.test',
+                                                            'bob@tenant-b.test']),
+    'Par defaut : proprietaires et administrateurs de l''organisation du site, eux seuls');
+
+  insert into public.site_settings (site_id, notification_emails)
+  values (v_site_a, '{Boutique@Tenant-a.test}')
+  on conflict (site_id) do update set notification_emails = excluded.notification_emails;
+  set local role service_role;
+  v_items := public.site_activity_to_notify(v_site_a, 50, 0);
+  reset role;
+  perform t.assert(v_items -> 0 -> 'recipients' = '["boutique@tenant-a.test"]'::jsonb,
+    'Les adresses « Prevenir ces adresses » du site remplacent les responsables');
+
+  update public.forms set notify_emails = '{devis@tenant-a.test}' where id = v_form;
+  set local role service_role;
+  v_items := public.site_activity_to_notify(v_site_a, 50, 0);
+  reset role;
+  perform t.assert(v_items -> 0 -> 'recipients' = '["devis@tenant-a.test"]'::jsonb,
+    'Les adresses propres a un formulaire passent en premier');
+
+  set local role service_role;
+  v_items := public.site_activity_to_notify(v_site_a, 50, 3600);
+  reset role;
+  perform t.assert(jsonb_array_length(v_items) = 0,
+    'La tache de fond laisse a l''envoi immediat le temps de passer');
+
+  update public.sites set is_demo = true where id = v_site_a;
+  set local role service_role;
+  v_items := public.site_activity_to_notify(v_site_a, 50, 0);
+  reset role;
+  update public.sites set is_demo = false where id = v_site_a;
+  perform t.assert(jsonb_array_length(v_items) = 0,
+    'Un site de demonstration ne previent personne');
+
+  -- Reserve avant l'envoi : jamais deux notifications pour un meme message.
+  set local role service_role;
+  v_first := public.mark_site_activity_notified('message', v_ok);
+  v_second := public.mark_site_activity_notified('message', v_ok);
+  v_items := public.site_activity_to_notify(v_site_a, 50, 0);
+  reset role;
+  perform t.assert(v_first and not v_second,
+    'Un seul envoi peut reserver un message (le second est refuse)');
+  perform t.assert(jsonb_array_length(v_items) = 0, 'Un message reserve n''est plus a signaler');
+
+  set local role service_role;
+  perform public.release_site_activity('message', v_ok);
+  v_items := public.site_activity_to_notify(v_site_a, 50, 0);
+  reset role;
+  perform t.assert(jsonb_array_length(v_items) = 1,
+    'Un envoi echoue libere le message : la tache de fond reessaiera');
+
+  perform t.assert(not has_function_privilege('authenticated',
+      'public.site_activity_to_notify(uuid, int, int)', 'execute')
+    and not has_function_privilege('anon', 'public.site_activity_to_notify(uuid, int, int)', 'execute'),
+    'La liste (et ses destinataires) n''est lisible que par le service');
+  perform t.assert(not has_function_privilege('authenticated',
+      'public.mark_site_activity_notified(text, uuid)', 'execute')
+    and not has_function_privilege('authenticated',
+      'public.release_site_activity(text, uuid)', 'execute'),
+    'Personne ne peut marquer ou liberer une notification a la place du service');
+
+  update public.site_settings set notification_emails = '{}' where site_id = v_site_a;
+  delete from public.form_submissions where form_id = v_form;
+  delete from public.forms where id = v_form;
+end;
+$$;
+
 \echo ''
 \echo '================================================'
 \echo '  Tous les tests de securite sont passes.'

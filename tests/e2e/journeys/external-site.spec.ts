@@ -5,6 +5,7 @@ import {
   type CustomerSite,
   resetRateLimits,
   serviceClient,
+  SITES_PORT,
   uniqueSuffix,
 } from './support/stack';
 import {
@@ -14,6 +15,7 @@ import {
   failNextDeployment,
   liveContent,
   repositoryState,
+  routeSiteHosting,
   type SiteInfrastructure,
 } from './support/external-site';
 import { userClient } from './support/stack';
@@ -38,6 +40,7 @@ const BUSINESS = `Boulangerie Lumière ${suffix}`;
 const INITIAL_TITLE = `Le pain de Lumière ${suffix}`;
 const PUBLISHED_TITLE = `Fournée du matin ${suffix}`;
 const FAILED_TITLE = `Titre jamais publié ${suffix}`;
+const LAST_TITLE = `Fournée du soir ${suffix}`;
 
 let customer: CustomerSite;
 let infra: SiteInfrastructure;
@@ -165,6 +168,8 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
   browser,
 }) => {
   const page = await login(browser, customer.email, customer.password);
+  // Le site est réellement servi (rendu du dernier déploiement), avec son pont d'aperçu.
+  await routeSiteHosting(page.context());
   await page.goto('/app/editeur');
 
   await test.step('l’aperçu encadre le projet Cloudflare, pas le domaine du client', async () => {
@@ -172,6 +177,17 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
       'src',
       /^https:\/\/[a-z0-9-]+\.pages\.dev\//,
     );
+  });
+
+  await test.step('aperçu réel : un clic ouvre le champ, la saisie s’y affiche aussitôt', async () => {
+    const frame = page.frameLocator('iframe[title="Aperçu de votre site"]');
+    await expect(frame.locator('h1')).toHaveText(INITIAL_TITLE);
+    await frame.locator('[data-nemasus="pages.accueil.hero.titre"]').click();
+    const title = page.getByRole('complementary', { name: 'Champs' }).getByLabel('Titre');
+    await expect(title).toBeFocused();
+    await title.fill(`${PUBLISHED_TITLE} (essai)`);
+    await expect(frame.locator('h1')).toHaveText(`${PUBLISHED_TITLE} (essai)`);
+    await title.fill(INITIAL_TITLE);
   });
 
   await test.step('le brouillon ne change rien en ligne', async () => {
@@ -193,7 +209,7 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
   await test.step('Publier : la version 2 n’est « en ligne » qu’une fois déployée', async () => {
     await page.getByRole('button', { name: 'Publier' }).first().click();
     const dialog = page.getByRole('dialog', { name: 'Publier la version 2' });
-    await dialog.getByLabel('Qu’avez-vous changé ? (facultatif)').fill('Nouveau titre');
+    await dialog.getByLabel('Qu’avez-vous changé ?').fill('Nouveau titre');
     await dialog.getByRole('button', { name: 'Publier' }).click();
     await expect(page.getByText('Version 2 en ligne').first()).toBeVisible({ timeout: 60_000 });
   });
@@ -264,6 +280,98 @@ test('restaurer la version 1 la redéploie réellement', async ({ browser }) => 
   const repo = await repositoryState(infra.repository);
   expect(repo.writes.every((write) => !write.force || write.branch !== 'main')).toBe(true);
   await page.context().close();
+});
+
+test('publier puis quitter l’éditeur : l’accueil suit la mise en ligne jusqu’au bout', async ({
+  browser,
+}) => {
+  const page = await login(browser, customer.email, customer.password);
+  await page.goto('/app/editeur');
+  await page
+    .getByRole('navigation', { name: 'Zones modifiables' })
+    .getByRole('button', { name: 'Bandeau d’accueil' })
+    .click();
+  await page.getByRole('complementary', { name: 'Champs' }).getByLabel('Titre').fill(LAST_TITLE);
+  await page.getByRole('button', { name: 'Enregistrer le brouillon' }).click();
+  await expect(page.getByText(/Brouillon enregistré à/)).toBeVisible();
+  await page.getByRole('button', { name: 'Publier' }).first().click();
+  await page
+    .getByRole('dialog', { name: /Publier la version \d+/ })
+    .getByRole('button', { name: 'Publier' })
+    .click();
+
+  // Le client part dès que la publication est lancée : l'accueil, sans être
+  // rechargé, suit la publication et cesse de l'annoncer « en cours » une
+  // fois en ligne.
+  await expect(page.getByText(/Publication de la version \d+…/)).toBeVisible();
+  await page.goto('/app');
+  await expect(page.getByText(/Publication de la version \d+ en cours/)).toHaveCount(0, {
+    timeout: 60_000,
+  });
+  await expect
+    .poll(async () => JSON.stringify((await liveContent(infra.project)).content), {
+      timeout: 30_000,
+    })
+    .toContain(LAST_TITLE);
+  await page.context().close();
+});
+
+test('un visiteur écrit par le formulaire du site : le commerçant est prévenu', async () => {
+  const db = serviceClient();
+  const { data: site } = await db
+    .from('sites')
+    .select('public_key')
+    .eq('id', customer.siteId)
+    .single();
+  const response = await fetch(
+    `http://127.0.0.1:${SITES_PORT}/v1/sites/${site?.public_key}/forms/contact`,
+    {
+      method: 'POST',
+      headers: {
+        origin: new URL(infra.productionUrl).origin,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        nom: 'Jeanne Petit',
+        email: 'jeanne@visiteur.test',
+        message: `Avez-vous du pain sans gluten ? ${suffix}`,
+      }),
+    },
+  );
+  expect(response.status).toBe(200);
+
+  // L'e-mail part juste après la réponse au visiteur, sans l'attendre.
+  await expect
+    .poll(
+      async () => {
+        const { data } = await db
+          .from('form_submissions')
+          .select('owner_notified_at')
+          .eq('site_id', customer.siteId)
+          .contains('data', { message: `Avez-vous du pain sans gluten ? ${suffix}` })
+          .maybeSingle();
+        return data?.owner_notified_at ?? null;
+      },
+      { timeout: 15_000 },
+    )
+    .not.toBeNull();
+  const { data: sent } = await db
+    .from('email_log')
+    .select('template, status')
+    .eq('site_id', customer.siteId)
+    .eq('template', 'new_message');
+  expect(sent?.some((row) => row.status === 'sent')).toBe(true);
+
+  // Un formulaire que le site n'a pas déclaré : réponse claire, pas une panne.
+  const unknown = await fetch(
+    `http://127.0.0.1:${SITES_PORT}/v1/sites/${site?.public_key}/forms/inexistant`,
+    {
+      method: 'POST',
+      headers: { origin: new URL(infra.productionUrl).origin, 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'x' }),
+    },
+  );
+  expect(unknown.status).toBe(404);
 });
 
 test('une autre société ne voit ni le brouillon ni l’historique', async () => {

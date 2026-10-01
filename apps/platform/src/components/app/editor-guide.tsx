@@ -17,10 +17,11 @@ export function EditorGuide() {
       <ol className="grid flex-1 gap-1.5 sm:grid-cols-3">
         <li>
           <strong>1.</strong> Cliquez sur ce que vous voulez changer dans l’aperçu, ou choisissez
-          une zone à gauche.
+          une zone dans la liste.
         </li>
         <li>
-          <strong>2.</strong> Modifiez le texte ou la photo dans le panneau de droite.
+          <strong>2.</strong> Modifiez le texte ou la photo dans les champs qui s’ouvrent, puis «
+          Enregistrer le brouillon ».
         </li>
         <li>
           <strong>3.</strong> Cliquez sur « Publier » : votre site est mis à jour en quelques

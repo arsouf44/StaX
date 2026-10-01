@@ -5,7 +5,11 @@ import { ContentReportPanel, type ContentReportView } from './report-panel';
 
 export const metadata: Metadata = { title: 'Signalements' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 const CATEGORY_LABELS: Record<string, string> = {
   illegal: 'Contenu illicite',

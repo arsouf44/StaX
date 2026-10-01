@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useId, type ReactNode } from 'react';
 import { Icon, cn, useLocalStorageValue, writeLocalStorage } from '@nemasus/ui';
 import type { NavGroup } from '@nemasus/business';
+import { agree } from '~/lib/plural';
 
 /**
  * Cadre de l espace client.
@@ -134,7 +135,7 @@ function NavItem({
       {badge ? (
         <span
           className="ml-auto bg-[var(--accent)] px-1.5 text-2xs font-medium text-[var(--accent-foreground)]"
-          aria-label={`${badge} non lu(s)`}
+          aria-label={`${badge} ${agree(Number(badge), 'non lu')}`}
         >
           {badge}
         </span>

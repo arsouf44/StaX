@@ -6,6 +6,7 @@ import { deflateSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { ContentDocument, SiteManifest } from '@nemasus/site-contract';
 import {
   completeDeliveryChecklist,
   connectSiteInfrastructure,
@@ -167,6 +168,9 @@ export async function createCustomerWithPaidOrder(options: {
    * commande payee, site encore en construction, que le client ne voit pas.
    */
   delivered?: boolean;
+  /** Contrat d'édition et contenu du site livré (défaut : site minimal). */
+  manifest?: SiteManifest;
+  content?: ContentDocument;
 }): Promise<CustomerSite> {
   const admin = serviceClient();
   const suffix = uniqueSuffix();
@@ -272,6 +276,8 @@ export async function createCustomerWithPaidOrder(options: {
     businessName: options.businessName,
     slug: options.subdomain,
     email,
+    ...(options.manifest ? { manifest: options.manifest } : {}),
+    ...(options.content ? { content: options.content } : {}),
   });
 
   if (options.withLegalIdentity !== false) {
@@ -321,7 +327,13 @@ export async function createStaffAccount(
  */
 export async function buildAndDeliverSite(
   siteId: string,
-  options: { businessName: string; slug: string; email: string },
+  options: {
+    businessName: string;
+    slug: string;
+    email: string;
+    manifest?: SiteManifest;
+    content?: ContentDocument;
+  },
 ): Promise<{ hostname: string; infrastructure: SiteInfrastructure }> {
   const admin = serviceClient();
   const staffAccount = await createStaffAccount('platform_admin');
@@ -331,6 +343,8 @@ export async function buildAndDeliverSite(
     slug: options.slug,
     siteName: options.businessName,
     title: `${options.businessName}, bienvenue`,
+    ...(options.manifest ? { manifest: options.manifest } : {}),
+    ...(options.content ? { content: options.content } : {}),
   });
   await connectSiteInfrastructure(staff, siteId, infrastructure);
 

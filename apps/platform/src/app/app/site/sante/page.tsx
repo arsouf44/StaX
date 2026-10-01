@@ -5,11 +5,20 @@ import { EmptyState, Icon, Panel, PermissionDenied, Stat, StatusPill } from '@ne
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { QualityCheckButton } from './check-button';
+import { countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Bilan de santé' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' });
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'Europe/Paris',
+});
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 const PERCENT = new Intl.NumberFormat('fr-FR', {
   style: 'percent',
   minimumFractionDigits: 1,
@@ -272,7 +281,7 @@ export default async function SiteHealthPage() {
               {passing.length > 0 ? (
                 <details className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
                   <summary className="cursor-pointer text-sm font-medium">
-                    {passing.length} contrôle(s) au vert
+                    {countOf(passing.length, 'contrôle')} au vert
                   </summary>
                   <ul className="mt-3 space-y-2">
                     {passing.map((item) => (

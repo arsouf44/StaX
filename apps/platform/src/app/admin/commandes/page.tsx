@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { unwrapList } from '@nemasus/database';
 import { formatMaintenance, formatMoney, ORDER_STATUS_LABELS } from '@nemasus/payments';
 import {
@@ -55,7 +56,7 @@ export default async function AdminOrdersPage({
   let query = db
     .from('orders')
     .select(
-      'id, reference, status, plan_slug, total_cents, maintenance_price_cents, billing_interval, currency, created_at, paid_at, organizations ( name )',
+      'id, reference, status, plan_slug, total_cents, maintenance_price_cents, billing_interval, currency, created_at, paid_at, organization_id, organizations ( name )',
     )
     .order('created_at', { ascending: false })
     .limit(150);
@@ -74,6 +75,7 @@ export default async function AdminOrdersPage({
     currency: string;
     created_at: string;
     paid_at: string | null;
+    organization_id: string | null;
     organizations: { name: string } | { name: string }[] | null;
   }>((await query) as never);
 
@@ -125,7 +127,18 @@ export default async function AdminOrdersPage({
                 {rows.map((row) => (
                   <TR key={row.id}>
                     <TD className="font-mono text-xs">{row.reference}</TD>
-                    <TD>{clientName(row.organizations)}</TD>
+                    <TD>
+                      {row.organization_id ? (
+                        <Link
+                          href={`/admin/organisations/${row.organization_id}`}
+                          className="underline-offset-4 hover:underline"
+                        >
+                          {clientName(row.organizations)}
+                        </Link>
+                      ) : (
+                        clientName(row.organizations)
+                      )}
+                    </TD>
                     <TD className="text-[var(--foreground-muted)]">{row.plan_slug ?? '—'}</TD>
                     <TD className="tabular-nums">
                       {formatMoney(row.total_cents, row.currency as 'EUR')}
@@ -148,9 +161,10 @@ export default async function AdminOrdersPage({
                     </TD>
                     <TD className="text-[var(--foreground-muted)]">
                       <time dateTime={row.paid_at ?? row.created_at}>
-                        {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-                          new Date(row.paid_at ?? row.created_at),
-                        )}
+                        {new Intl.DateTimeFormat('fr-FR', {
+                          dateStyle: 'medium',
+                          timeZone: 'Europe/Paris',
+                        }).format(new Date(row.paid_at ?? row.created_at))}
                       </time>
                     </TD>
                   </TR>

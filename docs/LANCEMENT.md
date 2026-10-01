@@ -88,12 +88,13 @@ d'erreur, notifications), renommé les tâches planifiées
 des sous-traitants (Resend ajouté). La **0058** (2026-09-29) inscrit Vercel,
 hébergeur de la plateforme, et recentre Cloudflare sur les sites des clients.
 
-**À faire : migrations 0060 à 0064** (2026-09-30). La **0059** (statistiques
-réellement calculées) est appliquée en production et inscrite avec son
-empreinte ; l'agrégation horaire y tourne déjà. Les suivantes sont prêtes et
-toutes additives — état des services dérivé des journaux (0060), libellés
-accentués (0061), pilotage de l'équipe (0062), bilan de santé des sites
-(0063), bilan mensuel des clients (0064) :
+**À faire : migrations 0060 à 0065** (2026-09-30 et 2026-10-01). La **0059**
+(statistiques réellement calculées) est appliquée en production et inscrite
+avec son empreinte ; l'agrégation horaire y tourne déjà. Les suivantes sont
+prêtes et toutes additives — état des services dérivé des journaux (0060),
+libellés accentués (0061), pilotage de l'équipe (0062), bilan de santé des
+sites (0063), bilan mensuel des clients (0064), e-mail au commerçant pour
+chaque message, réservation ou commande reçus par son site (0065) :
 
 ```
 DATABASE_URL="postgresql://…" pnpm db:migrate

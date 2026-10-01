@@ -233,6 +233,7 @@ export default async function ProjectPage() {
                         {new Intl.DateTimeFormat('fr-FR', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
+                          timeZone: 'Europe/Paris',
                         }).format(new Date(event.created_at))}
                       </time>
                     </p>
@@ -248,9 +249,10 @@ export default async function ProjectPage() {
               <p className="mt-2 text-sm text-[var(--foreground-muted)]">
                 Votre site est en ligne depuis le{' '}
                 <time dateTime={project.go_live_at}>
-                  {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
-                    new Date(project.go_live_at),
-                  )}
+                  {new Intl.DateTimeFormat('fr-FR', {
+                    dateStyle: 'long',
+                    timeZone: 'Europe/Paris',
+                  }).format(new Date(project.go_live_at))}
                 </time>
                 .
               </p>

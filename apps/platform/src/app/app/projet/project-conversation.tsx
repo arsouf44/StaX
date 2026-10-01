@@ -25,9 +25,11 @@ function SubmitButton() {
 }
 
 function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(
-    new Date(iso),
-  );
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Europe/Paris',
+  }).format(new Date(iso));
 }
 
 /**

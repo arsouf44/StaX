@@ -406,67 +406,122 @@ export function siteDeliveredEmail(
 /* -------------------------------------------------------------------------- */
 
 export function newMessageEmail(
-  ctx: BaseContext & { senderName: string; excerpt: string; inboxUrl: string },
+  ctx: BaseContext & {
+    siteName: string;
+    senderName: string;
+    excerpt: string;
+    inboxUrl: string;
+    formName?: string | null;
+    /** Adresse du visiteur : « Répondre » lui écrit directement. */
+    replyTo?: string | null;
+  },
 ): EmailMessage {
-  return shell({
+  const origin = ctx.formName ? ` (formulaire « ${ctx.formName} »)` : '';
+  const message = shell({
     to: ctx.to,
     template: 'new_message',
-    subject: `Nouveau message de ${ctx.senderName}`,
+    subject: `Nouveau message de ${ctx.senderName} — ${ctx.siteName}`,
     preheader: ctx.excerpt.slice(0, 120),
     heading: 'Vous avez reçu un message',
     bodyHtml: [
-      paragraph(`${ctx.senderName} vous a écrit depuis votre site :`),
-      `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E4E4E7;
-        color:#3F3F46;font-style:italic;">${escapeHtml(ctx.excerpt.slice(0, 500))}</blockquote>`,
+      paragraph(`${ctx.senderName} vous a écrit depuis ${ctx.siteName}${origin} :`),
+      ctx.excerpt
+        ? `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E4E4E7;
+        color:#3F3F46;font-style:italic;white-space:pre-line;">${escapeHtml(ctx.excerpt.slice(0, 500))}</blockquote>`
+        : '',
+      ctx.replyTo
+        ? paragraph('Répondez directement à cet e-mail : votre réponse lui parviendra.')
+        : '',
     ].join(''),
-    bodyText: [`${ctx.senderName} vous a écrit :`, ctx.excerpt.slice(0, 500)],
+    bodyText: [
+      `${ctx.senderName} vous a écrit depuis ${ctx.siteName}${origin} :`,
+      ctx.excerpt.slice(0, 500),
+      ...(ctx.replyTo ? ['Répondez directement à cet e-mail : votre réponse lui parviendra.'] : []),
+    ],
     action: { label: 'Lire le message', url: ctx.inboxUrl },
   });
+  return ctx.replyTo ? { ...message, replyTo: ctx.replyTo } : message;
 }
 
 export function newBookingEmail(
   ctx: BaseContext & {
+    siteName: string;
     customerName: string;
     dateLabel: string;
     partySize: number;
     bookingsUrl: string;
+    serviceName?: string | null;
+    /** Demande à accepter ou refuser (sinon : réservation confirmée d'office). */
+    needsAnswer?: boolean;
+    replyTo?: string | null;
   },
 ): EmailMessage {
-  return shell({
+  const people = `${ctx.partySize} ${ctx.partySize > 1 ? 'personnes' : 'personne'}`;
+  const needsAnswer = ctx.needsAnswer !== false;
+  const message = shell({
     to: ctx.to,
     template: 'new_booking',
-    subject: `Nouvelle réservation — ${ctx.dateLabel}`,
-    preheader: `${ctx.customerName}, ${ctx.partySize} personne(s).`,
-    heading: 'Nouvelle demande de réservation',
-    bodyHtml: definitionList([
-      ['Client', ctx.customerName],
-      ['Date et heure', ctx.dateLabel],
-      ['Nombre de personnes', String(ctx.partySize)],
-    ]),
+    subject: `${needsAnswer ? 'Demande de réservation' : 'Nouvelle réservation'} — ${ctx.dateLabel}`,
+    preheader: `${ctx.customerName}, ${people}, sur ${ctx.siteName}.`,
+    heading: needsAnswer ? 'Nouvelle demande de réservation' : 'Nouvelle réservation',
+    bodyHtml: [
+      definitionList([
+        ['Client', ctx.customerName],
+        ['Date et heure', ctx.dateLabel],
+        ['Nombre de personnes', String(ctx.partySize)],
+        ...(ctx.serviceName ? ([['Prestation', ctx.serviceName]] as Array<[string, string]>) : []),
+        ['Site', ctx.siteName],
+      ]),
+      needsAnswer
+        ? paragraph('Votre client attend votre réponse : acceptez ou refusez la demande.')
+        : '',
+    ].join(''),
     bodyText: [
-      `Nouvelle réservation : ${ctx.customerName}, ${ctx.dateLabel}, ${ctx.partySize} personne(s).`,
+      `${needsAnswer ? 'Demande de réservation' : 'Nouvelle réservation'} sur ${ctx.siteName} : ${ctx.customerName}, ${ctx.dateLabel}, ${people}.`,
+      ...(needsAnswer
+        ? ['Votre client attend votre réponse : acceptez ou refusez la demande.']
+        : []),
     ],
-    action: { label: 'Confirmer ou refuser', url: ctx.bookingsUrl },
+    action: {
+      label: needsAnswer ? 'Accepter ou refuser' : 'Voir la réservation',
+      url: ctx.bookingsUrl,
+    },
   });
+  return ctx.replyTo ? { ...message, replyTo: ctx.replyTo } : message;
 }
 
 export function newShopOrderEmail(
-  ctx: BaseContext & { reference: string; total: string; customerName: string; ordersUrl: string },
+  ctx: BaseContext & {
+    siteName: string;
+    reference: string;
+    total: string;
+    customerName: string;
+    ordersUrl: string;
+    replyTo?: string | null;
+  },
 ): EmailMessage {
-  return shell({
+  const message = shell({
     to: ctx.to,
     template: 'new_shop_order',
-    subject: `Nouvelle commande — ${ctx.reference}`,
-    preheader: `${ctx.customerName} — ${ctx.total}`,
+    subject: `Nouvelle commande payée — ${ctx.reference}`,
+    preheader: `${ctx.customerName} — ${ctx.total}, sur ${ctx.siteName}.`,
     heading: 'Vous avez reçu une commande',
-    bodyHtml: definitionList([
-      ['Reference', ctx.reference],
-      ['Client', ctx.customerName],
-      ['Montant', ctx.total],
-    ]),
-    bodyText: [`Nouvelle commande ${ctx.reference} de ${ctx.customerName} — ${ctx.total}.`],
+    bodyHtml: [
+      definitionList([
+        ['Référence', ctx.reference],
+        ['Client', ctx.customerName],
+        ['Montant payé', ctx.total],
+        ['Site', ctx.siteName],
+      ]),
+      paragraph('Le paiement est confirmé : vous pouvez préparer la commande.'),
+    ].join(''),
+    bodyText: [
+      `Nouvelle commande ${ctx.reference} de ${ctx.customerName} — ${ctx.total}, sur ${ctx.siteName}.`,
+      'Le paiement est confirmé : vous pouvez préparer la commande.',
+    ],
     action: { label: 'Voir la commande', url: ctx.ordersUrl },
   });
+  return ctx.replyTo ? { ...message, replyTo: ctx.replyTo } : message;
 }
 
 /* -------------------------------------------------------------------------- */

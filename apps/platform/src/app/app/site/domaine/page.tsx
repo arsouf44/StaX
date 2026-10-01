@@ -50,7 +50,11 @@ const SSL_LABELS: Record<string, string> = {
   failed: 'échec — contactez-nous',
 };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 export default async function DomainPage() {
   const { workspace, db } = await getWorkspace();

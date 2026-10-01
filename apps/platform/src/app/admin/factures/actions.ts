@@ -196,7 +196,10 @@ export async function issueSalesInvoiceAction(
   // L'e-mail part APRES l'ecriture : une facture enregistree sans e-mail se
   // renvoie, un e-mail parti sans facture est un engagement qu'on ne tient pas.
   const money = (cents: number) => formatMoney(cents, 'EUR', { hideDecimalsWhenRound: true });
-  const dueLabel = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(dueAt));
+  const dueLabel = new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'long',
+    timeZone: 'Europe/Paris',
+  }).format(new Date(dueAt));
 
   const delivery = await sendEmail(
     salesInvoiceIssuedEmail({

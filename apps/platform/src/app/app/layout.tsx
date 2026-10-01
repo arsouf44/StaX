@@ -70,9 +70,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <SupportBanner
           organizationName={workspace.organization.name}
           reason={support.reason}
-          expiresAtLabel={new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(
-            new Date(support.expiresAt),
-          )}
+          expiresAtLabel={new Intl.DateTimeFormat('fr-FR', {
+            timeStyle: 'short',
+            timeZone: 'Europe/Paris',
+          }).format(new Date(support.expiresAt))}
         />
       ) : null}
       <AppShell

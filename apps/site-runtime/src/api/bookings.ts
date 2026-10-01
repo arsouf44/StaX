@@ -3,6 +3,7 @@ import { hmacHex, randomToken, visitorHash } from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import { clientIp, field, guardPublicWrite, intField, refuse } from './shared';
 import type { ResolvedSite } from '../resolve';
+import { notifyOwnerLater, type Defer } from '../owner-notify';
 
 /**
  * Reservations.
@@ -58,7 +59,11 @@ export async function handleBookingSlots(request: Request, site: ResolvedSite): 
   }
 }
 
-export async function handleBookingCreate(request: Request, site: ResolvedSite): Promise<Response> {
+export async function handleBookingCreate(
+  request: Request,
+  site: ResolvedSite,
+  defer?: Defer,
+): Promise<Response> {
   const guard = await guardPublicWrite(request, site, 'booking');
   if (!guard.ok) return guard.response ?? refuse('Requête refusée.', 400);
 
@@ -129,6 +134,7 @@ export async function handleBookingCreate(request: Request, site: ResolvedSite):
       409,
     );
   }
+  notifyOwnerLater(site.siteId, defer);
 
   try {
     const hash = await visitorHash({

@@ -21,6 +21,8 @@ export default tseslint.config(
       '**/coverage/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      // Pile locale des parcours (binaires, bases, essais) : jamais versionnee.
+      '.e2e-stack/**',
       '**/*.generated.ts',
       'packages/database/src/generated/**',
       'supabase/functions/**',

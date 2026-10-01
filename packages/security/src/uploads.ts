@@ -246,3 +246,81 @@ function isoMediaType(header: Uint8Array): string | null {
 
 /** Octets a lire pour `sniffMediaType`. */
 export const SNIFF_HEADER_BYTES = 64;
+
+/** Octets lus pour trouver les dimensions d'une image (EXIF des JPEG compris). */
+export const DIMENSION_HEADER_BYTES = 512 * 1024;
+
+const MAX_DIMENSION = 50_000;
+
+/**
+ * Largeur et hauteur d'une image, lues dans ses premiers octets, sans la
+ * décoder. Elles partent avec le contenu publié (`width`, `height`) : le site
+ * réserve la place de la photo avant son chargement, sans saut de mise en
+ * page. `null` si le format ne les donne pas simplement ; rien n'est inventé.
+ */
+export function imageDimensions(
+  bytes: Uint8Array,
+  mimeType: string,
+): { width: number; height: number } | null {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const u16be = (offset: number) => (offset + 2 <= bytes.length ? view.getUint16(offset) : 0);
+  const u16le = (offset: number) => (offset + 2 <= bytes.length ? view.getUint16(offset, true) : 0);
+  const u32be = (offset: number) => (offset + 4 <= bytes.length ? view.getUint32(offset) : 0);
+  const u24le = (offset: number) =>
+    offset + 3 <= bytes.length
+      ? (bytes[offset] ?? 0) | ((bytes[offset + 1] ?? 0) << 8) | ((bytes[offset + 2] ?? 0) << 16)
+      : 0;
+  const sane = (width: number, height: number) =>
+    width > 0 && height > 0 && width <= MAX_DIMENSION && height <= MAX_DIMENSION
+      ? { width, height }
+      : null;
+
+  if (mimeType === 'image/png') return sane(u32be(16), u32be(20));
+  if (mimeType === 'image/gif') return sane(u16le(6), u16le(8));
+  if (mimeType === 'image/webp') {
+    const chunk = ascii(bytes, 12, 4);
+    if (chunk === 'VP8 ') return sane(u16le(26) & 0x3fff, u16le(28) & 0x3fff);
+    if (chunk === 'VP8L' && bytes[20] === 0x2f) {
+      const b1 = bytes[22] ?? 0;
+      const b2 = bytes[23] ?? 0;
+      const b3 = bytes[24] ?? 0;
+      return sane(
+        1 + (((b1 & 0x3f) << 8) | (bytes[21] ?? 0)),
+        1 + (((b3 & 0x0f) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6)),
+      );
+    }
+    if (chunk === 'VP8X') return sane(1 + u24le(24), 1 + u24le(27));
+    return null;
+  }
+  if (mimeType === 'image/jpeg') {
+    let offset = 2;
+    while (offset + 9 < bytes.length) {
+      if (bytes[offset] !== 0xff) return null;
+      const marker = bytes[offset + 1] ?? 0;
+      if (marker === 0xff) {
+        offset += 1;
+        continue;
+      }
+      // Marqueurs sans longueur : debut d'image, redemarrages.
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+        offset += 2;
+        continue;
+      }
+      // SOF0 à SOF15 (hors DHT, JPG et DAC) : hauteur puis largeur.
+      if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+        return sane(u16be(offset + 7), u16be(offset + 5));
+      }
+      if (marker === 0xd9 || marker === 0xda) return null;
+      offset += 2 + u16be(offset + 2);
+    }
+    return null;
+  }
+  if (mimeType === 'image/avif') {
+    // Boîte `ispe` (propriétés spatiales) : version et drapeaux, puis largeur, hauteur.
+    for (let offset = 4; offset + 16 <= bytes.length && offset < 4096; offset += 1) {
+      if (ascii(bytes, offset, 4) === 'ispe') return sane(u32be(offset + 8), u32be(offset + 12));
+    }
+    return null;
+  }
+  return null;
+}

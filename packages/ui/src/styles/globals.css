@@ -362,6 +362,14 @@
     text-wrap: pretty;
   }
 
+  /* Adresses, identifiants, noms de variables : passent a la ligne plutot
+     que de deborder (et d'etre coupes) sur telephone. */
+  code,
+  kbd,
+  samp {
+    overflow-wrap: anywhere;
+  }
+
   /* Focus toujours visible, jamais supprime. Sur toutes les surfaces. */
   :focus-visible {
     outline: 2px solid var(--accent);

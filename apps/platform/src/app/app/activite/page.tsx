@@ -15,45 +15,17 @@ import {
 } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
+import { auditActionLabel } from '~/lib/audit-labels';
 
 export const metadata: Metadata = { title: 'Journal d’activité' };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
-/**
- * Traduction des actions journalisees.
- *
- * Le journal stocke des identifiants stables (`member.role_changed`) pour rester
- * exploitable dans le temps. Ce qui s'affiche, ce sont des phrases francaises.
- * Une action inconnue reste lisible plutot que d'etre masquee : un journal qui
- * cache ce qu'il ne comprend pas n'est plus un journal.
- */
-const ACTION_LABELS: Record<string, string> = {
-  'site.published': 'Site publié',
-  'site.rolled_back': 'Retour à une version précédente',
-  'site.suspended': 'Site suspendu',
-  'site.reactivated': 'Site réactivé',
-  'member.invited': 'Collaborateur invité',
-  'member.joined': 'Collaborateur arrivé',
-  'member.role_changed': 'Accès d’un collaborateur modifié',
-  'member.removed': 'Accès d’un collaborateur retiré',
-  'order.paid': 'Commande payée',
-  'order.refunded': 'Commande remboursée',
-  'refund.requested': 'Remboursement demandé',
-  'subscription.cancel_requested': 'Résiliation demandée',
-  'subscription.cancel_reverted': 'Résiliation annulée',
-  'domain.attached': 'Nom de domaine rattaché',
-  'domain.verified': 'Nom de domaine vérifié',
-  'domain.detached': 'Nom de domaine retiré',
-  'data.exported': 'Export de données',
-  'data.deletion_requested': 'Suppression de données demandée',
-  'impersonation.started': 'Accès d’assistance ouvert par l’équipe Nemasus',
-  'impersonation.ended': 'Accès d’assistance refermé',
-  'auth.password_changed': 'Mot de passe modifié',
-  'auth.mfa_enabled': 'Double authentification activée',
-  'auth.mfa_disabled': 'Double authentification désactivée',
-};
-
+/** Les actions sont traduites par `~/lib/audit-labels`, commun au back-office. */
 const ACTOR_LABELS: Record<string, string> = {
   user: 'Vous ou un collaborateur',
   platform_staff: 'Équipe Nemasus',
@@ -118,7 +90,7 @@ export default async function ActivityPage() {
                       {DATE_TIME.format(new Date(row.created_at))}
                     </time>
                   </TD>
-                  <TD>{ACTION_LABELS[row.action] ?? row.action}</TD>
+                  <TD>{auditActionLabel(row.action)}</TD>
                   <TD className="text-[var(--foreground-muted)]">
                     {row.actor_email ?? ACTOR_LABELS[row.actor_type] ?? row.actor_type}
                     {row.impersonated_by ? (

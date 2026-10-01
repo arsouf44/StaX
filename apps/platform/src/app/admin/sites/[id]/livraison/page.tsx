@@ -44,6 +44,7 @@ import {
   ImportManifestButton,
   PhaseForm,
 } from './controls';
+import { agree, countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Infrastructure & livraison' };
 export const dynamic = 'force-dynamic';
@@ -188,7 +189,7 @@ function evidenceSummary(check: ReadinessCheck): string | null {
     const commit = evidence['commit'] as string | undefined;
     return commit ? `commit ${commit.slice(0, 7)}` : null;
   }
-  if (check.key === 'client_account') return `${String(evidence['clients'] ?? 0)} compte(s)`;
+  if (check.key === 'client_account') return countOf(Number(evidence['clients'] ?? 0), 'compte');
   return null;
 }
 
@@ -457,7 +458,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
         </Panel>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start [&>*]:min-w-0">
         {/* GitHub */}
         <Panel level={1} padding="lg" data-testid="panel-github">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -828,7 +829,14 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
               {
                 term: 'Zones modifiables',
                 description: activeManifest
-                  ? `${String(summary['pages'] ?? 0)} page(s), ${String(summary['sections'] ?? 0)} section(s), ${String(summary['fields'] ?? 0)} champ(s), ${String(summary['collections'] ?? 0)} collection(s), ${String(summary['forms'] ?? 0)} formulaire(s), ${String(summary['locales'] ?? 1)} langue(s)`
+                  ? [
+                      countOf(Number(summary['pages'] ?? 0), 'page'),
+                      countOf(Number(summary['sections'] ?? 0), 'section'),
+                      countOf(Number(summary['fields'] ?? 0), 'champ'),
+                      countOf(Number(summary['collections'] ?? 0), 'collection'),
+                      countOf(Number(summary['forms'] ?? 0), 'formulaire'),
+                      countOf(Number(summary['locales'] ?? 1), 'langue'),
+                    ].join(', ')
                   : '—',
               },
               {
@@ -1037,7 +1045,7 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
               modifier : c’est la base de données qui l’interdit.
             </p>
             <p className="text-sm">
-              Compte(s) client :{' '}
+              {agree(clients.length, 'Compte client', 'Comptes clients')} :{' '}
               {clients.length > 0
                 ? clients.map((member) => member.profiles?.email).join(', ')
                 : 'aucun pour l’instant'}

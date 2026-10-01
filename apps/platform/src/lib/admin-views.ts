@@ -16,7 +16,16 @@ import type { PlatformRole } from '@nemasus/types';
  */
 
 export type AdminColumnKind =
-  'text' | 'mono' | 'money' | 'date' | 'datetime' | 'status' | 'boolean' | 'relation';
+  | 'text'
+  | 'mono'
+  | 'money'
+  | 'date'
+  | 'datetime'
+  | 'status'
+  | 'boolean'
+  | 'relation'
+  /** Action du journal : libellé français, identifiant en infobulle. */
+  | 'audit';
 
 export interface AdminColumn {
   key: string;
@@ -27,6 +36,8 @@ export interface AdminColumn {
   statuses?: Record<string, StatusLabel>;
   /** Masquee sous 640 px pour garder le tableau lisible sur telephone. */
   secondary?: boolean;
+  /** Pour `relation` : lien vers la fiche liee, `<prefix>/<ligne[idKey]>`. */
+  link?: { prefix: string; idKey: string };
 }
 
 export interface AdminFilter {
@@ -68,6 +79,8 @@ export interface AdminView {
   note?: string;
 }
 
+const ORGANISATION_LINK = { prefix: '/admin/organisations', idKey: 'organization_id' };
+
 function label(text: string, tone: LabelTone, help?: string): StatusLabel {
   return help ? { label: text, tone, help } : { label: text, tone };
 }
@@ -86,6 +99,11 @@ export const PROJECT_STATUSES: Record<string, StatusLabel> = {
   ordered: label('Commandé', 'info'),
   questionnaire_pending: label('Questionnaire attendu', 'warning'),
   assets_pending: label('Éléments attendus', 'warning'),
+  design: label('Conception', 'accent'),
+  development: label('Développement', 'accent'),
+  verification: label('Vérifications', 'info'),
+  deploying: label('Mise en ligne', 'info'),
+  delivered: label('Livré', 'success'),
   in_progress: label('En création', 'accent'),
   internal_review: label('Relecture interne', 'info'),
   client_review: label('Chez le client', 'warning'),
@@ -209,7 +227,7 @@ export const ADMIN_VIEWS = {
       'Tous les sites de la plateforme. Un site « en construction » n’est pas encore confié à son client, qui ne le voit pas.',
     minimum: 'support',
     select:
-      'id, name, slug, status, is_demo, delivered_at, last_published_at, created_at, organizations ( name )',
+      'id, name, slug, status, is_demo, delivered_at, last_published_at, created_at, organization_id, organizations ( name )',
     orderColumn: 'created_at',
     ascending: false,
     searchColumn: 'name',
@@ -239,7 +257,13 @@ export const ADMIN_VIEWS = {
     ],
     columns: [
       { key: 'name', label: 'Site', kind: 'text' },
-      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name' },
+      {
+        key: 'organizations',
+        label: 'Client',
+        kind: 'relation',
+        path: 'name',
+        link: ORGANISATION_LINK,
+      },
       { key: 'status', label: 'État', kind: 'status', statuses: SITE_STATUSES },
       { key: 'delivered_at', label: 'Confié au client', kind: 'date', secondary: true },
       {
@@ -341,7 +365,8 @@ export const ADMIN_VIEWS = {
     title: 'Projets',
     description: 'La création de chaque site, de la commande à la mise en ligne.',
     minimum: 'support',
-    select: 'id, reference, title, status, due_at, go_live_at, created_at, organizations ( name )',
+    select:
+      'id, reference, title, status, due_at, go_live_at, created_at, organization_id, organizations ( name )',
     orderColumn: 'created_at',
     ascending: false,
     searchColumn: 'reference',
@@ -371,7 +396,13 @@ export const ADMIN_VIEWS = {
     ],
     columns: [
       { key: 'reference', label: 'Référence', kind: 'mono' },
-      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name' },
+      {
+        key: 'organizations',
+        label: 'Client',
+        kind: 'relation',
+        path: 'name',
+        link: ORGANISATION_LINK,
+      },
       { key: 'status', label: 'Étape', kind: 'status', statuses: PROJECT_STATUSES },
       { key: 'due_at', label: 'Échéance', kind: 'date', secondary: true },
       { key: 'go_live_at', label: 'Mise en ligne', kind: 'date', secondary: true },
@@ -433,7 +464,7 @@ export const ADMIN_VIEWS = {
       'Les contrats de maintenance. Leur état vient des webhooks Stripe signés : il n’est jamais saisi ici.',
     minimum: 'billing_admin',
     select:
-      'id, status, maintenance_state, plan_slug, maintenance_price_cents, billing_interval, currency, current_period_end, cancel_at_period_end, created_at, organizations ( name )',
+      'id, status, maintenance_state, plan_slug, maintenance_price_cents, billing_interval, currency, current_period_end, cancel_at_period_end, created_at, organization_id, organizations ( name )',
     orderColumn: 'created_at',
     ascending: false,
     filters: [
@@ -454,7 +485,13 @@ export const ADMIN_VIEWS = {
       { value: 'actifs', label: 'Actifs', column: 'status', operator: 'eq', match: 'active' },
     ],
     columns: [
-      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name' },
+      {
+        key: 'organizations',
+        label: 'Client',
+        kind: 'relation',
+        path: 'name',
+        link: ORGANISATION_LINK,
+      },
       { key: 'plan_slug', label: 'Offre', kind: 'text', secondary: true },
       { key: 'status', label: 'État', kind: 'status', statuses: SUBSCRIPTION_STATUSES },
       { key: 'maintenance_price_cents', label: 'Maintenance', kind: 'money' },
@@ -475,7 +512,7 @@ export const ADMIN_VIEWS = {
       'Les demandes et leur éligibilité, calculée à partir de la date réelle de mise en ligne.',
     minimum: 'billing_admin',
     select:
-      'id, status, eligible, eligibility_reason, amount_paid_cents, deduction_cents, refund_amount_cents, currency, requested_at, deadline_at, organizations ( name )',
+      'id, status, eligible, eligibility_reason, amount_paid_cents, deduction_cents, refund_amount_cents, currency, requested_at, deadline_at, organization_id, organizations ( name )',
     orderColumn: 'requested_at',
     ascending: false,
     filters: [
@@ -502,7 +539,13 @@ export const ADMIN_VIEWS = {
       },
     ],
     columns: [
-      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name' },
+      {
+        key: 'organizations',
+        label: 'Client',
+        kind: 'relation',
+        path: 'name',
+        link: ORGANISATION_LINK,
+      },
       { key: 'status', label: 'État', kind: 'status', statuses: REFUND_STATUSES },
       { key: 'eligible', label: 'Éligible', kind: 'boolean' },
       { key: 'refund_amount_cents', label: 'À rembourser', kind: 'money' },
@@ -523,7 +566,7 @@ export const ADMIN_VIEWS = {
     description: 'Les demandes d’assistance des clients.',
     minimum: 'support',
     select:
-      'id, reference, subject, category, status, priority, created_at, organizations ( name )',
+      'id, reference, subject, category, status, priority, created_at, organization_id, organizations ( name )',
     orderColumn: 'created_at',
     ascending: false,
     searchColumn: 'subject',
@@ -554,7 +597,13 @@ export const ADMIN_VIEWS = {
     columns: [
       { key: 'reference', label: 'Référence', kind: 'mono' },
       { key: 'subject', label: 'Sujet', kind: 'text' },
-      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name' },
+      {
+        key: 'organizations',
+        label: 'Client',
+        kind: 'relation',
+        path: 'name',
+        link: ORGANISATION_LINK,
+      },
       { key: 'status', label: 'État', kind: 'status', statuses: TICKET_STATUSES },
       { key: 'created_at', label: 'Ouvert le', kind: 'datetime', secondary: true },
     ],
@@ -655,7 +704,7 @@ export const ADMIN_VIEWS = {
     ],
     columns: [
       { key: 'created_at', label: 'Quand', kind: 'datetime' },
-      { key: 'action', label: 'Action', kind: 'mono' },
+      { key: 'action', label: 'Action', kind: 'audit' },
       { key: 'actor_email', label: 'Par qui', kind: 'text' },
       { key: 'actor_type', label: 'Type', kind: 'text', secondary: true },
       { key: 'target_type', label: 'Cible', kind: 'text', secondary: true },
@@ -729,7 +778,7 @@ export const ADMIN_VIEWS = {
     minimum: 'platform_admin',
     select:
       'id, reference, kind, status, requester_email, due_at, identity_verified_at, created_at, ' +
-      'organizations ( name )',
+      'organization_id, organizations ( name )',
     orderColumn: 'due_at',
     ascending: true,
     searchColumn: 'requester_email',
@@ -754,7 +803,14 @@ export const ADMIN_VIEWS = {
       { key: 'reference', label: 'Référence', kind: 'mono' },
       { key: 'kind', label: 'Demande', kind: 'status', statuses: PRIVACY_KINDS },
       { key: 'requester_email', label: 'Demandeur', kind: 'text' },
-      { key: 'organizations', label: 'Client', kind: 'relation', path: 'name', secondary: true },
+      {
+        key: 'organizations',
+        label: 'Client',
+        kind: 'relation',
+        path: 'name',
+        link: ORGANISATION_LINK,
+        secondary: true,
+      },
       { key: 'status', label: 'État', kind: 'status', statuses: PRIVACY_STATUSES },
       { key: 'created_at', label: 'Reçue le', kind: 'date', secondary: true },
     ],

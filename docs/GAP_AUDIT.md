@@ -24,6 +24,11 @@ calculées, état des services véridique, pilotage de l’équipe, bilan de san
 et bilan mensuel des clients, migrations 0059 à 0064 — § 17) · Branche :
 `claude/confident-planck-bmbp9h`
 
+Mise à jour : 2026-10-01 (**test comme un client et comme l’équipe** :
+publication de bout en bout, aperçu sur téléphone, e-mail au commerçant,
+fiche organisation, heures de Paris, migration 0065 — § 18) · Branche :
+`claude/confident-planck-bmbp9h`
+
 Légende : **OK** = fonctionne et testé · **PARTIEL** = utilisable mais incomplet ·
 **MANQUE** = absent ou factice.
 
@@ -617,9 +622,50 @@ la plateforme en ligne (Vercel) et une pile locale complète.
 | Build de production | OK |
 | Production | 0059 appliquée le 2026-09-30, empreinte inscrite ; agrégation « saine », tâche horaire planifiée |
 
+## 18. Test « comme un client » du 2026-10-01
+
+Méthode : la pile locale complète (base, authentification, API, faux GitHub
+et Cloudflare) **sert réellement** le site du client — rendu du dernier
+déploiement, pont d’aperçu chargé en HTTPS — et un navigateur parcourt chaque
+écran en client puis en équipe, sur ordinateur et téléphone : connexion,
+modification dans l’aperçu, brouillon, aperçu du brouillon, publication,
+départ de l’éditeur, formulaires, réglages.
+
+### 18.1 Ce qui ne marchait pas, et qui marche
+
+| # | Constat | Conséquence | Correction | Preuve |
+|---|---|---|---|---|
+| 1 | Un message, une demande de réservation, une commande payée reçus par le site **n’étaient signalés à personne** : les e-mails existaient en modèle, rien ne les envoyait ; « Prévenir ces adresses » n’était lu nulle part | Le commerçant ne savait qu’il avait un client qu’en ouvrant son espace | 0065 : le moteur des sites prévient aussitôt (après la réponse au visiteur), la tâche de fond rattrape ; réservation avant envoi (jamais deux e-mails), « Répondre » écrit au visiteur | 13 assertions SQL, 4 tests unitaires, parcours e2e |
+| 2 | L’annonce « prêt » du pont d’aperçu pouvait partir **avant** que l’éditeur écoute | La saisie ne s’affichait plus en direct dans l’aperçu | Le pont répète son annonce jusqu’à réponse ; l’éditeur le salue au chargement | tests du pont (fausse page) + parcours e2e |
+| 3 | `/bridge/v1.js` figeait au build l’adresse de l’éditeur | Un changement d’adresse coupait le pont sans bruit | Calculé à la requête | parcours e2e |
+| 4 | Sur téléphone, toucher un texte de l’aperçu n’ouvrait pas son champ (iOS ne fait pas de « clic ») | Édition au doigt impossible | Toucher bref reconnu, glisser fait défiler | tests du pont |
+| 5 | L’aperçu se chargeait **deux à trois fois** à chaque ouverture (streaming de Next) | Lenteur, pont instable | Chargé après l’hydratation | trace réseau : un seul chargement |
+| 6 | Publier puis quitter l’éditeur : l’accueil affichait « Publication en cours » **indéfiniment** | Le client croit que rien n’a marché | L’accueil suit la publication et s’actualise seul | parcours e2e |
+| 7 | Champs obligatoires affichés « facultatif » | Publication refusée sans comprendre | Marque d’obligation sur tous les champs | — |
+| 8 | Fiche organisation annoncée par la liste… **404** | L’équipe ne voyait pas un client d’un coup d’œil | `/admin/organisations/[id]` : identité, accès, sites, projets, demandes, commandes, maintenance, factures, journal | exploration |
+| 9 | Heures affichées en **UTC** (« 05:42 » pour 07 h 42) ; heures différentes serveur/navigateur | Dates fausses, erreurs d’hydratation | Tous les formats portent `Europe/Paris` | test qui balaie le code |
+| 10 | Journal en codes techniques (`site.release_published`) | Illisible pour le client comme pour l’équipe | Libellés français pour toutes les actions tracées | test qui relève chaque action écrite |
+| 11 | « Mon entreprise » d’un site livré via son dépôt promettait que téléphone, adresse et mentions légales « sont repris partout » | Rien ne changeait sur le site | Page honnête : renvoi vers l’éditeur et l’équipe, seuls les réglages utiles | exploration |
+| 12 | « 1 élément(s) attendent », « 3 visiteur(s) »… | Ton de formulaire administratif | Accords réels ; un test interdit les « (s) » | test |
+| 13 | Débordements sur téléphone (livraison, intégrations) ; formulaire inconnu = « Service indisponible » (503) | Écrans coupés ; erreur trompeuse pour le développeur du site | Valeurs longues coupées proprement ; 404 « Formulaire inconnu » | exploration, parcours e2e |
+| 14 | Un produit (élément de collection) ajouté était créé **masqué** ; un élément masqué bloquait pourtant la publication | Le client publie, son produit n’apparaît pas | Visible d’office ; un élément masqué ne bloque plus | test + scénario photo/collection |
+| 15 | « Publier » refusé sans dire **quel** champ compléter | Le client cherche | « Accueil › Bandeau d’accueil › Bouton : … » | test |
+| 16 | Photos publiées sans largeur ni hauteur | Saut de mise en page au chargement | Dimensions lues à l’envoi (PNG, JPEG, GIF, WebP, AVIF) | test + scénario |
+| 17 | Horaires : chaque jour à régler séparément ; interrupteurs tous nommés « Fermé » | Saisie fastidieuse ; inutilisable au lecteur d’écran | Un jour ouvert reprend le précédent, « Appliquer à tous les jours ouverts », « Ouvert le lundi » | scénario |
+| 18 | Fiche client sans accès depuis les listes de l’administration | Navigation à l’aveugle | Nom du client cliquable partout ; 203 liens suivis, aucun mort | parcours automatique |
+
+### 18.2 Preuves
+
+| Contrôle | Résultat |
+|---|---|
+| Assertions SQL (`scripts/db-test.sh`) | toutes passées, dont les 13 de la 0065 |
+| Tests unitaires, intégration, sécurité (`pnpm test`) | 441 passés |
+| Parcours complets contre une vraie pile (`pnpm test:e2e:stack`) | 33 passés (aperçu réel, publication suivie depuis l’accueil, message d’un visiteur → e-mail) |
+| Exploration de chaque écran, client et équipe, ordinateur et téléphone | aucune erreur JavaScript, aucune réponse 4xx/5xx, aucun débordement |
+
 ## Ce qui reste non terminé, sans détour
 
-000. **Migrations 0060 à 0064 à appliquer en production** (la 0059 l’est
+000. **Migrations 0060 à 0065 à appliquer en production** (la 0059 l’est
    depuis le 2026-09-30). Toutes additives, compatibles avec le code déployé :
    `DATABASE_URL="postgresql://…" pnpm db:migrate`. Tant qu’elles ne le sont
    pas, les écrans *Production*, *Bilan de santé* et l’état des services

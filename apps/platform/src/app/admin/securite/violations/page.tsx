@@ -12,7 +12,11 @@ export const metadata: Metadata = { title: 'Registre des violations' };
  * failles, leur portee et ce qui a ete fait. La RLS l'applique de toute facon.
  */
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 export default async function Page() {
   const { db } = await requireAdminRole('platform_admin');

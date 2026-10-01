@@ -126,9 +126,10 @@ export default async function BillingPage() {
                     ? 'Votre maintenance prend fin le '
                     : 'Prochaine échéance le '}
                   <time dateTime={subscription.current_period_end}>
-                    {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
-                      new Date(subscription.current_period_end),
-                    )}
+                    {new Intl.DateTimeFormat('fr-FR', {
+                      dateStyle: 'long',
+                      timeZone: 'Europe/Paris',
+                    }).format(new Date(subscription.current_period_end))}
                   </time>
                   .
                 </p>
@@ -203,9 +204,10 @@ export default async function BillingPage() {
                       <TD className="text-[var(--foreground-muted)]">
                         {invoice.issued_at ? (
                           <time dateTime={invoice.issued_at}>
-                            {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-                              new Date(invoice.issued_at),
-                            )}
+                            {new Intl.DateTimeFormat('fr-FR', {
+                              dateStyle: 'medium',
+                              timeZone: 'Europe/Paris',
+                            }).format(new Date(invoice.issued_at))}
                           </time>
                         ) : (
                           '—'
@@ -255,9 +257,10 @@ export default async function BillingPage() {
                       <TD className="text-[var(--foreground-muted)]">
                         {order.paid_at ? (
                           <time dateTime={order.paid_at}>
-                            {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-                              new Date(order.paid_at),
-                            )}
+                            {new Intl.DateTimeFormat('fr-FR', {
+                              dateStyle: 'medium',
+                              timeZone: 'Europe/Paris',
+                            }).format(new Date(order.paid_at))}
                           </time>
                         ) : (
                           '—'

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { niceMax } from '~/lib/audience';
+import { countOf } from '~/lib/plural';
 
 export interface AudiencePoint {
   day: string;
@@ -19,8 +20,17 @@ const MAX_BAR = 24;
 const GAP = 2;
 const RADIUS = 4;
 
-const SHORT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
-const LONG = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const SHORT = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'Europe/Paris',
+});
+const LONG = new Intl.DateTimeFormat('fr-FR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'Europe/Paris',
+});
 const NUMBER = new Intl.NumberFormat('fr-FR');
 
 function asDate(day: string) {
@@ -115,7 +125,7 @@ export function AudienceChart({ points, label }: { points: AudiencePoint[]; labe
                 onPointerDown={() => setActive(index)}
               >
                 <title>
-                  {`${LONG.format(asDate(point.day))} : ${NUMBER.format(point.visitors)} visiteur(s)`}
+                  {`${LONG.format(asDate(point.day))} : ${countOf(point.visitors, 'visiteur')}`}
                 </title>
               </rect>
               {labelled.has(index) ? (

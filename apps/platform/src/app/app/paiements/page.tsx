@@ -57,7 +57,11 @@ const REQUIREMENT_LABELS: Record<string, string> = {
   'tos_acceptance.date': 'L’acceptation des conditions Stripe',
 };
 
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 export default async function PaymentsPage({
   searchParams,

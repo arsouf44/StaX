@@ -7,7 +7,7 @@ import { MediaLibrary, type MediaItem } from './media-library';
 
 export const metadata: Metadata = { title: 'Photos & fichiers' };
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
 
 /** Taille lisible : « 480 Ko », « 2,4 Mo ». */
 function formatSize(bytes: number): string {

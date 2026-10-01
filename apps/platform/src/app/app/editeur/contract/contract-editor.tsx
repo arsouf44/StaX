@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Alert,
@@ -25,6 +33,7 @@ import {
   formatFieldAddress,
   isLocalized,
   newItemId,
+  describeFieldAddress,
   parseBridgeMessage,
   parseFieldAddress,
   stableStringify,
@@ -64,6 +73,7 @@ type Selection =
   | { kind: 'collection'; collectionId: string; itemId: string | null };
 
 const TIME = new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' });
+const subscribeNever = () => () => undefined;
 const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -190,6 +200,14 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
   }
 
   const frameSrc = siteOrigin ? `${siteOrigin}${framePath}` : null;
+  // L'apercu ne se charge qu'une fois la page hydratee : rendu cote serveur,
+  // l'iframe serait deplacee par le streaming de Next, ce qui la recharge
+  // (deux ou trois chargements du site du client a chaque ouverture).
+  const hydrated = useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
   const bridgeReady = bridgeReadyFor !== null && bridgeReadyFor === frameSrc;
 
   const post = useCallback(
@@ -233,6 +251,27 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
   useEffect(() => {
     post(editorMessage('mode', { editing }));
   }, [editing, post]);
+
+  // Apercu charge : on salue le pont, qui repond par `ready` (il repete aussi
+  // son annonce de lui-meme si l'apercu a fini avant l'editeur).
+  const greetBridge = useCallback(() => {
+    if (!siteOrigin) return;
+    iframeRef.current?.contentWindow?.postMessage(editorMessage('hello', {}), siteOrigin);
+  }, [siteOrigin]);
+
+  // Sur telephone, les champs sont sous la liste des zones : choisir une zone
+  // (dans la liste ou dans l'apercu) amene directement a ses champs.
+  const selectionMounted = useRef(false);
+  useEffect(() => {
+    if (!selectionMounted.current) {
+      selectionMounted.current = true;
+      return;
+    }
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 1023px)').matches) return;
+    document
+      .getElementById('champs-editeur')
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [selection]);
 
   useEffect(() => {
     if (!focusAddress) return;
@@ -469,7 +508,10 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
       {/* Barre d'actions */}
       <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--background)]/85 px-4 py-3 backdrop-blur">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{data.siteName}</p>
+          <h1 className="truncate text-sm font-medium">
+            <span className="sr-only">Modifier </span>
+            {data.siteName}
+          </h1>
           <p className="text-xs text-[var(--muted)]" aria-live="polite">
             {dirty
               ? 'Modifications non enregistrées'
@@ -533,7 +575,10 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
 
       <div className="grid flex-1 gap-0 lg:grid-cols-[16rem_1fr_24rem]">
         {/* Zones modifiables */}
-        <nav aria-label="Zones modifiables" className="border-r border-[var(--border)] p-3 text-sm">
+        <nav
+          aria-label="Zones modifiables"
+          className="order-1 border-b border-[var(--border)] p-3 text-sm lg:order-none lg:border-r lg:border-b-0"
+        >
           {manifest.globals?.length ? (
             <TreeGroup title="Informations générales">
               {manifest.globals.map((group) => (
@@ -606,7 +651,7 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
         {/* Apercu du vrai site */}
         <section
           aria-label="Aperçu du site"
-          className="flex min-h-[28rem] flex-col bg-[var(--surface-2)]"
+          className="order-3 flex min-h-[28rem] flex-col bg-[var(--surface-2)] lg:order-none"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-2 text-xs">
             <span className="flex items-center gap-2">
@@ -641,8 +686,9 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
             <iframe
               ref={iframeRef}
               key={frameSrc}
-              src={frameSrc}
+              src={hydrated ? frameSrc : undefined}
               title="Aperçu de votre site"
+              onLoad={greetBridge}
               className="h-full min-h-[28rem] w-full flex-1 bg-white"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               referrerPolicy="strict-origin-when-cross-origin"
@@ -671,13 +717,17 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
           {frameSrc && !bridgeReady ? (
             <p className="border-t border-[var(--border)] px-3 py-2 text-2xs text-[var(--muted)]">
               Astuce : si un clic sur un élément n’ouvre pas son champ, choisissez la zone dans la
-              liste à gauche.
+              liste des zones.
             </p>
           ) : null}
         </section>
 
         {/* Champs */}
-        <aside aria-label="Champs" className="border-l border-[var(--border)] p-4">
+        <aside
+          id="champs-editeur"
+          aria-label="Champs"
+          className="order-2 scroll-mt-24 border-b border-[var(--border)] p-4 lg:order-none lg:border-b-0 lg:border-l"
+        >
           <SelectionPanel
             manifest={manifest}
             content={content}
@@ -700,6 +750,7 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
         nextVersion={(data.production?.version ?? 0) + 1}
         blocking={publishCheck?.errors ?? []}
         warnings={publishCheck?.warnings ?? []}
+        describe={(path) => describeFieldAddress(manifest, path)}
         canSchedule={data.canSchedule}
         busy={busy === 'publish'}
         onGoTo={(path) => {
@@ -974,7 +1025,9 @@ function SelectionPanel({
           variant="primary"
           size="sm"
           onClick={() => {
-            const created: CollectionItem = { id: newItemId(), values: {}, hidden: true };
+            // Visible d'office : ajouté puis publié, il est en ligne. Le
+            // client peut le masquer le temps de le terminer.
+            const created: CollectionItem = { id: newItemId(), values: {} };
             onItems(collection.id, (list) => [created, ...list]);
             setSelection({ kind: 'collection', collectionId: collection.id, itemId: created.id });
           }}
@@ -1229,6 +1282,7 @@ function PublishDialog({
   nextVersion,
   blocking,
   warnings,
+  describe,
   canSchedule,
   busy,
   onConfirm,
@@ -1239,6 +1293,8 @@ function PublishDialog({
   nextVersion: number;
   blocking: ValueIssue[];
   warnings: ValueIssue[];
+  /** Où se trouve le champ en cause, en mots du client. */
+  describe: (path: string) => string | null;
   canSchedule: boolean;
   busy: boolean;
   onConfirm: (input: { note: string | null; scheduledFor: string | null }) => Promise<void>;
@@ -1281,6 +1337,9 @@ function PublishDialog({
                     className="text-left underline underline-offset-2"
                     onClick={() => onGoTo(issue.path.split('@')[0] ?? issue.path)}
                   >
+                    {describe(issue.path) ? (
+                      <span className="font-medium">{describe(issue.path)} : </span>
+                    ) : null}
                     {issue.message}
                   </button>
                 </li>
@@ -1291,14 +1350,14 @@ function PublishDialog({
         {warnings.length > 0 && blocking.length === 0 ? (
           <ul className="list-disc space-y-1 pl-5 text-xs text-[var(--foreground-muted)]">
             {warnings.slice(0, 5).map((issue) => (
-              <li key={`${issue.path}-${issue.message}`}>{issue.message}</li>
+              <li key={`${issue.path}-${issue.message}`}>
+                {describe(issue.path) ? `${describe(issue.path)} : ` : ''}
+                {issue.message}
+              </li>
             ))}
           </ul>
         ) : null}
-        <Field
-          label="Qu’avez-vous changé ? (facultatif)"
-          hint="Visible dans l’historique des versions."
-        >
+        <Field label="Qu’avez-vous changé ?" hint="Visible dans l’historique des versions.">
           <Input value={note} maxLength={200} onChange={(event) => setNote(event.target.value)} />
         </Field>
         {canSchedule ? (

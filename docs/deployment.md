@@ -83,11 +83,21 @@ cd apps/site-runtime
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
 wrangler secret put NEMASUS_SECRET_KEY        --env production   # LA MÊME valeur
 wrangler secret put TURNSTILE_SECRET_KEY      --env production
+wrangler secret put EMAIL_PROVIDER            --env production   # resend
+wrangler secret put EMAIL_API_KEY             --env production
+wrangler secret put EMAIL_FROM                --env production
 ```
 
 > `NEMASUS_SECRET_KEY` doit être **identique** sur Vercel et sur le Worker des
 > sites : elle signe les jetons de formulaire émis par l’un et vérifiés par
 > l’autre.
+>
+> Les variables `EMAIL_*` du Worker servent à prévenir le commerçant **dès**
+> qu’un visiteur lui écrit ou réserve (et aux liens de connexion des clients
+> du site). Sans elles, la tâche de fond de la plateforme envoie ces e-mails
+> à sa place, à son prochain passage (toutes les 5 minutes une fois les
+> secrets Vault posés, sinon une fois par jour) — migration 0065. En
+> production, rien n’est jamais marqué « prévenu » sans vrai fournisseur.
 
 ### 3. Informations légales
 
@@ -151,7 +161,9 @@ le même jour ([vente-par-telephone.md](./vente-par-telephone.md)).
 ### 6 bis. E-mails et authentification
 
 - `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` : e-mails de Nemasus
-  (propositions, livraison, réponses de l’équipe, alertes) ;
+  (propositions, livraison, réponses de l’équipe, alertes, et l’e-mail au
+  commerçant pour chaque message, réservation ou commande reçus par son
+  site) ;
 - `SUPPORT_EMAIL` : reçoit aussi **toutes les alertes de l’équipe** (à défaut
   `ADMIN_EMAIL`) ;
 - Supabase → Authentication : SMTP personnalisé, *Site URL* et *Redirect URLs*

@@ -5,6 +5,7 @@ import { formatMoney } from '@nemasus/payments';
 import { Alert, Card, Icon, Panel, Stat } from '@nemasus/ui';
 import { getAdminContext } from '~/lib/admin';
 import { loadWorkQueue } from '~/lib/staff-board';
+import { agree, countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Vue d’ensemble' };
 
@@ -154,7 +155,10 @@ export default async function AdminHomePage() {
         <p className="mt-1.5 text-sm text-[var(--foreground-muted)]">
           {queue.length === 0
             ? 'Rien n’attend de décision pour le moment.'
-            : `${queue.reduce((total, entry) => total + entry.count, 0)} élément(s) attendent une action.`}
+            : (() => {
+                const total = queue.reduce((sum, entry) => sum + entry.count, 0);
+                return `${countOf(total, 'élément')} ${agree(total, 'attend', 'attendent')} une action.`;
+              })()}
         </p>
       </div>
 
@@ -191,14 +195,14 @@ export default async function AdminHomePage() {
           <Stat
             label="Revenu récurrent annuel"
             value={formatMoney(overview.arrCents, 'EUR', { hideDecimalsWhenRound: true })}
-            hint={`${overview.activeSubscriptions} abonnement(s) actif(s) · mensualités ramenées à l’année`}
+            hint={`${countOf(overview.activeSubscriptions, 'abonnement actif', 'abonnements actifs')} · mensualités ramenées à l’année`}
           />
           <Stat
             label="Encaissé sur 30 jours"
             value={formatMoney(overview.revenueLast30dCents, 'EUR', {
               hideDecimalsWhenRound: true,
             })}
-            hint={`${overview.paidOrdersLast30d} commande(s) payée(s)`}
+            hint={countOf(overview.paidOrdersLast30d, 'commande payée', 'commandes payées')}
           />
           <Stat label="Clients" value={overview.clients.toLocaleString('fr-FR')} />
           <Stat
@@ -211,8 +215,13 @@ export default async function AdminHomePage() {
 
       {overview.atRiskSubscriptions > 0 ? (
         <Alert tone="warning" live="status" title="Abonnements à risque">
-          {overview.atRiskSubscriptions} abonnement(s) sont en retard de paiement ou résiliés à
-          échéance. Une relance humaine vaut mieux qu’une suspension automatique.{' '}
+          {countOf(overview.atRiskSubscriptions, 'abonnement')}{' '}
+          {agree(
+            overview.atRiskSubscriptions,
+            'est en retard de paiement ou résilié',
+            'sont en retard de paiement ou résiliés',
+          )}{' '}
+          à échéance. Une relance humaine vaut mieux qu’une suspension automatique.{' '}
           <Link href="/admin/abonnements?filtre=risque" className="underline underline-offset-4">
             Les consulter
           </Link>

@@ -19,6 +19,7 @@ import type { StatusTone } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { getAdminContext } from '~/lib/admin';
 import { getAdminView, type AdminColumn, type AdminViewId } from '~/lib/admin-views';
+import { auditActionLabel } from '~/lib/audit-labels';
 
 /**
  * Tableau du back-office.
@@ -32,8 +33,12 @@ import { getAdminView, type AdminColumn, type AdminViewId } from '~/lib/admin-vi
  * `ilike` : un `%` tape par erreur reste un caractere, pas un joker.
  */
 
-const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
-const DATE_TIME = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' });
+const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Europe/Paris',
+});
 
 function escapeLike(term: string): string {
   return term.replace(/[%_\\]/g, (character) => `\\${character}`);
@@ -45,7 +50,15 @@ function renderCell(column: AdminColumn, row: Record<string, unknown>) {
   if (column.kind === 'relation') {
     if (typeof raw !== 'object' || raw === null) return '—';
     const value = (raw as Record<string, unknown>)[column.path ?? 'name'];
-    return typeof value === 'string' ? value : '—';
+    if (typeof value !== 'string') return '—';
+    const id = column.link ? row[column.link.idKey] : null;
+    return column.link && typeof id === 'string' ? (
+      <Link href={`${column.link.prefix}/${id}`} className="underline-offset-4 hover:underline">
+        {value}
+      </Link>
+    ) : (
+      value
+    );
   }
 
   if (column.kind === 'boolean') {
@@ -63,6 +76,10 @@ function renderCell(column: AdminColumn, row: Record<string, unknown>) {
     const cents = typeof raw === 'number' ? raw : Number(raw);
     if (!Number.isFinite(cents)) return '—';
     return formatMoney(Math.trunc(cents), 'EUR', { hideDecimalsWhenRound: true });
+  }
+
+  if (column.kind === 'audit') {
+    return <span title={String(raw)}>{auditActionLabel(String(raw))}</span>;
   }
 
   if (column.kind === 'date') return DATE.format(new Date(String(raw)));

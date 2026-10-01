@@ -38,6 +38,7 @@ import {
   toHostingTarget,
   toRepositoryRef,
 } from './records';
+import { countOf } from '../plural';
 
 /**
  * Operations de l'equipe Nemasus sur l'infrastructure d'un site (page
@@ -87,7 +88,7 @@ export async function syncGitHubInstallations(service: Db): Promise<FlowResult<n
     }
     return {
       ok: true,
-      message: `${installations.length} installation(s) de l’application synchronisée(s).`,
+      message: `${countOf(installations.length, 'installation synchronisée', 'installations synchronisées')}.`,
       data: installations.length,
     };
   } catch (error) {
@@ -103,7 +104,7 @@ export async function repositoriesOfInstallation(
   }
   try {
     const repositories = await listInstallationRepositories(installationId);
-    return { ok: true, message: `${repositories.length} dépôt(s).`, data: repositories };
+    return { ok: true, message: `${countOf(repositories.length, 'dépôt')}.`, data: repositories };
   } catch (error) {
     return { ok: false, message: describe(error, 'Dépôts illisibles.') };
   }
@@ -660,7 +661,10 @@ export async function syncDomains(db: Db, siteId: string): Promise<FlowResult> {
       })
       .eq('id', row.id);
   }
-  return { ok: true, message: `${rows.length} domaine(s) vérifié(s) auprès de Cloudflare.` };
+  return {
+    ok: true,
+    message: `${countOf(rows.length, 'domaine vérifié', 'domaines vérifiés')} auprès de Cloudflare.`,
+  };
 }
 
 export async function addDomain(

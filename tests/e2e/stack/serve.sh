@@ -18,6 +18,9 @@ set +a
 
 export NEMASUS_ENV=test
 export NEXT_PUBLIC_PLATFORM_URL=http://127.0.0.1:3100
+# Lu a l'execution (le pont d'apercu, les liens des e-mails), quel que soit
+# l'environnement du build.
+export PLATFORM_URL=http://127.0.0.1:3100
 export NEXT_PUBLIC_SITES_DOMAIN=sites.nemasus.test
 export SITES_DOMAIN=sites.nemasus.test
 export SITES_PUBLIC_SCHEME=http
