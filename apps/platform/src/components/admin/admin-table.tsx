@@ -50,7 +50,15 @@ function renderCell(column: AdminColumn, row: Record<string, unknown>) {
   if (column.kind === 'relation') {
     if (typeof raw !== 'object' || raw === null) return '—';
     const value = (raw as Record<string, unknown>)[column.path ?? 'name'];
-    return typeof value === 'string' ? value : '—';
+    if (typeof value !== 'string') return '—';
+    const id = column.link ? row[column.link.idKey] : null;
+    return column.link && typeof id === 'string' ? (
+      <Link href={`${column.link.prefix}/${id}`} className="underline-offset-4 hover:underline">
+        {value}
+      </Link>
+    ) : (
+      value
+    );
   }
 
   if (column.kind === 'boolean') {

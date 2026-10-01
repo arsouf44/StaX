@@ -29,13 +29,14 @@ export default async function AdminConversationPage({
     id: string;
     reference: string;
     site_id: string | null;
+    organization_id: string;
     organizations: { name: string; billing_email: string | null; phone: string | null } | null;
     sites: { name: string } | null;
   }>(
     (await db
       .from('projects')
       .select(
-        'id, reference, site_id, organizations ( name, billing_email, phone ), sites ( name )',
+        'id, reference, site_id, organization_id, organizations ( name, billing_email, phone ), sites ( name )',
       )
       .eq('id', projectId)
       .maybeSingle()) as never,
@@ -82,6 +83,13 @@ export default async function AdminConversationPage({
               </Link>
             </>
           ) : null}
+          {' · '}
+          <Link
+            href={`/admin/organisations/${project.organization_id}`}
+            className="underline underline-offset-4"
+          >
+            Fiche du client
+          </Link>
         </p>
       </div>
 
