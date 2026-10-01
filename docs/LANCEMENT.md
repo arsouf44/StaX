@@ -88,20 +88,29 @@ d'erreur, notifications), renommé les tâches planifiées
 des sous-traitants (Resend ajouté). La **0058** (2026-09-29) inscrit Vercel,
 hébergeur de la plateforme, et recentre Cloudflare sur les sites des clients.
 
-**À faire : migrations 0060 à 0065** (2026-09-30 et 2026-10-01). La **0059**
-(statistiques réellement calculées) est appliquée en production et inscrite
-avec son empreinte ; l'agrégation horaire y tourne déjà. Les suivantes sont
-prêtes et toutes additives — état des services dérivé des journaux (0060),
-libellés accentués (0061), pilotage de l'équipe (0062), bilan de santé des
-sites (0063), bilan mensuel des clients (0064), e-mail au commerçant pour
-chaque message, réservation ou commande reçus par son site (0065) :
+**Migrations 0060 à 0065 : appliquées le 2026-10-01**, sauf une partie de la
+0063. État des services dérivé des journaux (0060, tâche
+`nemasus-system-health` planifiée toutes les 10 minutes), libellés accentués
+(0061), pilotage de l'équipe (0062), bilan mensuel des clients (0064), e-mail
+au commerçant pour chaque message, réservation ou commande (0065) : en place
+et inscrites dans `app.schema_migrations` avec l'empreinte de leur fichier.
+Les définitions en production ont été comparées à celles du dépôt :
+identiques.
+
+**Reste : la fin de la 0063** (bilan qualité hebdomadaire). Sa table, sa règle
+d'accès et la disponibilité sur 30 jours sont en place ; les deux fonctions de
+la tâche de fond (`sites_due_for_quality_audit`, `record_site_quality`) ne le
+sont pas : l'outil d'administration Supabase exige une confirmation manuelle
+pour une fonction qui contient un `delete` (la purge des bilans de plus de six
+mois). La migration étant rejouable sans risque, une commande suffit :
 
 ```
 DATABASE_URL="postgresql://…" pnpm db:migrate
 ```
 
-Le code tolère leur absence (les écrans concernés s'annoncent indisponibles),
-mais appliquez-les **avant** de fusionner : c'est l'ordre sûr.
+Elle applique la 0063 en entier et l'inscrit ; tout le reste est déjà à jour.
+D'ici là, la page « Bilan de santé » affiche la disponibilité et annonce le
+premier contrôle qualité « à venir ».
 
 Pour une future migration : `DATABASE_URL="postgresql://…" pnpm db:migrate`.
 

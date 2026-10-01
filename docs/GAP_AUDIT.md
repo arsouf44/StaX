@@ -620,7 +620,7 @@ la plateforme en ligne (Vercel) et une pile locale complète.
 | Tests navigateur (`pnpm test:e2e`, ordinateur + téléphone) | 66 passés |
 | Parcours complets contre une vraie pile (`pnpm test:e2e:stack`) | 31 passés, dont toutes les pages (nouveaux écrans compris) |
 | Build de production | OK |
-| Production | 0059 appliquée le 2026-09-30, empreinte inscrite ; agrégation « saine », tâche horaire planifiée |
+| Production | 0059 appliquée le 2026-09-30, empreinte inscrite ; agrégation « saine », tâche horaire planifiée. 0060 à 0065 appliquées le 2026-10-01 (sauf la fin de la 0063) |
 
 ## 18. Test « comme un client » du 2026-10-01
 
@@ -665,11 +665,12 @@ départ de l’éditeur, formulaires, réglages.
 
 ## Ce qui reste non terminé, sans détour
 
-000. **Migrations 0060 à 0065 à appliquer en production** (la 0059 l’est
-   depuis le 2026-09-30). Toutes additives, compatibles avec le code déployé :
-   `DATABASE_URL="postgresql://…" pnpm db:migrate`. Tant qu’elles ne le sont
-   pas, les écrans *Production*, *Bilan de santé* et l’état des services
-   dérivé annoncent leur indisponibilité au lieu d’échouer.
+000. ~~Migrations 0060 à 0065 à appliquer en production~~ — **fait le
+   2026-10-01** (définitions comparées au dépôt : identiques), **sauf les deux
+   fonctions de la tâche de fond du bilan qualité (0063)** : l'outil Supabase
+   exige une confirmation manuelle pour une fonction contenant un `delete`.
+   `DATABASE_URL="postgresql://…" pnpm db:migrate` les applique et inscrit la
+   0063 (rejouable sans risque).
 
 000 bis. **Téléphone de l’éditeur** (`LEGAL_PHONE`, variable Vercel) : exigé
    par la LCEN, il manque ; les mentions légales en ligne affichent « Identité
