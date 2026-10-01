@@ -650,6 +650,25 @@ function OpeningHoursControl({
     : [];
   const update = (next: Record<string, unknown>) => onChange({ week, ...hours, ...next });
   const setDay = (day: string, slots: Slot[]) => update({ week: { ...week, [day]: slots } });
+  // Un jour qu'on ouvre reprend les horaires du jour ouvert qui le précède :
+  // lundi réglé, ouvrir mardi à samedi suffit.
+  const openDay = (day: (typeof WEEK_DAYS)[number]) => {
+    const before = WEEK_DAYS.slice(0, WEEK_DAYS.indexOf(day)).reverse();
+    const model = before.map((entry) => week[entry] ?? []).find((slots) => slots.length > 0);
+    setDay(day, model ? model.map((slot) => ({ ...slot })) : [{ open: '09:00', close: '18:00' }]);
+  };
+  const openDays = WEEK_DAYS.filter((entry) => (week[entry] ?? []).length > 0);
+  const copyToOpenDays = (day: (typeof WEEK_DAYS)[number]) => {
+    const slots = week[day] ?? [];
+    update({
+      week: Object.fromEntries(
+        WEEK_DAYS.map((entry) => [
+          entry,
+          (week[entry] ?? []).length > 0 ? slots.map((slot) => ({ ...slot })) : (week[entry] ?? []),
+        ]),
+      ),
+    });
+  };
 
   return (
     <fieldset className="space-y-3">
@@ -664,10 +683,9 @@ function OpeningHoursControl({
                 <span className="text-sm font-medium">{WEEK_DAY_LABELS[day]}</span>
                 <Switch
                   label={closed ? 'Fermé' : 'Ouvert'}
+                  aria-label={`Ouvert le ${WEEK_DAY_LABELS[day].toLowerCase()}`}
                   checked={!closed}
-                  onChange={(event) =>
-                    setDay(day, event.target.checked ? [{ open: '09:00', close: '18:00' }] : [])
-                  }
+                  onChange={(event) => (event.target.checked ? openDay(day) : setDay(day, []))}
                 />
               </div>
               {!closed ? (
@@ -718,15 +736,22 @@ function OpeningHoursControl({
                       ) : null}
                     </div>
                   ))}
-                  {slots.length < 4 ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDay(day, [...slots, { open: '14:00', close: '18:00' }])}
-                    >
-                      + Ajouter un créneau
-                    </Button>
-                  ) : null}
+                  <div className="flex flex-wrap gap-1">
+                    {slots.length < 4 ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDay(day, [...slots, { open: '14:00', close: '18:00' }])}
+                      >
+                        + Ajouter un créneau
+                      </Button>
+                    ) : null}
+                    {openDays.length > 1 ? (
+                      <Button variant="ghost" size="sm" onClick={() => copyToOpenDays(day)}>
+                        Appliquer à tous les jours ouverts
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
             </li>
