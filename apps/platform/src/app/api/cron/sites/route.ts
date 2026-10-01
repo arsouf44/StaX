@@ -1,11 +1,13 @@
+import { platformUrl } from '@nemasus/config';
 import { tryCreateServiceClient } from '@nemasus/database';
+import { notifySiteActivity } from '@nemasus/emails';
 import { verifyCronSecret } from '@nemasus/infrastructure';
 import { runSiteOperations } from '~/lib/external-sites/operations';
 import { retryProposalDeliveries } from '~/lib/proposals';
 
 /**
  * Tache de fond des sites livres : publications programmees, suivi des
- * deploiements, apercus, surveillance. Appelee toutes les 5 minutes par
+ * deploiements, apercus, surveillance, notifications au commercant. Appelee toutes les 5 minutes par
  * Supabase (`pg_cron` + `pg_net`, migrations 0053 et 0057) et une fois par
  * jour par Vercel Cron (`vercel.json`) ; tout ordonnanceur qui presente
  * `Authorization: Bearer <CRON_SECRET>` convient.
@@ -24,7 +26,18 @@ async function run(request: Request): Promise<Response> {
   const report = await runSiteOperations(db, { budgetMs: 45_000 });
   // Propositions payées dont la livraison automatique n'a pas encore abouti.
   const proposals = await retryProposalDeliveries(db, { limit: 5 });
-  return Response.json({ ...report, proposals }, { headers: { 'cache-control': 'no-store' } });
+  // Messages, réservations et commandes dont le commerçant n'a pas encore été
+  // prévenu (le moteur des sites prévient aussitôt ; ceci rattrape les échecs).
+  // Deux minutes de délai : l'envoi immédiat a priorité.
+  const siteActivity = await notifySiteActivity(db, {
+    appUrl: platformUrl(),
+    limit: 25,
+    minAgeSeconds: 120,
+  }).catch(() => null);
+  return Response.json(
+    { ...report, proposals, siteActivity },
+    { headers: { 'cache-control': 'no-store' } },
+  );
 }
 
 export const GET = run;

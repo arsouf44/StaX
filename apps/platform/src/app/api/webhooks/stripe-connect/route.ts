@@ -1,4 +1,6 @@
+import { platformUrl } from '@nemasus/config';
 import { createServiceClient } from '@nemasus/database';
+import { notifySiteActivity } from '@nemasus/emails';
 import {
   redactEventPayload,
   summarizeAccount,
@@ -193,6 +195,20 @@ async function recordConnectPayment(db: Db, event: Stripe.Event, accountId: stri
       // L anomalie est deja journalisee en base. On la remonte pour que
       // l evenement soit marque en echec et rejouable.
       throw new Error(`Commande non encaissee : ${result.code ?? 'refus'}`);
+    }
+    // Le commerçant est prévenu aussitôt ; un échec d'e-mail ne remet pas en
+    // cause l'encaissement (la tâche de fond réessaiera).
+    const { data: order } = await db
+      .from('shop_orders')
+      .select('site_id')
+      .eq('id', orderId)
+      .maybeSingle();
+    if (order?.site_id) {
+      await notifySiteActivity(db, {
+        appUrl: platformUrl(),
+        siteId: order.site_id as string,
+        limit: 5,
+      }).catch(() => undefined);
     }
     return;
   }

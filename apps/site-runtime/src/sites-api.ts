@@ -7,6 +7,7 @@ import {
 } from '@nemasus/database';
 import { AUDIENCE_SCRIPT_DISABLED, audienceScript, pageViewSignal } from '@nemasus/analytics';
 import { customerLoginEmail, sendEmail } from '@nemasus/emails';
+import { notifyOwnerLater, type Defer } from './owner-notify';
 import { createConnectCheckoutSession } from '@nemasus/payments';
 import {
   enforceRateLimit,
@@ -212,7 +213,7 @@ export function isSitesApiPath(path: string): boolean {
   return path.startsWith('/v1/sites/');
 }
 
-export async function handleSitesApi(request: Request): Promise<Response> {
+export async function handleSitesApi(request: Request, defer?: Defer): Promise<Response> {
   const url = new URL(request.url);
   const [, , , publicKey = '', ...rest] = url.pathname.split('/');
   const resource = rest.join('/');
@@ -245,13 +246,13 @@ export async function handleSitesApi(request: Request): Promise<Response> {
     if (resource === 'collect' && request.method === 'POST')
       return await collect(request, site, replyOrigin);
     if (resource.startsWith('forms/') && request.method === 'POST') {
-      return await submitForm(request, site, resource.slice('forms/'.length), replyOrigin);
+      return await submitForm(request, site, resource.slice('forms/'.length), replyOrigin, defer);
     }
     if (resource === 'catalog' && isRead) return await catalog(site, replyOrigin);
     if (resource === 'bookings/services' && isRead) return await bookingServices(site, replyOrigin);
     if (resource === 'bookings/slots' && isRead) return await bookingSlots(url, site, replyOrigin);
     if (resource === 'bookings' && request.method === 'POST')
-      return await createBooking(request, site, replyOrigin);
+      return await createBooking(request, site, replyOrigin, defer);
     if (resource === 'checkout' && request.method === 'POST')
       return await checkout(request, site, replyOrigin);
     if (resource === 'customers/login' && request.method === 'POST')
@@ -330,6 +331,7 @@ async function submitForm(
   site: ApiSite,
   slug: string,
   origin: string | null,
+  defer?: Defer,
 ): Promise<Response> {
   if (!/^[a-z0-9][a-z0-9-]{1,48}$/.test(slug))
     return refuse('Formulaire inconnu.', 404, 'not_found', origin);
@@ -363,18 +365,27 @@ async function submitForm(
     email: field(payload, 'email', 200),
   });
 
-  const result = unwrap<{ ok: boolean; message?: string; code?: string; fields?: string[] }>(
-    (await createServiceClient().rpc('submit_form', {
-      p_site: site.siteId,
-      p_form_slug: slug,
-      p_data: payload,
-      p_spam_score: verdict.score,
-      p_ip_hash: gate.ipHash,
-      p_user_agent: (request.headers.get('user-agent') ?? '').slice(0, 60),
-      p_referrer: request.headers.get('referer'),
-      p_locale: site.locale,
-    })) as never,
-  );
+  let result: { ok: boolean; message?: string; code?: string; fields?: string[] };
+  try {
+    result = unwrap<typeof result>(
+      (await createServiceClient().rpc('submit_form', {
+        p_site: site.siteId,
+        p_form_slug: slug,
+        p_data: payload,
+        p_spam_score: verdict.score,
+        p_ip_hash: gate.ipHash,
+        p_user_agent: (request.headers.get('user-agent') ?? '').slice(0, 60),
+        p_referrer: request.headers.get('referer'),
+        p_locale: site.locale,
+      })) as never,
+    );
+  } catch (error) {
+    // Formulaire absent du contrat de ce site : une erreur du code du site,
+    // pas une panne. Le développeur doit le lire tel quel.
+    if ((error as { code?: string }).code === 'P0002')
+      return refuse('Formulaire inconnu.', 404, 'not_found', origin);
+    throw error;
+  }
   if (!result.ok) {
     if (result.code === 'missing_fields') {
       return json(
@@ -390,6 +401,7 @@ async function submitForm(
     }
     return refuse('Formulaire indisponible.', 404, 'not_found', origin);
   }
+  notifyOwnerLater(site.siteId, defer);
   return json(
     { ok: true, message: result.message ?? 'Merci, votre message a bien été envoyé.' },
     200,
@@ -579,6 +591,7 @@ async function createBooking(
   request: Request,
   site: ApiSite,
   origin: string | null,
+  defer?: Defer,
 ): Promise<Response> {
   if (!site.features.bookings)
     return refuse('Réservations non incluses dans l’offre.', 404, 'module_disabled', origin);
@@ -618,6 +631,7 @@ async function createBooking(
       result.code ?? 'unavailable',
       origin,
     );
+  notifyOwnerLater(site.siteId, defer);
   return json(
     { ok: true, reference: result.reference, requiresApproval: result.requiresApproval ?? true },
     200,

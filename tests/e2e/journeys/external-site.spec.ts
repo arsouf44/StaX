@@ -5,6 +5,7 @@ import {
   type CustomerSite,
   resetRateLimits,
   serviceClient,
+  SITES_PORT,
   uniqueSuffix,
 } from './support/stack';
 import {
@@ -313,6 +314,64 @@ test('publier puis quitter l’éditeur : l’accueil suit la mise en ligne jusq
     })
     .toContain(LAST_TITLE);
   await page.context().close();
+});
+
+test('un visiteur écrit par le formulaire du site : le commerçant est prévenu', async () => {
+  const db = serviceClient();
+  const { data: site } = await db
+    .from('sites')
+    .select('public_key')
+    .eq('id', customer.siteId)
+    .single();
+  const response = await fetch(
+    `http://127.0.0.1:${SITES_PORT}/v1/sites/${site?.public_key}/forms/contact`,
+    {
+      method: 'POST',
+      headers: {
+        origin: new URL(infra.productionUrl).origin,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        nom: 'Jeanne Petit',
+        email: 'jeanne@visiteur.test',
+        message: `Avez-vous du pain sans gluten ? ${suffix}`,
+      }),
+    },
+  );
+  expect(response.status).toBe(200);
+
+  // L'e-mail part juste après la réponse au visiteur, sans l'attendre.
+  await expect
+    .poll(
+      async () => {
+        const { data } = await db
+          .from('form_submissions')
+          .select('owner_notified_at')
+          .eq('site_id', customer.siteId)
+          .contains('data', { message: `Avez-vous du pain sans gluten ? ${suffix}` })
+          .maybeSingle();
+        return data?.owner_notified_at ?? null;
+      },
+      { timeout: 15_000 },
+    )
+    .not.toBeNull();
+  const { data: sent } = await db
+    .from('email_log')
+    .select('template, status')
+    .eq('site_id', customer.siteId)
+    .eq('template', 'new_message');
+  expect(sent?.some((row) => row.status === 'sent')).toBe(true);
+
+  // Un formulaire que le site n'a pas déclaré : réponse claire, pas une panne.
+  const unknown = await fetch(
+    `http://127.0.0.1:${SITES_PORT}/v1/sites/${site?.public_key}/forms/inexistant`,
+    {
+      method: 'POST',
+      headers: { origin: new URL(infra.productionUrl).origin, 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'x' }),
+    },
+  );
+  expect(unknown.status).toBe(404);
 });
 
 test('une autre société ne voit ni le brouillon ni l’historique', async () => {

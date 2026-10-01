@@ -28,6 +28,7 @@ import {
 import { handleCollect } from './api/collect';
 import { handleDonation } from './api/donations';
 import { handleSitesApi, isSitesApiPath } from './sites-api';
+import type { Defer } from './owner-notify';
 import type { WorkerEnv } from './env';
 
 /**
@@ -166,12 +167,12 @@ async function handlePage(request: Request, site: ResolvedSite, path: string): P
   });
 }
 
-async function route(request: Request): Promise<Response> {
+async function route(request: Request, defer?: Defer): Promise<Response> {
   const url = new URL(request.url);
 
   // API des sites independants : le site est designe par sa cle publique, et
   // chaque ecriture exige une origine qui lui appartient (voir sites-api.ts).
-  if (isSitesApiPath(url.pathname)) return handleSitesApi(request);
+  if (isSitesApiPath(url.pathname)) return handleSitesApi(request, defer);
 
   const path = normalizePath(url.pathname);
 
@@ -227,7 +228,7 @@ async function route(request: Request): Promise<Response> {
   }
 
   if (path === '/api/bookings' && request.method === 'POST') {
-    return handleBookingCreate(request, site);
+    return handleBookingCreate(request, site, defer);
   }
 
   if (path === '/api/cart') {
@@ -271,7 +272,7 @@ async function route(request: Request): Promise<Response> {
     if (!/^[a-z0-9][a-z0-9-]{0,48}$/.test(slug)) {
       return jsonResponse({ ok: false, code: 'not_found' }, 404);
     }
-    return handleFormSubmit(request, site, slug);
+    return handleFormSubmit(request, site, slug, defer);
   }
 
   if (isReserved(path)) {
@@ -292,13 +293,13 @@ async function route(request: Request): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: WorkerEnv): Promise<Response> {
+  async fetch(request: Request, env: WorkerEnv, ctx?: ExecutionContext): Promise<Response> {
     // Les bindings du Worker deviennent la source de configuration pour toute
     // la requete : aucun module ne lit `process.env`, qui n existe pas ici.
     setEnvSource(env as Record<string, string | undefined>);
 
     try {
-      return await route(request);
+      return await route(request, ctx ? (promise) => ctx.waitUntil(promise) : undefined);
     } catch (error) {
       // Aucun detail technique ne sort vers le visiteur : le message serait au
       // mieux inutile, au pire une aide a l attaquant.

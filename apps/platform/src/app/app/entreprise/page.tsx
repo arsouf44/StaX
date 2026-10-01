@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import { unwrapMaybe } from '@nemasus/database';
-import { Panel } from '@nemasus/ui';
+import { ButtonLink, Icon, Panel } from '@nemasus/ui';
 import { PageHeader } from '~/components/app/page-header';
 import { SettingsForm, type SettingsGroup } from '~/components/app/settings-form';
 import { getWorkspace } from '~/lib/workspace';
 import { parseLegalIdentity } from '@nemasus/site-engine';
-import { saveBusinessIdentityAction, saveLegalIdentityAction } from '../site/actions';
+import {
+  saveBusinessIdentityAction,
+  saveLegalIdentityAction,
+  saveSiteAlertsAction,
+} from '../site/actions';
 
 export const metadata: Metadata = { title: 'Mon entreprise' };
 
@@ -114,6 +118,36 @@ const GROUPS: SettingsGroup[] = [
         label: 'Mesurer la fréquentation',
         kind: 'boolean',
         hint: 'Mesure sans cookie ni profilage : pas d’identifiant publicitaire, pas de revente.',
+      },
+    ],
+  },
+];
+
+/**
+ * Site livré via son propre dépôt : ses textes (coordonnées, présentation,
+ * mentions légales) font partie de son code et se modifient dans l'éditeur.
+ * Seuls ces deux réglages s'appliquent à lui.
+ */
+const EXTERNAL_GROUPS: SettingsGroup[] = [
+  {
+    id: 'alertes',
+    title: 'Être prévenu',
+    description:
+      'Quand un visiteur vous écrit, réserve ou commande sur votre site, vous recevez aussitôt un e-mail. Sans adresse ici, il part aux propriétaires et administrateurs de votre espace.',
+    fields: [
+      {
+        name: 'notificationEmails',
+        label: 'Prévenir ces adresses',
+        kind: 'textarea',
+        rows: 2,
+        wide: true,
+        hint: 'Une adresse par ligne, cinq au maximum.',
+      },
+      {
+        name: 'analyticsEnabled',
+        label: 'Mesurer la fréquentation',
+        kind: 'boolean',
+        hint: 'Mesure sans cookie ni profilage : pas d’identifiant publicitaire, pas de revente. Vos chiffres s’affichent dans « Statistiques ».',
       },
     ],
   },
@@ -267,6 +301,49 @@ export default async function BusinessSettingsPage() {
 
   const identity = parseLegalIdentity(settings?.legal_identity);
   const legalValues = { ...identity };
+
+  if (site?.architecture === 'external_repository') {
+    return (
+      <>
+        <PageHeader
+          title="Mon entreprise"
+          description={`Les réglages de ${site.name} : qui est prévenu de ce qui arrive par votre site, et la mesure de sa fréquentation.`}
+        />
+        <Panel level={1} padding="lg" className="mb-8" data-testid="external-site-texts">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-2xl min-w-0">
+              <h2 className="text-sm font-medium">Les textes de votre site</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                Coordonnées, horaires, présentation, photos : tout ce que vos visiteurs lisent se
+                modifie dans « Modifier mon site », zone par zone, puis « Publier ». Vos mentions
+                légales font partie de votre site : pour les changer, écrivez-nous, c’est compris
+                dans la maintenance.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <ButtonLink href="/app/editeur" size="sm">
+                <Icon name="pencil" size={14} aria-hidden="true" />
+                Modifier mon site
+              </ButtonLink>
+              <ButtonLink href="/app/discussion" size="sm" variant="secondary">
+                Écrire à l’équipe
+              </ButtonLink>
+            </div>
+          </div>
+        </Panel>
+        <SettingsForm
+          action={saveSiteAlertsAction}
+          groups={EXTERNAL_GROUPS}
+          values={{
+            notificationEmails: values.notificationEmails,
+            analyticsEnabled: values.analyticsEnabled,
+          }}
+          readOnly={!canEdit}
+          footnote="Ces réglages s’appliquent dès l’enregistrement, sans publication."
+        />
+      </>
+    );
+  }
 
   return (
     <>

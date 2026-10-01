@@ -3,6 +3,7 @@ import { scoreSubmission, visitorHash } from '@nemasus/security';
 import { jsonResponse } from '../responses';
 import { clientIp, field, guardPublicWrite, refuse } from './shared';
 import type { ResolvedSite } from '../resolve';
+import { notifyOwnerLater, type Defer } from '../owner-notify';
 
 /**
  * Reception d une soumission de formulaire public.
@@ -16,6 +17,7 @@ export async function handleFormSubmit(
   request: Request,
   site: ResolvedSite,
   slug: string,
+  defer?: Defer,
 ): Promise<Response> {
   const isQuote = slug.includes('devis') || slug.includes('quote');
   const guard = await guardPublicWrite(request, site, isQuote ? 'quoteForm' : 'contactForm');
@@ -71,6 +73,7 @@ export async function handleFormSubmit(
     }
     return refuse('Formulaire indisponible.', 404, 'not_found');
   }
+  notifyOwnerLater(site.siteId, defer);
 
   // Comptabilise la conversion, sans cookie ni identifiant persistant.
   try {

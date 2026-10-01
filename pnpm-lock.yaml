@@ -321,6 +321,9 @@ importers:
       '@nemasus/database':
         specifier: workspace:*
         version: link:../database
+      '@nemasus/payments':
+        specifier: workspace:*
+        version: link:../payments
       '@nemasus/security':
         specifier: workspace:*
         version: link:../security
