@@ -5,6 +5,7 @@ import { EmptyState, Icon, Panel, PermissionDenied, Stat, StatusPill } from '@ne
 import { PageHeader } from '~/components/app/page-header';
 import { getWorkspace } from '~/lib/workspace';
 import { QualityCheckButton } from './check-button';
+import { countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Bilan de santé' };
 
@@ -272,7 +273,7 @@ export default async function SiteHealthPage() {
               {passing.length > 0 ? (
                 <details className="rounded-[var(--radius-md)] border border-[var(--border)] p-4">
                   <summary className="cursor-pointer text-sm font-medium">
-                    {passing.length} contrôle(s) au vert
+                    {countOf(passing.length, 'contrôle')} au vert
                   </summary>
                   <ul className="mt-3 space-y-2">
                     {passing.map((item) => (

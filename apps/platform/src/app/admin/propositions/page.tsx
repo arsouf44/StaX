@@ -6,6 +6,7 @@ import { Panel, StatusPill, type StatusTone } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 import { ProposalForm, type ProposalPlanChoice, type ProposalSiteChoice } from './proposal-form';
 import { ProposalRowActions } from './proposal-row-actions';
+import { countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Propositions' };
 export const dynamic = 'force-dynamic';
@@ -210,7 +211,9 @@ export default async function AdminProposalsPage({
           </Link>
         ))}
         <span className="ml-auto text-xs text-[var(--muted)]">
-          {counts.sent} envoyée(s) · {counts.claimed} compte(s) créé(s) · {counts.won} payée(s)
+          {countOf(counts.sent, 'envoyée', 'envoyées')} ·{' '}
+          {countOf(counts.claimed, 'compte créé', 'comptes créés')} ·{' '}
+          {countOf(counts.won, 'payée', 'payées')}
         </span>
       </div>
 

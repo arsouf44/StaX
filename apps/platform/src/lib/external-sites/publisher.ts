@@ -34,6 +34,7 @@ import {
   type HostingRow,
   type RepositoryRow,
 } from './records';
+import { countOf } from '../plural';
 
 /**
  * Publication d'un site developpe independamment.
@@ -107,7 +108,7 @@ function describeIssues(issues: Array<{ path: string; message: string }>): strin
     .slice(0, 3)
     .map((issue) => `${issue.message}${issue.path ? ` (${issue.path})` : ''}`)
     .join(' · ');
-  return issues.length > 3 ? `${listed} · et ${issues.length - 3} autre(s)` : listed;
+  return issues.length > 3 ? `${listed} · et ${countOf(issues.length - 3, 'autre')}` : listed;
 }
 
 async function authorName(db: Db, userId: string | null): Promise<string | null> {
@@ -317,7 +318,9 @@ export async function processRelease(db: Db, releaseId: string): Promise<StepOut
         release.id,
         'validation',
         'missing_media',
-        `${missing.length} photo(s) utilisée(s) n’existent plus dans votre médiathèque. Remplacez-les, puis publiez à nouveau.`,
+        missing.length === 1
+          ? 'Une photo utilisée n’existe plus dans votre médiathèque. Remplacez-la, puis publiez à nouveau.'
+          : `${missing.length} photos utilisées n’existent plus dans votre médiathèque. Remplacez-les, puis publiez à nouveau.`,
       );
     }
     commit = await client.commitFiles({

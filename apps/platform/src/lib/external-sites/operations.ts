@@ -15,6 +15,7 @@ import {
 } from './publisher';
 import { sendMonthlyReports } from '../monthly-report';
 import { alertTeam } from '../team-alerts';
+import { countOf } from '../plural';
 
 /**
  * Tache de fond des sites livres (`/api/cron/sites`, toutes les 5 minutes) :
@@ -75,7 +76,7 @@ export async function runSiteOperations(
       db,
       'scheduled_publishing',
       'healthy',
-      `Dernière exécution réussie : ${report.promoted} publication(s) programmée(s) déclenchée(s).`,
+      `Dernière exécution réussie : ${countOf(report.promoted, 'publication programmée déclenchée', 'publications programmées déclenchées')}.`,
     );
   } catch (error) {
     report.errors.push(`programmation : ${error instanceof Error ? error.message : 'erreur'}`);
@@ -122,7 +123,7 @@ export async function runSiteOperations(
       'deployment_sync',
       cloudflareSitesConfigured() ? 'healthy' : 'not_configured',
       cloudflareSitesConfigured()
-        ? `Dernier suivi : ${report.hostingsSynced} projet(s) relu(s) chez Cloudflare.`
+        ? `Dernier suivi : ${countOf(report.hostingsSynced, 'projet relu', 'projets relus')} chez Cloudflare.`
         : 'CLOUDFLARE_SITES_API_TOKEN absent : les déploiements ne peuvent pas être confirmés.',
     );
   } catch (error) {
@@ -178,7 +179,7 @@ export async function runSiteOperations(
       db,
       'site_monitoring',
       failures > 0 ? 'degraded' : 'healthy',
-      `${report.healthChecks} site(s) vérifié(s) à la dernière exécution, ${failures} injoignable(s).`,
+      `${countOf(report.healthChecks, 'site vérifié', 'sites vérifiés')} à la dernière exécution, ${countOf(failures, 'injoignable')}.`,
     );
   } catch (error) {
     report.errors.push(`surveillance : ${error instanceof Error ? error.message : 'erreur'}`);

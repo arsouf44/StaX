@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Panel, StatusPill } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
+import { agree, countOf } from '~/lib/plural';
 
 export const metadata: Metadata = { title: 'Messages clients' };
 export const dynamic = 'force-dynamic';
@@ -51,7 +52,7 @@ export default async function AdminMessagesPage() {
           Les messages que les clients et les prospects vous envoient depuis leur espace. Chaque
           réponse part aussi par e-mail au client.{' '}
           {waiting.length > 0
-            ? `${waiting.length} discussion(s) attendent une réponse.`
+            ? `${countOf(waiting.length, 'discussion')} ${agree(waiting.length, 'attend', 'attendent')} une réponse.`
             : 'Tout le monde a sa réponse.'}
         </p>
       </div>
@@ -85,7 +86,9 @@ export default async function AdminMessagesPage() {
                       <StatusPill tone="success">Répondu</StatusPill>
                     )}
                     {conversation.unread_count > 0 ? (
-                      <StatusPill tone="accent">{conversation.unread_count} non lu(s)</StatusPill>
+                      <StatusPill tone="accent">
+                        {countOf(conversation.unread_count, 'non lu', 'non lus')}
+                      </StatusPill>
                     ) : null}
                     {conversation.proposal_status ? (
                       <span className="text-xs text-[var(--muted)]">

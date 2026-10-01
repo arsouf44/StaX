@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { niceMax } from '~/lib/audience';
+import { countOf } from '~/lib/plural';
 
 export interface AudiencePoint {
   day: string;
@@ -115,7 +116,7 @@ export function AudienceChart({ points, label }: { points: AudiencePoint[]; labe
                 onPointerDown={() => setActive(index)}
               >
                 <title>
-                  {`${LONG.format(asDate(point.day))} : ${NUMBER.format(point.visitors)} visiteur(s)`}
+                  {`${LONG.format(asDate(point.day))} : ${countOf(point.visitors, 'visiteur')}`}
                 </title>
               </rect>
               {labelled.has(index) ? (
