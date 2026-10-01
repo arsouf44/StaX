@@ -209,7 +209,7 @@ test('le client publie : commit GitHub, déploiement Cloudflare, puis « en lign
   await test.step('Publier : la version 2 n’est « en ligne » qu’une fois déployée', async () => {
     await page.getByRole('button', { name: 'Publier' }).first().click();
     const dialog = page.getByRole('dialog', { name: 'Publier la version 2' });
-    await dialog.getByLabel('Qu’avez-vous changé ? (facultatif)').fill('Nouveau titre');
+    await dialog.getByLabel('Qu’avez-vous changé ?').fill('Nouveau titre');
     await dialog.getByRole('button', { name: 'Publier' }).click();
     await expect(page.getByText('Version 2 en ligne').first()).toBeVisible({ timeout: 60_000 });
   });

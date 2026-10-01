@@ -126,6 +126,38 @@ export function resolveFieldAddress(
   }
 }
 
+/**
+ * Où se trouve un champ, en mots du client : « Accueil › Bandeau d’accueil ›
+ * Bouton », « Coordonnées › Téléphone », « Produits › Nom ». Sert aux
+ * messages qui bloquent une publication : dire QUEL champ compléter.
+ */
+export function describeFieldAddress(manifest: SiteManifest, path: string): string | null {
+  const address = parseFieldAddress(path);
+  if (!address) return null;
+  switch (address.scope) {
+    case 'global': {
+      const group = manifest.globals?.find((entry) => entry.id === address.groupId);
+      const field = group?.fields.find((entry) => entry.id === address.fieldId);
+      return group && field ? `${group.label} › ${field.label}` : null;
+    }
+    case 'page': {
+      const page = manifest.pages.find((entry) => entry.id === address.pageId);
+      const section = page?.sections.find((entry) => entry.id === address.sectionId);
+      const field = section?.fields.find((entry) => entry.id === address.fieldId);
+      return page && section && field ? `${page.label} › ${section.label} › ${field.label}` : null;
+    }
+    case 'page-seo': {
+      const page = manifest.pages.find((entry) => entry.id === address.pageId);
+      return page ? `${page.label} › Référencement` : null;
+    }
+    case 'collection': {
+      const collection = manifest.collections?.find((entry) => entry.id === address.collectionId);
+      const field = collection?.fields.find((entry) => entry.id === address.fieldId);
+      return collection && field ? `${collection.label} › ${field.label}` : null;
+    }
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Serialisation stable et empreinte                                          */
 /* -------------------------------------------------------------------------- */
@@ -346,16 +378,20 @@ function validateCollection(
     ids.add(id);
 
     const itemBase = `${base}.${id}`;
+    // Un element masque n'est pas publie : ses champs obligatoires ne
+    // bloquent pas la publication (c'est un brouillon), ses valeurs restent
+    // verifiees.
+    const hidden = raw['hidden'] === true;
     const values = validateFields(
       collection.fields,
       record(raw['values']),
       manifest,
-      context,
+      hidden && context.mode === 'publish' ? { ...context, mode: 'draft' } : context,
       itemBase,
       dropped,
     );
     const item: CollectionItem = { id, values };
-    if (raw['hidden'] === true) item.hidden = true;
+    if (hidden) item.hidden = true;
 
     if (collection.route) {
       // L'adresse d'un element : saisie, sinon derivee de son titre ; toujours

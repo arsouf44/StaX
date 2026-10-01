@@ -7,6 +7,8 @@ import {
   unwrapMaybe,
 } from '@nemasus/database';
 import {
+  DIMENSION_HEADER_BYTES,
+  imageDimensions,
   SNIFF_HEADER_BYTES,
   safeFileName,
   sniffMediaType,
@@ -114,6 +116,14 @@ export async function storeMediaFile(
     };
   }
 
+  // Dimensions lues dans l'en-tête : le site réserve la place de la photo.
+  const dimensions = mimeType.startsWith('image/')
+    ? imageDimensions(
+        new Uint8Array(await file.slice(0, DIMENSION_HEADER_BYTES).arrayBuffer()),
+        mimeType,
+      )
+    : null;
+
   const fileName = safeFileName(file.name);
   const storagePath = tenantStoragePath(
     workspace.organization.id,
@@ -147,6 +157,8 @@ export async function storeMediaFile(
         file_name: fileName,
         mime_type: mimeType,
         size_bytes: file.size,
+        width: dimensions?.width ?? null,
+        height: dimensions?.height ?? null,
         alt_text: alt === '' ? null : alt,
         uploaded_by: userId,
         is_public: true,

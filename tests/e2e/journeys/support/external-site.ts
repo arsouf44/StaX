@@ -165,16 +165,23 @@ export interface SiteInfrastructure {
  */
 export async function createSiteInfrastructure(
   service: SupabaseClient,
-  options: { slug: string; siteName: string; title: string },
+  options: {
+    slug: string;
+    siteName: string;
+    title: string;
+    /** Contrat d'édition et contenu propres (défaut : site minimal). */
+    manifest?: SiteManifest;
+    content?: ContentDocument;
+  },
 ): Promise<SiteInfrastructure> {
   const seed = Math.floor(Math.random() * 1_000_000);
   const installationId = 700_000_000 + seed;
   const accountId = 800_000_000 + seed;
   const repositoryId = 900_000_000 + seed;
   const accountLogin = `nemasus-sites-${options.slug}`;
-  const manifest = e2eManifest(options.siteName);
+  const manifest = options.manifest ?? e2eManifest(options.siteName);
   const manifestText = JSON.stringify(manifest, null, 2);
-  const content = e2eInitialContent(options.title);
+  const content = options.content ?? e2eInitialContent(options.title);
   const bundle = buildContentBundle(manifest, content, new Map(), {
     siteId: 'initial',
     version: null,

@@ -33,6 +33,7 @@ import {
   formatFieldAddress,
   isLocalized,
   newItemId,
+  describeFieldAddress,
   parseBridgeMessage,
   parseFieldAddress,
   stableStringify,
@@ -749,6 +750,7 @@ export function ContractEditor({ data }: { data: ContractEditorData }) {
         nextVersion={(data.production?.version ?? 0) + 1}
         blocking={publishCheck?.errors ?? []}
         warnings={publishCheck?.warnings ?? []}
+        describe={(path) => describeFieldAddress(manifest, path)}
         canSchedule={data.canSchedule}
         busy={busy === 'publish'}
         onGoTo={(path) => {
@@ -1023,7 +1025,9 @@ function SelectionPanel({
           variant="primary"
           size="sm"
           onClick={() => {
-            const created: CollectionItem = { id: newItemId(), values: {}, hidden: true };
+            // Visible d'office : ajouté puis publié, il est en ligne. Le
+            // client peut le masquer le temps de le terminer.
+            const created: CollectionItem = { id: newItemId(), values: {} };
             onItems(collection.id, (list) => [created, ...list]);
             setSelection({ kind: 'collection', collectionId: collection.id, itemId: created.id });
           }}
@@ -1278,6 +1282,7 @@ function PublishDialog({
   nextVersion,
   blocking,
   warnings,
+  describe,
   canSchedule,
   busy,
   onConfirm,
@@ -1288,6 +1293,8 @@ function PublishDialog({
   nextVersion: number;
   blocking: ValueIssue[];
   warnings: ValueIssue[];
+  /** Où se trouve le champ en cause, en mots du client. */
+  describe: (path: string) => string | null;
   canSchedule: boolean;
   busy: boolean;
   onConfirm: (input: { note: string | null; scheduledFor: string | null }) => Promise<void>;
@@ -1330,6 +1337,9 @@ function PublishDialog({
                     className="text-left underline underline-offset-2"
                     onClick={() => onGoTo(issue.path.split('@')[0] ?? issue.path)}
                   >
+                    {describe(issue.path) ? (
+                      <span className="font-medium">{describe(issue.path)} : </span>
+                    ) : null}
                     {issue.message}
                   </button>
                 </li>
@@ -1340,14 +1350,14 @@ function PublishDialog({
         {warnings.length > 0 && blocking.length === 0 ? (
           <ul className="list-disc space-y-1 pl-5 text-xs text-[var(--foreground-muted)]">
             {warnings.slice(0, 5).map((issue) => (
-              <li key={`${issue.path}-${issue.message}`}>{issue.message}</li>
+              <li key={`${issue.path}-${issue.message}`}>
+                {describe(issue.path) ? `${describe(issue.path)} : ` : ''}
+                {issue.message}
+              </li>
             ))}
           </ul>
         ) : null}
-        <Field
-          label="Qu’avez-vous changé ? (facultatif)"
-          hint="Visible dans l’historique des versions."
-        >
+        <Field label="Qu’avez-vous changé ?" hint="Visible dans l’historique des versions.">
           <Input value={note} maxLength={200} onChange={(event) => setNote(event.target.value)} />
         </Field>
         {canSchedule ? (

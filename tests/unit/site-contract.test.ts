@@ -9,6 +9,7 @@ import {
   collectMediaIds,
   contentFromBundle,
   contentHash,
+  describeFieldAddress,
   formatFieldAddress,
   integrationsFromManifest,
   manifestJsonSchema,
@@ -444,6 +445,46 @@ describe('offre et contrat', () => {
       'rgpd',
     ]);
     expect(sync.modules).toEqual(['contact']);
+  });
+});
+
+describe('éléments masqués d’une collection', () => {
+  it('un élément masqué ne bloque pas la publication, un élément visible oui', () => {
+    const manifest = loadManifest();
+    const collection = manifest.collections?.find((entry) => entry.id === 'actualites');
+    const required = collection?.fields.find((field) => field.required);
+    expect(required).toBeDefined();
+    const content = (hidden: boolean) => ({
+      globals: {},
+      pages: {},
+      collections: {
+        actualites: [{ id: '0190a7b2-3c4d-7e8f-9a0b-1c2d3e4f5a01', values: {}, hidden }],
+      },
+    });
+    const blocking = (hidden: boolean) =>
+      validateContent(manifest, content(hidden), { mode: 'publish' }).issues.filter(
+        (issue) => issue.severity === 'error' && issue.path.startsWith('collections.actualites.'),
+      );
+    expect(blocking(true)).toEqual([]);
+    expect(blocking(false).length).toBeGreaterThan(0);
+  });
+});
+
+describe('emplacement d’un champ, en mots du client', () => {
+  it('nomme la page, la section et le champ', () => {
+    const manifest = loadManifest();
+    expect(describeFieldAddress(manifest, 'pages.accueil.hero.titre@fr')).toBe(
+      'Accueil › Bandeau d’accueil › Titre',
+    );
+    expect(describeFieldAddress(manifest, 'globals.coordonnees.telephone')).toBe(
+      'Coordonnées › Téléphone',
+    );
+    expect(describeFieldAddress(manifest, 'pages.accueil._seo')).toBe('Accueil › Référencement');
+    expect(describeFieldAddress(manifest, 'collections.actualites.0190a7b2-item.titre.extra')).toBe(
+      'Actualités › Titre',
+    );
+    expect(describeFieldAddress(manifest, 'pages.inconnue.hero.titre')).toBeNull();
+    expect(describeFieldAddress(manifest, 'n’importe quoi')).toBeNull();
   });
 });
 
