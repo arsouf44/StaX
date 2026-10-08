@@ -62,22 +62,31 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
   const nonce = options.nonce ? `'nonce-${options.nonce}'` : '';
   const isPlatform = options.profile === 'platform';
 
+  // Stripe ne sert qu'aux boutiques des sites clients : la plateforme encaisse
+  // par virement et ne charge aucun script de paiement.
   const scriptSrc = [
     "'self'",
     nonce,
     ...(options.scriptHashes ?? []),
     "'strict-dynamic'",
-    STRIPE_SCRIPT,
+    isPlatform ? '' : STRIPE_SCRIPT,
     TURNSTILE,
   ]
     .filter(Boolean)
     .join(' ');
 
-  const connect = ["'self'", STRIPE_CONNECT, TURNSTILE, ...(options.connectSrc ?? [])].join(' ');
+  const connect = [
+    "'self'",
+    isPlatform ? '' : STRIPE_CONNECT,
+    TURNSTILE,
+    ...(options.connectSrc ?? []),
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const frame = [
     "'self'",
-    STRIPE_FRAME,
+    isPlatform ? '' : STRIPE_FRAME,
     TURNSTILE,
     ...(options.frameSrc ?? []),
     // Contenus integres de la liste blanche (section « Contenu intégré »). Ils
@@ -91,7 +100,9 @@ export function buildContentSecurityPolicy(options: SecurityHeaderOptions): stri
           'https://calendly.com',
         ]
       : []),
-  ].join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const directives: string[] = [
     "default-src 'self'",

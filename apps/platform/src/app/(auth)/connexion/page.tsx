@@ -44,19 +44,12 @@ export default async function SignInPage({
   return (
     <AuthCard
       title="Connexion"
-      description="Accédez à votre espace pour modifier votre site, lire vos messages et suivre votre activité."
+      description="Accédez à votre espace pour suivre votre projet, modifier votre site et lire vos messages."
       footer={
         <>
-          Pas encore de compte ?{' '}
-          <Link
-            href={
-              typeof params.suivant === 'string'
-                ? `/inscription?suivant=${encodeURIComponent(redirectTo)}`
-                : '/inscription'
-            }
-            className="text-[var(--foreground)] underline underline-offset-4"
-          >
-            Créer un compte
+          Première connexion ?{' '}
+          <Link href="/acces" className="text-[var(--foreground)] underline underline-offset-4">
+            J’ai reçu un code d’accès
           </Link>
         </>
       }

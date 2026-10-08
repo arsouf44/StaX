@@ -49,7 +49,6 @@ test.beforeAll(async () => {
   customer = await createCustomerWithPaidOrder({
     businessName: BUSINESS,
     subdomain: `lumiere-${suffix}`,
-    planSlug: 'premium',
     delivered: false,
   });
   infra = await createSiteInfrastructure(serviceClient(), {

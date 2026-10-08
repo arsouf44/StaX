@@ -170,8 +170,8 @@ export function PaymentRoutingDiagram({ className }: { className?: string }) {
         </div>
         <p className="mt-2.5 text-xs leading-relaxed text-[var(--muted)]">
           Les encaissements de votre activité passent par votre propre compte Stripe connecté.
-          Nemasus ne les détient jamais et ne prélève aucune commission dessus. Vous ne payez à
-          Nemasus que la création du site, puis la maintenance mensuelle à partir de sa livraison.
+          Nemasus ne les détient jamais et ne prélève aucune commission dessus. Votre commande
+          Nemasus, elle, se règle séparément, par virement.
         </p>
       </div>
       <figcaption className="sr-only">

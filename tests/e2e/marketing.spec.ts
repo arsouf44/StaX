@@ -36,7 +36,14 @@ test.describe('Site public', () => {
   });
 
   test('aucune page principale ne defile horizontalement', async ({ page }) => {
-    for (const path of ['/', '/tarifs', '/realisations', '/fonctionnalites', '/cgv']) {
+    for (const path of [
+      '/',
+      '/comment-ca-marche',
+      '/realisations',
+      '/fonctionnalites',
+      '/cgv',
+      '/acces',
+    ]) {
       await page.goto(path);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
@@ -45,12 +52,24 @@ test.describe('Site public', () => {
     }
   });
 
-  test('la page des tarifs annonce les prix ou explique leur absence', async ({ page }) => {
+  test('aucun prix, aucune offre : on commande, on vire, on reçoit son code', async ({ page }) => {
+    for (const path of ['/', '/comment-ca-marche', '/faq', '/sur-mesure']) {
+      await page.goto(path);
+      const main = await page.locator('main').innerText();
+      expect(main, path).not.toMatch(
+        /\d[\d\s\u00a0\u202f]*(?:,\d{2})?\s?€|€\s?\d|\/\s?mois|par mois|HT\b/,
+      );
+      expect(main, path).not.toMatch(/abonnement mensuel|Choisir cette offre|Nos offres/i);
+    }
+    await page.goto('/comment-ca-marche');
+    const body = await page.locator('main').innerText();
+    expect(body).toContain('virement');
+    expect(body).toContain('code d’accès');
+  });
+
+  test('l’ancienne page des tarifs mène au parcours de commande expliqué', async ({ page }) => {
     await page.goto('/tarifs');
-    const body = (await page.locator('body').textContent()) ?? '';
-    // Soit les prix sont la, soit le catalogue est declare indisponible.
-    // Ce qui est interdit, c est une page vide sans explication.
-    expect(body.includes('€') || body.includes('momentanément indisponible')).toBe(true);
+    await expect(page).toHaveURL(/\/comment-ca-marche$/);
   });
 
   test('les mentions legales sont completes ; le marqueur de relecture suit l environnement', async ({
@@ -123,40 +142,37 @@ test.describe('Site public', () => {
     expect(body).toContain('Vous publiez, et c’est réellement en ligne');
   });
 
-  test('les anciennes pages par métier mènent aux offres', async ({ page }) => {
+  test('les anciennes pages par métier mènent au parcours expliqué', async ({ page }) => {
     await page.goto('/metiers');
-    await expect(page).toHaveURL(/\/tarifs$/);
+    await expect(page).toHaveURL(/\/comment-ca-marche$/);
     await page.goto('/metiers/restauration/restaurant');
-    await expect(page).toHaveURL(/\/tarifs$/);
+    await expect(page).toHaveURL(/\/comment-ca-marche$/);
   });
 
-  test('chaque offre donne des exemples, sans liste de métiers', async ({ page }) => {
-    await page.goto('/');
-    const main = await page.locator('main').innerText();
-    expect(main).toContain('Idéal pour un petit commerce');
-    expect(main).toContain('Un architecte');
-    expect(main).not.toMatch(/Métiers|Tous les métiers/);
-  });
-
-  test('« Comment ça marche » suit six étapes, de votre projet à votre autonomie', async ({
-    page,
-  }) => {
+  test('« Comment ça marche » : commande, virement, code, espace', async ({ page }) => {
     await page.goto('/comment-ca-marche');
     const steps = await page.locator('ol h3').allTextContents();
-    expect(steps.slice(0, 6)).toEqual([
-      'Votre projet',
-      'Conception',
-      'Développement',
-      'Mise en ligne',
-      'Livraison',
-      'Vous gardez la main',
+    expect(steps.slice(0, 4)).toEqual([
+      'Vous commandez',
+      'Vous réglez par virement',
+      'Vous recevez votre code',
+      'Votre espace s’ouvre',
     ]);
+  });
+
+  test('la page d’accès demande le code et rien d’autre', async ({ page }) => {
+    await page.goto('/acces');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      'Entrez votre code d’accès',
+    );
+    await expect(page.getByRole('button', { name: 'Accéder à mon site' })).toBeVisible();
+    const robots = await page.locator('meta[name="robots"]').getAttribute('content');
+    expect(robots).toContain('noindex');
   });
 
   test('aucune page n’annonce un générateur, un modèle ou un glisser-déposer', async ({ page }) => {
     for (const path of [
       '/',
-      '/tarifs',
       '/comment-ca-marche',
       '/fonctionnalites',
       '/fonctionnalites/editeur',
@@ -172,15 +188,15 @@ test.describe('Site public', () => {
     }
   });
 
-  test('les CGV décrivent une maintenance mensuelle qui commence à la livraison', async ({
+  test('les CGV décrivent le paiement par virement et le code d’accès, sans grille tarifaire', async ({
     page,
   }) => {
     await page.goto('/cgv');
     const body = (await page.locator('body').textContent()) ?? '';
-    expect(body).toContain('Maintenance mensuelle');
-    expect(body).toContain('commence le jour de la Livraison');
-    expect(body).toContain('Exceptionnel');
-    expect(body).not.toMatch(/maintenance annuelle/i);
+    expect(body).toContain('Paiement, code d’accès et facturation');
+    expect(body).toContain('virement bancaire');
+    expect(body).toContain('ne publie pas de grille tarifaire');
+    expect(body).not.toMatch(/Exceptionnel|Ultra Premium|maintenance mensuelle/i);
   });
 
   test('robots.txt existe et reste coherent', async ({ request }) => {
@@ -195,7 +211,7 @@ test.describe('Site public', () => {
     const response = await request.get('/sitemap.xml');
     expect(response.ok()).toBe(true);
     const xml = await response.text();
-    for (const forbidden of ['/app/', '/admin/', '/connexion', '/commander']) {
+    for (const forbidden of ['/app/', '/admin/', '/connexion', '/commander', '/acces', '/tarifs']) {
       expect(xml, `${forbidden} ne doit pas etre indexable`).not.toContain(forbidden);
     }
   });

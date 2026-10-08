@@ -20,12 +20,16 @@ export interface SiteDown {
 }
 
 export interface WorkQueue {
+  /** Commandes reçues : modalités de paiement à envoyer. */
+  ordersReceived: number;
+  /** Modalités envoyées : virement attendu. */
+  ordersAwaitingPayment: number;
+  /** Codes d'accès non utilisés qui expirent dans les 3 jours (ou expirés). */
+  codesUnused: number;
   unreadConversations: number;
   lateProjects: number;
   waitingOnClient: number;
   sitesDown: number;
-  proposalsExpiring: number;
-  deliveriesFailed: number;
   ticketsWaiting: number;
   sitesDownList: SiteDown[];
 }
@@ -58,8 +62,9 @@ export async function loadWorkQueue(db: Db): Promise<WorkQueue | null> {
     lateProjects: count(raw.lateProjects),
     waitingOnClient: count(raw.waitingOnClient),
     sitesDown: count(raw.sitesDown),
-    proposalsExpiring: count(raw.proposalsExpiring),
-    deliveriesFailed: count(raw.deliveriesFailed),
+    ordersReceived: count(raw.ordersReceived),
+    ordersAwaitingPayment: count(raw.ordersAwaitingPayment),
+    codesUnused: count(raw.codesUnused),
     ticketsWaiting: count(raw.ticketsWaiting),
     sitesDownList: Array.isArray(raw.sitesDownList) ? raw.sitesDownList : [],
   };

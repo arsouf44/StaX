@@ -59,7 +59,7 @@ export default async function AdminOrganizationsPage({
     <>
       <PageHeader
         title="Organisations"
-        description="Les entreprises clientes. Chaque ligne mène à sa fiche : sites, commandes, abonnement et journal."
+        description="Les entreprises clientes. Chaque ligne mène à sa fiche : sites, commandes et journal."
       />
 
       <form method="get" className="mb-5 flex max-w-sm items-center gap-2">

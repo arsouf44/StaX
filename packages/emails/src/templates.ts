@@ -1,9 +1,10 @@
-import { deliveryPolicyConfig, legalValue, platformUrl } from '@nemasus/config';
+import { emailSettings, legalValue, platformUrl } from '@nemasus/config';
 import {
   codeBlock,
   definitionList,
   paragraph,
   renderEmailLayout,
+  steps,
   strongLine,
   toPlainText,
 } from './layout';
@@ -43,7 +44,7 @@ function shell(params: {
     to: params.to,
     template: params.template,
     subject: params.subject,
-    replyTo: support.startsWith('[') ? undefined : support,
+    replyTo: emailSettings().replyTo ?? (support.startsWith('[') ? undefined : support),
     html: renderEmailLayout({
       preheader: params.preheader,
       heading: params.heading,
@@ -65,136 +66,105 @@ function shell(params: {
   };
 }
 
-/**
- * Information due a un prospect (article 13 du RGPD) : qui traite ses
- * coordonnees, pourquoi, et comment s'y opposer. Figure sur chaque message
- * adresse a une entreprise qui n'est pas encore cliente.
- */
-/**
- * Information du prospect au premier message (RGPD, art. 14 : ses coordonnees
- * n'ont pas ete collectees aupres de lui, mais dans une source publique puis
- * au telephone). Tout y est : responsable, finalite, base legale, source,
- * duree, droits, opposition immediate.
- */
-function prospectPrivacyNotice(): string {
-  const company = legalValue('LEGAL_COMPANY_NAME');
-  const address = legalValue('LEGAL_ADDRESS');
-  const contact = legalValue('LEGAL_DPO_CONTACT');
-  return (
-    'Pourquoi ce message : lors de notre échange téléphonique, vous avez accepté de recevoir ' +
-    `cette proposition. Responsable du traitement : ${company} (Nemasus), ${address}. Nous ` +
-    'utilisons vos coordonnées professionnelles (nom, entreprise, téléphone, e-mail) pour vous ' +
-    'adresser cette proposition et en assurer le suivi, sur le fondement de notre intérêt ' +
-    'légitime à présenter nos services aux entreprises (RGPD, art. 6.1.f). Le numéro de votre ' +
-    'établissement provient d’une source publique professionnelle (registre, annuaire ou site ' +
-    'de votre entreprise). Ces données sont conservées trois ans après notre dernier contact. ' +
-    'Vous pouvez vous y opposer à tout moment, sans motif, en répondant « STOP » : elles seront ' +
-    `supprimées. Vous pouvez aussi y accéder, les faire rectifier ou effacer (${contact}) et ` +
-    `saisir la CNIL. En savoir plus : ${platformUrl()}/confidentialite.`
-  );
-}
-
 const hello = (firstName?: string | null) => (firstName ? `Bonjour ${firstName},` : 'Bonjour,');
 
 /* -------------------------------------------------------------------------- */
 /*  Compte                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export function welcomeEmail(ctx: BaseContext): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'welcome',
-    subject: 'Bienvenue sur Nemasus',
-    preheader: 'Votre compte est créé. Voici la suite.',
-    heading: 'Bienvenue sur Nemasus',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        'Votre compte est créé. Vous pouvez dès maintenant commander votre site, ' +
-          'suivre son avancement et gérer votre entreprise depuis votre espace.',
-      ),
-      paragraph(
-        'Nous vous accompagnons à chaque étape : vous n’avez rien à installer et ' +
-          'rien à configurer techniquement.',
-      ),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      'Votre compte Nemasus est créé. Vous pouvez commander votre site et suivre son avancement depuis votre espace.',
-    ],
-    action: { label: 'Ouvrir mon espace', url: `${platformUrl()}/app` },
-  });
-}
-
-export function verifyEmailEmail(ctx: BaseContext & { verifyUrl: string }): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'verify_email',
-    subject: 'Confirmez votre adresse e-mail',
-    preheader: 'Une dernière étape pour activer votre compte.',
-    heading: 'Confirmez votre adresse e-mail',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        'Confirmez votre adresse pour sécuriser votre compte et recevoir les messages ' +
-          'de vos visiteurs.',
-      ),
-    ].join(''),
-    bodyText: [hello(ctx.firstName), 'Confirmez votre adresse e-mail pour activer votre compte.'],
-    action: { label: 'Confirmer mon adresse', url: ctx.verifyUrl },
-    footerNote:
-      'Ce lien expire dans 24 heures. Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.',
-  });
-}
-
-export function passwordResetEmail(ctx: BaseContext & { resetUrl: string }): EmailMessage {
+/**
+ * Mot de passe oublie. Le lien porte un jeton aleatoire dont la base ne garde
+ * que l'empreinte ; il expire au bout d'une heure et ne sert qu'une fois.
+ */
+export function passwordResetEmail(
+  ctx: BaseContext & { resetUrl: string; validForMinutes: number },
+): EmailMessage {
+  const validity =
+    ctx.validForMinutes % 60 === 0
+      ? `${ctx.validForMinutes / 60} heure${ctx.validForMinutes === 60 ? '' : 's'}`
+      : `${ctx.validForMinutes} minutes`;
   return shell({
     to: ctx.to,
     template: 'password_reset',
-    subject: 'Réinitialiser votre mot de passe',
-    preheader: 'Lien valable une heure.',
-    heading: 'Réinitialiser votre mot de passe',
+    subject: 'Réinitialisez votre mot de passe Nemasus',
+    preheader: `Lien personnel, valable ${validity} et utilisable une seule fois.`,
+    heading: 'Choisissez un nouveau mot de passe',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
       paragraph(
-        'Vous avez demandé à réinitialiser votre mot de passe. Ce lien est valable une heure ' +
-          'et ne fonctionne qu’une seule fois.',
+        'Vous avez demandé à réinitialiser le mot de passe de votre espace Nemasus. Cliquez sur ' +
+          'le bouton ci-dessous pour en choisir un nouveau.',
       ),
-    ].join(''),
-    bodyText: [hello(ctx.firstName), 'Réinitialisez votre mot de passe (lien valable une heure).'],
-    action: { label: 'Choisir un nouveau mot de passe', url: ctx.resetUrl },
-    footerNote:
-      'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : votre mot de passe reste inchangé.',
-  });
-}
-
-export function activationCodeEmail(
-  ctx: BaseContext & { code: string; businessName: string; expiresAt: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'activation_code',
-    subject: `Votre code d’accès — ${ctx.businessName}`,
-    preheader: 'Récupérez l’accès à votre espace client.',
-    heading: 'Votre site vous attend',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
       paragraph(
-        `Le site de ${ctx.businessName} est prêt. Ce code vous donne accès à votre espace, ` +
-          'depuis lequel vous pourrez modifier votre contenu et recevoir vos messages.',
-      ),
-      codeBlock(ctx.code),
-      paragraph(
-        `Ce code est à usage unique et expire le ${ctx.expiresAt}. Ne le transmettez à personne.`,
+        `Ce lien est valable ${validity} et ne fonctionne qu’une seule fois. Une fois le mot de ` +
+          'passe changé, toutes vos autres sessions sont fermées.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Votre code d’accès : ${ctx.code}`,
-      `Code à usage unique, valable jusqu’au ${ctx.expiresAt}.`,
+      'Vous avez demandé à réinitialiser le mot de passe de votre espace Nemasus.',
+      `Ce lien est valable ${validity} et ne fonctionne qu’une seule fois.`,
     ],
-    action: { label: 'Activer mon espace', url: `${platformUrl()}/activation` },
-    footerNote: 'Ce code est personnel. Nemasus ne vous le demandera jamais par téléphone.',
+    action: { label: 'Choisir un nouveau mot de passe', url: ctx.resetUrl },
+    footerNote:
+      'Vous n’êtes pas à l’origine de cette demande ? Ignorez ce message : votre mot de passe ' +
+      'reste inchangé et personne ne peut l’utiliser sans accès à votre boîte e-mail.',
+  });
+}
+
+/**
+ * Code d'acces personnel, envoye une fois le virement recu. Le lien preremplit
+ * le code mais n'ouvre rien a lui seul : la personne confirme sur la page, ce
+ * qui empeche un antivirus de messagerie qui « visite » les liens de consommer
+ * le code a sa place.
+ */
+export function accessCodeEmail(
+  ctx: BaseContext & {
+    code: string;
+    companyName: string;
+    orderReference: string | null;
+    accessUrl: string;
+    expiresLabel: string;
+  },
+): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'access_code',
+    subject: `Votre code d’accès Nemasus — ${ctx.companyName}`,
+    preheader: 'Paiement reçu : voici votre code personnel pour accéder à votre espace.',
+    heading: 'Votre espace est ouvert',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(
+        `Nous avons bien reçu votre paiement${
+          ctx.orderReference ? ` pour la commande ${ctx.orderReference}` : ''
+        }. Merci de votre confiance ! Voici votre code d’accès personnel à l’espace de ` +
+          `${ctx.companyName} :`,
+      ),
+      codeBlock(ctx.code),
+      steps([
+        'Rendez-vous sur Nemasus, rubrique « Accès client » (le bouton ci-dessous y mène, code prérempli).',
+        'Saisissez ce code, puis choisissez votre mot de passe pour vos prochaines connexions.',
+        'Retrouvez votre site, l’avancement de votre projet et la discussion avec notre équipe.',
+      ]),
+      paragraph(
+        `Ce code est personnel, ne sert qu’une seule fois et expire le ${ctx.expiresLabel}. ` +
+          'Il ne fonctionne qu’avec votre adresse e-mail.',
+      ),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Nous avons bien reçu votre paiement${
+        ctx.orderReference ? ` pour la commande ${ctx.orderReference}` : ''
+      }. Voici votre code d’accès personnel à l’espace de ${ctx.companyName} :`,
+      ctx.code,
+      'Rendez-vous sur Nemasus, rubrique « Accès client », saisissez ce code, puis choisissez votre mot de passe.',
+      `Code personnel, à usage unique, valable jusqu’au ${ctx.expiresLabel}.`,
+    ],
+    action: { label: 'Accéder à mon espace', url: ctx.accessUrl },
+    footerNote:
+      'Ce code est confidentiel : ne le transmettez à personne. L’équipe Nemasus ne vous le ' +
+      'demandera jamais, ni par téléphone ni par e-mail.',
   });
 }
 
@@ -204,8 +174,8 @@ export function teamInvitationEmail(
   return shell({
     to: ctx.to,
     template: 'team_invitation',
-    subject: `Invitation à rejoindre ${ctx.organizationName}`,
-    preheader: 'Vous avez été invité à collaborer.',
+    subject: `Invitation à rejoindre ${ctx.organizationName} sur Nemasus`,
+    preheader: 'Vous avez été invité à collaborer sur le site de l’entreprise.',
     heading: `Rejoignez ${ctx.organizationName}`,
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
@@ -213,163 +183,131 @@ export function teamInvitationEmail(
         `Vous avez été invité à rejoindre l’espace de ${ctx.organizationName} sur Nemasus ` +
           `avec le rôle « ${ctx.roleLabel} ».`,
       ),
+      paragraph(
+        'Le lien ci-dessous vous permet de créer votre compte avec cette adresse e-mail, ou de ' +
+          'vous connecter si vous en avez déjà un.',
+      ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
       `Invitation à rejoindre ${ctx.organizationName} (rôle : ${ctx.roleLabel}).`,
     ],
     action: { label: 'Accepter l’invitation', url: ctx.inviteUrl },
-    footerNote: 'Cette invitation expire dans 7 jours.',
+    footerNote: 'Cette invitation est personnelle et expire dans 7 jours.',
   });
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Commande et projet                                                         */
+/*  Commande et paiement par virement                                          */
 /* -------------------------------------------------------------------------- */
 
-export function orderConfirmedEmail(
+/** Accuse de reception d'une commande : ce qui va se passer, dans l'ordre. */
+export function siteOrderReceivedEmail(
+  ctx: BaseContext & { reference: string; companyName: string },
+): EmailMessage {
+  return shell({
+    to: ctx.to,
+    template: 'site_order_received',
+    subject: `Commande ${ctx.reference} reçue — ${ctx.companyName}`,
+    preheader: 'Nous revenons vers vous avec les modalités de paiement par virement.',
+    heading: 'Nous avons bien reçu votre commande',
+    bodyHtml: [
+      paragraph(hello(ctx.firstName)),
+      paragraph(
+        `Merci pour votre commande du site de ${ctx.companyName}. Elle est enregistrée sous la ` +
+          `référence ${ctx.reference}. Aucun paiement n’a été demandé à ce stade.`,
+      ),
+      strongLine('Ce qui se passe maintenant'),
+      steps([
+        'Nous étudions votre demande et vous écrivons si une précision est utile.',
+        'Nous vous envoyons par e-mail les modalités de paiement par virement bancaire : montant, coordonnées bancaires et référence à indiquer.',
+        'Dès réception de votre virement, vous recevez votre code d’accès personnel.',
+        'Avec ce code, vous accédez à votre espace : suivi du projet, échanges avec l’équipe, puis votre site.',
+      ]),
+    ].join(''),
+    bodyText: [
+      hello(ctx.firstName),
+      `Merci pour votre commande du site de ${ctx.companyName} (référence ${ctx.reference}).`,
+      '1. Nous étudions votre demande.',
+      '2. Nous vous envoyons les modalités de paiement par virement bancaire.',
+      '3. Dès réception du virement, vous recevez votre code d’accès personnel.',
+      '4. Avec ce code, vous accédez à votre espace et à votre site.',
+    ],
+    footerNote:
+      'Conservez la référence de votre commande : elle sera à rappeler dans le libellé de votre virement.',
+  });
+}
+
+export interface BankDetails {
+  holder: string;
+  iban: string;
+  bic: string | null;
+  bank: string | null;
+}
+
+/** Modalites de paiement par virement : montant convenu, coordonnees, reference. */
+export function bankTransferInstructionsEmail(
   ctx: BaseContext & {
     reference: string;
-    planName: string;
-    setupAmount: string;
-    /** Deja formate avec sa periodicite : « 12 € / mois ». */
-    maintenanceAmount: string;
-    orderUrl: string;
+    companyName: string;
+    amountLabel: string;
+    bank: BankDetails;
+    message: string | null;
+    reminder: boolean;
   },
 ): EmailMessage {
+  const rows: Array<[string, string]> = [
+    ['Montant à régler', ctx.amountLabel],
+    ['Bénéficiaire', ctx.bank.holder],
+    ['IBAN', ctx.bank.iban],
+  ];
+  if (ctx.bank.bic) rows.push(['BIC', ctx.bank.bic]);
+  if (ctx.bank.bank) rows.push(['Banque', ctx.bank.bank]);
+  rows.push(['Libellé du virement', ctx.reference]);
+
   return shell({
     to: ctx.to,
-    template: 'order_confirmed',
-    subject: `Commande confirmée — ${ctx.reference}`,
-    preheader: 'Nous démarrons votre projet.',
-    heading: 'Votre commande est confirmée',
+    template: 'site_order_payment',
+    subject: `${ctx.reminder ? 'Rappel — ' : ''}Modalités de paiement de votre commande ${ctx.reference}`,
+    preheader: `${ctx.amountLabel} par virement bancaire, référence ${ctx.reference}.`,
+    heading: 'Modalités de paiement par virement',
     bodyHtml: [
       paragraph(hello(ctx.firstName)),
-      paragraph('Merci pour votre confiance. Voici le recapitulatif de votre commande.'),
-      definitionList([
-        ['Reference', ctx.reference],
-        ['Offre', ctx.planName],
-        ['Paiement initial', ctx.setupAmount],
-        ['Maintenance', `${ctx.maintenanceAmount}, à partir de la livraison de votre site`],
-      ]),
       paragraph(
-        'Rien n’est prélevé au titre de la maintenance avant la livraison : elle commence le ' +
-          'jour où nous vous remettons votre site, en ligne.',
+        `Voici les modalités de paiement de la commande ${ctx.reference} pour le site de ` +
+          `${ctx.companyName}. Le règlement se fait par virement bancaire.`,
       ),
+      ctx.message ? quote(ctx.message.slice(0, 1500)) : '',
+      definitionList(rows),
+      strongLine(`Indiquez bien la référence ${ctx.reference} dans le libellé du virement.`),
       paragraph(
-        'Prochaine étape : complétez le questionnaire de votre projet. Plus vos réponses ' +
-          'sont précises, mieux nous concevrons votre site.',
+        'Dès que votre virement nous parvient, nous vous envoyons par e-mail votre code d’accès ' +
+          'personnel. Selon les banques, un virement met de quelques heures à deux jours ouvrés ' +
+          'pour arriver.',
       ),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
-      `Commande ${ctx.reference} confirmée.`,
-      `Offre : ${ctx.planName} — ${ctx.setupAmount}, puis ${ctx.maintenanceAmount} de maintenance.`,
-      'La maintenance commence à la livraison de votre site : rien n’est prélevé avant.',
+      `Modalités de paiement de la commande ${ctx.reference} (${ctx.companyName}).`,
+      ctx.message ? ctx.message.slice(0, 1500) : '',
+      ...rows.map(([label, value]) => `${label} : ${value}`),
+      `Indiquez la référence ${ctx.reference} dans le libellé du virement.`,
+      'Dès réception, nous vous envoyons votre code d’accès personnel.',
     ],
-    action: { label: 'Compléter mon questionnaire', url: ctx.orderUrl },
+    footerNote:
+      'Pour votre sécurité : nos coordonnées bancaires ne changent jamais par e-mail. En cas de ' +
+      'doute sur ce message, contactez-nous avant d’effectuer le virement.',
   });
 }
 
-export function projectStartedEmail(
-  ctx: BaseContext & { projectUrl: string; businessName: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'project_started',
-    subject: 'Nous démarrons la création de votre site',
-    preheader: 'Votre projet est entre les mains de notre équipe.',
-    heading: 'La création a commencé',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        `Notre équipe a commencé la conception du site de ${ctx.businessName}. ` +
-          'Vous pouvez suivre chaque étape depuis votre espace, et nous écrire à tout moment.',
-      ),
-    ].join(''),
-    bodyText: [hello(ctx.firstName), `La création du site de ${ctx.businessName} a commencé.`],
-    action: { label: 'Suivre mon projet', url: ctx.projectUrl },
-  });
-}
-
-export function previewReadyEmail(
-  ctx: BaseContext & { previewUrl: string; projectUrl: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'preview_ready',
-    subject: 'Votre site est prêt à être relu',
-    preheader: 'Découvrez votre site avant sa mise en ligne.',
-    heading: 'Votre site est prêt à être relu',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        'Votre site est disponible en aperçu privé. Prenez le temps de tout relire : textes, ' +
-          'photos, horaires, coordonnees.',
-      ),
-      paragraph(
-        'Si quelque chose ne va pas, indiquez-le directement depuis votre espace : nous ' +
-          'corrigeons avant la mise en ligne.',
-      ),
-    ].join(''),
-    bodyText: [hello(ctx.firstName), 'Votre site est disponible en aperçu privé.'],
-    action: { label: 'Voir mon site', url: ctx.previewUrl },
-    secondaryAction: { label: 'Demander des modifications', url: ctx.projectUrl },
-  });
-}
-
-export function sitePublishedEmail(
-  ctx: BaseContext & { siteUrl: string; appUrl: string; refundDeadline: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'site_published',
-    subject: 'Votre site est en ligne',
-    preheader: 'Félicitations, votre site est accessible à tous.',
-    heading: 'Votre site est en ligne',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      strongLine('Votre site est désormais accessible publiquement.'),
-      paragraph(
-        'Vous pouvez modifier vos contenus à tout moment depuis votre espace : textes, photos, ' +
-          'horaires, tarifs. Les modifications ne sont visibles qu’après publication.',
-      ),
-      definitionList([
-        ['Adresse de votre site', ctx.siteUrl],
-        ['Période de garantie commerciale', `jusqu’au ${ctx.refundDeadline}`],
-      ]),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Votre site est en ligne : ${ctx.siteUrl}`,
-      `Période de garantie commerciale jusqu’au ${ctx.refundDeadline}.`,
-    ],
-    action: { label: 'Voir mon site', url: ctx.siteUrl },
-    secondaryAction: { label: 'Gérer mon site', url: ctx.appUrl },
-  });
-}
-
-/**
- * Livraison d'un site concu et developpe par l'equipe : il est en ligne,
- * l'editeur s'ouvre, et la maintenance mensuelle commence ce jour-la.
- */
 export function siteDeliveredEmail(
   ctx: BaseContext & {
     siteUrl: string | null;
     appUrl: string;
-    /** Deja formate avec sa periodicite, ou `null` sans maintenance facturee. */
-    maintenanceAmount: string | null;
-    refundDeadline: string | null;
   },
 ): EmailMessage {
   const rows: Array<[string, string]> = [];
   if (ctx.siteUrl) rows.push(['Adresse de votre site', ctx.siteUrl]);
-  if (ctx.maintenanceAmount) {
-    rows.push(['Maintenance', `${ctx.maintenanceAmount}, à partir d’aujourd’hui`]);
-  }
-  if (ctx.refundDeadline) {
-    rows.push(['Garantie commerciale', `jusqu’au ${ctx.refundDeadline}`]);
-  }
 
   return shell({
     to: ctx.to,
@@ -525,257 +463,6 @@ export function newShopOrderEmail(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Facturation                                                                */
-/* -------------------------------------------------------------------------- */
-
-export function paymentFailedEmail(
-  ctx: BaseContext & { amount: string; retryDate: string; billingUrl: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'payment_failed',
-    subject: 'Échec du prélèvement de votre maintenance',
-    preheader: 'Mettez à jour votre moyen de paiement.',
-    heading: 'Nous n’avons pas pu encaisser votre maintenance',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        `Le prélèvement de ${ctx.amount} n’a pas abouti. Votre site reste en ligne : ` +
-          `nous réessaierons automatiquement le ${ctx.retryDate}.`,
-      ),
-      paragraph('Pour éviter toute interruption, vérifiez votre moyen de paiement dès maintenant.'),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Échec du prélèvement de ${ctx.amount}. Nouvelle tentative le ${ctx.retryDate}.`,
-    ],
-    action: { label: 'Mettre à jour mon paiement', url: ctx.billingUrl },
-  });
-}
-
-export function invoiceEmail(
-  ctx: BaseContext & { amount: string; periodLabel: string; invoiceUrl: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'invoice',
-    subject: `Votre facture — ${ctx.periodLabel}`,
-    preheader: `Facture de ${ctx.amount}.`,
-    heading: 'Votre facture est disponible',
-    bodyHtml: definitionList([
-      ['Période', ctx.periodLabel],
-      ['Montant', ctx.amount],
-    ]),
-    bodyText: [`Facture ${ctx.periodLabel} — ${ctx.amount}.`],
-    action: { label: 'Télécharger ma facture', url: ctx.invoiceUrl },
-  });
-}
-
-/**
- * Facture de vente emise apres un accord commercial hors ligne.
- *
- * Le client n'a pas encore de compte : ce message est souvent le premier qu'il
- * recoit de nous. Il doit donc dire trois choses sans detour : ce qui a ete
- * convenu, combien, et quoi faire maintenant.
- *
- * Le numero de facture n'est PAS un mot de passe. Il est ecrit ici en clair
- * parce qu'il n'a de valeur qu'associe a cette adresse e-mail : c'est elle qui
- * autorise le rattachement, et le message le dit pour que personne ne croie
- * detenir un secret.
- */
-export function salesInvoiceIssuedEmail(
-  ctx: BaseContext & {
-    invoiceNumber: string;
-    companyName: string;
-    planName: string;
-    setupAmount: string;
-    /** Deja formate avec sa periodicite : « 12 € / mois ». */
-    maintenanceAmount: string;
-    totalAmount: string;
-    dueLabel: string;
-    claimUrl: string;
-    /** Delai de realisation de l'offre ; a defaut, la politique generale. */
-    deliveryLabel?: string;
-  },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'sales_invoice_issued',
-    subject: `Votre facture ${ctx.invoiceNumber} — ${ctx.planName}`,
-    preheader: `${ctx.totalAmount} à régler avant le ${ctx.dueLabel}.`,
-    heading: 'Votre facture est prête',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      // `paragraph` echappe deja : le nom d entreprise vient d une saisie.
-      paragraph(
-        `Voici la facture correspondant à ce que nous avons convenu pour ${ctx.companyName}.`,
-      ),
-      definitionList([
-        ['Numéro de facture', ctx.invoiceNumber],
-        ['Offre', ctx.planName],
-        ['Création du site', ctx.setupAmount],
-        ['Maintenance', `${ctx.maintenanceAmount}, à partir de la livraison`],
-        ['Total à régler', ctx.totalAmount],
-        ['Échéance', ctx.dueLabel],
-      ]),
-      strongLine('Pour démarrer : créez votre compte avec CETTE adresse e-mail.'),
-      paragraph(
-        'Le bouton ci-dessous vous y mène, numéro de facture déjà rempli. Ce numéro ne vaut ' +
-          'que depuis cette adresse : il ne donne accès à rien tout seul, et le règlement reste ' +
-          'à effectuer séparément.',
-      ),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Facture ${ctx.invoiceNumber} — ${ctx.planName}.`,
-      `Création du site : ${ctx.setupAmount}. Maintenance : ${ctx.maintenanceAmount}, à partir de la livraison.`,
-      `Total à régler : ${ctx.totalAmount}, avant le ${ctx.dueLabel}.`,
-      `Créez votre compte avec cette adresse e-mail, puis saisissez le numéro ${ctx.invoiceNumber}.`,
-    ],
-    action: { label: 'Rattacher ma facture', url: ctx.claimUrl },
-    footerNote:
-      `Le délai de réalisation de votre site est de ${ctx.deliveryLabel ?? deliveryPolicyConfig().label} ` +
-      'à compter de la réception de vos contenus.',
-  });
-}
-
-export function subscriptionCancelledEmail(
-  ctx: BaseContext & {
-    endDate: string;
-    gracePeriodEnd: string;
-    billingUrl: string;
-    /** Choix du Client pour ses données (RGPD art. 28 § 3 g). */
-    dataFate: 'restitution' | 'suppression';
-    deletionDate: string;
-  },
-): EmailMessage {
-  const fate =
-    ctx.dataFate === 'suppression'
-      ? `Vous avez choisi la suppression de vos données : elles seront supprimées définitivement le ${ctx.deletionDate}.`
-      : `Vous avez choisi de récupérer vos données : jusqu’au ${ctx.deletionDate}, vous pouvez les exporter depuis votre espace et demander la copie du code de votre site. Elles seront ensuite supprimées définitivement.`;
-  return shell({
-    to: ctx.to,
-    template: 'subscription_cancelled',
-    subject: 'Résiliation de votre maintenance enregistrée',
-    preheader: `Votre site reste en ligne jusqu’au ${ctx.endDate}.`,
-    heading: 'Votre résiliation est enregistrée',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        `Votre maintenance prendra fin le ${ctx.endDate}. Votre site reste accessible ` +
-          `jusqu’à cette date, puis pendant une période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
-      ),
-      paragraph(fate),
-      paragraph(
-        'Vous pouvez changer d’avis, ou réactiver votre maintenance, jusqu’à cette date : ' +
-          'répondez simplement à cet e-mail.',
-      ),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Maintenance résiliée au ${ctx.endDate}. Période de continuité jusqu’au ${ctx.gracePeriodEnd}.`,
-      fate,
-      'Vous pouvez changer d’avis, ou réactiver votre maintenance, jusqu’à cette date.',
-    ],
-    action: { label: 'Gérer mon abonnement', url: ctx.billingUrl },
-  });
-}
-
-export function refundRequestedEmail(
-  ctx: BaseContext & { reference: string; amount: string; deduction: string | null },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'refund_requested',
-    subject: 'Votre demande de remboursement est enregistrée',
-    preheader: 'Nous revenons vers vous rapidement.',
-    heading: 'Demande de remboursement reçue',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph('Nous avons bien reçu votre demande et nous l’examinons.'),
-      definitionList([
-        ['Commande', ctx.reference],
-        ['Montant estimé du remboursement', ctx.amount],
-        ...(ctx.deduction
-          ? ([['Retenue pour achat du nom de domaine', ctx.deduction]] as Array<[string, string]>)
-          : []),
-      ]),
-      paragraph(
-        'Ce montant est une estimation : il sera confirmé après vérification. ' +
-          'Cette garantie commerciale ne remplacé pas vos droits légaux.',
-      ),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Demande de remboursement reçue pour la commande ${ctx.reference}. Montant estimé : ${ctx.amount}.`,
-    ],
-    action: { label: 'Suivre ma demande', url: `${platformUrl()}/app/facturation` },
-  });
-}
-
-export function refundProcessedEmail(
-  ctx: BaseContext & { amount: string; reference: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'refund_processed',
-    subject: 'Votre remboursement a été effectué',
-    preheader: `${ctx.amount} remboursés.`,
-    heading: 'Remboursement effectué',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        `Un remboursement de ${ctx.amount} a été émis pour la commande ${ctx.reference}. ` +
-          'Le délai de crédit dépend de votre banque, généralement 5 à 10 jours ouvrés.',
-      ),
-    ].join(''),
-    bodyText: [hello(ctx.firstName), `Remboursement de ${ctx.amount} effectué (${ctx.reference}).`],
-  });
-}
-
-/**
- * Rappel de reconduction — contrats ANNUELS vendus avant le passage a la
- * maintenance mensuelle, uniquement (le webhook Stripe filtre sur
- * `billing_interval = 'year'`).
- *
- * Envoye entre trois mois et un mois avant l'echeance : pour un client non
- * professionnel, l'article L215-1 du Code de la consommation l'impose, faute
- * de quoi il peut resilier a tout moment apres la reconduction. Nous
- * l'envoyons a tous les clients concernes, par loyaute. La maintenance
- * mensuelle, sans duree minimale, n'a pas de reconduction a annoncer.
- */
-export function renewalReminderEmail(
-  ctx: BaseContext & { renewalDate: string; amount: string; cancelUrl: string },
-): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'renewal_reminder',
-    subject: `Votre maintenance sera reconduite le ${ctx.renewalDate}`,
-    preheader: `Reconduction le ${ctx.renewalDate} pour ${ctx.amount}. Vous pouvez résilier d’ici là.`,
-    heading: 'Reconduction de votre maintenance',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        `Votre contrat de maintenance sera reconduit automatiquement le ${ctx.renewalDate}, ` +
-          `pour une nouvelle période, au prix de ${ctx.amount}.`,
-      ),
-      paragraph(
-        'Si vous ne souhaitez pas la reconduire, vous pouvez résilier en ligne en quelques ' +
-          'clics d’ici cette date, sans frais ni justification. Votre site reste en ligne ' +
-          'jusqu’à l’échéance.',
-      ),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Maintenance reconduite le ${ctx.renewalDate} pour ${ctx.amount}.`,
-      `Pour ne pas la reconduire : ${ctx.cancelUrl}`,
-    ],
-    action: { label: 'Résilier votre contrat', url: ctx.cancelUrl },
-    secondaryAction: { label: 'Gérer mon abonnement', url: `${platformUrl()}/app/abonnement` },
-  });
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Signalements de contenus (DSA)                                             */
 /* -------------------------------------------------------------------------- */
 
@@ -921,123 +608,9 @@ export function internalLeadEmail(ctx: {
   });
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Proposition de site (vente par telephone)                                  */
-/* -------------------------------------------------------------------------- */
-
 function quote(text: string): string {
-  return `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E4E4E7;
-    color:#3F3F46;">${escapeHtml(text)}</blockquote>`;
-}
-
-/**
- * « Votre site est prêt » : envoyé après un appel concluant.
- *
- * Le prospect n'a rien d'autre en main que ce message : il doit comprendre en
- * trois lignes ce qu'il voit (son site, déjà en ligne), ce qu'il paie (le prix
- * de l'offre, la maintenance mensuelle) et quoi faire (un seul bouton). Le code
- * est rappelé en clair au cas où le lien ne s'ouvrirait pas.
- */
-export function siteProposalEmail(ctx: {
-  to: string;
-  firstName?: string | null;
-  companyName: string;
-  siteUrl: string | null;
-  claimUrl: string;
-  code: string;
-  planName: string;
-  /** Prix de création, déjà formaté (TTC). */
-  priceLabel: string;
-  /** Maintenance, déjà formatée avec sa périodicité, ou `null`. */
-  maintenanceLabel: string | null;
-  expiresLabel: string;
-  message: string | null;
-  reminder?: boolean;
-}): EmailMessage {
-  const rows: Array<[string, string]> = [
-    ['Offre', ctx.planName],
-    ['Création du site', ctx.priceLabel],
-  ];
-  if (ctx.maintenanceLabel) rows.push(['Maintenance', `${ctx.maintenanceLabel}, sans engagement`]);
-  rows.push(['Proposition valable jusqu’au', ctx.expiresLabel]);
-
-  const subject = ctx.reminder
-    ? `Rappel : le site de ${ctx.companyName} vous attend`
-    : `Le site de ${ctx.companyName} est prêt`;
-
-  return shell({
-    to: ctx.to,
-    template: ctx.reminder ? 'site_proposal_reminder' : 'site_proposal',
-    subject,
-    preheader: 'Découvrez-le en ligne, puis récupérez-le en quelques minutes.',
-    heading: `Le site de ${ctx.companyName} est prêt`,
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        'Comme convenu lors de notre appel, nous avons préparé votre site. Il est déjà en ' +
-          'ligne : vous pouvez le découvrir dès maintenant.',
-      ),
-      ctx.message ? quote(ctx.message) : '',
-      strongLine('Pour le récupérer, trois étapes :'),
-      paragraph('1. Cliquez sur « Récupérer mon site » ci-dessous.'),
-      paragraph('2. Créez votre compte Nemasus avec cette adresse e-mail.'),
-      paragraph(
-        '3. Vérifiez votre site et réglez-le en ligne : il est à vous aussitôt, et vous ' +
-          'pouvez le modifier vous-même.',
-      ),
-      definitionList(rows),
-      paragraph('Votre code personnel, si l’on vous le demande :'),
-      codeBlock(ctx.code),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Comme convenu, le site de ${ctx.companyName} est prêt et déjà en ligne.`,
-      ctx.siteUrl ? `Voir le site : ${ctx.siteUrl}` : '',
-      ctx.message ?? '',
-      'Pour le récupérer : cliquez sur le lien ci-dessous, créez votre compte Nemasus avec cette adresse e-mail, puis réglez en ligne.',
-      ...rows.map(([label, value]) => `${label} : ${value}`),
-      `Votre code personnel : ${ctx.code}`,
-      prospectPrivacyNotice(),
-    ],
-    action: { label: 'Récupérer mon site', url: ctx.claimUrl },
-    ...(ctx.siteUrl ? { secondaryAction: { label: 'Voir mon site', url: ctx.siteUrl } } : {}),
-    footerNote:
-      'Ce code est personnel et ne fonctionne qu’avec votre adresse e-mail. Nemasus ne vous le ' +
-      `demandera jamais par téléphone. ${prospectPrivacyNotice()}`,
-  });
-}
-
-/** Rappel à un prospect qui a déjà récupéré son site mais n'a pas encore réglé. */
-export function proposalPaymentReminderEmail(ctx: {
-  to: string;
-  firstName?: string | null;
-  companyName: string;
-  appUrl: string;
-  priceLabel: string;
-  expiresLabel: string;
-}): EmailMessage {
-  return shell({
-    to: ctx.to,
-    template: 'site_proposal_payment_reminder',
-    subject: `Votre site ${ctx.companyName} vous attend`,
-    preheader: 'Une dernière étape pour qu’il soit à vous.',
-    heading: 'Une dernière étape',
-    bodyHtml: [
-      paragraph(hello(ctx.firstName)),
-      paragraph(
-        `Votre site est prêt dans votre espace Nemasus. Il ne reste qu’à le régler ` +
-          `(${ctx.priceLabel}) pour qu’il soit à vous et que vous puissiez le modifier.`,
-      ),
-      paragraph(`Cette proposition est valable jusqu’au ${ctx.expiresLabel}.`),
-    ].join(''),
-    bodyText: [
-      hello(ctx.firstName),
-      `Votre site est prêt dans votre espace Nemasus. Réglez-le (${ctx.priceLabel}) avant le ${ctx.expiresLabel}.`,
-      prospectPrivacyNotice(),
-    ],
-    action: { label: 'Finaliser', url: ctx.appUrl },
-    footerNote: prospectPrivacyNotice(),
-  });
+  return `<blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #E1E4E7;
+    color:#4B545C;white-space:pre-line;">${escapeHtml(text)}</blockquote>`;
 }
 
 /* -------------------------------------------------------------------------- */

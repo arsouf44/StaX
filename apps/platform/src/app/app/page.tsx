@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { resolveBusiness } from '@nemasus/business';
 import { featureAccess, loadFeatureSnapshot, unwrapList, unwrapMaybe } from '@nemasus/database';
-import { formatMaintenance, PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@nemasus/payments';
+import { PROJECT_STATUS_LABELS, PROJECT_TIMELINE } from '@nemasus/payments';
 import {
   Alert,
   ButtonLink,
@@ -18,7 +18,6 @@ import {
 import { publicSiteUrl } from '@nemasus/config';
 import { getWorkspace, isSiteUnderConstruction } from '~/lib/workspace';
 import { loadReleaseViews } from './editeur/contract/data';
-import { loadClientProposal, ProposalDashboard } from './proposition/proposal-dashboard';
 import { FirstSteps } from '~/components/app/first-steps';
 import { ReleaseWatcher } from '~/components/app/release-watcher';
 
@@ -44,24 +43,6 @@ export default async function DashboardPage({
   const { workspace, db } = await getWorkspace();
   const site = workspace.currentSite;
 
-  // Site proposé après un appel, récupéré avec un code, pas encore livré :
-  // le client voit son site, le prix, et peut payer ou nous écrire.
-  if (site && !site.deliveredAt) {
-    const proposal = await loadClientProposal(db, site.id);
-    if (proposal && (proposal.status === 'claimed' || proposal.status === 'paid')) {
-      return (
-        <ProposalDashboard
-          db={db}
-          siteId={site.id}
-          firstName={workspace.profile.first_name ?? ''}
-          proposal={proposal}
-          paymentCancelled={params.paiement === 'annule'}
-          justClaimed={params.bienvenue === '1'}
-        />
-      );
-    }
-  }
-
   if (site && isSiteUnderConstruction(workspace)) {
     return (
       <ProjectDashboard
@@ -70,7 +51,13 @@ export default async function DashboardPage({
         siteId={site.id}
         db={db}
         canUpload={workspace.capabilities.includes('media.manage')}
-        orderNotice={typeof params.commande === 'string' ? params.commande : null}
+        orderNotice={
+          typeof params.commande === 'string'
+            ? params.commande
+            : params.bienvenue === '1'
+              ? 'bienvenue'
+              : null
+        }
       />
     );
   }
@@ -81,7 +68,6 @@ export default async function DashboardPage({
         site={site}
         db={db}
         canEdit={workspace.capabilities.includes('content.edit')}
-        subscription={workspace.subscription}
       />
     );
   }
@@ -308,12 +294,12 @@ export default async function DashboardPage({
         <EmptyState
           icon={<Icon name="layout-dashboard" size={24} />}
           title="Aucun site pour le moment"
-          description="Commandez votre site pour démarrer, ou saisissez le code d’activation que nous vous avons envoyé."
+          description="Commandez votre site pour démarrer, ou saisissez le code d’accès personnel reçu après votre paiement."
           action={
             <div className="flex flex-wrap justify-center gap-3">
               <ButtonLink href="/commander">Commander mon site</ButtonLink>
-              <ButtonLink href="/activation" variant="secondary">
-                J’ai un code d’activation
+              <ButtonLink href="/acces" variant="secondary">
+                J’ai un code d’accès
               </ButtonLink>
             </div>
           }
@@ -322,10 +308,9 @@ export default async function DashboardPage({
 
       {site?.status === 'suspended' ? (
         <Alert tone="warning" live="status" title="Votre site est suspendu">
-          Il n’est plus accessible au public, mais rien n’est supprimé. Régularisez votre
-          maintenance depuis la page{' '}
-          <Link href="/app/abonnement" className="underline underline-offset-4">
-            Maintenance
+          Il n’est plus accessible au public, mais rien n’est supprimé.{' '}
+          <Link href="/app/support" className="underline underline-offset-4">
+            Écrivez-nous
           </Link>{' '}
           pour le remettre en ligne.
         </Alert>
@@ -439,28 +424,12 @@ export default async function DashboardPage({
             </div>
           </section>
 
-          <section aria-labelledby="offre">
-            <h2 id="offre" className="mb-3 text-sm font-medium">
-              Votre offre
+          <section aria-labelledby="capacites">
+            <h2 id="capacites" className="mb-3 text-sm font-medium">
+              Capacités de votre site
             </h2>
             <Panel level={1} padding="lg">
-              <div className="flex flex-wrap items-center gap-3">
-                <StatusPill tone="accent">{planLabel(site.planName, site.planSlug)}</StatusPill>
-                {workspace.subscription ? (
-                  <span className="text-sm text-[var(--foreground-muted)]">
-                    Maintenance {subscriptionLabel(workspace.subscription.status)}
-                    {workspace.subscription.maintenance_price_cents
-                      ? ` — ${formatMaintenance(
-                          workspace.subscription.maintenance_price_cents,
-                          'EUR',
-                          workspace.subscription.billing_interval,
-                        )}`
-                      : ''}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <QuotaMeter
                   label="Pages"
                   used={access.usage('max_pages')}
@@ -479,31 +448,6 @@ export default async function DashboardPage({
       ) : null}
     </div>
   );
-}
-
-/**
- * Nom d'offre affiche au client.
- *
- * Aucune table de correspondance en dur : le nom vient de la base, qui est la
- * seule source du catalogue. Une offre renommee ou ajoutee s'affiche donc
- * correctement sans toucher a ce fichier — et une offre archivee garde le nom
- * sous lequel elle a ete vendue.
- */
-function planLabel(name: string | null, slug: string | null): string {
-  return name ?? slug ?? 'Offre en cours de définition';
-}
-
-function subscriptionLabel(status: string): string {
-  const labels: Record<string, string> = {
-    trialing: 'en période d’essai',
-    active: 'active',
-    past_due: 'en retard de paiement',
-    canceled: 'résiliée',
-    paused: 'en pause',
-    incomplete: 'en attente de paiement',
-    unpaid: 'impayée',
-  };
-  return labels[status] ?? status;
 }
 
 function ActionCard({
@@ -710,9 +654,9 @@ async function ProjectDashboard({
           livré à ce compte depuis l’administration, comme pour un client.
         </Alert>
       ) : orderNotice ? (
-        <Alert tone="success" live="status" title="Merci pour votre commande">
-          Votre paiement est confirmé. L’équipe Nemasus démarre votre projet. La maintenance
-          mensuelle ne commencera qu’à la livraison de votre site.
+        <Alert tone="success" live="status" title="Bienvenue dans votre espace">
+          Votre paiement est bien reçu et votre projet est ouvert. Vous suivez ici chaque étape de
+          la création de votre site, et vous pouvez écrire à l’équipe à tout moment.
         </Alert>
       ) : null}
 
@@ -876,35 +820,16 @@ async function ProjectDashboard({
 /*  Apres la livraison : la gestion d'un site independant                      */
 /* -------------------------------------------------------------------------- */
 
-/** Maintenance sans abonnement Stripe (encore) enregistre : ce que le client doit lire. */
-function maintenanceWithoutSubscription(delivered: boolean, status: string | null): string {
-  if (!delivered) return 'Démarre à la livraison';
-  switch (status) {
-    case 'waived':
-      return 'Incluse (compte interne Nemasus)';
-    case 'failed':
-    case 'pending_delivery':
-    case 'started':
-      return 'Mise en place en cours par l’équipe Nemasus';
-    case 'not_applicable':
-      return 'Définie par votre devis';
-    default:
-      return 'Détail sur la page Maintenance';
-  }
-}
-
 async function ManagedSiteDashboard({
   firstName,
   site,
   db,
   canEdit,
-  subscription,
 }: {
   firstName: string;
   site: NonNullable<Awaited<ReturnType<typeof getWorkspace>>['workspace']['currentSite']>;
   db: Awaited<ReturnType<typeof getWorkspace>>['db'];
   canEdit: boolean;
-  subscription: Awaited<ReturnType<typeof getWorkspace>>['workspace']['subscription'];
 }) {
   const [
     overviewResult,
@@ -915,7 +840,6 @@ async function ManagedSiteDashboard({
     bookings,
     orders,
     metrics,
-    platformOrder,
     availabilityResult,
   ] = await Promise.all([
     db.rpc('site_management_overview', { p_site: site.id }),
@@ -949,16 +873,6 @@ async function ManagedSiteDashboard({
       .eq('site_id', site.id)
       .order('day', { ascending: false })
       .limit(7),
-    // Etat de la maintenance porte par la commande (lisible par qui voit la
-    // facturation ; a defaut, la carte renvoie vers la page Maintenance).
-    db
-      .from('orders')
-      .select('maintenance_status')
-      .eq('site_id', site.id)
-      .in('status', ['paid', 'partially_refunded', 'internal'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
     // Disponibilite reelle sur 30 jours (verifications HTTPS).
     db.rpc('site_availability', { p_site: site.id, p_days: 30 }),
   ]);
@@ -992,8 +906,6 @@ async function ManagedSiteDashboard({
     draftUpdated && production?.publishedAt && draftUpdated > production.publishedAt,
   );
   const days = unwrapList<{ day: string; pageviews: number; visitors: number }>(metrics as never);
-  const maintenanceStatus =
-    (platformOrder.data as { maintenance_status: string } | null)?.maintenance_status ?? null;
 
   return (
     <div className="space-y-8" data-testid="managed-site-dashboard">
@@ -1089,15 +1001,11 @@ async function ManagedSiteDashboard({
             ) : null}
           </div>
           <div>
-            <p className="text-xs text-[var(--muted)]">Maintenance</p>
+            <p className="text-xs text-[var(--muted)]">Besoin d’un changement plus profond ?</p>
             <p className="mt-1 text-sm">
-              {subscription
-                ? `${subscriptionLabel(subscription.status)}${
-                    subscription.maintenance_price_cents
-                      ? ` — ${formatMaintenance(subscription.maintenance_price_cents, 'EUR', subscription.billing_interval)}`
-                      : ''
-                  }`
-                : maintenanceWithoutSubscription(Boolean(site.deliveredAt), maintenanceStatus)}
+              <Link href="/app/support" className="underline underline-offset-4">
+                Écrivez à l’équipe
+              </Link>
             </p>
           </div>
         </div>

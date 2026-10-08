@@ -7,15 +7,14 @@ import { DomainForm } from './domain-form';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Votre adresse',
+  title: 'Votre adresse web',
   robots: { index: false, follow: false },
 };
 
 export default async function OrderDomainPage() {
   const draft = await readOrderDraft();
-  if (!draft.planSlug) redirect('/commander');
-  if (!draft.businessTypeSlug) redirect('/commander/metier');
-  if (!draft.organizationName) redirect('/commander/informations');
+  if (!draft.businessTypeSlug) redirect('/commander');
+  if (!draft.organizationName || !draft.contactEmail) redirect('/commander/informations');
 
   return (
     <>

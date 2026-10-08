@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { request } from 'node:http';
@@ -18,12 +18,13 @@ import {
  * Acces a la pile locale (tests/e2e/stack) pour les parcours de bout en bout.
  *
  * Rien ici ne contourne le produit : les donnees de depart passent par les
- * MEMES fonctions que la production (creation de commande par le client,
- * webhook de paiement signe, script de provisionnement du compte interne,
+ * MEMES fonctions que la production (commande enregistree par le serveur,
+ * modalites de virement puis paiement confirme par l'equipe, code d'acces
+ * consomme par le serveur, script de provisionnement du compte interne,
  * rattachement du depot et du projet Cloudflare par l'equipe, livraison).
- * Seuls les fournisseurs externes sont remplaces : Stripe (le test signe
- * lui-meme l'evenement « paiement reussi »), GitHub et Cloudflare (faux
- * fournisseurs de la pile, memes API).
+ * Seuls les fournisseurs externes sont remplaces : GitHub et Cloudflare (faux
+ * fournisseurs de la pile, memes API). Aucun virement n'est evidemment emis :
+ * c'est l'equipe qui declare l'avoir recu, comme en production.
  */
 
 const ROOT = resolve(__dirname, '../../../..');
@@ -49,12 +50,28 @@ const SUPABASE_URL = stackEnv['SUPABASE_URL'] ?? 'http://127.0.0.1:54321';
 const ANON_KEY = stackEnv['SUPABASE_ANON_KEY'] ?? '';
 const SERVICE_KEY = stackEnv['SUPABASE_SERVICE_ROLE_KEY'] ?? '';
 
-/** Meme derivation que tests/e2e/stack/serve.sh. */
-function webhookSecret(): string {
-  if (process.env.STRIPE_WEBHOOK_SECRET) return process.env.STRIPE_WEBHOOK_SECRET;
+/** Cle de signature de la plateforme : meme derivation que tests/e2e/stack/serve.sh. */
+function platformSecret(): string {
+  if (process.env.NEMASUS_SECRET_KEY) return process.env.NEMASUS_SECRET_KEY;
   const jwtSecret = readFileSync(resolve(STACK_DIR, 'jwt-secret'), 'utf8').trim();
-  const digest = createHash('sha256').update(`${jwtSecret}-stripe-webhook`).digest('hex');
-  return `whsec_${digest.slice(0, 48)}`;
+  return `${jwtSecret}-nemasus-e2e-secret`;
+}
+
+/** Code d'acces lisible, meme alphabet que la plateforme (ni 0, O, 1, I, L). */
+export function newAccessCode(): string {
+  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const bytes = randomBytes(12);
+  const chars = [...bytes].map((byte) => alphabet[byte % alphabet.length]).join('');
+  return `${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}`;
+}
+
+/** Empreinte HMAC d'un code, identique a `hashActivationCode` du serveur. */
+export function accessCodeHash(code: string): string {
+  const clean = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const normalized = (clean.match(/.{1,4}/g) ?? []).join('-');
+  return createHmac('sha256', platformSecret())
+    .update(`activation-code:${normalized}`)
+    .digest('hex');
 }
 
 export function serviceClient(): SupabaseClient {
@@ -91,8 +108,13 @@ export function randomPassword(): string {
   return `E2e-${randomBytes(12).toString('base64url')}-9!`;
 }
 
+/** Empreinte d'un jeton de reinitialisation, identique a celle du serveur. */
+export function passwordResetHash(token: string): string {
+  return createHmac('sha256', platformSecret()).update(`password-reset:${token}`).digest('hex');
+}
+
 /* -------------------------------------------------------------------------- */
-/*  Client ordinaire : commande + paiement (webhook signe) = site prepare      */
+/*  Client ordinaire : commande + virement confirme + code = site prepare      */
 /* -------------------------------------------------------------------------- */
 
 export interface CustomerSite {
@@ -100,6 +122,7 @@ export interface CustomerSite {
   password: string;
   businessName: string;
   organizationId: string;
+  /** Commande de site (`site_orders`). */
   orderId: string;
   siteId: string;
   /** Domaine du site (projet Cloudflare) ; vide tant qu'il n'est pas livre. */
@@ -108,20 +131,83 @@ export interface CustomerSite {
   infrastructure: SiteInfrastructure | null;
 }
 
-export async function signedWebhook(event: Record<string, unknown>): Promise<Response> {
-  const body = JSON.stringify(event);
-  const timestamp = Math.floor(Date.now() / 1000);
-  const signature = createHmac('sha256', webhookSecret())
-    .update(`${timestamp}.${body}`)
-    .digest('hex');
-  return fetch(`${PLATFORM_URL}/api/webhooks/stripe`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'stripe-signature': `t=${timestamp},v1=${signature}`,
-    },
-    body,
+export interface PaidSiteOrder {
+  orderId: string;
+  reference: string;
+  organizationId: string;
+  siteId: string;
+  /** Code d'acces en clair, tel que le client le recoit par e-mail. */
+  code: string;
+}
+
+/**
+ * Commande puis virement confirme, par les memes fonctions que la production :
+ * enregistrement par le serveur (`submit_site_order`), modalites puis paiement
+ * confirmes par une personne de l'equipe, avec son propre jeton.
+ */
+export async function createPaidSiteOrder(options: {
+  businessName: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  sectorSlug?: string;
+  businessType?: string;
+  amountCents?: number;
+}): Promise<PaidSiteOrder> {
+  const admin = serviceClient();
+  const submitted = await admin.rpc('submit_site_order', {
+    p_company: options.businessName,
+    p_first_name: options.firstName ?? 'Marie',
+    p_last_name: options.lastName ?? 'Dupont',
+    p_email: options.email,
+    p_phone: '0600000000',
+    p_city: 'Lyon',
+    p_sector: options.sectorSlug ?? 'restauration',
+    p_business_type: options.businessType ?? 'boulangerie',
+    p_description: `Site de ${options.businessName}`,
+    p_answers: {},
+    p_domain_handling: 'later',
+    p_domain: null,
+    p_terms_version: 'e2e',
+    p_ip_hash: null,
   });
+  const order = (submitted.data ?? {}) as { ok?: boolean; orderId?: string; reference?: string };
+  if (submitted.error || !order.ok || !order.orderId || !order.reference) {
+    throw new Error(`Commande : ${submitted.error?.message ?? JSON.stringify(submitted.data)}`);
+  }
+
+  const staffAccount = await createStaffAccount('platform_admin');
+  const staff = await userClient(staffAccount.email, staffAccount.password);
+  const amount = options.amountCents ?? 120_000;
+  const requested = await staff.rpc('request_site_order_payment', {
+    p_order: order.orderId,
+    p_amount_cents: amount,
+    p_message: 'Création du site et mise en ligne.',
+  });
+  if (requested.error || !(requested.data as { ok?: boolean })?.ok) {
+    throw new Error(`Modalites : ${requested.error?.message ?? JSON.stringify(requested.data)}`);
+  }
+
+  const code = newAccessCode();
+  const confirmed = await staff.rpc('confirm_site_order_payment', {
+    p_order: order.orderId,
+    p_amount_cents: amount,
+    p_code_hash: accessCodeHash(code),
+    p_code_hint: code.replace(/-/g, '').slice(-4),
+    p_valid_days: 30,
+    p_site: null,
+  });
+  const paid = (confirmed.data ?? {}) as { ok?: boolean; organizationId?: string; siteId?: string };
+  if (confirmed.error || !paid.ok || !paid.organizationId || !paid.siteId) {
+    throw new Error(`Paiement : ${confirmed.error?.message ?? JSON.stringify(confirmed.data)}`);
+  }
+  return {
+    orderId: order.orderId,
+    reference: order.reference,
+    organizationId: paid.organizationId,
+    siteId: paid.siteId,
+    code,
+  };
 }
 
 /** Mentions legales plausibles pour un site de test (aucune n est reelle). */
@@ -154,7 +240,6 @@ export async function fillLegalIdentity(page: Page, businessName: string): Promi
 export async function createCustomerWithPaidOrder(options: {
   businessName: string;
   subdomain: string;
-  planSlug?: string;
   sectorSlug?: string;
   businessType?: string;
   /**
@@ -177,6 +262,16 @@ export async function createCustomerWithPaidOrder(options: {
   const email = `client-${suffix}@exemple.test`;
   const password = randomPassword();
 
+  const paidOrder = await createPaidSiteOrder({
+    businessName: options.businessName,
+    email,
+    ...(options.sectorSlug ? { sectorSlug: options.sectorSlug } : {}),
+    ...(options.businessType ? { businessType: options.businessType } : {}),
+  });
+
+  // Le client a deja ouvert son espace avec son code et choisi un mot de
+  // passe (parcours verifie par bank-transfer.spec.ts) : compte confirme, puis
+  // code consomme par le serveur pour ce compte, comme le fait `/acces`.
   const created = await admin.auth.admin.createUser({
     email,
     password,
@@ -184,77 +279,18 @@ export async function createCustomerWithPaidOrder(options: {
     user_metadata: { first_name: 'Marie', last_name: 'Dupont' },
   });
   if (created.error) throw new Error(`Compte client : ${created.error.message}`);
+  const redeemed = await admin.rpc('redeem_activation_code', {
+    p_code_hash: accessCodeHash(paidOrder.code),
+    p_user_id: created.data.user.id,
+    p_email: email,
+  });
+  const redemption = (redeemed.data ?? {}) as { ok?: boolean; code?: string };
+  if (redeemed.error || !redemption.ok) {
+    throw new Error(`Code d'acces : ${redeemed.error?.message ?? redemption.code ?? ''}`);
+  }
 
-  // Tout ce qui suit est fait PAR LE CLIENT, avec son propre jeton : la RLS
-  // s applique comme dans le tunnel de commande.
   const db = await userClient(email, password);
-  const org = await db
-    .from('organizations')
-    .insert({
-      name: options.businessName,
-      slug: `org-${suffix}`,
-      created_by: created.data.user.id,
-      billing_email: email,
-      city: 'Lyon',
-      sector_slug: options.sectorSlug ?? 'restauration',
-      business_type_slug: options.businessType ?? 'boulangerie',
-    })
-    .select('id')
-    .single();
-  if (org.error) throw new Error(`Organisation : ${org.error.message}`);
-
-  const plan = await admin
-    .from('plans')
-    .select('id')
-    .eq('slug', options.planSlug ?? 'premium')
-    .eq('is_active', true)
-    .is('valid_until', null)
-    .single();
-  if (plan.error) throw new Error(`Offre : ${plan.error.message}`);
-
-  const order = await db.rpc('create_order', {
-    p_organization_id: org.data.id,
-    p_plan_id: plan.data.id,
-    p_sector_slug: options.sectorSlug ?? 'restauration',
-    p_business_type: options.businessType ?? 'boulangerie',
-    p_questionnaire: { businessName: options.businessName, city: 'Lyon', contactEmail: email },
-    p_requested_domain: options.subdomain,
-    p_domain_handling: 'subdomain_only',
-    p_terms_version: 'e2e',
-  });
-  if (order.error || typeof order.data !== 'string') {
-    throw new Error(`Commande : ${order.error?.message ?? 'identifiant absent'}`);
-  }
-  const orderId = order.data;
-
-  // « Stripe » confirme le paiement : le webhook de la plateforme enregistre la
-  // commande et cree le site, VIDE et non confie, comme en production.
-  const response = await signedWebhook({
-    id: `evt_e2e_${suffix}`,
-    object: 'event',
-    type: 'checkout.session.completed',
-    api_version: '2025-01-27.acacia',
-    created: Math.floor(Date.now() / 1000),
-    livemode: false,
-    data: {
-      object: {
-        id: `cs_e2e_${suffix}`,
-        object: 'checkout.session',
-        client_reference_id: orderId,
-        metadata: { nemasus_order_id: orderId },
-        payment_status: 'paid',
-        payment_intent: `pi_e2e_${suffix}`,
-        customer: null,
-        subscription: null,
-      },
-    },
-  });
-  if (!response.ok) throw new Error(`Webhook : ${response.status} ${await response.text()}`);
-
-  const paid = await admin.from('orders').select('status, site_id').eq('id', orderId).single();
-  if (paid.error || paid.data.status !== 'paid' || !paid.data.site_id) {
-    throw new Error(`Commande non payee apres le webhook : ${JSON.stringify(paid.data)}`);
-  }
+  const { organizationId, orderId, siteId } = paidOrder;
 
   // L'equipe Nemasus developpe le site HORS de Nemasus (depot + projet Cloudflare),
   // le rattache, verifie la checklist, puis le livre. Le parcours complet par
@@ -265,14 +301,14 @@ export async function createCustomerWithPaidOrder(options: {
       email,
       password,
       businessName: options.businessName,
-      organizationId: org.data.id,
+      organizationId,
       orderId,
-      siteId: paid.data.site_id as string,
+      siteId,
       hostname: '',
       infrastructure: null,
     };
   }
-  const delivered = await buildAndDeliverSite(paid.data.site_id as string, {
+  const delivered = await buildAndDeliverSite(siteId, {
     businessName: options.businessName,
     slug: options.subdomain,
     email,
@@ -285,7 +321,7 @@ export async function createCustomerWithPaidOrder(options: {
     const identity = await db
       .from('site_settings')
       .update({ legal_identity: legalIdentityFixture(options.businessName) })
-      .eq('site_id', paid.data.site_id);
+      .eq('site_id', siteId);
     if (identity.error) throw new Error(`Mentions legales : ${identity.error.message}`);
   }
 
@@ -293,9 +329,9 @@ export async function createCustomerWithPaidOrder(options: {
     email,
     password,
     businessName: options.businessName,
-    organizationId: org.data.id,
+    organizationId,
     orderId,
-    siteId: paid.data.site_id as string,
+    siteId,
     hostname: delivered.hostname,
     infrastructure: delivered.infrastructure,
   };

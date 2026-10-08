@@ -114,7 +114,8 @@ export default async function SecurityPage({
               l’interface — et elle est vérifiée automatiquement à chaque modification du code.
             </li>
             <li>
-              Aucune donnée de carte bancaire ne transite par nos serveurs ni n’y est conservée.
+              Votre premier accès s’est fait par un code à usage unique, vérifié par nos serveurs ;
+              aucune donnée de carte bancaire ne transite par nos serveurs.
             </li>
           </ul>
           <p className="mt-4 text-xs text-[var(--muted)]">

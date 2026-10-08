@@ -165,7 +165,7 @@ export default async function StatisticsPage({
           <Link href="/app/support" className="underline underline-offset-4">
             Demandez-nous de l’activer
           </Link>{' '}
-          : c’est inclus dans votre offre.
+          : c’est inclus, sans supplément.
         </Alert>
       ) : null}
 

@@ -50,15 +50,15 @@ export default async function DataPage() {
           <h2 className="text-sm font-medium">Combien de temps gardons-nous vos données ?</h2>
           <ul className="mt-3 space-y-2 text-sm text-[var(--foreground-muted)]">
             <li>
-              <strong className="text-[var(--foreground)]">Pendant votre abonnement :</strong> tout
-              est conservé et accessible.
+              <strong className="text-[var(--foreground)]">Pendant votre contrat :</strong> tout est
+              conservé et accessible.
             </li>
             <li>
-              <strong className="text-[var(--foreground)]">Si vous arrêtez la maintenance :</strong>{' '}
-              votre site reste en ligne {maintenance.gracePeriodDays} jours. Vous choisissez
-              ensuite, à la résiliation : récupérer vos données (export et copie du code pendant{' '}
-              {maintenance.exportWindowDays} jours), puis les supprimer — c’est le choix par défaut
-              — ou les supprimer tout de suite.
+              <strong className="text-[var(--foreground)]">À la fin du contrat :</strong> votre site
+              reste en ligne {maintenance.gracePeriodDays} jours. Vous choisissez ensuite :
+              récupérer vos données (export et copie du code pendant {maintenance.exportWindowDays}{' '}
+              jours), puis les supprimer — c’est le choix par défaut — ou les supprimer tout de
+              suite.
             </li>
             <li>
               <strong className="text-[var(--foreground)]">

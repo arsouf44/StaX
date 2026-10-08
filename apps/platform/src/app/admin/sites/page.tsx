@@ -19,28 +19,16 @@ export default async function Page({
   // Creer un site est reserve a l'administration ; la base le reverifie.
   let actions: React.ReactNode = null;
   if (hasPlatformRole(session.profile, 'platform_admin')) {
-    const [types, plans] = await Promise.all([
-      db
-        .from('business_types')
-        .select('slug, label')
-        .eq('is_active', true)
-        .order('label', { ascending: true }),
-      db
-        .from('plans')
-        .select('id, name')
-        .eq('is_active', true)
-        .is('valid_until', null)
-        .order('sort_order', { ascending: true }),
-    ]);
+    const types = await db
+      .from('business_types')
+      .select('slug, label')
+      .eq('is_active', true)
+      .order('label', { ascending: true });
     actions = (
       <CreateSiteButton
         businessTypes={unwrapList<{ slug: string; label: string }>(types as never).map((row) => ({
           value: row.slug,
           label: row.label,
-        }))}
-        plans={unwrapList<{ id: string; name: string }>(plans as never).map((row) => ({
-          value: row.id,
-          label: row.name,
         }))}
       />
     );

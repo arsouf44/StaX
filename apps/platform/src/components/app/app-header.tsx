@@ -136,6 +136,8 @@ export function AppHeader({ workspace }: { workspace: Workspace }) {
             <span className="hidden truncate sm:inline">
               {workspace.profile.first_name ?? 'Mon compte'}
             </span>
+            {/* Sur téléphone, seule l'icône est visible : le bouton garde un nom. */}
+            <span className="sr-only sm:hidden">Mon compte</span>
           </DropdownTrigger>
           <DropdownContent align="end">
             <div className="px-2.5 py-2">

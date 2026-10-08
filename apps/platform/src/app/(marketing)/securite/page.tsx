@@ -22,12 +22,12 @@ const PILLARS = [
     ],
   },
   {
-    title: 'Données de paiement',
-    body: 'Aucun numéro de carte, aucun cryptogramme, aucune donnée bancaire sensible ne transite par nos serveurs ni n’est stockée chez nous. Les paiements sont traités par Stripe, sur leur infrastructure certifiée.',
+    title: 'Paiements',
+    body: 'Votre commande Nemasus se règle par virement bancaire : aucune carte n’est demandée sur Nemasus. Si votre site encaisse en ligne, ces paiements sont traités par Stripe, sur son infrastructure certifiée : aucun numéro de carte ne transite par nos serveurs.',
     points: [
-      'Redirection vers une page de paiement Stripe',
-      'Nous conservons un identifiant de transaction, un montant et un statut',
-      'La vérité d’un paiement vient du webhook signé, jamais du navigateur',
+      'Coordonnées bancaires et référence de virement envoyées par e-mail, jamais modifiées par e-mail',
+      'Le paiement d’une commande n’est confirmé qu’après réception réelle du virement',
+      'Sur votre site, la vérité d’un paiement vient du webhook signé, jamais du navigateur',
       'Vos justificatifs d’identité sont vérifiés par Stripe, nous ne les voyons pas',
     ],
   },
@@ -35,7 +35,9 @@ const PILLARS = [
     title: 'Accès et authentification',
     body: 'Les comptes sont protégés par une politique de mot de passe exigeante et une double authentification disponible. L’accès à notre back-office impose un second facteur, sans exception.',
     points: [
+      'Premier accès par code personnel : à usage unique, expirant, vérifié côté serveur, stocké sous forme d’empreinte',
       'Mot de passe de 12 caractères minimum, mots de passe courants refusés',
+      'Lien de réinitialisation du mot de passe valable une heure, utilisable une seule fois',
       'Double authentification disponible pour tous, obligatoire pour notre équipe',
       'Limitation stricte des tentatives de connexion',
       'Rôles distincts au sein de votre organisation : propriétaire, éditeur, facturation, lecture',

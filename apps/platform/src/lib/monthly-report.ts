@@ -1,5 +1,5 @@
 import 'server-only';
-import { platformUrl, readEnv } from '@nemasus/config';
+import { emailSettings, platformUrl } from '@nemasus/config';
 import type { Db } from '@nemasus/database';
 import { sendEmail, siteMonthlyReportEmail, type MonthlyReportFigures } from '@nemasus/emails';
 import { formatMoney } from '@nemasus/payments';
@@ -17,8 +17,7 @@ import { formatMoney } from '@nemasus/payments';
  */
 
 export function realEmailProvider(): boolean {
-  const provider = readEnv('EMAIL_PROVIDER');
-  return Boolean(provider && provider !== 'console' && readEnv('EMAIL_API_KEY'));
+  return emailSettings().provider !== 'console';
 }
 
 /** Mois à couvrir (AAAA-MM-01) et s'il est déjà l'heure de l'envoyer. */

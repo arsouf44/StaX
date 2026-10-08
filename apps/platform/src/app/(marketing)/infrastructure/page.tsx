@@ -54,9 +54,9 @@ const LAYERS = [
     ],
   },
   {
-    name: 'Paiements',
+    name: 'Encaissements de votre site',
     provider: 'Stripe',
-    role: 'Traite les paiements de la plateforme et les encaissements de vos clients finaux, sur son infrastructure certifiée PCI.',
+    role: 'Si votre site vend en ligne ou prend des acomptes, Stripe traite ces paiements sur son infrastructure certifiée PCI. Votre commande Nemasus, elle, se règle par virement bancaire.',
     facts: [
       'Aucune donnée de carte chez Nemasus',
       'Vos encaissements sur votre propre compte connecté',

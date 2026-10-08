@@ -129,7 +129,7 @@ export function DashboardMock({ className }: { className?: string }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-[11px] font-medium">Restaurant Dupont</p>
-            <p className="truncate text-[9px] text-[#5e676f]">Offre Ultra Premium</p>
+            <p className="truncate text-[9px] text-[#5e676f]">Site livré · en ligne</p>
           </div>
         </div>
         <nav className="space-y-0.5">
@@ -252,7 +252,7 @@ export function ProjectMock({ className }: { className?: string }) {
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium">Votre projet — Restaurant Dupont</p>
             <p className="mt-0.5 text-[11px] text-[#5e676f]">
-              Offre Premium · votre site est en cours de développement
+              Paiement reçu · votre site est en cours de développement
             </p>
           </div>
           <span className="shrink-0 border border-[rgb(20_24_28/0.18)] px-2 py-1 text-[10px] text-[#4b545c]">

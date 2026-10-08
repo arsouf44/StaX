@@ -3,332 +3,193 @@
 import type { ActionState } from '~/lib/form-state';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import {
-  createUserClient,
-  listMemberships,
-  tryCreateServiceClient,
-  unwrapMaybe,
-} from '@nemasus/database';
-import { createCheckoutSession, ensureStripeCustomer, isStripeConfigured } from '@nemasus/payments';
 import { getBusiness } from '@nemasus/business';
+import { createUserClient, tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
+import { isLegalValueConfigured, legalValue } from '@nemasus/config';
 import { clearOrderDraft, readOrderDraft } from '~/lib/order-draft';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 import { getSession } from '~/lib/session';
 import { guardAction } from '~/lib/action-guard';
-import { DPA_VERSION, TERMS_VERSION } from '~/content/legal';
+import { sendOrderReceivedEmail } from '~/lib/site-orders';
+import { alertTeam } from '~/lib/team-alerts';
+import { TERMS_VERSION } from '~/content/legal';
 
 /**
- * Creation de la commande et ouverture du paiement.
+ * Envoi de la commande.
  *
- * Ce qui se passe ici, et l ordre dans lequel cela se passe, est le cœur de
- * l integrite financiere :
- *
- *  1. La personne doit etre authentifiee. Une commande sans compte n aurait
- *     pas de proprietaire identifiable.
- *
- *  2. L organisation est creee si besoin, avec la personne comme
- *     proprietaire — le declencheur en base s en charge dans la meme
- *     transaction.
- *
- *  3. La commande est creee par `app.create_order`, qui LIT LE PRIX DANS LE
- *     CATALOGUE. Aucun montant ne vient du navigateur, et le brouillon signe
- *     n en contient aucun. Un client ne peut donc pas se fabriquer une remise.
- *
- *  4. La session Stripe est ouverte a partir des montants figes dans la
- *     commande, avec une cle d idempotence derivee de son identifiant : un
- *     double-clic ne cree pas deux paiements.
- *
- *  5. La commande ne devient « payee » qu au webhook. Cette action ne la marque
- *     jamais comme telle, quoi qu il arrive ensuite dans le navigateur.
+ *  1. Aucun compte n'est exigé : le compte du client s'ouvre avec le code
+ *     d'accès personnel qu'il reçoit une fois son virement arrivé.
+ *  2. Aucun montant ne part du navigateur, et aucun n'est enregistré ici : il
+ *     n'y a pas de grille tarifaire. L'équipe convient du montant avec le
+ *     client et lui adresse les modalités de paiement par virement.
+ *  3. L'écriture passe par une fonction SQL réservée au serveur : aucune
+ *     table n'est exposée en écriture au public. Garde commune (débit,
+ *     champ piège, Turnstile) avant tout.
  */
 
-export type CheckoutState = ActionState;
+export type OrderSubmitState = ActionState;
 
-export async function startCheckoutAction(
-  _previous: CheckoutState,
+function checked(value: FormDataEntryValue | null): boolean {
+  return value === 'on' || value === 'true';
+}
+
+function unavailable(): string {
+  const contact = isLegalValueConfigured('SUPPORT_EMAIL')
+    ? ` Écrivez-nous à ${legalValue('SUPPORT_EMAIL')} : nous enregistrerons votre commande avec vous.`
+    : '';
+  return `Votre commande n’a pas pu être enregistrée pour le moment.${contact}`;
+}
+
+const DOMAIN_LABELS: Record<string, string> = {
+  customer_owned: 'Domaine existant à connecter',
+  purchase: 'Domaine à acheter',
+  later: 'Domaine choisi plus tard',
+};
+
+export async function submitOrderAction(
+  _previous: OrderSubmitState,
   formData: FormData,
-): Promise<CheckoutState> {
-  const professional = formData.get('professionalUse');
-  if (professional !== 'on' && professional !== 'true') {
+): Promise<OrderSubmitState> {
+  if (!checked(formData.get('professionalUse'))) {
     return {
       status: 'error',
       message:
-        'Nos offres sont réservées aux professionnels et aux associations : confirmez que vous ' +
+        'Nos services sont réservés aux professionnels et aux associations : confirmez que vous ' +
         'commandez pour votre activité.',
     };
   }
-
-  const established = formData.get('establishedInFrance');
-  if (established !== 'on' && established !== 'true') {
+  if (!checked(formData.get('acceptTerms'))) {
     return {
       status: 'error',
       message:
-        'La commande en ligne est réservée aux entreprises et associations établies en France. ' +
-        'Établie ailleurs ? Demandez un devis : la TVA applicable dépend de votre pays.',
+        'Pour envoyer votre commande, acceptez les conditions générales de vente et l’accord de ' +
+        'traitement des données.',
     };
   }
 
-  const accepted = formData.get('acceptTerms');
-  if (accepted !== 'on' && accepted !== 'true') {
-    return {
-      status: 'error',
-      message:
-        'Vous devez accepter les conditions générales de vente et l’accord de traitement des ' +
-        'données pour commander.',
-    };
-  }
-
-  const session = await getSession();
-  if (!session.user) {
-    redirect('/connexion?suivant=%2Fcommander%2Frecapitulatif');
-  }
-
-  const guard = await guardAction({ limit: 'checkout', userId: session.user.id });
+  const guard = await guardAction({
+    limit: 'orderForm',
+    honeypot: formData.get('website'),
+    turnstileToken: formData.get('turnstileToken'),
+  });
   if (!guard.ok) return { status: 'error', message: guard.message };
 
   const draft = await readOrderDraft();
-  if (!draft.planSlug || !draft.businessTypeSlug || !draft.sectorSlug || !draft.organizationName) {
+  if (!draft.businessTypeSlug || !draft.sectorSlug || !draft.organizationName) {
     return {
       status: 'error',
       message: 'Votre commande est incomplète. Reprenez le parcours depuis le début.',
     };
   }
-
-  // Le metier doit exister ET appartenir au secteur annonce.
-  const business = getBusiness(draft.businessTypeSlug);
-  if (!business || business.sector !== draft.sectorSlug) {
-    return { status: 'error', message: 'Le métier choisi n’est plus disponible.' };
-  }
-
-  if (!isStripeConfigured()) {
+  if (!draft.contactEmail) {
     return {
       status: 'error',
-      message:
-        'Le paiement en ligne n’est pas disponible pour le moment. Écrivez-nous et nous ' +
-        'finaliserons votre commande avec vous.',
+      message: 'Indiquez votre adresse e-mail à l’étape « Vos coordonnées ».',
+    };
+  }
+  const business = getBusiness(draft.businessTypeSlug);
+  if (!business || business.sector !== draft.sectorSlug) {
+    return {
+      status: 'error',
+      message: 'Le métier choisi n’est plus disponible. Choisissez-le à nouveau.',
     };
   }
 
-  const db = createUserClient(session.user.accessToken);
+  const service = tryCreateServiceClient();
+  if (service === null) return { status: 'error', message: unavailable() };
 
-  // 1. Organisation : on reutilise celle dont la personne est deja
-  //    proprietaire plutot que d en empiler une nouvelle a chaque commande.
-  const memberships = await listMemberships(db, session.user.id);
-  let organizationId = memberships.find((m) => m.role === 'owner')?.organizationId ?? null;
-
-  if (!organizationId) {
-    const { data: slug } = await db.rpc('unique_organization_slug', {
-      p_source: draft.organizationName,
-    });
-
-    const created = unwrapMaybe<{ id: string }>(
-      (await db
-        .from('organizations')
-        .insert({
-          name: draft.organizationName,
-          slug: typeof slug === 'string' ? slug : null,
-          created_by: session.user.id,
-          billing_email: draft.contactEmail ?? session.user.email,
-          city: draft.city ?? null,
-          phone: draft.contactPhone ?? null,
-          sector_slug: draft.sectorSlug,
-          business_type_slug: draft.businessTypeSlug,
-        })
-        .select('id')
-        .single()) as never,
-    );
-    if (!created) {
-      return {
-        status: 'error',
-        message: 'Votre espace n’a pas pu être créé. Réessayez dans quelques instants.',
-      };
-    }
-    organizationId = created.id;
-  }
-
-  // 2. Offre : l identifiant du plan est resolu en base, jamais transmis par
-  //    le navigateur.
-  const plan = unwrapMaybe<{
-    id: string;
-    name: string;
-    setup_price_cents: number;
-    maintenance_price_cents: number;
-    currency: string;
-    stripe_setup_price_id: string | null;
-    stripe_maintenance_price_id: string | null;
-  }>(
-    (await db
-      .from('plans')
-      .select(
-        'id, name, setup_price_cents, maintenance_price_cents, currency, stripe_setup_price_id, stripe_maintenance_price_id',
-      )
-      .eq('slug', draft.planSlug)
-      .eq('is_active', true)
-      .order('version', { ascending: false })
-      .limit(1)
-      .single()) as never,
-  );
-
-  if (!plan) {
-    return { status: 'error', message: 'Cette offre n’est plus disponible.' };
-  }
-
-  // 3. Commande : le prix vient du catalogue, calcule par la base.
-  const { data: orderId, error: orderError } = await db.rpc('create_order', {
-    p_organization_id: organizationId,
-    p_plan_id: plan.id,
-    p_sector_slug: draft.sectorSlug,
+  const { data, error } = await service.rpc('submit_site_order', {
+    p_company: draft.organizationName,
+    p_first_name: draft.contactFirstName ?? null,
+    p_last_name: draft.contactLastName ?? null,
+    p_email: draft.contactEmail,
+    p_phone: draft.contactPhone ?? null,
+    p_city: draft.city ?? null,
+    p_sector: draft.sectorSlug,
     p_business_type: draft.businessTypeSlug,
-    p_questionnaire: {
-      businessName: draft.organizationName,
-      city: draft.city ?? null,
-      contactEmail: draft.contactEmail ?? null,
-      contactPhone: draft.contactPhone ?? null,
-      ...draft.answers,
-      // Preuve de l'acceptation (article 1127-2 du Code civil) : versions des
-      // documents acceptes et declaration d'achat professionnel.
-      acceptedDocuments: {
-        cgv: TERMS_VERSION,
-        dpa: DPA_VERSION,
-        professionalUse: true,
-        establishedInFrance: true,
-      },
-    },
-    p_requested_domain: draft.domainHostname ?? draft.subdomain ?? null,
-    p_domain_handling: draft.domainHandling ?? 'none',
-    p_coupon_code: draft.couponCode ?? null,
-    p_customer_notes: draft.customerNotes ?? null,
+    p_description: draft.customerNotes ?? null,
+    p_answers: draft.answers,
+    p_domain_handling: draft.domainHandling ?? 'later',
+    p_domain: draft.domainHostname ?? null,
     p_terms_version: TERMS_VERSION,
     p_ip_hash: guard.ipHash,
   });
 
-  if (orderError || typeof orderId !== 'string') {
-    return {
-      status: 'error',
-      message:
-        'Votre commande n’a pas pu être enregistrée. Vérifiez vos droits sur cette organisation ' +
-        'ou réessayez dans quelques instants.',
-    };
-  }
+  const result = (data ?? null) as {
+    ok?: boolean;
+    code?: string;
+    orderId?: string;
+    reference?: string;
+    duplicate?: boolean;
+  } | null;
 
-  // 4. Montants relus DEPUIS LA COMMANDE : ce sont eux, et eux seuls, qui
-  //    partent chez Stripe.
-  const order = unwrapMaybe<{
-    id: string;
-    reference: string;
-    setup_price_cents: number;
-    maintenance_price_cents: number;
-    discount_cents: number;
-    currency: string;
-    coupon_code: string | null;
-    vat_rate_bps: number;
-  }>(
-    (await db
-      .from('orders')
-      .select(
-        'id, reference, setup_price_cents, maintenance_price_cents, discount_cents, currency, coupon_code, vat_rate_bps',
-      )
-      .eq('id', orderId)
-      .single()) as never,
-  );
-
-  if (!order) {
-    return { status: 'error', message: 'Commande introuvable. Réessayez.' };
-  }
-
-  let checkoutUrl: string;
-  try {
-    // Le client Stripe est cree une seule fois par organisation : la cle
-    // d idempotence derive de son identifiant.
-    const { data: existing } = await db
-      .from('organizations')
-      .select('stripe_customer_id')
-      .eq('id', organizationId)
-      .maybeSingle();
-
-    const customerId = await ensureStripeCustomer({
-      email: session.user.email,
-      organizationName: draft.organizationName,
-      organizationId,
-      existingCustomerId: existing?.stripe_customer_id ?? null,
-    });
-
-    if (!existing?.stripe_customer_id) {
-      // Colonne reservee au serveur par un declencheur : une ecriture avec le
-      // jeton du client etait refusee. La cle de service l'inscrit ; a
-      // defaut, le webhook de paiement le fera.
-      await tryCreateServiceClient()
-        ?.from('organizations')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', organizationId)
-        .is('stripe_customer_id', null);
+  if (error || !result?.ok || !result.orderId || !result.reference) {
+    console.error('[nemasus:order] commande refusee', error?.code, error?.message, result?.code);
+    if (result?.code === 'invalid_email') {
+      return { status: 'error', message: 'L’adresse e-mail indiquée n’est pas valide.' };
     }
-
-    const checkout = await createCheckoutSession({
-      orderId: order.id,
-      orderReference: order.reference,
-      organizationId,
-      customerEmail: session.user.email,
-      stripeCustomerId: customerId,
-      plan: {
-        planSlug: draft.planSlug,
-        planName: plan.name,
-        setupPriceCents: order.setup_price_cents,
-        maintenancePriceCents: order.maintenance_price_cents,
-        currency: order.currency as 'EUR',
-        stripeSetupPriceId: plan.stripe_setup_price_id,
-        stripeMaintenancePriceId: plan.stripe_maintenance_price_id,
-        vatRateBps: order.vat_rate_bps,
-      },
-      discountCents: order.discount_cents,
-      couponCode: order.coupon_code,
-      locale: 'fr',
-    });
-    checkoutUrl = checkout.url;
-
-    // La policy de `orders` reserve la mise a jour a l'administration : la
-    // session est inscrite par une fonction qui ne permet que cela.
-    await db.rpc('attach_checkout_session', {
-      p_order: order.id,
-      p_session: checkout.sessionId,
-    });
-  } catch (error) {
-    console.error('[nemasus:checkout]', error);
-    return {
-      status: 'error',
-      message:
-        'La page de paiement n’a pas pu être ouverte. Votre commande est enregistrée : ' +
-        'réessayez depuis votre espace, rien n’a été débité.',
-    };
+    return { status: 'error', message: unavailable() };
   }
 
-  redirect(checkoutUrl);
+  if (!result.duplicate) {
+    await sendOrderReceivedEmail(service, {
+      id: result.orderId,
+      reference: result.reference,
+      company_name: draft.organizationName,
+      contact_first_name: draft.contactFirstName ?? null,
+      contact_email: draft.contactEmail,
+    });
+
+    await alertTeam(
+      {
+        subject: `Nouvelle commande ${result.reference} — ${draft.organizationName}`,
+        heading: 'Nouvelle commande : modalités de paiement à envoyer',
+        lines: [
+          ['Référence', result.reference],
+          ['Entreprise', draft.organizationName],
+          [
+            'Contact',
+            [draft.contactFirstName, draft.contactLastName].filter(Boolean).join(' ') ||
+              draft.contactEmail,
+          ],
+          ['E-mail', draft.contactEmail],
+          ['Téléphone', draft.contactPhone ?? '—'],
+          ['Métier', business.name],
+          ['Ville', draft.city ?? '—'],
+          [
+            'Adresse web',
+            `${DOMAIN_LABELS[draft.domainHandling ?? 'later'] ?? '—'}${
+              draft.domainHostname ? ` : ${draft.domainHostname}` : ''
+            }`,
+          ],
+        ],
+        excerpt: draft.customerNotes ?? null,
+        path: `/admin/commandes/${result.orderId}`,
+        actionLabel: 'Ouvrir la commande',
+      },
+      { db: service },
+    );
+  }
+
+  await clearOrderDraft();
+  redirect(`/commander/merci?reference=${encodeURIComponent(result.reference)}`);
 }
 
 /**
- * Commande d un compte interne Nemasus : aucun paiement, meme parcours qu un
- * client. La commande, l organisation, le projet et un site VIDE sont crees ;
- * l equipe Nemasus construit ensuite le site depuis l administration, puis le
- * confie a ce compte.
+ * Commande d'un compte interne Nemasus : aucun paiement, même parcours qu'un
+ * client. La commande, l'organisation, le projet et un site VIDE sont créés ;
+ * l'équipe construit ensuite le site, puis le confie à ce compte.
  *
- * L interface ne propose ce chemin qu aux comptes internes, mais CE N EST PAS
- * ELLE QUI DECIDE : `create_internal_order` relit en base le privilege du
- * compte (colonnes que lui-meme ne peut pas ecrire) et refuse tout autre
- * appelant. Un client qui invoquerait cette action a la main obtiendrait un
- * refus, et aucune commande.
- *
- * Aucun appel a Stripe n a lieu ici, ni avant ni apres.
+ * L'interface ne propose ce chemin qu'aux comptes internes, mais CE N'EST PAS
+ * ELLE QUI DÉCIDE : `create_internal_order` relit en base le privilège du
+ * compte et refuse tout autre appelant.
  */
 export async function createInternalOrderAction(
-  _previous: CheckoutState,
+  _previous: OrderSubmitState,
   formData: FormData,
-): Promise<CheckoutState> {
-  const accepted = formData.get('acceptTerms');
-  if (accepted !== 'on' && accepted !== 'true') {
-    return {
-      status: 'error',
-      message: 'Cochez la case de confirmation pour créer ce site.',
-    };
+): Promise<OrderSubmitState> {
+  if (!checked(formData.get('acceptTerms'))) {
+    return { status: 'error', message: 'Cochez la case de confirmation pour créer ce site.' };
   }
 
   const session = await getSession();
@@ -340,7 +201,7 @@ export async function createInternalOrderAction(
   if (!guard.ok) return { status: 'error', message: guard.message };
 
   const draft = await readOrderDraft();
-  if (!draft.planSlug || !draft.businessTypeSlug || !draft.sectorSlug || !draft.organizationName) {
+  if (!draft.businessTypeSlug || !draft.sectorSlug || !draft.organizationName) {
     return {
       status: 'error',
       message: 'Votre commande est incomplète. Reprenez le parcours depuis le début.',
@@ -353,24 +214,28 @@ export async function createInternalOrderAction(
   }
 
   const db = createUserClient(session.user.accessToken);
+  // L'offre interne n'est pas publique : la RLS la masque aux comptes non
+  // staff. Son identifiant n'a rien de sensible, il est lu côté serveur ;
+  // la commande elle-même reste passée sous l'identité de l'utilisateur.
+  const catalog = tryCreateServiceClient();
+  if (!catalog) return { status: 'error', message: 'La commande interne est indisponible.' };
 
+  // Formule interne des sites (aucun prix) : ses droits sont ceux que vérifie
+  // la checklist de livraison.
   const plan = unwrapMaybe<{ id: string }>(
-    (await db
+    (await catalog
       .from('plans')
       .select('id')
-      .eq('slug', draft.planSlug)
+      .eq('slug', 'site-nemasus')
       .eq('is_active', true)
       .order('version', { ascending: false })
       .limit(1)
       .maybeSingle()) as never,
   );
-  if (!plan) return { status: 'error', message: 'Cette offre n’est plus disponible.' };
+  if (!plan) return { status: 'error', message: 'La commande interne est indisponible.' };
 
   const pitch = typeof draft.answers['pitch'] === 'string' ? draft.answers['pitch'] : null;
 
-  // Aucun modele n est applique : le site est construit de zero par l equipe.
-  // Aucune cle de service non plus : tout passe par le jeton de la personne,
-  // et c est la base qui verifie le privilege du compte.
   const { data, error } = await db.rpc('create_internal_order', {
     p_plan_id: plan.id,
     p_sector_slug: draft.sectorSlug,
@@ -383,8 +248,13 @@ export async function createInternalOrderAction(
       contactPhone: draft.contactPhone ?? null,
       ...draft.answers,
     },
-    p_requested_domain: draft.domainHostname ?? draft.subdomain ?? null,
-    p_domain_handling: draft.domainHandling ?? 'subdomain_only',
+    p_requested_domain: draft.domainHostname ?? null,
+    p_domain_handling:
+      draft.domainHandling === 'customer_owned'
+        ? 'customer_owned'
+        : draft.domainHandling === 'purchase'
+          ? 'stax_purchase'
+          : 'subdomain_only',
     p_customer_notes: draft.customerNotes ?? null,
     p_terms_version: TERMS_VERSION,
     p_details: {
@@ -404,7 +274,7 @@ export async function createInternalOrderAction(
     if (error?.code === '42501') {
       return {
         status: 'error',
-        message: 'Ce compte ne peut pas commander sans paiement. Passez par le règlement habituel.',
+        message: 'Ce compte ne peut pas commander sans paiement. Envoyez la commande normalement.',
       };
     }
     console.error('[nemasus:internal-order]', error?.message);

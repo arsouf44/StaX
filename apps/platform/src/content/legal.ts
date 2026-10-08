@@ -6,7 +6,6 @@ import {
   maintenancePolicyConfig,
   refundPolicyConfig,
 } from '@nemasus/config';
-import { formatMoney } from '@nemasus/payments';
 
 /**
  * LEGAL_REVIEW_REQUIRED
@@ -18,9 +17,10 @@ import { formatMoney } from '@nemasus/payments';
  *
  * Deux règles de rédaction, tenues sans exception :
  *  1. chaque engagement écrit ici correspond à ce que la plateforme FAIT
- *     réellement (site conçu dans un projet dédié, maintenance mensuelle qui
- *     commence à la livraison, compte Stripe au nom du client, export en
- *     libre-service…) — un texte qui promet autre chose que le produit est le
+ *     réellement (site conçu dans un projet dédié, commande sans prix public,
+ *     paiement par virement, code d'accès personnel, compte Stripe au nom du
+ *     client pour ses ventes, export en libre-service…) — un texte qui promet
+ *     autre chose que le produit est le
  *     premier motif de litige ;
  *  2. aucune valeur d'identité (dénomination, SIREN, siège, capital,
  *     directeur de la publication, hébergeur) n'est écrite en dur : tout
@@ -40,9 +40,12 @@ export const LEGAL_DOCUMENTS_REQUIRE_REVIEW = LEGAL_REVIEW_REQUIRED;
  * références commerciales, sous-traitance, confidentialité, effets du
  * remboursement, exclusion des résultats de référencement, délai d'action ;
  * CGU acceptées à l'inscription ; prospection auprès des professionnels.
+ * 2026-10-08 : plus de grille tarifaire ni d'abonnement : commande, modalités
+ * de paiement par virement, code d'accès personnel à réception du virement,
+ * annulation et remboursement ; mot de passe oublié envoyé par Nemasus.
  */
-export const TERMS_VERSION = '2026-09-29';
-export const PRIVACY_VERSION = '2026-09-29';
+export const TERMS_VERSION = '2026-10-08';
+export const PRIVACY_VERSION = '2026-10-08';
 export const TERMS_OF_USE_VERSION = '2026-09-29';
 export const DPA_VERSION = '2026-09-29';
 
@@ -320,16 +323,16 @@ export function buildTerms(): LegalDocument {
     slug: 'cgv',
     title: 'Conditions générales de vente',
     description:
-      'Commande, prix, paiement, réalisation, réception, maintenance mensuelle, résiliation, ' +
-      'réversibilité, paiements sur votre site, responsabilité : les règles qui s’appliquent aux ' +
-      `prestations ${brand}.`,
+      'Commande, modalités de paiement par virement, code d’accès, réalisation, réception, ' +
+      'hébergement, fin du contrat, réversibilité, paiements sur votre site, responsabilité : les ' +
+      `règles qui s’appliquent aux prestations ${brand}.`,
     version: TERMS_VERSION,
     updatedAt: UPDATED_AT,
     intro:
       'Les présentes conditions régissent la vente des prestations de conception, de ' +
-      'développement, de mise en ligne, d’hébergement et de maintenance de sites internet ' +
-      `proposées sous la marque ${brand}. Elles sont acceptées lors de chaque commande ; la ` +
-      'version acceptée est conservée avec sa date et son numéro.',
+      'développement, de mise en ligne et d’hébergement de sites internet proposées sous la ' +
+      `marque ${brand}. Elles sont acceptées lors de chaque commande ; la version acceptée est ` +
+      'conservée avec sa date et son numéro.',
     articles: [
       {
         id: 'objet',
@@ -386,38 +389,47 @@ export function buildTerms(): LegalDocument {
               description:
                 'Le site internet conçu et développé individuellement pour le Client par le ' +
                 'Prestataire, dans un projet qui lui est propre (code source, dépôt et déploiement ' +
-                'dédiés), puis hébergé et maintenu par le Prestataire. Aucun modèle préexistant ' +
-                'n’est proposé au Client pour le constituer.',
+                'dédiés). Aucun modèle préexistant n’est proposé au Client pour le constituer.',
+            },
+            {
+              term: 'Commande',
+              description:
+                'La demande de réalisation d’un Site adressée par le Client au Prestataire, en ' +
+                'ligne ou à la suite d’un échange avec l’équipe, décrivant son activité et son ' +
+                'projet. Elle n’emporte aucun paiement.',
+            },
+            {
+              term: 'Modalités de paiement',
+              description:
+                'Le message adressé par e-mail au Client, en réponse à sa Commande, qui précise le ' +
+                'montant convenu, ce qu’il comprend (notamment la Création et, le cas échéant, ' +
+                'l’hébergement, l’accompagnement et leur durée), le délai de réalisation, les ' +
+                'coordonnées bancaires et la référence à indiquer pour le virement.',
+            },
+            {
+              term: 'Création',
+              description:
+                'La conception, le développement, la mise en ligne et la vérification du Site.',
+            },
+            {
+              term: 'Code d’accès',
+              description:
+                'Le code personnel, à usage unique et à durée de validité limitée, adressé au ' +
+                'Client à réception de son paiement, qui ouvre son Espace client. Il ne vaut que ' +
+                'pour l’adresse e-mail de la Commande.',
             },
             {
               term: 'Espace client',
               description:
                 'L’interface en ligne mise à disposition du Client pour suivre son projet, ' +
-                'transmettre ses informations et ses fichiers, puis, après la Livraison, modifier ' +
-                'les Contenus modifiables de son Site, et gérer son abonnement, ses données et ses ' +
-                'paiements.',
-            },
-            {
-              term: 'Création',
-              description:
-                'La conception, le développement, la mise en ligne et la vérification du Site, ' +
-                'réglés par un paiement unique à la commande.',
+                'transmettre ses informations et ses fichiers, échanger avec l’équipe, puis, après ' +
+                'la Livraison, modifier les Contenus modifiables de son Site et gérer ses données.',
             },
             {
               term: 'Livraison',
               description:
                 'La remise du Site au Client, une fois celui-ci en ligne et vérifié par le ' +
-                'Prestataire. La Livraison ouvre l’éditeur de l’Espace client et marque le début ' +
-                'de la Maintenance.',
-            },
-            {
-              term: 'Maintenance',
-              description:
-                'L’abonnement mensuel, qui commence à la Livraison, couvrant les prestations ' +
-                'décrites à l’article 10 : hébergement, certificat de sécurité, infrastructure de ' +
-                'publication, conservation des versions, surveillance, mises à jour nécessaires, ' +
-                'support, accès à l’éditeur et, le cas échéant, renouvellement du nom de domaine ' +
-                'acheté par le Prestataire pour le compte du Client.',
+                'Prestataire. La Livraison ouvre l’éditeur de l’Espace client.',
             },
             {
               term: 'Contenus modifiables',
@@ -432,13 +444,6 @@ export function buildTerms(): LegalDocument {
                 'Les informations, textes, photographies, logos, marques, documents et accès que ' +
                 'le Client fournit pour la réalisation et la vie de son Site.',
             },
-            {
-              term: 'Offre',
-              description:
-                'La formule choisie par le Client (Essentiel, Premium, Ultra Premium, Exceptionnel ' +
-                'ou devis sur mesure), dont le contenu est décrit sur la page des tarifs au jour de ' +
-                'la commande et repris dans le récapitulatif de commande.',
-            },
           ]),
         ],
       },
@@ -448,9 +453,9 @@ export function buildTerms(): LegalDocument {
         blocks: [
           p('Le contrat est formé des documents suivants, par ordre de priorité décroissant :'),
           list([
-            'le devis signé, pour une prestation sur mesure ;',
-            'le récapitulatif de commande (offre et ce qu’elle comprend, prix, délai de ' +
-              'réalisation, options) ;',
+            'les Modalités de paiement acceptées par le Client, et le cas échéant la proposition ' +
+              'détaillée d’un projet sur mesure ;',
+            'le récapitulatif de la Commande ;',
             'les présentes CGV ;',
             'l’accord de traitement des données personnelles (article 28 du RGPD), qui en fait ' +
               'partie intégrante et prévaut sur les CGV pour ce qui concerne les données ' +
@@ -471,34 +476,31 @@ export function buildTerms(): LegalDocument {
         title: 'Article 5 — Commande',
         blocks: [
           p(
-            'La commande est passée en ligne, en quatre étapes : le Client choisit une Offre, ' +
-              'indique son activité, renseigne les informations utiles à son projet, puis vérifie ' +
-              'le récapitulatif (prix hors taxes, TVA et total toutes taxes comprises). Jusqu’au ' +
-              'paiement, il peut revenir aux étapes précédentes pour corriger toute erreur de ' +
-              'saisie (articles 1127-1 et 1127-2 du Code civil). Il accepte ensuite les présentes ' +
-              'CGV et l’accord de traitement des données, puis procède au paiement.',
+            'La Commande est passée en ligne : le Client indique son activité, ses coordonnées et ' +
+              'son projet, puis l’adresse souhaitée pour son Site, et vérifie le récapitulatif. ' +
+              'Jusqu’à l’envoi, il peut revenir aux étapes précédentes pour corriger toute erreur ' +
+              'de saisie (articles 1127-1 et 1127-2 du Code civil). Il accepte les présentes CGV ' +
+              'et l’accord de traitement des données, puis envoie sa Commande. Un accusé de ' +
+              'réception lui est adressé par e-mail, avec la référence de la Commande.',
           ),
           p(
-            'Une commande peut aussi faire suite à un échange téléphonique. Le Prestataire adresse ' +
-              'alors au Client, par e-mail, une proposition personnelle : le Site déjà réalisé et ' +
-              'consultable en ligne, l’Offre retenue et son prix, et un code personnel valable ' +
-              'quatorze jours, qui ne fonctionne qu’avec l’adresse e-mail destinataire. Le Client ' +
-              'crée son Espace client, y consulte le Site et la proposition, peut demander des ' +
-              'précisions, puis accepte les présentes CGV et procède au paiement. Ni l’appel ni la ' +
-              'proposition n’engagent le Client tant qu’il n’a pas payé. La commande est alors ' +
-              'conclue à distance, en ligne.',
+            'Une Commande peut aussi être enregistrée par le Prestataire à la suite d’un échange ' +
+              'avec le Client, qui en reçoit alors les Modalités de paiement par e-mail. Ni ' +
+              'l’échange ni la Commande n’engagent le Client à payer.',
           ),
           p(
-            'Le contrat est formé à la confirmation du paiement par le prestataire de paiement. ' +
-              'Le Client reçoit alors une confirmation par e-mail reprenant les éléments ' +
-              'essentiels de sa commande. L’acceptation des CGV est horodatée et conservée avec le ' +
-              'numéro de version du texte accepté, à titre de preuve.',
+            'En réponse à la Commande, le Prestataire adresse au Client les Modalités de ' +
+              'paiement. Le contrat est formé à la réception, par le Prestataire, du virement du ' +
+              'montant indiqué dans les Modalités de paiement : ce paiement vaut acceptation des ' +
+              'Modalités de paiement et des présentes CGV. L’acceptation des CGV lors de la ' +
+              'Commande est horodatée et conservée avec le numéro de version du texte accepté, à ' +
+              'titre de preuve.',
           ),
           p(
             'Le Client s’engage à fournir des informations exactes et à jour. Le Prestataire peut ' +
-              'refuser une commande pour un motif légitime, notamment une activité ou un contenu ' +
-              'illicite, un litige de paiement antérieur non réglé ou une demande anormale ; le ' +
-              'paiement éventuellement reçu est alors intégralement remboursé.',
+              'refuser une Commande pour un motif légitime, notamment une activité ou un contenu ' +
+              'illicite, un litige antérieur non réglé ou une demande anormale ; le paiement ' +
+              'éventuellement reçu est alors intégralement remboursé par virement.',
           ),
         ],
       },
@@ -507,72 +509,57 @@ export function buildTerms(): LegalDocument {
         title: 'Article 6 — Prix',
         blocks: [
           p(
-            'Les prix sont exprimés en euros hors taxes. La taxe sur la valeur ajoutée est ' +
-              'appliquée selon la réglementation en vigueur et le lieu d’établissement du Client, ' +
-              'et apparaît séparément sur le récapitulatif de commande, lors du paiement et sur la ' +
-              'facture.',
+            'Le Prestataire ne publie pas de grille tarifaire : chaque Site est conçu sur mesure. ' +
+              'Le montant de la prestation est celui indiqué dans les Modalités de paiement, qui ' +
+              'précisent ce qu’il comprend. Il est exprimé en euros ; la taxe sur la valeur ' +
+              'ajoutée est appliquée selon la réglementation en vigueur et le lieu ' +
+              'd’établissement du Client, et apparaît sur la facture.',
           ),
           p(
-            'La commande en ligne est ouverte aux Clients établis en France, auxquels la TVA ' +
-              'française s’applique (20 % à ce jour). Un Client établi dans un autre État membre ' +
-              'de l’Union européenne ou hors de l’Union commande sur devis : s’il est assujetti et ' +
-              'communique un numéro de TVA valide, la facture est établie hors TVA française avec ' +
+            'Pour un Client établi dans un autre État membre de l’Union européenne, assujetti et ' +
+              'disposant d’un numéro de TVA valide, la facture est établie hors TVA française avec ' +
               'la mention « Autoliquidation » (article 283-2 du Code général des impôts et ' +
               'article 196 de la directive 2006/112/CE), la taxe étant due par le Client dans son ' +
               'pays.',
           ),
-          p('Le prix comprend deux composantes distinctes, présentées séparément :'),
-          list([
-            'un paiement unique de Création, dû à la commande ;',
-            'un abonnement mensuel de Maintenance, dont le montant est indiqué par mois, dû ' +
-              'seulement à compter de la Livraison du Site.',
-          ]),
           p(
-            'Pour une prestation sur mesure, le prix de la Création et celui de la Maintenance ' +
-              'sont fixés par le devis.',
-          ),
-          p(
-            'Le prix de la Maintenance est celui en vigueur au jour de la commande. Une évolution ' +
-              'ultérieure du tarif public ne s’applique pas aux contrats en cours : le tarif du ' +
-              'Client reste celui de sa commande, sauf accord exprès de sa part.',
+            'Toute prestation supplémentaire demandée après la formation du contrat (nouvelles ' +
+              'pages, fonctionnalités, refonte) fait l’objet de nouvelles Modalités de paiement, ' +
+              'que le Client est libre d’accepter ou non.',
           ),
         ],
       },
       {
         id: 'paiement',
-        title: 'Article 7 — Paiement et facturation',
+        title: 'Article 7 — Paiement, code d’accès et facturation',
         blocks: [
           p(
-            'Le paiement s’effectue par carte bancaire, par l’intermédiaire de Stripe, prestataire ' +
-              'de services de paiement agréé. Aucune donnée de carte bancaire n’est collectée ni ' +
-              'conservée par le Prestataire. Une prestation convenue sur devis peut être réglée par ' +
-              'virement, selon les modalités et l’échéance indiquées sur la facture.',
+            'Le paiement s’effectue par virement bancaire, sur le compte indiqué dans les ' +
+              'Modalités de paiement, en rappelant la référence de la Commande dans le libellé. ' +
+              'Aucune carte bancaire n’est demandée par le Prestataire. Les coordonnées bancaires ' +
+              'du Prestataire ne sont jamais modifiées par e-mail : en cas de doute sur un message, ' +
+              'le Client contacte le Prestataire avant tout virement.',
           ),
           p(
-            'La Création est payée à la commande. La Maintenance est mensuelle et payée d’avance ' +
-              'pour chaque mois. Elle commence le jour de la Livraison du Site (sa remise au Client ' +
-              'une fois en ligne et vérifié) : aucune somme n’est prélevée au titre de la ' +
-              'Maintenance avant cette date. Les mois suivants sont prélevés à la même date sur le ' +
-              'moyen de paiement enregistré auprès de Stripe lors de la commande, que le Client ' +
-              'autorise à cette fin et peut remplacer à tout moment depuis son Espace client.',
+            'À réception du virement, le Prestataire adresse au Client, à l’adresse e-mail de la ' +
+              'Commande, son Code d’accès. Le Client le saisit sur la page « Accès client » de la ' +
+              'plateforme : son Espace client s’ouvre et il choisit son mot de passe. Le Code ' +
+              'd’accès est personnel et confidentiel ; il ne sert qu’une fois et expire au terme ' +
+              'de la durée indiquée dans le message. Un Code d’accès expiré, perdu ou compromis ' +
+              'est désactivé et remplacé sur simple demande.',
           ),
           p(
-            'Une facture conforme à la réglementation est émise pour chaque paiement et reste ' +
-              'téléchargeable depuis l’Espace client.',
+            'Une facture conforme à la réglementation est émise pour chaque paiement et adressée ' +
+              'au Client sur simple demande depuis son Espace client.',
           ),
           p(
-            'Toute somme non payée à son échéance porte de plein droit, dès le lendemain de ' +
-              'l’échéance et sans qu’un rappel soit nécessaire, conformément à l’article L.441-10 ' +
-              'du Code de commerce : des pénalités de retard calculées au taux d’intérêt appliqué ' +
-              'par la Banque centrale européenne à son opération de refinancement la plus récente ' +
-              'majoré de dix points, et une indemnité forfaitaire pour frais de recouvrement de ' +
-              '40 euros, sans préjudice d’une indemnisation complémentaire sur justificatifs. Aucun ' +
-              'escompte n’est accordé pour paiement anticipé.',
-          ),
-          p(
-            'En cas d’échec d’un prélèvement, le Client en est informé et invité à mettre à jour ' +
-              'son moyen de paiement. Sans régularisation dans les quinze jours, le Prestataire ' +
-              'peut suspendre la Maintenance dans les conditions de l’article 19.',
+            'Lorsque les Modalités de paiement prévoient un paiement échelonné, toute somme non ' +
+              'payée à son échéance porte de plein droit, dès le lendemain de l’échéance et sans ' +
+              'qu’un rappel soit nécessaire, conformément à l’article L.441-10 du Code de ' +
+              'commerce : des pénalités de retard calculées au taux d’intérêt appliqué par la ' +
+              'Banque centrale européenne à son opération de refinancement la plus récente majoré ' +
+              'de dix points, et une indemnité forfaitaire pour frais de recouvrement de 40 euros. ' +
+              'Aucun escompte n’est accordé pour paiement anticipé.',
           ),
           note(
             'Les pénalités de retard et l’indemnité forfaitaire ne s’appliquent pas au Client non ' +
@@ -600,30 +587,29 @@ export function buildTerms(): LegalDocument {
           ),
           p(
             'Le Client formule ses demandes de correction lors des étapes de validation. Une ' +
-              'étape validée ne peut être remise en cause que sur devis ; il en va de même de ' +
-              'toute demande qui élargit le périmètre de l’Offre (pages, fonctionnalités, ' +
-              'changement de direction graphique ou de contenu).',
+              'étape validée ne peut être remise en cause que par de nouvelles Modalités de ' +
+              'paiement ; il en va de même de toute demande qui élargit le périmètre convenu ' +
+              '(pages, fonctionnalités, changement de direction graphique ou de contenu).',
           ),
           p(
-            'Le Prestataire livre le Site dans le délai de réalisation indiqué pour l’Offre ' +
-              'choisie sur la page des tarifs et rappelé dans le récapitulatif de commande (à ' +
-              `défaut, ${delivery.label}), à compter de la réception de l’ensemble des Éléments ` +
-              'nécessaires à sa réalisation. Ce point de départ est notifié au Client dans son ' +
-              'Espace client. Le délai est suspendu tant que des Éléments demandés ou une ' +
+            'Le Prestataire livre le Site dans le délai de réalisation indiqué dans les Modalités ' +
+              `de paiement (à défaut, ${delivery.label}), à compter de la réception de l’ensemble ` +
+              'des Éléments nécessaires à sa réalisation. Ce point de départ est notifié au Client ' +
+              'dans son Espace client. Le délai est suspendu tant que des Éléments demandés ou une ' +
               'validation attendue n’ont pas été transmis, et prolongé d’autant.',
           ),
           p(
             'Si le Client ne transmet pas les Éléments demandés, ou ne répond pas à une demande ' +
               'de validation, pendant quatre-vingt-dix jours malgré deux relances écrites, le ' +
               'Prestataire peut, à son choix : livrer le Site réalisé avec les éléments dont il ' +
-              'dispose, ce qui vaut Livraison ; ou mettre fin à la commande, les sommes versées ' +
-              'lui restant acquises à hauteur du travail accompli, dont il justifie, et le ' +
-              'surplus étant remboursé.',
+              'dispose, ce qui vaut Livraison ; ou mettre fin au contrat, les sommes versées lui ' +
+              'restant acquises à hauteur du travail accompli, dont il justifie, et le surplus ' +
+              'étant remboursé par virement.',
           ),
           note(
             'En cas de retard imputable au seul Prestataire, le Client peut, après une mise en ' +
-              'demeure restée sans effet pendant quinze jours, résoudre la commande et obtenir le ' +
-              'remboursement de la Création.',
+              'demeure restée sans effet pendant quinze jours, résoudre le contrat et obtenir le ' +
+              'remboursement des sommes versées pour la Création.',
           ),
         ],
       },
@@ -639,20 +625,11 @@ export function buildTerms(): LegalDocument {
           ),
           p(
             `Le Client dispose de ${refund.windowDays} jours à compter de la Livraison pour ` +
-              'signaler par écrit, depuis son Espace client, toute non-conformité du Site à sa ' +
-              'commande, en la décrivant précisément. Le Prestataire corrige dans un délai ' +
+              'signaler par écrit, depuis son Espace client, toute non-conformité du Site à ce qui ' +
+              'a été convenu, en la décrivant précisément. Le Prestataire corrige dans un délai ' +
               'raisonnable les non-conformités avérées. À l’expiration de ce délai sans ' +
               'signalement, ou dès la correction des non-conformités signalées, le Site est réputé ' +
-              'conforme et réceptionné sans réserve, sans préjudice de la garantie commerciale de ' +
-              'l’article 18.',
-          ),
-          p(
-            'Lorsque la commande porte sur un Site déjà réalisé et présenté au Client avant son ' +
-              'paiement (proposition faisant suite à un échange téléphonique), le Client l’a ' +
-              'examiné avant de l’acheter. La Livraison intervient dès la confirmation du paiement ' +
-              'et la vérification du Site en ligne, en général dans l’heure et au plus tard le ' +
-              'jour ouvré suivant. Le Site est livré à l’adresse de son hébergement ; le nom de ' +
-              'domaine du Client est connecté ensuite, à sa demande.',
+              'conforme et réceptionné sans réserve.',
           ),
           p(
             'Après la Livraison, le Client modifie lui-même les Contenus modifiables depuis son ' +
@@ -663,27 +640,22 @@ export function buildTerms(): LegalDocument {
           ),
           p(
             'Les modifications de structure, de design, de code ou d’intégrations, l’ajout de ' +
-              'pages ou de fonctionnalités et les refontes sont réalisés par le Prestataire, sur ' +
-              'devis lorsqu’ils excèdent le support inclus dans la Maintenance.',
+              'pages ou de fonctionnalités et les refontes sont réalisés par le Prestataire, selon ' +
+              'de nouvelles Modalités de paiement.',
           ),
         ],
       },
       {
-        id: 'maintenance',
-        title: 'Article 10 — Maintenance mensuelle : début, durée et contenu',
+        id: 'services',
+        title: 'Article 10 — Hébergement et services de la plateforme',
         blocks: [
           p(
-            'La Maintenance commence le jour de la Livraison du Site : aucune somme n’est due à ce ' +
-              'titre pendant la conception et le développement. Elle est conclue pour une durée ' +
-              'indéterminée, sans durée minimale d’engagement, et facturée par périodes mensuelles ' +
-              'successives, payables d’avance, jusqu’à sa résiliation dans les conditions de ' +
-              'l’article 11.',
+            'Pendant la durée prévue par les Modalités de paiement, le Prestataire met à la ' +
+              'disposition du Client :',
           ),
-          p('La Maintenance comprend :'),
           list([
             'l’hébergement du Site sur l’infrastructure retenue par le Prestataire (à ce jour, ' +
-              'Cloudflare pour le Site, Vercel pour l’Espace client) et la mise à disposition de ' +
-              'l’Espace client ;',
+              'Cloudflare pour le Site, Vercel pour l’Espace client) et l’Espace client ;',
             'la connexion du nom de domaine et le certificat de sécurité (HTTPS), renouvelé ' +
               'automatiquement ;',
             'l’infrastructure de publication : l’enregistrement de chaque publication dans le ' +
@@ -692,71 +664,48 @@ export function buildTerms(): LegalDocument {
               'antérieure ;',
             'la surveillance de la disponibilité du Site et les sauvegardes des données de ' +
               'l’Espace client ;',
-            'les mises à jour nécessaires au bon fonctionnement du Site et de la plateforme, ' +
-              'notamment de sécurité ;',
-            'l’accès à l’éditeur de l’Espace client, dans les limites de l’Offre ;',
             'le support relatif à l’utilisation du Site et de l’Espace client, par messages ' +
-              'depuis l’Espace client, les jours ouvrés ;',
-            'le renouvellement du nom de domaine acheté par le Prestataire pour le compte du ' +
-              'Client, le cas échéant.',
+              'depuis l’Espace client, les jours ouvrés.',
           ]),
           p(
-            'Elle ne comprend pas de travaux de développement illimités : les nouvelles pages ou ' +
-              'fonctionnalités, les modifications de structure ou de design, les refontes, la ' +
-              'production de contenus rédactionnels ou photographiques et les actions de ' +
-              'référencement ou de publicité font l’objet d’un devis distinct.',
+            'Ces services ne comprennent pas de travaux de développement illimités : les ' +
+              'nouvelles pages ou fonctionnalités, les modifications de structure ou de design, ' +
+              'les refontes, la production de contenus rédactionnels ou photographiques et les ' +
+              'actions de référencement ou de publicité font l’objet de nouvelles Modalités de ' +
+              'paiement.',
           ),
           p(
             'Le Prestataire peut faire évoluer les outils et les prestataires techniques qu’il ' +
               'utilise, sans diminuer le niveau de service ni les garanties relatives aux données ' +
-              'personnelles prévues par l’accord de traitement des données.',
-          ),
-          note(
-            'Le Client non professionnel conserve en toute hypothèse les droits que lui ' +
-              'reconnaissent les articles L.215-1 et suivants du Code de la consommation.',
+              'personnelles prévues par l’accord de traitement des données. Aucun abonnement ' +
+              'n’est souscrit et aucun prélèvement n’est effectué automatiquement : toute ' +
+              'prolongation des services au-delà de la durée convenue fait l’objet de nouvelles ' +
+              'Modalités de paiement, que le Client est libre d’accepter.',
           ),
         ],
       },
       {
-        id: 'resiliation',
-        title: 'Article 11 — Résiliation',
+        id: 'fin',
+        title: 'Article 11 — Fin du contrat',
         blocks: [
           p(
-            'Le Client peut résilier sa Maintenance à tout moment, en ligne, depuis son Espace ' +
-              'client (« Résilier votre contrat »), sans avoir à se justifier et sans frais. La ' +
-              'résiliation prend effet au terme de la période mensuelle en cours : le mois entamé ' +
-              'reste dû et aucun prélèvement n’intervient ensuite, sous réserve de la garantie ' +
-              'commerciale de l’article 18. Le Client reçoit par e-mail une confirmation indiquant ' +
-              'la date à laquelle le contrat prend fin et ses effets.',
+            'Le contrat prend fin au terme de la durée prévue par les Modalités de paiement, sauf ' +
+              'prolongation convenue entre les parties. Le Client peut y mettre fin à tout moment ' +
+              'par écrit, depuis son Espace client ; les sommes versées pour une prestation déjà ' +
+              'exécutée restent acquises au Prestataire.',
           ),
           p(
-            'Tant que le Site n’est pas livré, aucune Maintenance n’est en cours : la commande de ' +
-              'Création suit les règles des articles 8, 9 et 18.',
+            'Le Prestataire peut mettre fin au contrat en cas de manquement grave du Client aux ' +
+              'présentes CGV ou à la loi, après une mise en demeure restée sans effet pendant ' +
+              'quinze jours, sans préjudice de la suspension prévue à l’article 19.',
           ),
           p(
-            'Le Prestataire peut résilier la Maintenance sans avoir à la motiver, moyennant un ' +
-              'préavis de trois mois notifié par e-mail ; le Client conserve alors le bénéfice de ' +
-              'l’article 12, et la copie du code source de son Site lui est remise sans frais. Il ' +
-              'peut aussi résilier le contrat en cas de défaut de paiement persistant, ou de ' +
-              'manquement grave du Client aux présentes CGV ou à la loi, après une mise en demeure ' +
-              'restée sans effet pendant quinze jours, sans préjudice de la suspension prévue à ' +
-              'l’article 19.',
+            `À la fin du contrat, le Site demeure accessible pendant une période de continuité de ` +
+              `${maintenance.gracePeriodDays} jours. Le Site est ensuite suspendu et, pendant ` +
+              `${maintenance.exportWindowDays} jours, le Client peut encore exporter ses données ` +
+              'et obtenir la copie du code source prévue à l’article 12 ; les données sont ensuite ' +
+              'supprimées définitivement, sauf demande de suppression immédiate du Client.',
           ),
-          p(
-            `À l’issue de la dernière période payée, le Site demeure accessible pendant une ` +
-              `période de continuité de ${maintenance.gracePeriodDays} jours, à l’issue de laquelle ` +
-              'la prestation prend fin. Le sort des données est alors celui que le Client a choisi ' +
-              'lors de la résiliation, et qu’il peut modifier jusqu’à la fin de la prestation :',
-          ),
-          list([
-            '« restitution puis suppression » (choix appliqué si le Client n’en exprime aucun) : ' +
-              'le Site est suspendu — accès public, éditeur et fonctions interactives interrompus ' +
-              `— et, pendant ${maintenance.exportWindowDays} jours, le Client peut encore exporter ` +
-              'ses données, obtenir la copie du code source prévue à l’article 12 ou réactiver son ' +
-              'abonnement ; les données sont ensuite supprimées définitivement ;',
-            '« suppression » : les données du Client et celles de ses propres clients et ' +
-              'visiteurs sont supprimées définitivement dès la fin de la prestation.',
-          ]),
           p(
             'Seules sont conservées, au-delà, les informations que le Prestataire doit garder ' +
               'pour son propre compte en vertu d’une obligation légale (article 20 et accord de ' +
@@ -788,8 +737,8 @@ export function buildTerms(): LegalDocument {
             `L’usage de la plateforme ${brand} (Espace client, éditeur, formulaires, réservations, ` +
               'paiements, statistiques) prend fin avec le contrat : les fonctions du Site qui en ' +
               'dépendent cessent alors de fonctionner. Une assistance à la migration vers un autre ' +
-              'prestataire, au-delà de la remise de la copie du code source, peut être fournie sur ' +
-              'devis.',
+              'prestataire, au-delà de la remise de la copie du code source, peut être convenue ' +
+              'par de nouvelles Modalités de paiement.',
           ),
         ],
       },
@@ -800,8 +749,9 @@ export function buildTerms(): LegalDocument {
           p(
             'Lorsque le Prestataire achète un nom de domaine pour le compte du Client, il agit en ' +
               'qualité de mandataire : le nom de domaine est enregistré au nom du Client, qui en est ' +
-              'le titulaire. Le Prestataire en assure le renouvellement tant que la Maintenance est ' +
-              'en vigueur, et remet au Client le code de transfert sur simple demande.',
+              'le titulaire. Le Prestataire en assure le renouvellement pendant la durée prévue par ' +
+              'les Modalités de paiement, et remet au Client le code de transfert sur simple ' +
+              'demande.',
           ),
           p(
             'Lorsque le Client possède déjà son nom de domaine, il en reste seul titulaire et ' +
@@ -821,7 +771,7 @@ export function buildTerms(): LegalDocument {
         title: 'Article 14 — Paiements encaissés sur le Site du Client',
         blocks: [
           p(
-            'Lorsque l’Offre permet au Site d’encaisser des paiements (commandes, acomptes, dons), ' +
+            'Lorsque le Site encaisse des paiements (commandes, acomptes, dons), ' +
               'ces paiements sont traités par Stripe sur un compte ouvert au nom du Client, qui ' +
               'accepte directement les conditions de Stripe. Les fonds sont versés par Stripe sur ' +
               'le compte bancaire du Client : ils ne transitent jamais par le Prestataire, qui ' +
@@ -972,32 +922,29 @@ export function buildTerms(): LegalDocument {
         ],
       },
       {
-        id: 'garantie',
-        title: 'Article 18 — Garantie commerciale de satisfaction',
+        id: 'remboursement',
+        title: 'Article 18 — Annulation et remboursement',
         blocks: [
           p(
-            `Le Prestataire accorde une garantie commerciale de ${refund.windowDays} jours à ` +
-              'compter de la Livraison du Site. Pendant cette période, le Client ' +
-              'insatisfait peut demander, sans justification, le remboursement de la Création et de ' +
-              'la Maintenance déjà prélevée, selon la politique de remboursement. Cette garantie ' +
-              'ne peut être exercée qu’une fois par Client.',
+            'Tant que le Prestataire n’a pas commencé la réalisation, le Client peut annuler son ' +
+              'contrat par écrit depuis son Espace client ou par e-mail : la somme versée lui est ' +
+              'remboursée intégralement par virement, dans un délai de trente jours.',
           ),
           p(
-            'Lorsqu’un nom de domaine a effectivement été acheté pour le compte du Client, un ' +
-              `montant forfaitaire de ${formatRefundDeduction(refund.domainDeductionCents)} est ` +
-              'déduit du remboursement, ce coût étant définitivement engagé ; le nom de domaine ' +
-              'reste acquis au Client. Aucune déduction n’est appliquée si aucun achat n’a eu lieu.',
+            'Une fois la réalisation commencée, une annulation à l’initiative du Client donne ' +
+              'lieu au remboursement des sommes versées, déduction faite du travail accompli, dont ' +
+              'le Prestataire justifie, et des frais définitivement engagés pour le compte du ' +
+              'Client (notamment l’achat d’un nom de domaine, qui reste acquis au Client).',
           ),
           p(
-            'Le remboursement met fin au contrat. Le Site peut alors être mis hors ligne, la cession de ' +
-              'droits prévue à l’article 16 est réputée n’être jamais intervenue et le Client ' +
-              'renonce à utiliser les textes, visuels et code créés par le Prestataire. Il ' +
-              'conserve ses propres Éléments et peut exporter ses données dans les délais de ' +
-              'conservation prévus à l’article 11.',
+            'Le remboursement met fin au contrat. Le Site peut alors être mis hors ligne et la ' +
+              'cession de droits prévue à l’article 16 ne porte que sur ce qui a été payé et non ' +
+              'remboursé. Le Client conserve ses propres Éléments et peut exporter ses données dans ' +
+              'les délais prévus à l’article 11.',
           ),
           note(
-            'Cette garantie est une faveur commerciale. Elle s’ajoute aux droits que le Client ' +
-              'tient de la loi et ne s’y substitue en aucun cas.',
+            'Ces stipulations s’ajoutent aux droits que le Client tient de la loi et ne s’y ' +
+              'substituent en aucun cas.',
           ),
         ],
       },
@@ -1009,7 +956,8 @@ export function buildTerms(): LegalDocument {
             'Le Prestataire peut suspendre l’accès au Site ou à un contenu, en informant le Client ' +
               'et en motivant sa décision, lorsque cela est nécessaire pour faire cesser un contenu ' +
               'manifestement illicite, pour préserver la sécurité de la plateforme ou d’autres ' +
-              'clients, ou en cas de défaut de paiement persistant après relance.',
+              'clients, ou en cas de défaut de paiement d’une somme convenue persistant après ' +
+              'relance.',
           ),
           p(
             'La suspension n’emporte pas suppression des données, qui restent exportables. Elle ' +
@@ -1151,9 +1099,9 @@ export function buildTerms(): LegalDocument {
         blocks: [
           p(
             'Les CGV peuvent évoluer. La version applicable à une commande est celle acceptée lors ' +
-              'de cette commande. Pour une Maintenance en cours, une nouvelle version est notifiée ' +
-              'au Client au moins trente jours avant de s’appliquer, et ne s’applique qu’à la ' +
-              'période suivante ; le Client qui la refuse peut résilier sans frais avant cette date.',
+              'de cette commande. Pour un contrat en cours, une nouvelle version est notifiée au ' +
+              'Client au moins trente jours avant de s’appliquer ; le Client qui la refuse peut ' +
+              'mettre fin au contrat sans frais avant cette date.',
           ),
         ],
       },
@@ -1164,14 +1112,15 @@ export function buildTerms(): LegalDocument {
           p(
             'Les enregistrements électroniques conservés par le Prestataire dans des conditions ' +
               'raisonnables de sécurité (horodatage de l’acceptation des CGV, journal des ' +
-              'opérations, messages échangés dans l’Espace client, confirmations de paiement) font ' +
+              'opérations, messages échangés dans l’Espace client, Modalités de paiement, ' +
+              'confirmations de réception des virements) font ' +
               'foi entre les parties, sauf preuve contraire. Les messages échangés depuis l’Espace ' +
               'client et par e-mail valent écrit entre les parties.',
           ),
           p(
             'Les commandes et factures sont archivées pendant dix ans. Le Client accède à tout ' +
-              'moment à ses commandes, à la version des CGV acceptée et à ses factures depuis son ' +
-              'Espace client, ou sur simple demande.',
+              'moment à sa commande et à la version des CGV acceptée depuis son Espace client, et ' +
+              'à ses factures sur simple demande.',
           ),
         ],
       },
@@ -1396,7 +1345,7 @@ export function buildDataProcessingAgreement(): LegalDocument {
           p(
             'Pendant toute la durée du contrat, le Client exporte ses données en libre-service, ' +
               'dans des formats ouverts. Conformément à l’article 28, paragraphe 3, g) du RGPD, ' +
-              'il choisit, lors de la résiliation, le sort des données à caractère personnel à la ' +
+              'il choisit, à la fin du contrat, le sort des données à caractère personnel à la ' +
               'fin de la prestation ; ce choix vaut instruction documentée et peut être modifié ' +
               'jusqu’à la fin de la prestation :',
           ),
@@ -1408,7 +1357,7 @@ export function buildDataProcessingAgreement(): LegalDocument {
               'Client ait pu la récupérer ;',
             '« suppression » : les données sont supprimées définitivement dès la fin de la ' +
               `prestation, c’est-à-dire au terme de la période de continuité de ` +
-              `${maintenance.gracePeriodDays} jours suivant la dernière période payée.`,
+              `${maintenance.gracePeriodDays} jours suivant la fin du contrat.`,
           ]),
           p(
             'La suppression porte sur toutes les données traitées pour le compte du Client : ' +
@@ -1547,9 +1496,10 @@ export function buildTermsOfUse(): LegalDocument {
               'd’une association qu’elle est habilitée à représenter, ou invitée par elle.',
           ),
           p(
-            'L’accès est gratuit ; les prestations (création, maintenance) sont payantes dans les ' +
-              'conditions des conditions générales de vente. Les frais de connexion et ' +
-              'd’équipement restent à la charge de l’Utilisateur.',
+            'L’accès à l’espace client est ouvert par le code d’accès personnel remis au Client ' +
+              'après le paiement de sa commande, puis par son adresse e-mail et son mot de passe. ' +
+              'Les prestations sont payantes dans les conditions des conditions générales de ' +
+              'vente. Les frais de connexion et d’équipement restent à la charge de l’Utilisateur.',
           ),
         ],
       },
@@ -1598,7 +1548,7 @@ export function buildTermsOfUse(): LegalDocument {
             'de revendre l’accès à la plateforme sans accord exprès.',
           ]),
           p(
-            'Les quantités présentées comme illimitées dans une Offre s’entendent d’un usage ' +
+            'Les quantités présentées comme illimitées s’entendent d’un usage ' +
               'normal, pour les besoins propres du Client. Un usage manifestement anormal (volume ' +
               'disproportionné, revente, usage compromettant le service rendu aux autres clients) ' +
               'peut être limité, après information motivée de l’Utilisateur.',
@@ -1673,7 +1623,7 @@ export function buildTermsOfUse(): LegalDocument {
             'Les interventions programmées susceptibles d’affecter la disponibilité sont ' +
               'annoncées à l’avance dans l’espace client lorsque cela est possible. Les ' +
               'fonctionnalités de la plateforme peuvent évoluer, sans supprimer une fonction ' +
-              'essentielle de l’Offre souscrite.',
+              'essentielle de la prestation convenue.',
           ),
           note(
             'Aucun engagement chiffré de disponibilité n’est publié tant qu’il n’est pas mesuré ' +
@@ -1721,7 +1671,7 @@ export function buildTermsOfUse(): LegalDocument {
         blocks: [
           p(
             'La plateforme, son interface, ses composants techniques et sa documentation ' +
-              'demeurent la propriété du Prestataire. L’abonnement confère un droit d’usage ' +
+              'demeurent la propriété du Prestataire. Le contrat confère un droit d’usage ' +
               'personnel et non exclusif, et n’emporte aucune cession de droits. Toute ' +
               'reproduction, décompilation ou extraction non autorisée est interdite.',
           ),
@@ -1819,9 +1769,9 @@ export function buildPrivacyPolicy(): LegalDocument {
               term: 'Données de facturation',
               description:
                 'Raison sociale, adresse de facturation, numéro de TVA le cas échéant, ' +
-                'historique des commandes et des factures, statut d’abonnement. Aucune donnée ' +
-                'de carte bancaire n’est collectée ni conservée : elles sont traitées ' +
-                'directement par le prestataire de paiement.',
+                'historique des commandes, montants convenus et dates de réception des ' +
+                'virements, factures. Aucune donnée de carte bancaire n’est collectée : les ' +
+                'commandes se règlent par virement.',
             },
             {
               term: 'Données de projet',
@@ -1868,8 +1818,9 @@ export function buildPrivacyPolicy(): LegalDocument {
               'coordonnées professionnelles des entreprises que nous contactons pour la première ' +
               'fois proviennent de sources publiques : registres officiels des entreprises, ' +
               'annuaires professionnels, fiches d’établissement et sites internet des entreprises ' +
-              'elles-mêmes. Les données de paiement nous sont transmises par Stripe (statut du ' +
-              'paiement, jamais le numéro de carte).',
+              'elles-mêmes. La réception d’un virement est constatée par nos soins sur notre ' +
+              'relevé bancaire. Pour les paiements encaissés sur le site d’un client, Stripe nous ' +
+              'transmet le statut du paiement, jamais le numéro de carte.',
           ),
           p(
             'Les champs signalés comme obligatoires dans nos formulaires sont nécessaires pour ' +
@@ -1883,7 +1834,8 @@ export function buildPrivacyPolicy(): LegalDocument {
         title: 'Article 4 — Finalités et bases légales',
         blocks: [
           list([
-            'Fourniture du service, création et maintenance du site, accès à l’espace client — ' +
+            'Fourniture du service, création et hébergement du site, accès à l’espace client par ' +
+              'code personnel puis mot de passe, réinitialisation du mot de passe — ' +
               'exécution du contrat (article 6.1.b du RGPD).',
             'Facturation, recouvrement et obligations comptables — obligation légale ' +
               '(article 6.1.c).',
@@ -1898,11 +1850,11 @@ export function buildPrivacyPolicy(): LegalDocument {
               'portant sur leur activité professionnelle) — intérêt légitime (article 6.1.f), à ' +
               'faire connaître nos services aux entreprises susceptibles d’en avoir besoin. Vous ' +
               'pouvez vous y opposer à tout moment, sans justification.',
-            'Envoi et suivi d’une proposition de site à une entreprise qui l’a acceptée lors d’un ' +
-              'échange téléphonique — mesures précontractuelles prises à sa demande (article ' +
-              '6.1.b).',
-            'Informations liées à votre abonnement (livraison, début de la maintenance, ' +
-              'prélèvements, résiliation) — exécution du contrat et obligation légale.',
+            'Traitement d’une commande : accusé de réception, envoi des modalités de paiement, ' +
+              'constat de la réception du virement, envoi du code d’accès — mesures ' +
+              'précontractuelles puis exécution du contrat (article 6.1.b).',
+            'Informations liées à votre contrat (livraison, fin du contrat) — exécution du ' +
+              'contrat et obligation légale.',
             'Actualités de Nemasus adressées aux personnes qui l’ont demandé lors de leur ' +
               'inscription — consentement (article 6.1.a), retirable à tout moment en un clic.',
             'Défense de nos droits en cas de litige — intérêt légitime (article 6.1.f).',
@@ -1919,8 +1871,8 @@ export function buildPrivacyPolicy(): LegalDocument {
         blocks: [
           list([
             'Données de compte et de projet : pendant la durée du contrat et la période de ' +
-              `continuité de ${maintenance.gracePeriodDays} jours qui suit, puis, selon le choix ` +
-              `fait à la résiliation, ${maintenance.exportWindowDays} jours pour les exporter ` +
+              `continuité de ${maintenance.gracePeriodDays} jours qui suit, puis, selon votre ` +
+              `choix, ${maintenance.exportWindowDays} jours pour les exporter ` +
               '(« restitution puis suppression », choix par défaut) ou suppression immédiate ' +
               '(« suppression ») ; les sauvegardes sont effacées par rotation au plus tard ' +
               `${maintenance.backupRotationDays} jours après.`,
@@ -1964,9 +1916,10 @@ export function buildPrivacyPolicy(): LegalDocument {
               'sur la page « Sous-traitants ».',
           ),
           p(
-            'Les paiements sont traités par Stripe, qui agit en qualité de responsable de ' +
-              'traitement distinct pour l’exécution des paiements, la lutte contre la fraude et ses ' +
-              'obligations réglementaires, conformément à sa propre politique de confidentialité.',
+            'Les paiements encaissés sur les sites de nos clients sont traités par Stripe, qui ' +
+              'agit en qualité de responsable de traitement distinct pour l’exécution des ' +
+              'paiements, la lutte contre la fraude et ses obligations réglementaires, ' +
+              'conformément à sa propre politique de confidentialité.',
           ),
           p(
             'Les données peuvent être communiquées aux autorités administratives ou judiciaires ' +
@@ -2245,148 +2198,6 @@ export function buildCookiePolicy(): LegalDocument {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Politique de remboursement                                                 */
-/* -------------------------------------------------------------------------- */
-
-export function buildRefundPolicy(): LegalDocument {
-  const refund = refundPolicyConfig();
-
-  return {
-    slug: 'remboursements',
-    title: 'Politique de remboursement',
-    description:
-      `Garantie commerciale de ${refund.windowDays} jours après la livraison : conditions, ` +
-      'procédure, délais, effets et déduction éventuelle du nom de domaine.',
-    updatedAt: UPDATED_AT,
-    intro:
-      'Cette garantie commerciale est un engagement volontaire du Prestataire, défini à ' +
-      'l’article 18 des conditions générales de vente. Elle s’ajoute aux droits que vous tenez ' +
-      'de la loi : elle ne les remplace ni ne les restreint en aucune manière.',
-    articles: [
-      {
-        id: 'garantie',
-        title: `Article 1 — Garantie de ${refund.windowDays} jours`,
-        blocks: [
-          p(
-            `Vous disposez de ${refund.windowDays} jours calendaires à compter de la livraison ` +
-              'de votre site — sa remise, une fois en ligne — pour demander le remboursement.',
-          ),
-          p(
-            'Aucune justification n’est exigée. Nous vous demandons simplement, si vous le ' +
-              'souhaitez, ce qui n’a pas convenu : c’est ainsi que le service progresse. La ' +
-              'garantie peut être exercée une fois par client.',
-          ),
-        ],
-      },
-      {
-        id: 'perimetre-remboursement',
-        title: 'Article 2 — Ce qui est remboursé',
-        blocks: [
-          list([
-            'le paiement de création effectivement réglé ;',
-            'les mensualités de maintenance déjà prélevées, en totalité.',
-          ]),
-          p(
-            'Le remboursement est effectué sur le moyen de paiement utilisé lors de la commande. ' +
-              'Aucun autre moyen de remboursement ne peut être utilisé sans votre accord ' +
-              'exprès.',
-          ),
-        ],
-      },
-      {
-        id: 'deduction-domaine',
-        title: 'Article 3 — Déduction liée au nom de domaine',
-        blocks: [
-          p(
-            'Une seule déduction est possible, et uniquement dans un cas précis : lorsqu’un nom ' +
-              'de domaine a été réellement acheté pour votre compte. Ce coût est engagé de ' +
-              'manière irréversible auprès du bureau d’enregistrement dès l’achat.',
-          ),
-          p(
-            `Dans ce cas, et dans ce cas seulement, un montant forfaitaire de ` +
-              `${formatRefundDeduction(refund.domainDeductionCents)} est retenu sur le ` +
-              'remboursement. Le nom de domaine, enregistré à votre nom, vous reste acquis pour la ' +
-              'durée de son enregistrement.',
-          ),
-          note(
-            'Si aucun nom de domaine n’a été acheté — parce que vous en possédiez déjà un, ou ' +
-              'parce que le site utilisait encore une adresse de prévisualisation — rien n’est ' +
-              'retenu. Cette condition est vérifiée automatiquement à partir de l’état réel de ' +
-              'votre dossier, et non déclarée à la main.',
-          ),
-        ],
-      },
-      {
-        id: 'procedure-remboursement',
-        title: 'Article 4 — Procédure',
-        blocks: [
-          list([
-            'depuis votre espace client, ouvrez « Facturation » puis « Demander un ' +
-              'remboursement » ;',
-            'la demande est enregistrée avec sa date, et son éligibilité est calculée ' +
-              'automatiquement à partir de la date réelle de livraison ;',
-            'nous accusons réception et examinons la demande ;',
-            'en cas d’acceptation, le remboursement est déclenché auprès du prestataire de ' +
-              'paiement ;',
-            'vous suivez l’avancement de la demande depuis votre espace, à chaque changement ' +
-              'd’état.',
-          ]),
-          p(
-            'Les délais de mise à disposition des fonds dépendent ensuite de votre banque, ' +
-              'généralement quelques jours ouvrés.',
-          ),
-        ],
-      },
-      {
-        id: 'effets-remboursement',
-        title: 'Article 5 — Effets du remboursement',
-        blocks: [
-          p(
-            'Le remboursement met fin au contrat à sa date. Le site peut alors être mis hors ' +
-              'ligne, et les textes, visuels et code créés par nos soins ne peuvent plus être ' +
-              'utilisés : la cession de droits, qui supposait le paiement de la création, est ' +
-              'réputée n’être jamais intervenue.',
-          ),
-          p(
-            'Vous conservez vos propres contenus (textes, photographies, logos que vous avez ' +
-              'fournis) et pouvez exporter vos données depuis votre espace pendant les délais de ' +
-              'conservation prévus par les conditions générales de vente.',
-          ),
-        ],
-      },
-      {
-        id: 'refus-remboursement',
-        title: 'Article 6 — Cas de refus',
-        blocks: [
-          p('Une demande peut être refusée, avec un motif écrit, notamment lorsque :'),
-          list([
-            `le délai de ${refund.windowDays} jours après la livraison est dépassé ;`,
-            'la garantie a déjà été exercée pour une précédente commande ;',
-            'la demande porte sur une prestation sur mesure déjà livrée et acceptée, régie par ' +
-              'son propre devis ;',
-            'un usage manifestement frauduleux est caractérisé.',
-          ]),
-          p('Un refus n’éteint aucun des droits que vous tenez de la loi ou du contrat.'),
-        ],
-      },
-      {
-        id: 'garanties-legales',
-        title: 'Article 7 — Articulation avec vos droits',
-        blocks: [
-          p(
-            'La présente garantie commerciale est distincte des droits et garanties prévus par ' +
-              'la loi et par les conditions générales de vente, qui demeurent applicables de plein ' +
-              'droit, notamment en cas de manquement du Prestataire à ses obligations.',
-          ),
-        ],
-      },
-    ],
-  };
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Données personnelles — exercice concret des droits                         */
-/* -------------------------------------------------------------------------- */
 
 export function buildDataPolicy(): LegalDocument {
   const maintenance = maintenancePolicyConfig();
@@ -2505,23 +2316,23 @@ export function buildDataPolicy(): LegalDocument {
       },
       {
         id: 'retention-site',
-        title: 'Article 6 — Ce qui se passe si vous arrêtez la maintenance',
+        title: 'Article 6 — Ce qui se passe à la fin du contrat',
         blocks: [
           list([
             `votre site reste en ligne pendant une période de continuité de ` +
-              `${maintenance.gracePeriodDays} jours après la fin de la période payée ;`,
-            'à la résiliation, vous choisissez le sort de vos données : « restitution puis ' +
-              `suppression » (le site est suspendu, vous exportez vos données et obtenez la ` +
-              `copie de son code pendant ${maintenance.exportWindowDays} jours, puis tout est ` +
-              'supprimé) ou « suppression » (dès la fin de la période de continuité) ;',
+              `${maintenance.gracePeriodDays} jours après la fin du contrat ;`,
+            'vous choisissez ensuite le sort de vos données : « restitution puis suppression » ' +
+              `(le site est suspendu, vous exportez vos données et obtenez la copie de son code ` +
+              `pendant ${maintenance.exportWindowDays} jours, puis tout est supprimé) ou ` +
+              '« suppression » (dès la fin de la période de continuité) ;',
             'sans choix de votre part, c’est la restitution puis la suppression qui s’applique : ' +
               'rien n’est effacé avant que vous ayez pu tout récupérer ;',
-            'vous pouvez changer d’avis, ou réactiver votre maintenance, jusqu’à la suppression.',
+            'vous pouvez changer d’avis, ou prolonger le contrat avec nous, jusqu’à la ' +
+              'suppression.',
           ]),
           p(
-            'La date de suppression figure dans l’e-mail de confirmation de la résiliation. Les ' +
-              'sauvegardes chiffrées sont effacées par rotation au plus tard ' +
-              `${maintenance.backupRotationDays} jours après.`,
+            'La date de suppression vous est confirmée par e-mail. Les sauvegardes chiffrées sont ' +
+              `effacées par rotation au plus tard ${maintenance.backupRotationDays} jours après.`,
           ),
         ],
       },
@@ -2752,14 +2563,6 @@ export function buildAccessibility(): LegalDocument {
 /*  Registre des documents                                                     */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Formate la retenue liee au domaine sans jamais diviser des centimes a la main.
- * La valeur vient de la configuration : elle n'est ecrite en dur nulle part.
- */
-function formatRefundDeduction(cents: number): string {
-  return formatMoney(cents, 'EUR', { hideDecimalsWhenRound: true });
-}
-
 export const LEGAL_BUILDERS = {
   'mentions-legales': buildLegalNotice,
   cgv: buildTerms,
@@ -2767,7 +2570,6 @@ export const LEGAL_BUILDERS = {
   'accord-de-traitement': buildDataProcessingAgreement,
   confidentialite: buildPrivacyPolicy,
   cookies: buildCookiePolicy,
-  remboursements: buildRefundPolicy,
   'donnees-personnelles': buildDataPolicy,
   'sous-traitants': buildSubprocessors,
   'signaler-un-contenu': buildNoticeAndAction,
@@ -2788,7 +2590,6 @@ export const LEGAL_ORDER: readonly LegalSlug[] = [
   'accord-de-traitement',
   'confidentialite',
   'cookies',
-  'remboursements',
   'donnees-personnelles',
   'sous-traitants',
   'signaler-un-contenu',

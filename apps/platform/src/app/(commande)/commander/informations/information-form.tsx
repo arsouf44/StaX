@@ -39,6 +39,8 @@ export function InformationForm({
   questions: OnboardingField[];
   draft: {
     organizationName: string;
+    contactFirstName: string;
+    contactLastName: string;
     contactEmail: string;
     contactPhone: string;
     city: string;
@@ -64,13 +66,29 @@ export function InformationForm({
       {state.errors ? <FormErrorSummary errors={state.errors} /> : null}
 
       <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Prénom" error={state.errors?.contactFirstName} required>
+          <Input
+            name="contactFirstName"
+            defaultValue={draft.contactFirstName}
+            autoComplete="given-name"
+            required
+            autoFocus
+          />
+        </Field>
+        <Field label="Nom" error={state.errors?.contactLastName} required>
+          <Input
+            name="contactLastName"
+            defaultValue={draft.contactLastName}
+            autoComplete="family-name"
+            required
+          />
+        </Field>
         <Field label="Nom de votre entreprise" error={state.errors?.organizationName} required>
           <Input
             name="organizationName"
             defaultValue={draft.organizationName}
             autoComplete="organization"
             required
-            autoFocus
           />
         </Field>
         <Field
@@ -80,7 +98,12 @@ export function InformationForm({
         >
           <Input name="city" defaultValue={draft.city} autoComplete="address-level2" />
         </Field>
-        <Field label="Adresse e-mail" error={state.errors?.contactEmail} required>
+        <Field
+          label="Adresse e-mail"
+          error={state.errors?.contactEmail}
+          hint="Elle recevra les modalités de paiement, puis votre code d’accès personnel."
+          required
+        >
           <Input
             name="contactEmail"
             type="email"
@@ -89,7 +112,11 @@ export function InformationForm({
             required
           />
         </Field>
-        <Field label="Téléphone" error={state.errors?.contactPhone}>
+        <Field
+          label="Téléphone"
+          error={state.errors?.contactPhone}
+          hint="Facultatif. Pour vous joindre si une précision est utile."
+        >
           <Input
             name="contactPhone"
             type="tel"
@@ -193,10 +220,10 @@ export function InformationForm({
       ) : null}
 
       <Field
-        label="Autre chose à nous dire ?"
-        hint="Facultatif. Une contrainte, une préférence, un exemple de site que vous aimez."
+        label="Votre projet en quelques mots"
+        hint="Facultatif. Ce que doit permettre votre site, une contrainte, une échéance, un site que vous aimez."
       >
-        <Textarea name="customerNotes" rows={4} defaultValue={draft.customerNotes} />
+        <Textarea name="customerNotes" rows={5} defaultValue={draft.customerNotes} />
       </Field>
 
       <SubmitButton />

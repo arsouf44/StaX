@@ -8,14 +8,13 @@ import { InformationForm } from './information-form';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Vos informations',
+  title: 'Vos coordonnées',
   robots: { index: false, follow: false },
 };
 
 export default async function OrderInformationPage() {
   const draft = await readOrderDraft();
-  if (!draft.planSlug) redirect('/commander');
-  if (!draft.businessTypeSlug) redirect('/commander/metier');
+  if (!draft.businessTypeSlug) redirect('/commander');
 
   // Les questions posees sont celles du METIER choisi : un coiffeur et un
   // agent immobilier n ont pas les memes informations a fournir.
@@ -27,8 +26,9 @@ export default async function OrderInformationPage() {
 
       <h1 className="title-page">Parlez-nous de vous</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-        Ces informations nous permettent de préparer votre site. Rien n’est définitif : vous pourrez
-        tout modifier depuis votre espace, avant comme après la mise en ligne.
+        Ces informations nous permettent de préparer votre site et de vous envoyer les modalités de
+        paiement. Votre code d’accès personnel sera envoyé à l’adresse e-mail indiquée ici :
+        vérifiez-la bien.
       </p>
 
       <InformationForm
@@ -43,6 +43,8 @@ export default async function OrderInformationPage() {
         }))}
         draft={{
           organizationName: draft.organizationName ?? '',
+          contactFirstName: draft.contactFirstName ?? '',
+          contactLastName: draft.contactLastName ?? '',
           contactEmail: draft.contactEmail ?? '',
           contactPhone: draft.contactPhone ?? '',
           city: draft.city ?? '',

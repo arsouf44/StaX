@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
-import type { PlanSlug } from '@nemasus/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   Alert,
-  Badge,
   Breadcrumb,
   ButtonLink,
   Container,
@@ -42,15 +40,6 @@ export async function generateMetadata({
   };
 }
 
-// Exhaustif par construction : une offre ajoutee au catalogue sans libelle
-// ne compile pas.
-const PLAN_LABELS: Record<Exclude<PlanSlug, 'sur-mesure'>, string> = {
-  essentiel: 'Inclus dès l’offre Essentiel',
-  premium: 'Inclus à partir de Premium',
-  'ultra-premium': 'Inclus à partir d’Ultra Premium',
-  exceptionnel: 'Inclus dans l’offre Exceptionnel',
-};
-
 export default async function FeatureDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const page = getFeaturePage(slug);
@@ -69,15 +58,6 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
             ]}
           />
           <div className="max-w-3xl">
-            {page.requiredPlan ? (
-              <Badge tone="accent" className="mb-5">
-                {PLAN_LABELS[page.requiredPlan]}
-              </Badge>
-            ) : (
-              <Badge tone="success" className="mb-5">
-                Inclus dans toutes les offres
-              </Badge>
-            )}
             <SectionHeading
               as="h1"
               eyebrow={page.eyebrow}
@@ -174,8 +154,14 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
                   <ButtonLink variant="accent" size="pill" href="/commander" block>
                     Commander mon site
                   </ButtonLink>
-                  <ButtonLink size="pill" href="/tarifs" variant="ghost" block className="mt-2">
-                    Voir les tarifs
+                  <ButtonLink
+                    size="pill"
+                    href="/comment-ca-marche"
+                    variant="ghost"
+                    block
+                    className="mt-2"
+                  >
+                    Comment ça marche
                   </ButtonLink>
                 </div>
               </Panel>

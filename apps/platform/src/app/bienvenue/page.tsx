@@ -17,8 +17,8 @@ export const metadata: Metadata = {
  * Compte sans organisation.
  *
  * Plutot qu un tableau de bord vide qui donnerait l impression que quelque
- * chose a echoue, on explique la situation et on propose les deux seules
- * suites possibles : commander, ou activer un acces recu par e-mail.
+ * chose a echoue, on explique la situation et on propose les suites
+ * possibles : saisir le code d acces recu apres le virement, ou commander.
  */
 export default async function WelcomePage() {
   const session = await getSession();
@@ -59,13 +59,14 @@ export default async function WelcomePage() {
             <div className="mt-8 space-y-4">
               {internal ? null : (
                 <Panel level={2} padding="lg">
-                  <h2 className="text-base font-medium">Nous avons préparé mon site</h2>
+                  <h2 className="text-base font-medium">J’ai reçu mon code d’accès</h2>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                    Après notre appel, vous avez reçu un e-mail « Votre site est prêt » avec un code
-                    à 12 caractères. Saisissez-le pour retrouver votre site.
+                    Après votre virement, vous avez reçu un e-mail « Votre code d’accès Nemasus »
+                    avec un code à 12 caractères. Saisissez-le pour ouvrir l’espace de votre
+                    entreprise.
                   </p>
-                  <ButtonLink href="/recuperer" className="mt-4">
-                    Récupérer mon site
+                  <ButtonLink href="/acces" className="mt-4">
+                    Saisir mon code d’accès
                   </ButtonLink>
                 </Panel>
               )}
@@ -76,8 +77,8 @@ export default async function WelcomePage() {
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   {internal
-                    ? 'Compte interne Nemasus : choisissez n’importe quelle offre et n’importe quel métier. Aucun paiement ne vous sera demandé. Le site est ensuite construit par l’équipe Nemasus, puis confié à ce compte depuis l’administration.'
-                    : 'Choisissez votre offre et votre métier. Comptez cinq minutes, et vous pourrez tout modifier ensuite.'}
+                    ? 'Compte interne Nemasus : choisissez n’importe quel métier. Aucun paiement ne vous sera demandé. Le site est ensuite construit par l’équipe Nemasus, puis confié à ce compte depuis l’administration.'
+                    : 'Décrivez votre activité et votre projet : nous vous envoyons ensuite les modalités de paiement par virement, puis votre code d’accès.'}
                 </p>
                 <ButtonLink href="/commander" className="mt-4">
                   {internal ? 'Commander sans paiement' : 'Commander mon site'}
@@ -85,25 +86,11 @@ export default async function WelcomePage() {
               </Panel>
 
               <Panel level={1} padding="lg">
-                <h2 className="text-base font-medium">J’ai reçu une facture</h2>
+                <h2 className="text-base font-medium">On m’a invité à collaborer</h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  Si nous avons convenu de votre site par téléphone, vous avez reçu une facture par
-                  e-mail. Son numéro suffit à retrouver votre commande.
+                  Si une entreprise vous a invité sur son espace, ouvrez le lien de l’e-mail
+                  d’invitation : il vous rattache directement à son site.
                 </p>
-                <ButtonLink href="/facture" variant="secondary" className="mt-4">
-                  Saisir mon numéro de facture
-                </ButtonLink>
-              </Panel>
-
-              <Panel level={1} padding="lg">
-                <h2 className="text-base font-medium">J’ai reçu un code d’activation</h2>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                  Si quelqu’un a commandé un site pour vous, ou vous a invité sur le sien, un code
-                  vous a été envoyé par e-mail.
-                </p>
-                <ButtonLink href="/activation" variant="secondary" className="mt-4">
-                  Saisir mon code
-                </ButtonLink>
               </Panel>
             </div>
 

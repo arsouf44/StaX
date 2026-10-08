@@ -38,7 +38,7 @@ export function ResetRequestForm({ turnstileSiteKey }: { turnstileSiteKey: strin
         </Alert>
       ) : null}
 
-      <div aria-hidden="true" className="sr-only">
+      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
         <label htmlFor="website">Ne remplissez pas ce champ</label>
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>

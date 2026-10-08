@@ -41,7 +41,7 @@ const STEPS: readonly Step[] = [
   },
   {
     title: 'Suivi',
-    text: 'À la livraison, l’éditeur s’ouvre et la maintenance commence : hébergement, sauvegardes, surveillance, statistiques.',
+    text: 'À la livraison, l’éditeur s’ouvre : vous modifiez vos contenus, publiez, suivez vos statistiques. Nous restons joignables depuis votre espace.',
     art: 'grow',
     label: 'Demandes reçues et visibilité en hausse sur quatre trimestres',
   },

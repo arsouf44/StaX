@@ -126,27 +126,6 @@ export const QUOTE_STATUSES: Record<string, StatusLabel> = {
   paid: label('Payé', 'success'),
 };
 
-export const REFUND_STATUSES: Record<string, StatusLabel> = {
-  requested: label('Demandé', 'warning'),
-  under_review: label('En examen', 'info'),
-  approved: label('Approuvé', 'accent'),
-  rejected: label('Refusé', 'neutral'),
-  processing: label('En cours chez Stripe', 'info'),
-  refunded: label('Remboursé', 'success'),
-  failed: label('Échec', 'danger'),
-};
-
-export const SUBSCRIPTION_STATUSES: Record<string, StatusLabel> = {
-  incomplete: label('Incomplet', 'warning'),
-  trialing: label('Période offerte', 'info'),
-  active: label('Actif', 'success'),
-  past_due: label('Impayé', 'warning'),
-  unpaid: label('Impayé prolongé', 'danger'),
-  cancel_at_period_end: label('Résiliation programmée', 'warning'),
-  canceled: label('Résilié', 'neutral'),
-  paused: label('En pause', 'neutral'),
-};
-
 export const TICKET_STATUSES: Record<string, StatusLabel> = {
   open: label('Ouvert', 'accent'),
   waiting_support: label('À traiter', 'warning'),
@@ -182,13 +161,6 @@ export const PLATFORM_ROLE_LABELS: Record<string, StatusLabel> = {
   designer: label('Design', 'neutral'),
 };
 
-export const INVOICE_STATUSES: Record<string, StatusLabel> = {
-  issued: label('Émise', 'warning', 'En attente de rattachement par le client.'),
-  claimed: label('Rattachée', 'accent', 'Le client a retrouvé sa commande.'),
-  paid: label('Payée', 'success'),
-  cancelled: label('Annulée', 'neutral'),
-};
-
 const PRIVACY_KINDS: Record<string, StatusLabel> = {
   export: label('Accès / portabilité', 'info'),
   deletion: label('Effacement', 'warning'),
@@ -202,11 +174,6 @@ const PRIVACY_STATUSES: Record<string, StatusLabel> = {
   in_progress: label('En cours', 'info'),
   completed: label('Traitée', 'success'),
   refused: label('Refusée', 'neutral', 'Un refus doit être motivé et notifié.'),
-};
-
-const COUPON_KINDS: Record<string, StatusLabel> = {
-  percent: label('Pourcentage', 'info'),
-  amount: label('Montant fixe', 'accent'),
 };
 
 const JOB_STATUSES: Record<string, StatusLabel> = {
@@ -455,108 +422,6 @@ export const ADMIN_VIEWS = {
     icon: 'file-text',
   },
 
-  abonnements: {
-    id: 'abonnements',
-    route: '/admin/abonnements',
-    table: 'subscriptions',
-    title: 'Abonnements',
-    description:
-      'Les contrats de maintenance. Leur état vient des webhooks Stripe signés : il n’est jamais saisi ici.',
-    minimum: 'billing_admin',
-    select:
-      'id, status, maintenance_state, plan_slug, maintenance_price_cents, billing_interval, currency, current_period_end, cancel_at_period_end, created_at, organization_id, organizations ( name )',
-    orderColumn: 'created_at',
-    ascending: false,
-    filters: [
-      {
-        value: 'impayes',
-        label: 'Impayés',
-        column: 'status',
-        operator: 'in',
-        match: ['past_due', 'unpaid'],
-      },
-      {
-        value: 'risque',
-        label: 'Résiliation programmée',
-        column: 'cancel_at_period_end',
-        operator: 'eq',
-        match: 'true',
-      },
-      { value: 'actifs', label: 'Actifs', column: 'status', operator: 'eq', match: 'active' },
-    ],
-    columns: [
-      {
-        key: 'organizations',
-        label: 'Client',
-        kind: 'relation',
-        path: 'name',
-        link: ORGANISATION_LINK,
-      },
-      { key: 'plan_slug', label: 'Offre', kind: 'text', secondary: true },
-      { key: 'status', label: 'État', kind: 'status', statuses: SUBSCRIPTION_STATUSES },
-      { key: 'maintenance_price_cents', label: 'Maintenance', kind: 'money' },
-      { key: 'current_period_end', label: 'Échéance', kind: 'date', secondary: true },
-    ],
-    emptyTitle: 'Aucun abonnement',
-    emptyDescription: 'Un abonnement démarre à la mise en ligne du site du client.',
-    icon: 'shield-check',
-    note: 'Lecture seule. Modifier un abonnement se fait dans Stripe : la base suit ensuite, par le webhook signé.',
-  },
-
-  remboursements: {
-    id: 'remboursements',
-    route: '/admin/remboursements',
-    table: 'refund_requests',
-    title: 'Remboursements',
-    description:
-      'Les demandes et leur éligibilité, calculée à partir de la date réelle de mise en ligne.',
-    minimum: 'billing_admin',
-    select:
-      'id, status, eligible, eligibility_reason, amount_paid_cents, deduction_cents, refund_amount_cents, currency, requested_at, deadline_at, organization_id, organizations ( name )',
-    orderColumn: 'requested_at',
-    ascending: false,
-    filters: [
-      {
-        value: 'a-traiter',
-        label: 'À traiter',
-        column: 'status',
-        operator: 'in',
-        match: ['requested', 'under_review'],
-      },
-      {
-        value: 'en-cours',
-        label: 'En cours',
-        column: 'status',
-        operator: 'in',
-        match: ['approved', 'processing'],
-      },
-      {
-        value: 'traites',
-        label: 'Traités',
-        column: 'status',
-        operator: 'in',
-        match: ['refunded', 'rejected', 'failed'],
-      },
-    ],
-    columns: [
-      {
-        key: 'organizations',
-        label: 'Client',
-        kind: 'relation',
-        path: 'name',
-        link: ORGANISATION_LINK,
-      },
-      { key: 'status', label: 'État', kind: 'status', statuses: REFUND_STATUSES },
-      { key: 'eligible', label: 'Éligible', kind: 'boolean' },
-      { key: 'refund_amount_cents', label: 'À rembourser', kind: 'money' },
-      { key: 'deduction_cents', label: 'Déduction domaine', kind: 'money', secondary: true },
-      { key: 'requested_at', label: 'Demandé le', kind: 'datetime', secondary: true },
-    ],
-    emptyTitle: 'Aucune demande',
-    emptyDescription: 'Les demandes de remboursement des clients apparaissent ici.',
-    icon: 'rotate-ccw',
-  },
-
   support: {
     id: 'support',
     route: '/admin/support',
@@ -610,36 +475,6 @@ export const ADMIN_VIEWS = {
     emptyTitle: 'Aucun ticket',
     emptyDescription: 'Les demandes envoyées depuis l’espace client apparaissent ici.',
     icon: 'life-buoy',
-  },
-
-  catalogue: {
-    id: 'catalogue',
-    route: '/admin/catalogue',
-    table: 'plans',
-    title: 'Offres',
-    description:
-      'Le catalogue commercial. Une offre n’est jamais modifiée en place : une nouvelle version est créée, et les contrats en cours gardent leur prix.',
-    minimum: 'platform_admin',
-    select:
-      'id, slug, version, name, setup_price_cents, maintenance_price_cents, billing_interval, currency, is_quote_only, is_active, is_public, valid_from, valid_until',
-    orderColumn: 'sort_order',
-    ascending: true,
-    filters: [
-      { value: 'actives', label: 'En vente', column: 'is_active', operator: 'eq', match: 'true' },
-      { value: 'retirees', label: 'Retirées', column: 'is_active', operator: 'eq', match: 'false' },
-    ],
-    columns: [
-      { key: 'name', label: 'Offre', kind: 'text' },
-      { key: 'version', label: 'Version', kind: 'mono', secondary: true },
-      { key: 'setup_price_cents', label: 'Création HT', kind: 'money' },
-      { key: 'maintenance_price_cents', label: 'Maintenance HT', kind: 'money' },
-      { key: 'is_public', label: 'Publique', kind: 'boolean', secondary: true },
-      { key: 'valid_from', label: 'En vigueur depuis', kind: 'date', secondary: true },
-    ],
-    emptyTitle: 'Aucune offre',
-    emptyDescription: 'Le catalogue est vide : appliquez la migration de données de référence.',
-    icon: 'package',
-    note: 'Lecture seule. Un changement de prix passe par une migration versionnée, pour que l’historique des commandes reste vérifiable.',
   },
 
   securite: {
@@ -715,59 +550,6 @@ export const ADMIN_VIEWS = {
     note: 'Le journal est en ajout seul : une ligne écrite ne peut être ni modifiée ni supprimée, y compris par un administrateur.',
   },
 
-  factures: {
-    id: 'factures',
-    route: '/admin/factures',
-    table: 'sales_invoices',
-    title: 'Factures de vente',
-    description:
-      'Les factures émises après un appel et une démonstration. Le client saisit le numéro pour retrouver sa commande.',
-    minimum: 'billing_admin',
-    select:
-      'id, number, plan_slug, company_name, customer_email, total_cents, currency, status, issued_at, claimed_at, attempt_count',
-    orderColumn: 'issued_at',
-    ascending: false,
-    searchColumn: 'number',
-    searchLabel: 'Rechercher un numéro',
-    filters: [
-      {
-        value: 'en-attente',
-        label: 'Non rattachées',
-        column: 'status',
-        operator: 'eq',
-        match: 'issued',
-      },
-      {
-        value: 'rattachees',
-        label: 'Rattachées',
-        column: 'status',
-        operator: 'in',
-        match: ['claimed', 'paid'],
-      },
-      {
-        value: 'annulees',
-        label: 'Annulées',
-        column: 'status',
-        operator: 'eq',
-        match: 'cancelled',
-      },
-    ],
-    columns: [
-      { key: 'number', label: 'Numéro', kind: 'mono' },
-      { key: 'company_name', label: 'Entreprise', kind: 'text' },
-      { key: 'customer_email', label: 'Destinataire', kind: 'text', secondary: true },
-      { key: 'plan_slug', label: 'Offre', kind: 'text', secondary: true },
-      { key: 'total_cents', label: 'Total TTC', kind: 'money' },
-      { key: 'status', label: 'État', kind: 'status', statuses: INVOICE_STATUSES },
-      { key: 'attempt_count', label: 'Tentatives', kind: 'text', secondary: true },
-    ],
-    emptyTitle: 'Aucune facture',
-    emptyDescription:
-      'Émettez une facture après un accord commercial pour que le client puisse rattacher sa commande.',
-    icon: 'receipt',
-    note: 'Un nombre de tentatives élevé sur une facture non rattachée signale une énumération de numéros.',
-  },
-
   confidentialite: {
     id: 'confidentialite',
     route: '/admin/confidentialite',
@@ -818,38 +600,6 @@ export const ADMIN_VIEWS = {
     emptyDescription: 'Les demandes d’exercice des droits arrivent ici dès leur dépôt.',
     icon: 'shield-check',
     note: 'Trié par échéance, la plus proche en premier. Une demande sans identité vérifiée ne doit jamais être exécutée : c’est ainsi qu’on livre les données de quelqu’un d’autre.',
-  },
-
-  coupons: {
-    id: 'coupons',
-    route: '/admin/coupons',
-    table: 'coupons',
-    title: 'Codes promotionnels',
-    description: 'Remises applicables à la création du site ou à la maintenance.',
-    minimum: 'platform_admin',
-    select:
-      'id, code, label, kind, value, applies_to, max_redemptions, redeemed_count, ' +
-      'valid_until, is_active, created_at',
-    orderColumn: 'created_at',
-    ascending: false,
-    searchColumn: 'code',
-    searchLabel: 'Rechercher un code',
-    filters: [
-      { value: 'actifs', label: 'Actifs', column: 'is_active', operator: 'eq', match: 'true' },
-    ],
-    columns: [
-      { key: 'code', label: 'Code', kind: 'mono' },
-      { key: 'label', label: 'Libellé', kind: 'text' },
-      { key: 'kind', label: 'Type', kind: 'status', statuses: COUPON_KINDS },
-      { key: 'applies_to', label: 'Porte sur', kind: 'text', secondary: true },
-      { key: 'redeemed_count', label: 'Utilisé', kind: 'text' },
-      { key: 'valid_until', label: 'Jusqu’au', kind: 'date', secondary: true },
-      { key: 'is_active', label: 'Actif', kind: 'boolean' },
-    ],
-    emptyTitle: 'Aucun code',
-    emptyDescription: 'Créez un code pour accorder une remise sur une commande.',
-    icon: 'badge',
-    note: 'La remise est toujours recalculée par la base au moment de la commande : un code affiché ici ne fixe jamais un montant à lui seul.',
   },
 
   'feature-flags': {

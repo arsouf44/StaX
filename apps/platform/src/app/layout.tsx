@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { platformUrl, publicEnv } from '@nemasus/config';
-import { BRAND, faviconDataUri } from '@nemasus/ui/brand';
+import { BRAND } from '@nemasus/ui/brand';
 import { ToastProvider } from '@nemasus/ui';
 import './globals.css';
 
@@ -17,25 +17,21 @@ export const metadata: Metadata = {
     template: `%s — ${BRAND.name}`,
   },
   description:
-    'Nemasus conçoit, héberge et maintient le site professionnel de votre entreprise. ' +
-    'Nous construisons le site, vous gardez la main sur vos contenus, ' +
-    'vos messages et vos paiements.',
+    'Nemasus, studio français de sites web professionnels : nous concevons, développons et ' +
+    'mettons en ligne le site de votre entreprise, puis vous le gérez vous-même depuis un ' +
+    'éditeur simple.',
   applicationName: BRAND.name,
   authors: [{ name: BRAND.name }],
   generator: null,
   referrer: 'strict-origin-when-cross-origin',
   formatDetection: { telephone: false, address: false, email: false },
-  icons: {
-    icon: [{ url: faviconDataUri(), type: 'image/svg+xml' }],
-    apple: [{ url: faviconDataUri() }],
-  },
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
     siteName: BRAND.name,
     url: platformUrl(),
   },
-  twitter: { card: 'summary_large_image' },
+  twitter: { card: 'summary_large_image', title: `${BRAND.name} — ${BRAND.tagline}` },
   robots: {
     index: true,
     follow: true,

@@ -6,19 +6,15 @@ import { hmacHex, timingSafeEqual } from '@nemasus/security';
 /**
  * Brouillon de commande.
  *
- * Les trois premieres etapes du parcours d achat n exigent AUCUN compte : on
- * ne demande a quelqu un de s inscrire qu au moment ou cela devient
- * necessaire, c est-a-dire au paiement.
+ * Le parcours de commande n exige AUCUN compte : le compte du client est
+ * ouvert plus tard, avec le code d acces personnel qu il recoit une fois son
+ * virement arrive.
  *
- * Le brouillon vit donc dans un cookie signe, pas en base. Deux consequences
- * importantes :
+ * Le brouillon vit donc dans un cookie signe, pas en base :
  *
- *  - il ne contient QUE des choix (offre, metier, reponses) — jamais un prix.
- *    Le prix est recalcule cote serveur a partir du catalogue au moment de
- *    creer la commande. Modifier le cookie ne change donc pas ce qui est
- *    facture ;
- *  - la signature empeche de fabriquer un brouillon pointant vers une offre
- *    inexistante ou un contenu hors bornes.
+ *  - il ne contient QUE des choix et des coordonnees — aucun prix : il n y a
+ *    pas de grille tarifaire, le montant est convenu ensuite avec le client ;
+ *  - la signature empeche de fabriquer un brouillon hors bornes.
  */
 
 const COOKIE_NAME = '__nemasus_order';
@@ -26,19 +22,16 @@ const MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
 export const orderDraftSchema = z
   .object({
-    planSlug: z.string().max(40).optional(),
     sectorSlug: z.string().max(60).optional(),
     businessTypeSlug: z.string().max(60).optional(),
     organizationName: z.string().max(120).optional(),
+    contactFirstName: z.string().max(80).optional(),
+    contactLastName: z.string().max(80).optional(),
     contactEmail: z.string().max(200).optional(),
     contactPhone: z.string().max(40).optional(),
     city: z.string().max(120).optional(),
-    domainHandling: z
-      .enum(['none', 'customer_owned', 'stax_purchase', 'subdomain_only'])
-      .optional(),
+    domainHandling: z.enum(['customer_owned', 'purchase', 'later']).optional(),
     domainHostname: z.string().max(253).optional(),
-    subdomain: z.string().max(63).optional(),
-    couponCode: z.string().max(40).optional(),
     customerNotes: z.string().max(2000).optional(),
     answers: z
       .record(z.string().max(60), z.union([z.string().max(2000), z.number(), z.boolean()]))
@@ -119,11 +112,10 @@ export async function clearOrderDraft(): Promise<void> {
 
 /** Etapes du parcours, dans l ordre. Sert au fil d Ariane et aux redirections. */
 export const ORDER_STEPS = [
-  { path: '/commander', label: 'Votre offre' },
-  { path: '/commander/metier', label: 'Votre métier' },
-  { path: '/commander/informations', label: 'Vos informations' },
-  { path: '/commander/adresse', label: 'Votre adresse' },
-  { path: '/commander/recapitulatif', label: 'Récapitulatif' },
+  { path: '/commander', label: 'Votre activité' },
+  { path: '/commander/informations', label: 'Vos coordonnées' },
+  { path: '/commander/adresse', label: 'Votre adresse web' },
+  { path: '/commander/recapitulatif', label: 'Envoi' },
 ] as const;
 
 /**
@@ -132,9 +124,8 @@ export const ORDER_STEPS = [
  * le laisser sur une page incomplete.
  */
 export function firstIncompleteStep(draft: OrderDraft): string {
-  if (!draft.planSlug) return '/commander';
-  if (!draft.businessTypeSlug || !draft.sectorSlug) return '/commander/metier';
-  if (!draft.organizationName) return '/commander/informations';
+  if (!draft.businessTypeSlug || !draft.sectorSlug) return '/commander';
+  if (!draft.organizationName || !draft.contactEmail) return '/commander/informations';
   if (!draft.domainHandling) return '/commander/adresse';
   return '/commander/recapitulatif';
 }

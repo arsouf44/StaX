@@ -48,17 +48,12 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
   {
     label: 'Ventes et clients',
     items: [
+      { href: '/admin/commandes', label: 'Commandes', icon: 'receipt', minimum: 'support' },
       {
         href: '/admin/messages',
         label: 'Messages clients',
         icon: 'message-circle',
         minimum: 'support',
-      },
-      {
-        href: '/admin/propositions',
-        label: 'Propositions',
-        icon: 'send',
-        minimum: 'platform_admin',
       },
       {
         href: '/admin/organisations',
@@ -72,29 +67,10 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
     ],
   },
   {
-    label: 'Commerce',
+    label: 'Projets',
     items: [
-      { href: '/admin/commandes', label: 'Commandes', icon: 'receipt', minimum: 'support' },
-      {
-        href: '/admin/factures',
-        label: 'Factures de vente',
-        icon: 'file-text',
-        minimum: 'billing_admin',
-      },
       { href: '/admin/projets', label: 'Projets', icon: 'route', minimum: 'support' },
-      { href: '/admin/devis', label: 'Devis', icon: 'file-text', minimum: 'support' },
-      {
-        href: '/admin/abonnements',
-        label: 'Abonnements',
-        icon: 'shield-check',
-        minimum: 'billing_admin',
-      },
-      {
-        href: '/admin/remboursements',
-        label: 'Remboursements',
-        icon: 'euro',
-        minimum: 'billing_admin',
-      },
+      { href: '/admin/devis', label: 'Demandes sur mesure', icon: 'file-text', minimum: 'support' },
     ],
   },
   {
@@ -107,7 +83,6 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
         icon: 'user-check',
         minimum: 'support',
       },
-      { href: '/admin/catalogue', label: 'Offres', icon: 'package', minimum: 'platform_admin' },
       { href: '/admin/webhooks', label: 'Événements', icon: 'zap', minimum: 'developer' },
       { href: '/admin/securite', label: 'Sécurité', icon: 'lock', minimum: 'platform_admin' },
       {
@@ -128,7 +103,6 @@ const GROUPS: Array<{ label: string; items: AdminEntry[] }> = [
         icon: 'flag',
         minimum: 'support',
       },
-      { href: '/admin/coupons', label: 'Codes promo', icon: 'badge', minimum: 'platform_admin' },
       {
         href: '/admin/feature-flags',
         label: 'Activations',

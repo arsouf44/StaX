@@ -46,11 +46,26 @@ export const RATE_LIMITS = {
     max: 8,
     message: 'Trop de tentatives d’activation. Réessayez dans quinze minutes.',
   },
+  /** Saisie d'un code d'accès : par adresse IP, en plus du compteur porté par chaque code. */
+  accessCode: {
+    bucket: 'auth.access_code',
+    windowSeconds: 900,
+    max: 8,
+    message:
+      'Trop de tentatives. Pour votre sécurité, patientez quinze minutes avant de réessayer.',
+  },
   contactForm: {
     bucket: 'public.contact_form',
     windowSeconds: 3600,
     max: 10,
     message: 'Vous avez envoyé trop de messages. Réessayez dans une heure.',
+  },
+  orderForm: {
+    bucket: 'public.order_form',
+    windowSeconds: 3600,
+    max: 5,
+    message:
+      'Vous avez envoyé plusieurs commandes en peu de temps. Réessayez plus tard ou écrivez-nous.',
   },
   quoteForm: {
     bucket: 'public.quote_form',

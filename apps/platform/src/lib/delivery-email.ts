@@ -1,16 +1,14 @@
 import 'server-only';
-import { platformUrl, refundPolicyConfig } from '@nemasus/config';
+import { platformUrl } from '@nemasus/config';
 import { unwrapList, unwrapMaybe, type Db } from '@nemasus/database';
 import { sendEmail, siteDeliveredEmail } from '@nemasus/emails';
-import { formatMaintenance } from '@nemasus/payments';
 
 /**
  * E-mail de livraison.
  *
  * La base notifie deja le client dans son espace (`deliver_site`) ; l'e-mail
- * reprend l'essentiel hors de Nemasus : le site est en ligne, l'editeur s'ouvre,
- * la maintenance mensuelle commence ce jour, la garantie court jusqu'a telle
- * date. Un envoi manque ne remet jamais la livraison en cause.
+ * reprend l'essentiel hors de Nemasus : le site est en ligne, a telle adresse,
+ * et l'editeur s'ouvre. Un envoi manque ne remet jamais la livraison en cause.
  */
 export async function sendDeliveryEmails(service: Db, siteId: string): Promise<void> {
   const site = unwrapMaybe<{ organization_id: string; delivered_at: string | null }>(
@@ -22,7 +20,7 @@ export async function sendDeliveryEmails(service: Db, siteId: string): Promise<v
   );
   if (!site?.delivered_at) return;
 
-  const [domains, hosting, order, members] = await Promise.all([
+  const [domains, hosting, members] = await Promise.all([
     service
       .from('site_domains')
       .select('hostname, is_primary')
@@ -35,14 +33,6 @@ export async function sendDeliveryEmails(service: Db, siteId: string): Promise<v
       .eq('status', 'connected')
       .maybeSingle(),
     service
-      .from('orders')
-      .select('maintenance_price_cents, billing_interval, currency')
-      .eq('site_id', siteId)
-      .in('status', ['paid', 'partially_refunded'])
-      .order('paid_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    service
       .from('organization_members')
       .select('profiles!organization_members_user_id_fkey ( email, first_name, platform_role )')
       .eq('organization_id', site.organization_id)
@@ -53,29 +43,6 @@ export async function sendDeliveryEmails(service: Db, siteId: string): Promise<v
   const primary = activeDomains.find((domain) => domain.is_primary) ?? activeDomains[0];
   const productionUrl = unwrapMaybe<{ production_url: string }>(hosting as never)?.production_url;
   const siteUrl = primary ? `https://${primary.hostname}` : (productionUrl ?? null);
-
-  const paid = unwrapMaybe<{
-    maintenance_price_cents: number;
-    billing_interval: string;
-    currency: string;
-  }>(order as never);
-  const maintenanceAmount =
-    paid && paid.maintenance_price_cents > 0
-      ? `${formatMaintenance(
-          paid.maintenance_price_cents,
-          'EUR',
-          paid.billing_interval === 'year' ? 'year' : 'month',
-        )} HT`
-      : null;
-
-  const refund = refundPolicyConfig();
-  const deadline = new Date(site.delivered_at);
-  deadline.setUTCDate(deadline.getUTCDate() + refund.windowDays);
-  const refundDeadline = paid
-    ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'Europe/Paris' }).format(
-        deadline,
-      )
-    : null;
 
   const recipients = unwrapList<{
     profiles: { email: string; first_name: string | null; platform_role: string | null } | null;
@@ -92,8 +59,6 @@ export async function sendDeliveryEmails(service: Db, siteId: string): Promise<v
         firstName: profile.first_name,
         siteUrl,
         appUrl: `${platformUrl()}/app`,
-        maintenanceAmount,
-        refundDeadline,
       }),
       { db: service, organizationId: site.organization_id },
     );

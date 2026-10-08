@@ -1,5 +1,3 @@
-import type { PlanSlug } from '@nemasus/types';
-
 /**
  * Pages de fonctionnalités.
  *
@@ -27,17 +25,6 @@ export interface FeaturePage {
   sections: readonly FeatureSection[];
   /** Ce que la fonctionnalité ne fait PAS : dit franchement, pas caché. */
   limits?: readonly string[];
-  /**
-   * Offre minimale requise, ou `null` si incluse partout.
-   *
-   * Ces valeurs sont les slugs REELS du catalogue. Elles ont porte des noms
-   * d'offres disparus (« classique », « signature ») pendant que la base
-   * accordait deja autre chose : une page vitrine annoncait alors une
-   * fonctionnalite dans une offre qui ne la comportait pas.
-   * `tests/integration/plan-promises.test.ts` compare desormais ces valeurs
-   * a la grille `plan_features`.
-   */
-  requiredPlan: Exclude<PlanSlug, 'sur-mesure'> | null;
   related: readonly string[];
 }
 
@@ -50,7 +37,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Nous créons votre site, vous le gérez ensuite. Une fois votre site livré, vous modifiez vos textes, vos photos, vos horaires et vos informations. Rien n’apparaît en ligne tant que vous n’avez pas publié.',
     visual: 'editor',
-    requiredPlan: null,
     sections: [
       {
         title: 'Vous cliquez, vous modifiez',
@@ -100,7 +86,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Votre site répond sous votre propre nom, en HTTPS, avec un certificat renouvelé automatiquement. Votre domaine pointe vers le déploiement de votre propre site, pas vers une plateforme partagée.',
     visual: 'domains',
-    requiredPlan: null,
     sections: [
       {
         title: 'Vous avez déjà un nom de domaine',
@@ -139,11 +124,10 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Un formulaire de contact générique vous fait perdre du temps. Ceux que nous développons pour votre site posent les bonnes questions selon votre activité.',
     visual: 'dashboard',
-    requiredPlan: null,
     sections: [
       {
         title: 'Adaptés à votre activité',
-        body: 'Un plombier reçoit la nature de la panne, l’urgence et le code postal. Un traiteur reçoit la date, le nombre de convives et le type d’événement. Vous rappelez en connaissant déjà le besoin. L’offre Essentiel comprend un formulaire de contact ; plusieurs formulaires et des champs avancés sont inclus dès l’offre Premium.',
+        body: 'Un plombier reçoit la nature de la panne, l’urgence et le code postal. Un traiteur reçoit la date, le nombre de convives et le type d’événement. Vous rappelez en connaissant déjà le besoin. Chaque formulaire est conçu pour votre activité : nous prévoyons ceux dont votre site a besoin, avec les champs utiles.',
       },
       {
         title: 'Protégés contre le spam',
@@ -169,7 +153,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Plus de messages perdus entre une boîte mail saturée, un répondeur et un carnet. Chaque demande a un statut, une réponse et un historique.',
     visual: 'dashboard',
-    requiredPlan: null,
     sections: [
       {
         title: 'Non lu, lu, traité',
@@ -199,11 +182,10 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Combien de visiteurs, quelles pages, d’où viennent-ils. Sans cookie de pistage, sans conserver d’adresse IP, sans revendre quoi que ce soit.',
     visual: 'dashboard',
-    requiredPlan: null,
     sections: [
       {
         title: 'Ce que vous voyez',
-        body: 'Le nombre de visiteurs et de pages vues, les pages les plus consultées et le nombre de demandes reçues. Dès l’offre Premium, s’y ajoutent les sources de trafic, la répartition mobile/ordinateur et les conversions. De quoi décider, sans noyer l’essentiel.',
+        body: 'Le nombre de visiteurs et de pages vues, les pages les plus consultées et le nombre de demandes reçues. S’y ajoutent les sources de trafic, la répartition mobile/ordinateur et les conversions. De quoi décider, sans noyer l’essentiel.',
       },
       {
         title: 'Ce que nous ne faisons pas',
@@ -233,7 +215,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Être trouvé sur Google commence par des fondations propres. Elles sont en place dès le premier jour, sur tous les sites, sans option payante.',
     visual: 'site',
-    requiredPlan: null,
     sections: [
       {
         title: 'Les fondations',
@@ -268,7 +249,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Acomptes, commandes, dons. L’argent va directement de votre client à votre compte bancaire. Nemasus n’est pas dans ce circuit.',
     visual: 'payments',
-    requiredPlan: 'ultra-premium',
     sections: [
       {
         title: 'Votre compte, à votre nom',
@@ -285,7 +265,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Ce que vous payez',
-        body: 'À Nemasus : la création du site, puis la maintenance mensuelle à partir de sa livraison. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
+        body: 'À Nemasus : votre commande, réglée par virement selon le montant convenu. À Stripe : les frais bancaires de chaque transaction, facturés directement par Stripe selon ses tarifs publics. Rien d’autre.',
       },
     ],
     limits: [
@@ -302,7 +282,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Créneaux, capacités, délais, fermetures exceptionnelles. Le moteur s’adapte à un restaurant comme à un cabinet.',
     visual: 'dashboard',
-    requiredPlan: 'premium',
     sections: [
       {
         title: 'Paramétré selon votre activité',
@@ -320,7 +299,7 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Acompte possible',
-        body: 'Pour limiter les réservations non honorées, vous pouvez demander un acompte au moment de la réservation, avec l’offre Ultra Premium, qui comprend le paiement en ligne. Il est encaissé sur votre propre compte.',
+        body: 'Pour limiter les réservations non honorées, vous pouvez demander un acompte au moment de la réservation, si votre site encaisse en ligne. Il est encaissé sur votre propre compte.',
       },
     ],
     limits: [
@@ -336,7 +315,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Un catalogue, un panier, des commandes. Pensé pour les petits volumes d’un commerce de proximité, pas pour concurrencer une place de marché.',
     visual: 'site',
-    requiredPlan: 'ultra-premium',
     sections: [
       {
         title: 'Un catalogue simple',
@@ -365,7 +343,6 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
     subtitle:
       'Mettre à jour une carte, publier une actualité, préparer une publication : sans dépendre de personne, et sans risquer de casser quoi que ce soit.',
     visual: 'editor',
-    requiredPlan: null,
     sections: [
       {
         title: 'Ce que votre site prévoit',
@@ -373,16 +350,16 @@ export const FEATURE_PAGES: readonly FeaturePage[] = [
       },
       {
         title: 'Médias organisés',
-        body: 'Vos photos et documents sont rangés dans une médiathèque, dans la limite d’espace de votre offre. Chaque image reçoit un texte alternatif, utile pour l’accessibilité comme pour le référencement.',
+        body: 'Vos photos et documents sont rangés dans une médiathèque, dans la limite d’espace prévue pour votre site. Chaque image reçoit un texte alternatif, utile pour l’accessibilité comme pour le référencement.',
         points: [
-          'Espace médias selon votre offre',
+          'Espace médias adapté à votre site',
           'Texte alternatif sur chaque image',
           'Une image remplacée est publiée avec la version suivante',
         ],
       },
       {
         title: 'Publication programmée',
-        body: 'Dès l’offre Premium, préparez une version et choisissez sa date : elle est publiée automatiquement, puis déployée comme n’importe quelle publication.',
+        body: 'Préparez une version et choisissez sa date : elle est publiée automatiquement, puis déployée comme n’importe quelle publication.',
       },
       {
         title: 'Un contenu qui vous appartient',

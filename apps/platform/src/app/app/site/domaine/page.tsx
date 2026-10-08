@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { featureAccess, loadFeatureSnapshot, unwrapList } from '@nemasus/database';
 import { domainProvider } from '@nemasus/infrastructure';
 import { ButtonLink, Icon, Panel } from '@nemasus/ui';
@@ -242,7 +241,7 @@ export default async function DomainPage() {
             </span>
             <div>
               <h2 className="text-sm font-medium">
-                Le domaine personnalisé n’est pas inclus dans votre offre
+                Le domaine personnalisé n’est pas encore activé pour votre site
               </h2>
               <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
                 Votre site est en ligne à son adresse Nemasus
@@ -253,12 +252,6 @@ export default async function DomainPage() {
                 <ButtonLink href="/app/support" variant="secondary">
                   Demander l’activation
                 </ButtonLink>
-                <Link
-                  href="/tarifs"
-                  className="self-center text-sm text-[var(--accent)] underline underline-offset-4"
-                >
-                  Comparer les offres
-                </Link>
               </div>
             </div>
           </div>

@@ -24,7 +24,6 @@ import {
 } from '~/lib/external-sites/admin-flows';
 import { syncHostingDeployments } from '~/lib/external-sites/publisher';
 import { loadHosting, toHostingTarget } from '~/lib/external-sites/records';
-import { startMaintenanceAtDelivery } from '~/lib/maintenance';
 import { sendDeliveryEmails } from '~/lib/delivery-email';
 import type { ActionState } from '~/lib/form-state';
 
@@ -537,7 +536,7 @@ const DELIVERY_ERRORS: Record<string, string> = {
   archived: 'Ce site est archivé.',
 };
 
-/** « Livrer le site au client » : checklist exigee par la base, puis maintenance. */
+/** « Livrer le site au client » : checklist exigee par la base, puis e-mail de livraison. */
 export async function deliverExternalSiteAction(payload: unknown): Promise<ActionState> {
   const parsed = deliverSchema.safeParse(payload);
   if (!parsed.success) return { status: 'error', message: 'Vérifiez l’adresse e-mail du client.' };
@@ -562,47 +561,13 @@ export async function deliverExternalSiteAction(payload: unknown): Promise<Actio
     };
   }
 
-  // La maintenance mensuelle commence ICI, a la livraison.
-  const maintenance = await startMaintenanceAtDelivery(access.service, parsed.data.siteId);
   await sendDeliveryEmails(access.service, parsed.data.siteId).catch((mailError: unknown) => {
     console.error('[nemasus:delivery] e-mail de livraison', mailError);
   });
   refresh(parsed.data.siteId);
   revalidatePath('/admin/sites');
-  const maintenanceText =
-    maintenance.status === 'started'
-      ? ' La maintenance mensuelle démarre aujourd’hui.'
-      : maintenance.status === 'failed'
-        ? ` Attention : la maintenance n’a pas pu démarrer (${maintenance.message}). Relancez-la depuis cette page.`
-        : '';
   return {
-    status: maintenance.status === 'failed' ? 'error' : 'success',
-    message: `Site livré : le client en a désormais la main, il a été prévenu.${maintenanceText}`,
+    status: 'success',
+    message: 'Site livré : le client en a désormais la main, il a été prévenu.',
   };
-}
-
-export async function retryMaintenanceAction(payload: unknown): Promise<ActionState> {
-  const parsed = siteOnly.safeParse(payload);
-  if (!parsed.success) return { status: 'error', message: 'Demande refusée.' };
-  const access = await gate();
-  if (!access.ok) return access.state;
-  const site = unwrapMaybe<{ delivered_at: string | null }>(
-    (await access.db
-      .from('sites')
-      .select('delivered_at')
-      .eq('id', parsed.data.siteId)
-      .maybeSingle()) as never,
-  );
-  if (!site?.delivered_at) {
-    return { status: 'error', message: 'La maintenance ne démarre qu’à la livraison du site.' };
-  }
-  const maintenance = await startMaintenanceAtDelivery(access.service, parsed.data.siteId);
-  refresh(parsed.data.siteId);
-  if (maintenance.status === 'started') {
-    return { status: 'success', message: 'Maintenance mensuelle démarrée.' };
-  }
-  if (maintenance.status === 'not_applicable') {
-    return { status: 'error', message: 'Aucune maintenance en attente pour ce site.' };
-  }
-  return { status: 'error', message: maintenance.message };
 }

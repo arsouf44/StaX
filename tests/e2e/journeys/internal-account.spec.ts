@@ -16,7 +16,7 @@ import {
 } from './support/external-site';
 
 /**
- * Compte interne Nemasus : une commande Ultra Premium sans aucun paiement, qui
+ * Compte interne Nemasus : une commande sans aucun paiement, qui
  * suit ensuite EXACTEMENT le parcours d'un client : Nemasus developpe le site hors
  * de Nemasus (depot GitHub, projet Cloudflare), le rattache, puis le livre a ce
  * compte, qui ne peut le modifier qu'a partir de ce moment. L'equipe garde la
@@ -67,17 +67,16 @@ test('compte interne : commande sans paiement, site construit par Nemasus puis c
     await login(page);
   });
 
-  await test.step('commande Ultra Premium dans le tunnel', async () => {
+  await test.step('commande dans le tunnel, sans offre à choisir', async () => {
     await page.goto('/commander');
-    await page.locator('label', { has: page.locator('input[value="ultra-premium"]') }).click();
-    await page.getByRole('button', { name: 'Continuer' }).click();
-
-    await page.waitForURL(/\/commander\/metier/);
+    await expect(page.locator('main')).not.toContainText('€');
     await page.getByRole('button', { name: /Restauration/ }).click();
     await page.getByRole('button', { name: /^Restaurant$/ }).click();
     await page.getByRole('button', { name: 'Continuer' }).click();
 
     await page.waitForURL(/\/commander\/informations/);
+    await page.locator('[name="contactFirstName"]').fill('Marie');
+    await page.locator('[name="contactLastName"]').fill('Dupont');
     await page.locator('[name="organizationName"]').fill(`Chez Dupont ${suffix}`);
     await page.locator('[name="city"]').fill('Lyon');
     await page.locator('[name="contactEmail"]').fill(`contact-${suffix}@exemple.test`);
@@ -98,7 +97,7 @@ test('compte interne : commande sans paiement, site construit par Nemasus puis c
     await page.waitForURL(/\/commander\/adresse/);
     // Domaine choisi plus tard : le site sera d'abord en ligne sur l'adresse
     // technique de son projet Cloudflare, aucun sous-domaine Nemasus a saisir.
-    await page.locator('label', { has: page.locator('input[value="subdomain_only"]') }).click();
+    await page.locator('label', { has: page.locator('input[value="later"]') }).click();
     await expect(page.locator('[name="subdomain"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Continuer' }).click();
     await page.waitForURL(/\/commander\/recapitulatif/);
@@ -108,7 +107,7 @@ test('compte interne : commande sans paiement, site construit par Nemasus puis c
     const main = page.locator('main');
     await expect(main).toContainText('Compte interne Nemasus');
     await expect(main).toContainText('Aucun paiement');
-    await expect(main).toContainText('0,00 €');
+    await expect(main).not.toContainText('€');
     await expect(main).toContainText('développe le site hors de Nemasus');
     await expect(main).toContainText('Communiquée à la mise en ligne');
     await expect(main).toContainText('que lorsque l’administration le lui livre');
@@ -122,7 +121,7 @@ test('compte interne : commande sans paiement, site construit par Nemasus puis c
       if (/stripe\.com/.test(request.url())) stripeRequests.push(request.url());
     });
     await page.getByLabel(/Je confirme cette commande interne/).check();
-    await page.getByRole('button', { name: 'Enregistrer la commande' }).click();
+    await page.getByRole('button', { name: 'Enregistrer la commande interne' }).click();
     await page.waitForURL(/\/app\?commande=interne/, { timeout: 30_000 });
     await expect(page.locator('main')).toContainText('Commande interne enregistrée');
     // Tableau de bord du PROJET : suivi des etapes, aucun ecran du site.
@@ -221,12 +220,12 @@ test('compte interne : commande sans paiement, site construit par Nemasus puis c
 
   await staffContext.close();
 
-  await test.step('sites illimités : une seconde commande interne, autre offre', async () => {
+  await test.step('sites illimités : une seconde commande interne', async () => {
     const db = await userClient(account.email, account.password);
     const plan = await serviceClient()
       .from('plans')
       .select('id')
-      .eq('slug', 'essentiel')
+      .eq('slug', 'site-nemasus')
       .eq('is_active', true)
       .is('valid_until', null)
       .single();
@@ -251,7 +250,7 @@ test('le privilège interne est vérifié par la base, pas par l’interface', a
   const plan = await serviceClient()
     .from('plans')
     .select('id')
-    .eq('slug', 'ultra-premium')
+    .eq('slug', 'site-nemasus')
     .eq('is_active', true)
     .is('valid_until', null)
     .single();

@@ -182,10 +182,21 @@ const serverSchema = z.object({
   /** Secret des taches de fond planifiees (`Authorization: Bearer ...`). */
   CRON_SECRET: z.string().min(16).optional(),
 
-  EMAIL_PROVIDER: z.enum(['console', 'resend', 'postmark']).default('console'),
+  /**
+   * Cle API Resend : SECRET SERVEUR, jamais prefixee NEXT_PUBLIC_, jamais
+   * commitee. Sa seule presence active l envoi par Resend.
+   */
+  RESEND_API_KEY: optionalSecret,
+  EMAIL_PROVIDER: z.enum(['console', 'resend', 'postmark']).optional(),
   EMAIL_API_KEY: optionalSecret,
-  EMAIL_FROM: z.string().default('Nemasus <bonjour@localhost>'),
+  EMAIL_FROM: z.string().optional(),
   EMAIL_REPLY_TO: z.string().optional(),
+
+  /** Coordonnees bancaires communiquees dans les modalites de paiement par virement. */
+  BANK_TRANSFER_HOLDER: z.string().max(140).optional(),
+  BANK_TRANSFER_IBAN: z.string().max(42).optional(),
+  BANK_TRANSFER_BIC: z.string().max(11).optional(),
+  BANK_TRANSFER_BANK: z.string().max(140).optional(),
 
   ADMIN_EMAIL: z.string().email().optional(),
   /**
@@ -351,6 +362,7 @@ export function resetEnvCache(): void {
 export type CapabilityKey =
   | 'stripe'
   | 'stripe_connect'
+  | 'bank_transfer'
   | 'cloudflare_domains'
   | 'turnstile'
   | 'email'
@@ -368,8 +380,10 @@ export function hasCapability(key: CapabilityKey): boolean {
       return Boolean(readEnv('CLOUDFLARE_API_TOKEN') && readEnv('CLOUDFLARE_ZONE_ID'));
     case 'turnstile':
       return Boolean(readEnv('TURNSTILE_SECRET_KEY'));
+    case 'bank_transfer':
+      return bankTransferDetails() !== null;
     case 'email':
-      return readEnv('EMAIL_PROVIDER') !== 'console' ? Boolean(readEnv('EMAIL_API_KEY')) : true;
+      return emailSettings().provider !== 'console';
     case 'github_app':
       return Boolean(
         readEnv('GITHUB_APP_ID') &&
@@ -387,17 +401,89 @@ export function hasCapability(key: CapabilityKey): boolean {
 
 /** Every capability the current deployment is missing, for /admin/system. */
 export function missingCapabilities(): CapabilityKey[] {
+  // Le paiement de Nemasus se fait par virement : Stripe ne sert plus qu aux
+  // encaissements des boutiques des clients (Stripe Connect).
   const keys: CapabilityKey[] = [
-    'stripe',
     'stripe_connect',
     'cloudflare_domains',
     'turnstile',
     'email',
+    'bank_transfer',
     'github_app',
     'cloudflare_sites',
     'cron',
   ];
   return keys.filter((key) => !hasCapability(key));
+}
+
+/* -------------------------------------------------------------------------- */
+/*  E-mails transactionnels                                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface EmailSettings {
+  provider: 'console' | 'resend' | 'postmark';
+  /** Secret serveur. Jamais journalise, jamais renvoye au navigateur. */
+  apiKey: string | null;
+  from: string;
+  replyTo: string | null;
+}
+
+/**
+ * Configuration d envoi, lue en un seul endroit.
+ *
+ * `RESEND_API_KEY` suffit a activer Resend. `EMAIL_PROVIDER` + `EMAIL_API_KEY`
+ * restent acceptes (configuration anterieure). Sans cle, le mode `console`
+ * n envoie rien : aucun message ne part par accident depuis un poste de
+ * developpement.
+ *
+ * Sans `EMAIL_FROM`, Resend n accepte que son adresse de test
+ * (`onboarding@resend.dev`), qui ne delivre qu au titulaire du compte Resend :
+ * suffisant pour verifier la cle, jamais pour des clients.
+ */
+export function emailSettings(): EmailSettings {
+  const resendKey = readEnv('RESEND_API_KEY') ?? null;
+  const declared = readEnv('EMAIL_PROVIDER');
+  const genericKey = readEnv('EMAIL_API_KEY') ?? null;
+
+  let provider: EmailSettings['provider'] = 'console';
+  let apiKey: string | null = null;
+  if (declared === 'postmark' && genericKey) {
+    provider = 'postmark';
+    apiKey = genericKey;
+  } else if (declared !== 'console' && (resendKey || (declared === 'resend' && genericKey))) {
+    provider = 'resend';
+    apiKey = resendKey ?? genericKey;
+  }
+
+  const from =
+    readEnv('EMAIL_FROM') ??
+    (provider === 'resend' ? 'Nemasus <onboarding@resend.dev>' : 'Nemasus <bonjour@localhost>');
+  return { provider, apiKey, from, replyTo: readEnv('EMAIL_REPLY_TO') ?? null };
+}
+
+export interface BankTransferDetails {
+  holder: string;
+  iban: string;
+  bic: string | null;
+  bank: string | null;
+}
+
+/**
+ * Coordonnees bancaires du virement. Sans titulaire ni IBAN, `null` : les
+ * modalites de paiement ne peuvent pas partir, et l administration le dit.
+ */
+export function bankTransferDetails(): BankTransferDetails | null {
+  const holder = readEnv('BANK_TRANSFER_HOLDER');
+  const iban = readEnv('BANK_TRANSFER_IBAN');
+  if (!holder || !iban) return null;
+  const compact = iban.replace(/\s+/g, '').toUpperCase();
+  return {
+    holder,
+    // Lisible : groupes de quatre caracteres, comme sur un RIB.
+    iban: (compact.match(/.{1,4}/g) ?? [compact]).join(' '),
+    bic: readEnv('BANK_TRANSFER_BIC')?.toUpperCase() ?? null,
+    bank: readEnv('BANK_TRANSFER_BANK') ?? null,
+  };
 }
 
 export function platformUrl(): string {

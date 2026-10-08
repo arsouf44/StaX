@@ -13,10 +13,17 @@ import { expect, test } from '@playwright/test';
  */
 
 /** Points de depart : tout ce qu'un visiteur peut atteindre depuis l'accueil. */
-const ENTRY_POINTS = ['/', '/tarifs', '/fonctionnalites', '/realisations', '/sur-mesure'];
+const ENTRY_POINTS = [
+  '/',
+  '/comment-ca-marche',
+  '/fonctionnalites',
+  '/realisations',
+  '/sur-mesure',
+  '/faq',
+];
 
 /** Chemins prives : leur redirection vers la connexion est normale. */
-const PRIVATE_PREFIXES = ['/app', '/admin', '/commander', '/facture', '/activation', '/compte'];
+const PRIVATE_PREFIXES = ['/app', '/admin', '/commander', '/compte', '/acces/mot-de-passe'];
 
 /** Nombre maximum de pages explorees : assez pour couvrir, pas au point de durer. */
 const MAX_PAGES = 60;

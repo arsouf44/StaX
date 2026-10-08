@@ -11,12 +11,13 @@ import {
 } from '@nemasus/auth';
 import { createUserClient, tryCreateServiceClient, unwrapMaybe } from '@nemasus/database';
 import { activationCodeHint, generateActivationCode, hashActivationCode } from '@nemasus/security';
+import { accessCodeEmail, sendEmail } from '@nemasus/emails';
 import { emailSchema, optionalText, uuidSchema } from '@nemasus/validation';
 import { guardAction } from '~/lib/action-guard';
 import { requireAdminRole } from '~/lib/admin';
-import { startMaintenanceAtDelivery } from '~/lib/maintenance';
 import { sendDeliveryEmails } from '~/lib/delivery-email';
 import type { ActionState } from '~/lib/form-state';
+import { accessCodeUrl, formatOrderDate } from '~/lib/site-orders';
 import { ORG_COOKIE, SITE_COOKIE } from '~/lib/workspace';
 
 /**
@@ -172,10 +173,10 @@ export async function issueActivationCodeAction(
 
   const db = createUserClient(session.user.accessToken);
 
-  const site = unwrapMaybe<{ id: string; organization_id: string }>(
+  const site = unwrapMaybe<{ id: string; organization_id: string; name: string }>(
     (await db
       .from('sites')
-      .select('id, organization_id')
+      .select('id, organization_id, name')
       .eq('id', parsed.data.siteId)
       .maybeSingle()) as never,
   );
@@ -184,21 +185,44 @@ export async function issueActivationCodeAction(
   const code = generateActivationCode();
   const expiresAt = new Date(Date.now() + parsed.data.validForDays * 86_400_000).toISOString();
 
-  const { error } = await db.from('activation_codes').insert({
-    site_id: site.id,
-    organization_id: site.organization_id,
-    code_hash: await hashActivationCode(code),
-    code_hint: activationCodeHint(code),
-    granted_role: parsed.data.role,
-    email_constraint: parsed.data.email.trim().toLowerCase(),
-    expires_at: expiresAt,
-    created_by: session.user.id,
-  });
+  const { data: inserted, error } = await db
+    .from('activation_codes')
+    .insert({
+      site_id: site.id,
+      organization_id: site.organization_id,
+      code_hash: await hashActivationCode(code),
+      code_hint: activationCodeHint(code),
+      granted_role: parsed.data.role,
+      email_constraint: parsed.data.email.trim().toLowerCase(),
+      expires_at: expiresAt,
+      created_by: session.user.id,
+    })
+    .select('id')
+    .single();
 
-  if (error) {
-    console.error('[nemasus:activation] emission refusee', error.code, error.message);
-    return { status: 'error', message: explain(error.code, error.message) };
+  if (error || !inserted) {
+    console.error('[nemasus:activation] emission refusee', error?.code, error?.message);
+    return { status: 'error', message: explain(error?.code ?? '', error?.message ?? '') };
   }
+
+  // Le code part par e-mail à l'adresse indiquée : la personne l'utilise sur
+  // la page « Accès client », qui ouvre sa session. Il reste affiché une fois
+  // ici, au cas où l'e-mail ne partirait pas.
+  const sent = await sendEmail(
+    accessCodeEmail({
+      to: parsed.data.email.trim().toLowerCase(),
+      code,
+      companyName: site.name,
+      orderReference: null,
+      accessUrl: accessCodeUrl(code),
+      expiresLabel: formatOrderDate(expiresAt),
+    }),
+    { organizationId: site.organization_id, siteId: site.id },
+  ).catch(() => ({ ok: false, skipped: false }));
+  await db.rpc('record_access_code_email', {
+    p_code: (inserted as { id: string }).id,
+    p_status: !sent.ok ? 'failed' : sent.skipped ? 'skipped' : 'sent',
+  });
 
   // Le code en clair n'entre JAMAIS dans le journal.
   await db.rpc('write_audit', {
@@ -213,7 +237,11 @@ export async function issueActivationCodeAction(
   revalidatePath(`/admin/sites/${site.id}`);
   return {
     status: 'success',
-    message: 'Code créé. Il ne sera plus affiché après fermeture de cette fenêtre.',
+    message:
+      (sent.ok && !sent.skipped
+        ? 'Code créé et envoyé par e-mail. '
+        : 'Code créé, mais l’e-mail n’est pas parti : transmettez-le vous-même. ') +
+      'Il ne sera plus affiché après fermeture de cette fenêtre.',
     code,
   };
 }
@@ -374,11 +402,7 @@ export async function deliverSiteAction(payload: unknown): Promise<ActionState> 
     };
   }
 
-  // La maintenance mensuelle commence a la livraison, jamais avant.
   const service = tryCreateServiceClient();
-  const maintenance = service
-    ? await startMaintenanceAtDelivery(service, parsed.data.siteId)
-    : ({ status: 'failed', message: 'clé de service absente' } as const);
   if (service) {
     await sendDeliveryEmails(service, parsed.data.siteId).catch((mailError: unknown) => {
       console.error('[nemasus:delivery] e-mail de livraison', mailError);
@@ -388,14 +412,8 @@ export async function deliverSiteAction(payload: unknown): Promise<ActionState> 
   revalidatePath(`/admin/sites/${parsed.data.siteId}`);
   revalidatePath('/admin/sites');
   return {
-    status: maintenance.status === 'failed' ? 'error' : 'success',
-    message:
-      'Site confié. Le client y a désormais accès depuis son espace, et il a été prévenu.' +
-      (maintenance.status === 'started'
-        ? ' La maintenance mensuelle démarre aujourd’hui.'
-        : maintenance.status === 'failed'
-          ? ` Attention : la maintenance n’a pas pu démarrer (${maintenance.message}).`
-          : ''),
+    status: 'success',
+    message: 'Site confié. Le client y a désormais accès depuis son espace, et il a été prévenu.',
   };
 }
 

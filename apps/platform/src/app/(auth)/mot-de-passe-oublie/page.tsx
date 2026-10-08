@@ -21,7 +21,7 @@ export default async function ForgotPasswordPage({
   return (
     <AuthCard
       title="Mot de passe oublié"
-      description="Indiquez l’adresse e-mail de votre compte : nous vous enverrons un lien pour choisir un nouveau mot de passe."
+      description="Indiquez l’adresse e-mail de votre compte : nous vous enverrons un lien personnel, valable une heure, pour choisir un nouveau mot de passe."
       footer={
         <Link href="/connexion" className="text-[var(--foreground)] underline underline-offset-4">
           Retour à la connexion

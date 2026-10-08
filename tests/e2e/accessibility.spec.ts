@@ -8,7 +8,17 @@ import { expect, test } from '@playwright/test';
  * rapide reintroduit regulierement.
  */
 
-const PAGES = ['/', '/tarifs', '/realisations', '/contact', '/cgv', '/connexion'];
+const PAGES = [
+  '/',
+  '/comment-ca-marche',
+  '/realisations',
+  '/contact',
+  '/cgv',
+  '/connexion',
+  '/acces',
+  '/mot-de-passe-oublie',
+  '/commander',
+];
 
 test.describe('Accessibilite', () => {
   for (const path of PAGES) {
