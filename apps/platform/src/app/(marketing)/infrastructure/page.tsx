@@ -7,8 +7,7 @@ export const metadata: Metadata = {
   title: 'Infrastructure',
   description:
     'Où tournent vos sites : un dépôt GitHub et un projet Cloudflare par site, une base ' +
-    'PostgreSQL européenne chez Supabase pour votre espace, et chaque publication suivie ' +
-    'jusqu’à son déploiement.',
+    'européenne pour votre espace, chaque publication suivie jusqu’en ligne.',
   alternates: { canonical: '/infrastructure' },
 };
 

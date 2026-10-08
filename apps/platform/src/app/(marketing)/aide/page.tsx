@@ -6,8 +6,8 @@ import { breadcrumbJsonLd, JsonLd } from '~/lib/structured-data';
 export const metadata: Metadata = {
   title: 'Centre d’aide',
   description:
-    'Guides pratiques pour votre espace Nemasus : accéder avec votre code, choisir votre mot de ' +
-    'passe, modifier et publier votre site, connecter un domaine, gérer messages et réservations.',
+    'Guides de l’espace Nemasus : accéder avec votre code, choisir votre mot de passe, ' +
+    'modifier et publier votre site, connecter un domaine, gérer vos messages.',
   alternates: { canonical: '/aide' },
 };
 

@@ -6,8 +6,8 @@ import { breadcrumbJsonLd, faqJsonLd, JsonLd, organizationJsonLd } from '~/lib/s
 export const metadata: Metadata = {
   title: 'Questions fréquentes',
   description:
-    'Commande, paiement par virement, code d’accès, modifications, hébergement, référencement : ' +
-    'les réponses aux questions que l’on nous pose le plus souvent sur Nemasus.',
+    'Commande, paiement par virement, code d’accès, modifications, hébergement, ' +
+    'référencement : les réponses aux questions les plus fréquentes sur Nemasus.',
   alternates: { canonical: '/faq' },
 };
 

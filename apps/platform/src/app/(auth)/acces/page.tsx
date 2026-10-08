@@ -54,11 +54,17 @@ export default async function AccessPage({
       footer={
         <>
           Pas encore de code ?{' '}
-          <Link href="/commander" className="text-[var(--foreground)] underline underline-offset-4">
+          <Link
+            href="/commander"
+            className="whitespace-nowrap text-[var(--foreground)] underline underline-offset-4"
+          >
             Commander mon site
           </Link>{' '}
           ·{' '}
-          <Link href="/contact" className="text-[var(--foreground)] underline underline-offset-4">
+          <Link
+            href="/contact"
+            className="whitespace-nowrap text-[var(--foreground)] underline underline-offset-4"
+          >
             Code perdu ou expiré
           </Link>
         </>

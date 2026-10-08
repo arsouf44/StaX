@@ -5,8 +5,8 @@ import { CreationTimeline } from '~/components/marketing/diagrams';
 export const metadata: Metadata = {
   title: 'Projets sur mesure',
   description:
-    'Intégrations, espace client avancé, reprise de données, volumétries importantes : ' +
-    'Nemasus étudie votre besoin et vous adresse une proposition détaillée avant toute commande.',
+    'Intégrations, espace client avancé, reprise de données : Nemasus étudie votre besoin ' +
+    'et vous adresse une proposition détaillée avant toute commande.',
   alternates: { canonical: '/sur-mesure' },
 };
 

@@ -19,6 +19,7 @@ import {
   SitePreview,
 } from '~/components/marketing/product-visuals';
 import { DomainRoutingDiagram, PaymentRoutingDiagram } from '~/components/marketing/diagrams';
+import { metaDescription } from '~/lib/seo';
 
 /** Les dix pages de fonctionnalités sont pré-rendues au build. */
 export function generateStaticParams() {
@@ -35,7 +36,7 @@ export async function generateMetadata({
   if (!page) return { title: 'Page introuvable' };
   return {
     title: page.name,
-    description: page.subtitle,
+    description: metaDescription(page.subtitle),
     alternates: { canonical: `/fonctionnalites/${page.slug}` },
   };
 }

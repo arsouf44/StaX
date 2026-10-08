@@ -5,8 +5,8 @@ import { ButtonLink, Container, Panel, Section, SectionHeading } from '@nemasus/
 export const metadata: Metadata = {
   title: 'À propos',
   description:
-    'Qui est Nemasus et pourquoi le studio existe : offrir aux entreprises un site professionnel ' +
-    'conçu pour elles, mis en ligne pour de bon, et qu’elles gèrent ensuite elles-mêmes.',
+    'Qui est Nemasus : un studio qui conçoit pour chaque entreprise un site professionnel, ' +
+    'le met en ligne pour de bon, puis le lui confie.',
   alternates: { canonical: '/a-propos' },
 };
 

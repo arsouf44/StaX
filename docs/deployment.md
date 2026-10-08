@@ -67,8 +67,11 @@ SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL       https://<ref>.supabase.co
 SUPABASE_ANON_KEY / NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY                     (secret)
 NEMASUS_SECRET_KEY                            (secret — openssl rand -base64 48)
-STRIPE_SECRET_KEY  STRIPE_WEBHOOK_SECRET  STRIPE_CONNECT_WEBHOOK_SECRET
+RESEND_API_KEY                                (secret)   EMAIL_FROM  EMAIL_REPLY_TO
+BANK_TRANSFER_HOLDER  BANK_TRANSFER_IBAN  BANK_TRANSFER_BIC  BANK_TRANSFER_BANK
 TURNSTILE_SECRET_KEY  NEXT_PUBLIC_TURNSTILE_SITE_KEY
+# Encaissements des boutiques des clients (facultatif)
+STRIPE_SECRET_KEY  STRIPE_CONNECT_WEBHOOK_SECRET  STRIPE_CONNECT_CLIENT_ID
 # Sites livrés (étapes 7 à 9, integrations.md)
 GITHUB_APP_ID  GITHUB_APP_SLUG  GITHUB_APP_PRIVATE_KEY  GITHUB_APP_WEBHOOK_SECRET
 CLOUDFLARE_SITES_API_TOKEN  CLOUDFLARE_SITES_ACCOUNT_ID  CLOUDFLARE_WEBHOOK_SECRET
@@ -145,29 +148,33 @@ pnpm admin:bootstrap
 Puis, immédiatement : se connecter, enrôler le second facteur, changer le mot de
 passe, retirer `ADMIN_BOOTSTRAP_PASSWORD` de l’environnement.
 
-### 6. Webhooks Stripe
+### 6. Paiement par virement, et Stripe Connect
+
+Les commandes de sites se règlent **par virement** : renseignez les
+coordonnées `BANK_TRANSFER_*` ; l’équipe confirme chaque virement reçu dans
+l’administration, ce qui ouvre l’espace du client et émet son code d’accès
+([commande-virement.md](./commande-virement.md)). Il n’y a plus de webhook de
+paiement de la plateforme.
+
+Facultatif, pour les boutiques des clients : un seul point d’entrée Stripe,
+créé en mode **Connect**.
 
 | Point d’entrée | Événements |
 | --- | --- |
-| `https://…/api/webhooks/stripe` | `checkout.session.*`, `customer.subscription.*`, `invoice.*`, `charge.refunded` |
 | `https://…/api/webhooks/stripe-connect` | `account.updated`, `payment_intent.succeeded`, `charge.refunded` |
-
-Le second doit être créé en mode **Connect**. L’abonnement mensuel de
-maintenance n’est pas créé au paiement de la commande mais **à la livraison**
-du site ([stripe.md](./stripe.md)). Pour un site **proposé après un appel**, le
-webhook livre le site aussitôt le paiement confirmé : l’abonnement démarre donc
-le même jour ([vente-par-telephone.md](./vente-par-telephone.md)).
 
 ### 6 bis. E-mails et authentification
 
-- `EMAIL_PROVIDER`, `EMAIL_API_KEY`, `EMAIL_FROM` : e-mails de Nemasus
-  (propositions, livraison, réponses de l’équipe, alertes, et l’e-mail au
+- `RESEND_API_KEY` (secret serveur), `EMAIL_FROM`, `EMAIL_REPLY_TO` : tous
+  les e-mails de Nemasus (commande, modalités de virement, code d’accès, **mot
+  de passe oublié**, livraison, réponses de l’équipe, alertes, et l’e-mail au
   commerçant pour chaque message, réservation ou commande reçus par son
   site) ;
 - `SUPPORT_EMAIL` : reçoit aussi **toutes les alertes de l’équipe** (à défaut
   `ADMIN_EMAIL`) ;
-- Supabase → Authentication : SMTP personnalisé, *Site URL* et *Redirect URLs*
-  = `https://<domaine>/auth/confirmation` ([supabase.md](./supabase.md)).
+- Supabase → Authentication : *Site URL* = `https://<domaine>` et *Redirect
+  URLs* = `https://<domaine>/auth/confirmation` ([supabase.md](./supabase.md)).
+  Le mot de passe oublié ne passe plus par les e-mails de Supabase.
 
 Pas à pas complet : [LANCEMENT.md](./LANCEMENT.md).
 
@@ -245,8 +252,9 @@ Dans l’interface :
 - envoyer un webhook de test depuis GitHub (*Recent Deliveries → Redeliver*)
   et vérifier la réponse 200 ;
 - envoyer un message depuis un formulaire public, vérifier qu’il arrive ;
-- déclencher un événement de test Stripe et vérifier son statut `processed`
-  dans `webhook_events`.
+- passer une commande de test, envoyer les modalités, confirmer le virement,
+  ouvrir l’espace avec le code reçu ; puis « Mot de passe oublié » jusqu’au
+  bout.
 
 ---
 

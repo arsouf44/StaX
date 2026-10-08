@@ -184,6 +184,12 @@ const nextConfig: NextConfig = {
       { source: '/metiers/:path*', destination: '/comment-ca-marche', permanent: true },
       { source: '/remboursements', destination: '/cgv', permanent: true },
       { source: '/connexion-client', destination: '/acces', permanent: true },
+      // Plus d'inscription libre ni de « récupération » par carte : le compte
+      // s'ouvre avec le code d'accès (la chaîne de requête, `?code=`, suit).
+      { source: '/inscription', destination: '/acces', permanent: true },
+      { source: '/activation', destination: '/acces', permanent: true },
+      { source: '/recuperer', destination: '/acces', permanent: true },
+      { source: '/facture', destination: '/acces', permanent: true },
       { source: '/app/abonnement', destination: '/app/facturation', permanent: true },
       { source: '/app/abonnement/:path*', destination: '/app/facturation', permanent: true },
       { source: '/app/commande/:path*', destination: '/app/facturation', permanent: true },

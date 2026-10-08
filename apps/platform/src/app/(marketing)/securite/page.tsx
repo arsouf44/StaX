@@ -5,8 +5,8 @@ import { Alert, Container, Panel, Reveal, Section, SectionHeading, ButtonLink } 
 export const metadata: Metadata = {
   title: 'Sécurité',
   description:
-    'Isolation stricte entre clients garantie par la base de données, aucune donnée bancaire ' +
-    'stockée, chiffrement en transit, journaux d’audit. Comment Nemasus protège vos données.',
+    'Comment Nemasus protège vos données : isolation entre clients imposée par la base, ' +
+    'aucune donnée de carte, chiffrement en transit, journaux d’audit.',
   alternates: { canonical: '/securite' },
 };
 

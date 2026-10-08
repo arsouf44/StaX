@@ -7,13 +7,13 @@ projet Cloudflare, puis **rattaché** à Nemasus pour que le client en modifie l
 contenu **après** la livraison.
 
 ```
-ORDER
+ORDER                     commande sans prix → modalités de virement → virement reçu → code d'accès
  → BUILD EXTERNALLY        l'équipe développe le site hors de Nemasus
  → GITHUB                  un dépôt par site (application GitHub Nemasus)
  → CLOUDFLARE              un projet Pages ou Workers par site, domaine, HTTPS
  → VERIFY                  checklist : déployé, domaine, HTTPS, SEO, formulaires, responsive…
  → IMPORT INTO NEMASUS        dépôt + projet + nemasus.manifest.json + contenu initial = version 1
- → DELIVER                 « Livrer le site au client » : l'éditeur s'ouvre, la maintenance démarre
+ → DELIVER                 « Livrer le site au client » : l'éditeur s'ouvre
  → CLIENT EDITS DRAFT      brouillon, aperçu du VRAI site (build Cloudflare de prévisualisation)
  → PUBLISH                 « Publier » : nouvelle version demandée
  → GITHUB COMMIT           commit `nemasus: publication client 00002` en avance rapide
@@ -32,15 +32,15 @@ réservations, paiements, statistiques) sont suspendues.
 
 | Étape | Qui | Effet |
 | --- | --- | --- |
-| Choix de l’offre, métier, informations, adresse | client | brouillon de commande (cookie signé) |
-| Récapitulatif : prix, délai de réalisation de l’offre, ce que l’offre comprend | client | `app.create_order` fige prix et inclusions (`orders.plan_inclusions`) |
-| Paiement de la **création** seulement | Stripe | webhook signé → `app.apply_order_paid` |
+| Métier, informations, adresse du site (aucun prix) | visiteur | brouillon de commande (cookie signé) |
+| Envoi de la commande, CGV acceptées | visiteur | `app.submit_site_order` : commande `CMD-…` reçue |
+| Modalités de paiement (montant convenu, IBAN, référence) | équipe | `app.request_site_order_payment` |
+| Virement constaté sur le relevé | équipe | `app.confirm_site_order_payment` : organisation, site, projet, code d’accès |
+| Saisie du code d’accès | client | `/acces` : espace ouvert, premier mot de passe |
 
-Au paiement : le site (`sites.architecture = 'external_repository'`) et le
-projet sont créés, **vides et non livrés** (`delivered_at` nul). La maintenance
-passe à `pending_delivery` : **rien n’est prélevé** avant la livraison. La
-carte est mémorisée (`setup_future_usage`) pour démarrer l’abonnement mensuel
-le jour de la livraison.
+Au virement reçu : le site (offre interne `site-nemasus`) et le projet sont
+créés, **vides et non livrés** (`delivered_at` nul). Le détail du cycle et de
+sa sécurité : [commande-virement.md](./commande-virement.md).
 
 Le métier sert à adapter le questionnaire, à suggérer les fonctionnalités
 utiles et à donner le bon vocabulaire à l’espace client. **Il ne sélectionne
@@ -141,12 +141,9 @@ l’inscrit, avec sa preuve (`record_delivery_check`, rôle de service).
 
 - pose `sites.delivered_at`, passe le site `live`, le projet à « Livraison » ;
 - ouvre au client l’édition, l’aperçu, la publication et l’historique ;
-- notifie le client (notification + e-mail « Votre site vous est livré ») ;
-- **démarre la maintenance mensuelle** (`startMaintenanceAtDelivery` →
-  abonnement Stripe). La base refuse tout abonnement pour un site non livré
-  (`upsert_subscription_from_stripe` → `site_not_delivered`). Un échec Stripe
-  n’annule pas la livraison : la commande passe en `failed`, visible et
-  relançable depuis la même page.
+- notifie le client (notification + e-mail « Votre site vous est livré »).
+
+Aucun abonnement n’est créé : il n’y a plus de prélèvement automatique.
 
 La garantie commerciale court à partir de la livraison.
 
@@ -216,10 +213,11 @@ commit, l’état de son déploiement, et :
 
 La page suit une restauration jusqu’à la confirmation de Cloudflare.
 
-## 10. Après la livraison : maintenance, suspension, résiliation
+## 10. Après la livraison : hébergement, suspension, fin du contrat
 
-- **Maintenance mensuelle**, sans durée minimale, résiliable en ligne ; elle
-  prend fin au terme du mois en cours. Contenu exact : [CGV, article 10](../apps/platform/src/content/legal.ts).
+- **Hébergement et services de la plateforme** : aucun abonnement ni
+  prélèvement automatique ; ce qui est compris et pour combien de temps est
+  convenu avec chaque client. Contenu exact : [CGV, articles 10 et 11](../apps/platform/src/content/legal.ts).
 - **Suspension** (impayé persistant, contenu illicite, fin de la période de
   continuité) : l’éditeur, l’aperçu, la publication et les interactions de
   l’API des sites sont interrompus ; rien n’est effacé ; le client relit son
@@ -235,7 +233,7 @@ formulaires, mesure d’audience sans cookie, réservations, boutique et
 paiement sur le compte Stripe du commerçant, comptes clients. Le site est
 identifié par sa **clé publique** (elle n’ouvre aucun droit seule) ; toute
 écriture exige une **origine appartenant au site** ; chaque opération est
-limitée en débit et vérifiée contre les droits de l’offre en base.
+limitée en débit et vérifiée contre les droits du site en base.
 
 ---
 

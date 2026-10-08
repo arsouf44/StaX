@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Fonctionnalités',
   description:
     'Éditeur de contenu, domaines, formulaires, messages, statistiques, référencement, ' +
-    'paiements, réservations, vente en ligne : tout ce que fait la plateforme Nemasus.',
+    'réservations, vente en ligne : ce que fait la plateforme Nemasus.',
   alternates: { canonical: '/fonctionnalites' },
 };
 

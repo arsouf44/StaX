@@ -58,9 +58,10 @@ directement, en termes clairs et sans minimiser.
 
 | Symptôme | Vérifier d’abord |
 | --- | --- |
-| Commandes payées non appliquées | `webhook_events` : statut `failed` et son motif |
-| Paiements en double | La contrainte d’unicité sur `stripe_payment_intent_id` |
-| Abonnements désynchronisés | Rejouer les événements depuis le tableau de bord Stripe |
+| Virement reçu mais pas de code chez le client | `/admin/commandes` → la commande : état de l’e-mail du code ; « Envoyer un nouveau code » (le précédent est désactivé) |
+| Client bloqué sur `/acces` | Liste des codes de la commande : expiré, désactivé, déjà utilisé, nombre d’essais ; émettre un nouveau code |
+| E-mails non reçus | `/admin/sante` (fournisseur configuré ?) et `email_log` ; `RESEND_API_KEY`, domaine d’envoi vérifié dans Resend |
+| Encaissements Connect non appliqués | `webhook_events` : statut `failed` et son motif |
 
 Les fonctions étant idempotentes, **rejouer un événement est sans danger**. En
 cas de doute, rejouer est préférable à ne rien faire.

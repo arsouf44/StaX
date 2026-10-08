@@ -196,7 +196,8 @@ test.describe('Site public', () => {
     expect(body).toContain('Paiement, code d’accès et facturation');
     expect(body).toContain('virement bancaire');
     expect(body).toContain('ne publie pas de grille tarifaire');
-    expect(body).not.toMatch(/Exceptionnel|Ultra Premium|maintenance mensuelle/i);
+    // `\b` : « exceptionnelle » (force majeure) n'est pas le nom d'une offre.
+    expect(body).not.toMatch(/\bExceptionnel\b|Ultra Premium|maintenance mensuelle/i);
   });
 
   test('robots.txt existe et reste coherent', async ({ request }) => {
@@ -211,8 +212,11 @@ test.describe('Site public', () => {
     const response = await request.get('/sitemap.xml');
     expect(response.ok()).toBe(true);
     const xml = await response.text();
-    for (const forbidden of ['/app/', '/admin/', '/connexion', '/commander', '/acces', '/tarifs']) {
+    for (const forbidden of ['/app/', '/admin/', '/connexion', '/commander', '/tarifs']) {
       expect(xml, `${forbidden} ne doit pas etre indexable`).not.toContain(forbidden);
     }
+    // `/accessibilite` est indexable ; `/acces` (saisie du code), non.
+    expect(xml).not.toMatch(/\/acces(<|\/|\?)/);
+    expect(xml).toContain('/comment-ca-marche');
   });
 });

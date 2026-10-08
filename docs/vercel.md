@@ -53,9 +53,9 @@ ajoutez après, **redéployez** (Deployments → ⋯ → Redeploy, sans le cache
 
 | Variable absente | Symptôme exact |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | « Le catalogue tarifaire est momentanément indisponible » — la page s'affiche, vide |
-| `NEMASUS_SECRET_KEY` | **Tous** les formulaires refusent de s'exécuter : inscription, contact, devis, activation |
-| `SUPABASE_SERVICE_ROLE_KEY` | Contact, devis et activation annoncent une indisponibilité ; la limitation de débit cesse d'être appliquée ; les webhooks Stripe échouent ; l'ouverture de l'éditeur depuis l'administration (sessions de construction et d'assistance) est refusée avec un message |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Connexion et espace client indisponibles, annoncés comme tels ; les pages publiques s'affichent |
+| `NEMASUS_SECRET_KEY` | **Tous** les formulaires refusent de s'exécuter : commande, accès par code, contact, devis, mot de passe oublié |
+| `SUPABASE_SERVICE_ROLE_KEY` | Commande, accès par code, mot de passe oublié, contact et devis annoncent une indisponibilité ; la limitation de débit cesse d'être appliquée ; l'ouverture de l'éditeur depuis l'administration est refusée avec un message |
 
 **Aucune page ne plante pour autant** : chaque écran qui dépend d'une variable
 absente l'annonce en clair. L'écran **Administration → État des services**
@@ -117,9 +117,9 @@ site commercial français sans mentions légales valides est une infraction.
 ### Selon les fonctions activées
 
 ```
-EMAIL_PROVIDER=resend|postmark        EMAIL_API_KEY=   EMAIL_FROM=   EMAIL_REPLY_TO=
-STRIPE_SECRET_KEY=   STRIPE_WEBHOOK_SECRET=   STRIPE_CONNECT_WEBHOOK_SECRET=
-STRIPE_CONNECT_CLIENT_ID=
+RESEND_API_KEY=   (secret)            EMAIL_FROM=   EMAIL_REPLY_TO=
+BANK_TRANSFER_HOLDER=   BANK_TRANSFER_IBAN=   BANK_TRANSFER_BIC=   BANK_TRANSFER_BANK=
+STRIPE_SECRET_KEY=   STRIPE_CONNECT_WEBHOOK_SECRET=   STRIPE_CONNECT_CLIENT_ID=   (Connect, facultatif)
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=       TURNSTILE_SECRET_KEY=
 GITHUB_APP_ID=  GITHUB_APP_SLUG=  GITHUB_APP_PRIVATE_KEY=  GITHUB_APP_WEBHOOK_SECRET=
 CLOUDFLARE_SITES_API_TOKEN=  CLOUDFLARE_SITES_ACCOUNT_ID=  CLOUDFLARE_WEBHOOK_SECRET=
@@ -130,26 +130,27 @@ L'application GitHub et le jeton Cloudflare se créent en quelques minutes :
 voir [integrations.md](./integrations.md).
 
 Chaque fonction non configurée se déclare indisponible au lieu d'échouer, et
-`/admin/sante` l'affiche comme telle. Aucun paiement n'est possible tant que
-Stripe n'est pas renseigné.
+`/admin/sante` l'affiche comme telle. Sans `RESEND_API_KEY`, aucun e-mail ne
+part (les codes d'accès sont alors affichés une fois à l'équipe) ; sans
+coordonnées bancaires, les modalités de virement ne peuvent pas être envoyées.
 
 ---
 
 ## 3. Après le déploiement
 
 ```
-1. /tarifs          les trois offres s'affichent avec leurs prix
-2. /status          les indicateurs répondent
-3. /inscription     créer un compte, en laissant le téléphone vide
-4. /mentions-legales   aucun marqueur « [À CONFIGURER — … ] »
-5. /admin/sante   la liste des capacités manquantes est-elle celle attendue ?
+1. /                  aucun prix, « Commander mon site » mène à /commander
+2. /status            les indicateurs répondent
+3. /acces             « Entrez votre code d'accès » ; un code inventé est refusé
+4. /mot-de-passe-oublie   même message pour toute adresse ; l'e-mail arrive (Resend)
+5. /mentions-legales  aucun marqueur « [À CONFIGURER — … ] »
+6. /admin/sante       la liste des capacités manquantes est-elle celle attendue ?
 ```
 
-Webhook Stripe : `https://votre-domaine/api/webhooks/stripe`, et
-`https://votre-domaine/api/webhooks/stripe-connect` pour Connect. Le secret de
-signature de chaque endpoint va dans les variables ci-dessus. **Aucun paiement
-n'est jamais considéré comme abouti sur la seule redirection du navigateur :
-c'est le webhook qui fait foi.**
+Seul webhook Stripe : `https://votre-domaine/api/webhooks/stripe-connect`
+(Connect, facultatif). Les commandes de sites se règlent par virement : **un
+paiement n'est déclaré que par une personne de l'équipe, après l'avoir constaté
+sur le relevé bancaire** ([commande-virement.md](./commande-virement.md)).
 
 ---
 
@@ -173,4 +174,4 @@ par Workers Builds. Le dépôt n'en contient plus la configuration :
 3. rattachez le domaine de la plateforme au projet Vercel
    (*Settings → Domains*) et mettez la même adresse dans `PLATFORM_URL`,
    `NEXT_PUBLIC_PLATFORM_URL`, Supabase (*Authentication → URL Configuration*)
-   et les webhooks Stripe.
+   et le webhook Stripe Connect.

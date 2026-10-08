@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
+import { metaDescription } from '~/lib/seo';
 
 /**
  * Rendu dynamique volontaire : l'identite de l'editeur provient des secrets de
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const document = getLegalDocument('cgu');
   return {
     title: document.title,
-    description: document.description,
+    description: metaDescription(document.description),
     alternates: { canonical: '/cgu' },
     robots: { index: true, follow: true },
   };

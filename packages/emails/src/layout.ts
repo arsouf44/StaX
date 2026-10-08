@@ -171,6 +171,7 @@ export function renderEmailLayout(options: EmailLayoutOptions): string {
       <p style="margin:18px 0 0;font-family:${SANS};font-size:12px;line-height:1.6;color:${COLORS.muted};">
         ${escapeHtml(companyName)} ·
         <a href="${escapeHtml(platformUrl)}" style="color:${COLORS.muted};">${escapeHtml(platformUrl.replace(/^https?:\/\//, ''))}</a>
+        · <a href="${escapeHtml(platformUrl.replace(/\/+$/, ''))}/confidentialite" style="color:${COLORS.muted};">Vos données et vos droits</a>
       </p>
     </td>
   </tr>

@@ -38,9 +38,8 @@ SUPABASE_ACCESS_TOKEN=
 # preview et des jetons CSRF. Generer avec : openssl rand -base64 48
 NEMASUS_SECRET_KEY=
 
-# --- Stripe (paiements de la plateforme) --------------------------------------
+# --- Stripe Connect (encaissements des boutiques des sites clients) ----------
 STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
 STRIPE_CONNECT_WEBHOOK_SECRET=
 STRIPE_CONNECT_CLIENT_ID=
 
@@ -54,12 +53,14 @@ CLOUDFLARE_SAAS_FALLBACK_ORIGIN=
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 
-# --- E-mails transactionnels --------------------------------------------------
-# EMAIL_PROVIDER : console | resend | postmark
-EMAIL_PROVIDER=
-EMAIL_API_KEY=
+# --- E-mails transactionnels (Resend) -----------------------------------------
+# Secret du Worker : `wrangler secret put RESEND_API_KEY`, jamais dans le depot.
+RESEND_API_KEY=
 EMAIL_FROM=
 EMAIL_REPLY_TO=
+# Avance : forcer un fournisseur (console | resend | postmark) et sa cle.
+EMAIL_PROVIDER=
+EMAIL_API_KEY=
 
 # --- Compte platform_owner initial --------------------------------------------
 # ADMIN_BOOTSTRAP_PASSWORD est fourni uniquement au moment du provisioning,

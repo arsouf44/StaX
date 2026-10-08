@@ -17,9 +17,8 @@ export const metadata: Metadata = {
     template: `%s — ${BRAND.name}`,
   },
   description:
-    'Nemasus, studio français de sites web professionnels : nous concevons, développons et ' +
-    'mettons en ligne le site de votre entreprise, puis vous le gérez vous-même depuis un ' +
-    'éditeur simple.',
+    'Studio français de sites web professionnels : nous concevons et mettons en ligne le site ' +
+    'de votre entreprise, puis vous le gérez depuis un éditeur simple.',
   applicationName: BRAND.name,
   authors: [{ name: BRAND.name }],
   generator: null,

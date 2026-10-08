@@ -10,8 +10,8 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Commander votre site',
   description:
-    'Commandez votre site professionnel en quelques minutes : votre activité, vos coordonnées, ' +
-    'votre adresse web. Paiement par virement, code d’accès personnel à réception.',
+    'Commandez votre site professionnel : votre activité, vos coordonnées, votre adresse web. ' +
+    'Paiement par virement, code d’accès personnel à réception.',
   alternates: { canonical: '/commander' },
   robots: { index: false, follow: true },
 };

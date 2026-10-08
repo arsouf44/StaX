@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
+import { metaDescription } from '~/lib/seo';
 
 /** Rendu dynamique : l'identite de l'editeur vient des secrets de deploiement. */
 export const dynamic = 'force-dynamic';
@@ -9,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const document = getLegalDocument('accord-de-traitement');
   return {
     title: document.title,
-    description: document.description,
+    description: metaDescription(document.description),
     alternates: { canonical: '/accord-de-traitement' },
     robots: { index: true, follow: true },
   };

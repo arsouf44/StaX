@@ -18,14 +18,22 @@ export function BrowserFrame({
   children,
   className,
   secure = true,
+  label,
 }: {
   url: string;
   children: React.ReactNode;
   className?: string;
   secure?: boolean;
+  /**
+   * Description lue par les lecteurs d'écran : la maquette est une seule
+   * illustration, pas une suite de fragments d'interface en petits caractères.
+   */
+  label?: string;
 }) {
   return (
     <div
+      role="img"
+      aria-label={label ?? `Illustration : aperçu de ${url}`}
       className={cn(
         'overflow-hidden border border-[rgb(255_255_255/0.85)] bg-[rgb(250_251_251/0.86)] shadow-[var(--shadow-stage)] backdrop-blur-xl',
         className,

@@ -14,18 +14,21 @@ import {
 } from '~/lib/structured-data';
 
 const DESCRIPTION =
-  'Comment commander un site Nemasus : commande en ligne sans engagement de paiement, ' +
-  'modalités de paiement par virement envoyées par e-mail, code d’accès personnel à réception, ' +
-  'puis conception, développement, mise en ligne et livraison de votre site.';
+  'Commander un site Nemasus : commande en ligne, modalités de virement par e-mail, code ' +
+  'd’accès à réception, puis conception, mise en ligne et livraison.';
 
 export const metadata: Metadata = {
   title: 'Comment ça marche : commande, virement, code d’accès',
   description: DESCRIPTION,
   alternates: { canonical: '/comment-ca-marche' },
   openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: 'Nemasus',
     title: 'Comment ça marche — Nemasus',
     description: DESCRIPTION,
     url: '/comment-ca-marche',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
   },
 };
 
@@ -184,7 +187,10 @@ export default function HowItWorksPage() {
               <CreationTimeline steps={PROCESS_STEPS} />
             </Reveal>
             <div className="lg:sticky lg:top-28">
-              <BrowserFrame url="nemasus.fr/app">
+              <BrowserFrame
+                url="nemasus.fr/app"
+                label="Illustration : le suivi du projet dans l’espace client, étape par étape"
+              >
                 <ProjectMock />
               </BrowserFrame>
               <p className="mt-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
@@ -264,7 +270,10 @@ export default function HowItWorksPage() {
             </div>
             <Reveal delay={80}>
               <div className="stage">
-                <BrowserFrame url="nemasus.fr/app/editeur">
+                <BrowserFrame
+                  url="nemasus.fr/app/editeur"
+                  label="Illustration : l’éditeur Nemasus, ouvert à la livraison du site"
+                >
                   <EditorMock />
                 </BrowserFrame>
               </div>

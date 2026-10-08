@@ -15,18 +15,21 @@ import {
 } from '~/lib/structured-data';
 
 const DESCRIPTION =
-  'Nemasus conçoit et développe le site de votre entreprise, le met en ligne sur votre domaine ' +
-  'et vous le livre avec un éditeur simple. Commande en ligne, paiement par virement, accès ' +
-  'à votre espace par code personnel.';
+  'Studio français de sites web sur mesure : nous concevons et mettons en ligne votre site, ' +
+  'puis vous le gérez. Commande en ligne, paiement par virement.';
 
 export const metadata: Metadata = {
   title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
   description: DESCRIPTION,
   alternates: { canonical: '/' },
   openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: 'Nemasus',
     title: 'Nemasus — Nous créons votre site. Vous le gérez ensuite.',
     description: DESCRIPTION,
     url: '/',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
   },
 };
 

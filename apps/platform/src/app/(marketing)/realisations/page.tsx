@@ -14,8 +14,8 @@ import { BrowserFrame, SitePreview } from '~/components/marketing/product-visual
 export const metadata: Metadata = {
   title: 'Réalisations',
   description:
-    'Des exemples concrets de sites Nemasus : restaurant, salon, artisan. Ces démonstrations sont clairement ' +
-    'identifiées comme telles : nous ne présentons jamais un exemple comme un vrai client.',
+    'Exemples de sites conçus par Nemasus (restaurant, salon, artisan) : des démonstrations ' +
+    'identifiées comme telles, jamais présentées comme des clients.',
   alternates: { canonical: '/realisations' },
 };
 
@@ -69,7 +69,10 @@ export default function ShowcasePage() {
               <Reveal key={item.variant} delay={index * 60}>
                 <article className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-center">
                   <div className={index % 2 === 1 ? 'lg:order-2' : undefined}>
-                    <BrowserFrame url={item.host}>
+                    <BrowserFrame
+                      url={item.host}
+                      label={`Démonstration : aperçu du site ${item.name}`}
+                    >
                       <SitePreview variant={item.variant} />
                     </BrowserFrame>
                   </div>

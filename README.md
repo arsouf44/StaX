@@ -3,7 +3,9 @@
 **Nous créons votre site. Vous le gérez ensuite.**
 
 Nemasus vend, fait réaliser, livre et fait gérer des sites web professionnels.
-Une entreprise choisit son offre, paie, présente son activité ; l’équipe
+Une entreprise commande son site en ligne (aucun prix public), règle par
+virement le montant convenu, reçoit un **code d’accès personnel** qui ouvre son
+espace, et présente son activité ; l’équipe
 **conçoit et développe son site individuellement, hors de Nemasus** — dans son
 propre dépôt GitHub, déployé par son propre projet Cloudflare, sur son
 domaine. Le site est vérifié, rattaché à Nemasus, puis **livré** : le client
@@ -12,10 +14,11 @@ modifiables) et publie ; chaque publication est un vrai commit, un vrai
 déploiement, et n’est annoncée « en ligne » qu’une fois confirmée.
 
 Nemasus n’est **pas** un générateur de sites : aucun modèle, aucune structure
-choisie par l’offre, le métier ou un questionnaire.
+choisie par le métier ou un questionnaire.
 
 ```
-COMMANDE → DÉVELOPPEMENT HORS DE NEMASUS → GITHUB → CLOUDFLARE → VÉRIFICATIONS
+COMMANDE → MODALITÉS DE VIREMENT → VIREMENT REÇU → CODE D’ACCÈS → ESPACE CLIENT
+→ DÉVELOPPEMENT HORS DE NEMASUS → GITHUB → CLOUDFLARE → VÉRIFICATIONS
 → RATTACHEMENT À NEMASUS → LIVRAISON → BROUILLON DU CLIENT → PUBLIER
 → COMMIT GITHUB → DÉPLOIEMENT CLOUDFLARE → EN LIGNE
 ```
@@ -39,8 +42,8 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 > définie : rien ne casse au renommage.
 
 > **Avant le premier client :** [docs/LANCEMENT.md](./docs/LANCEMENT.md) liste,
-> dans l’ordre, ce qu’il reste à configurer (base, identité légale, e-mails,
-> Stripe, GitHub, Cloudflare) et la répétition générale à faire.
+> dans l’ordre, ce qu’il reste à configurer (base, identité légale, e-mails
+> Resend, coordonnées bancaires, GitHub, Cloudflare) et la répétition générale.
 
 ---
 
@@ -48,9 +51,11 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 
 | Capacité                                                            | État | Où c’est implémenté                                              |
 | ------------------------------------------------------------------- | ---- | ---------------------------------------------------------------- |
-| Vendre cinq offres (Essentiel → Exceptionnel, Sur mesure sur devis) | ✅   | `apps/platform/src/app/(commande)`, `plans`, `plan_inclusions`   |
-| Paiement de la création, carte enregistrée                          | ✅   | Stripe Checkout (mode `payment`) + `app.apply_order_paid`        |
-| Maintenance **mensuelle** qui démarre **à la livraison**            | ✅   | `lib/maintenance.ts` ; refusée en base avant livraison           |
+| Commande en ligne **sans aucun prix affiché** ni compte à créer     | ✅   | `apps/platform/src/app/(commande)`, `app.submit_site_order`      |
+| Modalités de **virement** envoyées par l’équipe (montant convenu)   | ✅   | `/admin/commandes`, `app.request_site_order_payment`             |
+| Virement reçu → espace créé + **code d’accès** personnel par e-mail | ✅   | `app.confirm_site_order_payment`, `activation_codes` (HMAC)      |
+| Accès par code, vérifié **côté serveur**, session ouverte par lui   | ✅   | `/acces`, `lib/access-code.ts`, `app.check_access_code`          |
+| Mot de passe oublié par **Resend** (jeton haché, 1 h, usage unique) | ✅   | `/mot-de-passe-oublie`, `lib/password-reset.ts`                  |
 | Suivi du projet par le client (7 étapes, validations)               | ✅   | `/app`, `app.set_project_phase`, `app.respond_to_project_review` |
 | Aucune édition avant la livraison (imposé par la base)              | ✅   | `app.site_content_access`                                        |
 | Rattacher un dépôt GitHub et un projet Cloudflare                   | ✅   | application GitHub, `admin/sites/[id]/livraison`                 |
@@ -59,7 +64,7 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 | Éditeur du client généré depuis le contrat, aperçu réel             | ✅   | `apps/platform/src/app/app/editeur/contract`                     |
 | Publier : commit GitHub + déploiement Cloudflare suivi              | ✅   | `lib/external-sites/publisher.ts`, `app.record_site_deployment`  |
 | Historique, Voir, Restaurer (redéploiement réel), Republier         | ✅   | `/app/site/versions`, `site_releases`                            |
-| Webhooks GitHub, Cloudflare, Stripe signés ; tâche de fond          | ✅   | `api/webhooks/*`, `api/cron/sites`                               |
+| Webhooks GitHub, Cloudflare, Stripe Connect signés ; tâche de fond  | ✅   | `api/webhooks/*`, `api/cron/sites`                               |
 | Surveillance HTTPS des sites livrés                                 | ✅   | `site_health_checks`                                             |
 | Statistiques réelles (visiteurs, sources, appareils, contacts)      | ✅   | `app.rollup_site_metrics` (horaire), `/app/statistiques`         |
 | Mesure d’audience des sites indépendants en une ligne               | ✅   | `/v1/sites/<clé>/mesure.js`, sans cookie                         |
@@ -68,12 +73,12 @@ le souhaite, paie — et le site lui est livré automatiquement. Voir
 | Tableau de production de l’équipe, file « à traiter »               | ✅   | `/admin/production`, `staff_work_queue()`                        |
 | Page d’état dérivée des journaux, jamais « saine » par défaut       | ✅   | `app.refresh_system_health` (10 min)                             |
 | API des sites : formulaires, réservations, boutique, comptes        | ✅   | `apps/site-runtime/src/sites-api.ts`                             |
-| Espace client (messages, réservations, factures, abonnement)        | ✅   | `apps/platform/src/app/app`                                      |
+| Espace client (projet, messages, réservations, « Ma commande »)     | ✅   | `apps/platform/src/app/app`                                      |
 | Encaissements sur les sites clients                                 | ✅   | Stripe Connect, commission à zéro                                |
 | Projets sur mesure sur devis                                        | ✅   | `/devis` → `quotes`                                              |
-| **Vente par téléphone** : site prêt, e-mail + code, paiement, livré | ✅   | `site_proposals`, `/admin/propositions`, `/recuperer`            |
+| **Vente par téléphone** : commande saisie par l’équipe, même suite  | ✅   | `/admin/commandes/nouvelle`, `app.admin_create_site_order`       |
 | Discussion client ↔ équipe, réponses par e-mail, alertes à l’équipe | ✅   | `/app/discussion`, `/admin/messages`, `lib/team-alerts.ts`       |
-| Invitations de collaborateurs, mot de passe oublié                  | ✅   | `/invitation`, `/auth/confirmation`                              |
+| Invitations de collaborateurs (compte créé par le lien)             | ✅   | `/invitation`, `app.invitation_signup_context`                   |
 | Sites de l’ancien moteur : toujours servis, rien d’effacé           | ✅   | `apps/site-runtime`, `packages/site-engine`                      |
 | Comptes internes Nemasus : sites sans paiement                      | ✅   | `app.create_internal_order`, `pnpm internal:bootstrap`           |
 | Intervention de l’équipe Nemasus, tracée et visible du client       | ✅   | sessions d’assistance, `app.org_can`                             |
@@ -158,7 +163,7 @@ pnpm build                 # build de production (plateforme + Worker des sites)
 ```
 apps/
   platform/        Next.js 16 — site public, commande, espace client, back-office,
-                   webhooks (Stripe, GitHub, Cloudflare), tâche de fond
+                   webhooks (GitHub, Cloudflare, Stripe Connect), tâche de fond
   site-runtime/    Worker Cloudflare — API des sites ; sites de l’ancien moteur
 packages/
   site-contract/   Contrat d’édition nemasus.manifest.json, fichier de contenu, pont d’aperçu
@@ -166,7 +171,7 @@ packages/
   config/          Environnement, configuration légale, politiques commerciales
   types/           Types partagés, énumérations, Result<T>
   validation/      Schémas Zod — une seule définition par frontière
-  payments/        Arithmétique monétaire, Stripe, Connect, remboursements
+  payments/        Arithmétique monétaire, Stripe Connect (boutiques des clients)
   business/        Secteurs, métiers, questionnaire, vocabulaire, RBAC — aucune structure de site
   security/        Crypto, en-têtes, CSRF, anti-pourriel, limitation de débit
   site-engine/     Ancien moteur : blocs, thèmes, instantanés, rendu HTML
@@ -175,7 +180,7 @@ packages/
   emails/          Modèles et interface d’envoi indépendante du fournisseur
   analytics/       Mesure d’audience sans cookie
   ui/              Système de design, primitives, icônes, mouvement
-supabase/migrations/   64 migrations SQL versionnées (jamais réécrites)
+supabase/migrations/   66 migrations SQL versionnées (jamais réécrites)
 tests/                 unitaires, intégration, sécurité, SQL, E2E
 ```
 
@@ -184,6 +189,7 @@ Documentation détaillée dans [`docs/`](./docs) :
 | Document                                                      | Contenu                                                            |
 | ------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [LANCEMENT.md](./docs/LANCEMENT.md)                           | **Lancement commercial** : ce qui est prêt, ce qu’il reste à faire |
+| [commande-virement.md](./docs/commande-virement.md)           | **Commande, virement, code d’accès, mot de passe** : tout le cycle |
 | [vente-par-telephone.md](./docs/vente-par-telephone.md)       | **Vente par téléphone** : mode d’emploi de l’équipe                |
 | [architecture.md](./docs/architecture.md)                     | Choix structurants et leurs raisons                                |
 | [site-delivery.md](./docs/site-delivery.md)                   | **Le cycle complet** : commande → livraison → publication          |
@@ -196,7 +202,7 @@ Documentation détaillée dans [`docs/`](./docs) :
 | [integrations.md](./docs/integrations.md)                     | Créer l’application GitHub et le jeton Cloudflare                  |
 | [cloudflare.md](./docs/cloudflare.md)                         | Sites des clients : projets Cloudflare, jeton, webhook ; API       |
 | [supabase.md](./docs/supabase.md)                             | Projet, rôles, sauvegardes                                         |
-| [stripe.md](./docs/stripe.md)                                 | Offres, paiement, maintenance mensuelle à la livraison             |
+| [stripe.md](./docs/stripe.md)                                 | Ce que Stripe fait encore (Connect seulement)                      |
 | [stripe-connect.md](./docs/stripe-connect.md)                 | Encaissements des clients                                          |
 | [domains.md](./docs/domains.md)                               | Connexion d’un domaine client                                      |
 | [admin-bootstrap.md](./docs/admin-bootstrap.md)               | Création du compte propriétaire                                    |
@@ -216,9 +222,10 @@ Documentation détaillée dans [`docs/`](./docs) :
    d’un autre, ni rattacher le site, le dépôt ou le domaine d’une autre
    organisation.
 
-2. **La vérité sur un paiement vient du webhook signé**, jamais de la
-   redirection du navigateur. La page de confirmation ne lit même pas le
-   `session_id` renvoyé par Stripe : elle relit l’état réel de la commande.
+2. **Un paiement n’est jamais déclaré par le navigateur.** Le virement est
+   constaté par une personne de l’équipe sur le relevé bancaire, puis confirmé
+   dans l’administration ; seule la base, sur ce geste, crée l’espace et le code
+   d’accès. Le code n’est vérifié que côté serveur et n’est stocké que haché.
 
 3. **L’argent est toujours manipulé en centimes entiers.** Aucun flottant
    n’intervient dans un calcul de montant. Les arrondis TypeScript reproduisent
@@ -292,7 +299,14 @@ Les parcours (`tests/e2e/journeys`) :
   rapide → déploiement → « Version 2 en ligne » ; un déploiement en échec n’est
   jamais annoncé publié et la version 2 reste servie ; restaurer la version 1
   la redéploie réellement ; une autre société ne voit rien ;
-- **compte interne** (`internal-account.spec.ts`) : commande Ultra Premium
+- **commande par virement** (`bank-transfer.spec.ts`) : le visiteur commande
+  sans prix ni compte ; l’équipe envoie les modalités puis confirme le virement ;
+  le code, affiché une fois (sans fournisseur d’e-mail), ouvre l’espace et fait
+  choisir un mot de passe ; codes inventé, déjà servi, expiré et désactivé
+  refusés ; déconnexion, reconnexion ; mot de passe oublié (même réponse pour
+  toute adresse, lien unique, autres sessions fermées) ; un autre client reste
+  invisible même avec des cookies forgés ;
+- **compte interne** (`internal-account.spec.ts`) : commande
   sans paiement, site construit hors de Nemasus, rattaché puis confié au compte,
   qui ne peut le modifier qu’à partir de ce moment ; le privilège est refusé à
   un client ordinaire par la base ;
@@ -300,14 +314,12 @@ Les parcours (`tests/e2e/journeys`) :
   espace client d’un site livré et d’un site en construction : aucune ne
   répond une erreur ;
 - **signalement d’un contenu** hébergé (`content-report.spec.ts`) ;
-- **vente par téléphone** (`cold-call.spec.ts`) : l’équipe envoie la
-  proposition depuis l’administration ; un autre compte ne peut pas utiliser le
-  code ; le prospect se connecte, retrouve son code prérempli, voit son site et
-  son prix, ne peut rien modifier, écrit à l’équipe qui lui répond ; le
-  paiement (webhook signé) livre le site automatiquement et ouvre l’éditeur.
+- **intrusion** (`penetration.spec.ts`) : deux clients étrangers et un
+  visiteur anonyme ; aucune lecture ni écriture croisée, codes et jetons
+  inaccessibles depuis un client, blocage des essais de codes.
 
-Le paiement Stripe y est remplacé par un webhook **signé** avec un secret
-jetable : c’est le vrai chemin « paiement reçu → site préparé », sans réseau.
+Aucun virement n’est émis : comme en production, c’est l’équipe qui déclare
+l’avoir reçu, par l’administration ou par la même fonction.
 
 ---
 

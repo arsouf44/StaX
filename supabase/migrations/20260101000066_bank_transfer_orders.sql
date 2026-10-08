@@ -1595,3 +1595,17 @@ begin
   end loop;
 end;
 $$;
+
+-- -----------------------------------------------------------------------------
+--  11. Liste publique des sous-traitants : Stripe ne sert plus qu'à Connect
+--
+--  Nemasus n'encaisse plus ses prestations par carte. Stripe reste utilisé pour
+--  les encaissements en ligne des boutiques des sites clients (Connect), versés
+--  sur le compte du commerçant.
+-- -----------------------------------------------------------------------------
+update public.subprocessors
+   set purpose = 'Encaissements en ligne des boutiques des sites clients (Stripe Connect), '
+                 || 'versés sur le compte Stripe du commerçant. Nemasus n''encaisse pas ses '
+                 || 'propres prestations par Stripe.',
+       updated_at = now()
+ where name = 'Stripe Payments Europe, Ltd.';

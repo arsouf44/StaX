@@ -62,6 +62,7 @@ function shell(params: {
       params.action ? `${params.action.label} : ${params.action.url}` : '',
       `Une question ? Écrivez à ${support}.`,
       `${company} — ${base}`,
+      `Vos données et vos droits : ${base.replace(/\/+$/, '')}/confidentialite`,
     ]),
   };
 }
