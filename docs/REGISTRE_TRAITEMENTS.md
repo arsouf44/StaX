@@ -52,16 +52,15 @@ remplace, il ne se retrouve pas.
 | --- | --- |
 | **Finalité** | Commander un site, facturer, encaisser, tenir la comptabilité |
 | **Base légale** | Contrat (art. 6.1.b) et obligation légale (art. 6.1.c) |
-| **Personnes** | Clients et prospects ayant reçu une facture |
-| **Données** | Raison sociale, e-mail, montants, offre, références de paiement Stripe |
-| **Tables** | `orders`, `sales_invoices`, `invoices`, `payments`, `subscriptions`, `quotes` |
-| **Conservation** | **10 ans** pour les pièces comptables (art. L123-22 du code de commerce) |
-| **Destinataires** | Stripe Payments Europe Ltd (paiement) |
+| **Personnes** | Clients ayant commandé un site, et contacts des commandes non conclues |
+| **Données** | Raison sociale, nom, e-mail, téléphone et ville du contact, activité, description du projet, montant convenu, date et montant du virement reçu, empreinte de l'adresse IP de la commande, notes internes de l'équipe, empreinte du code d'accès et état de ses envois |
+| **Tables** | `site_orders`, `activation_codes`, `quotes` ; historique avant 0066 : `orders`, `sales_invoices`, `invoices`, `payments`, `subscriptions` |
+| **Conservation** | Commande payée : **10 ans** pour les pièces comptables (art. L123-22 du code de commerce). Commande non conclue (reçue, en attente de virement, annulée) : coordonnées **anonymisées 3 ans** après le dernier échange (`app.apply_retention()`, 0066) |
+| **Destinataires** | Équipe Nemasus ; Resend (envoi des e-mails) |
 
-**Aucune donnée bancaire n'est traitée par Nemasus.** Numéros de carte, CVC et
-cryptogrammes ne transitent jamais par notre infrastructure : le paiement a lieu
-sur une page hébergée par Stripe. Nous ne conservons qu'un identifiant de
-transaction.
+**Aucune donnée de carte n'est traitée par Nemasus.** Le client règle par
+virement ; la plateforme n'enregistre que le montant et la date du virement
+constaté. Le code d'accès n'est conservé que sous forme d'empreinte HMAC.
 
 ### A3 — Réalisation et exploitation des sites
 
@@ -146,7 +145,11 @@ L'identité de l'auteur n'est pas communiquée à l'éditeur du site, sauf
 obligation légale. Seule l'équipe Nemasus lit les signalements (RLS), et seule
 l'administration de la plateforme peut décider.
 
-### A8 — Propositions de site (vente par téléphone)
+### A8 — Propositions de site (vente par téléphone) — historique
+
+Depuis la migration 0066, une vente par téléphone est une commande saisie par
+l'équipe (A2) ; plus aucune proposition n'est envoyée. Les propositions
+antérieures restent soumises aux règles ci-dessous.
 
 | | |
 | --- | --- |

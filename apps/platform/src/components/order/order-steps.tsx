@@ -13,7 +13,7 @@ export function OrderSteps({ current }: { current: string }) {
 
   return (
     <nav aria-label="Étapes de la commande" className="mb-10">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[11px] font-bold tracking-[0.07em] uppercase">
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-bold tracking-[0.07em] uppercase">
         {ORDER_STEPS.map((step, position) => {
           const done = position < index;
           const active = position === index;

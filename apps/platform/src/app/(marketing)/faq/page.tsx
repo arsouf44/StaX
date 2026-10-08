@@ -1,34 +1,30 @@
 import type { Metadata } from 'next';
-import { serializeJsonLd } from '@nemasus/security';
 import { ButtonLink, Container, Section, SectionHeading } from '@nemasus/ui';
 import { FAQ_CATEGORIES, FAQ_ITEMS, type FaqItem } from '~/content/faq';
+import { breadcrumbJsonLd, faqJsonLd, JsonLd, organizationJsonLd } from '~/lib/structured-data';
 
 export const metadata: Metadata = {
   title: 'Questions fréquentes',
   description:
-    'Délais, tarifs, modifications, hébergement, référencement, garanties : les réponses ' +
-    'aux questions que l’on nous pose le plus souvent.',
+    'Commande, paiement par virement, code d’accès, modifications, hébergement, ' +
+    'référencement : les réponses aux questions les plus fréquentes sur Nemasus.',
   alternates: { canonical: '/faq' },
 };
 
 export default function FaqPage() {
   const categories = Object.keys(FAQ_CATEGORIES) as Array<FaqItem['category']>;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map((item) => ({
-      '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: { '@type': 'Answer', text: item.answer },
-    })),
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      <JsonLd
+        graph={[
+          organizationJsonLd(),
+          faqJsonLd(FAQ_ITEMS, '/faq'),
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Questions fréquentes', path: '/faq' },
+          ]),
+        ]}
       />
 
       <Section className="relative overflow-hidden">

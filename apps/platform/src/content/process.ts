@@ -1,11 +1,12 @@
 /**
- * Le parcours d'un projet Nemasus, tel qu'il se deroule reellement.
+ * Le parcours d'un projet Nemasus, tel qu'il se déroule réellement.
  *
- * Une seule source pour la page d'accueil et « Comment ça marche » : deux
- * versions du meme parcours finiraient par se contredire. Chaque etape
- * correspond a une phase reelle du dossier (voir `PROJECT_TIMELINE` dans
- * `@nemasus/payments`) et a ce que l'equipe fait vraiment : aucun modele, aucun
- * generateur, un projet independant par site.
+ * Une seule source pour la page d'accueil, « Comment ça marche » et les
+ * données structurées : deux versions du même parcours finiraient par se
+ * contredire. Chaque étape correspond à ce que fait réellement la plateforme :
+ * commande sans prix public, modalités de paiement par virement envoyées par
+ * l'équipe, code d'accès personnel émis à réception du virement, puis un site
+ * conçu et développé dans un projet qui lui est propre.
  */
 
 export interface ProcessStep {
@@ -14,12 +15,40 @@ export interface ProcessStep {
   detail?: string;
 }
 
+/** Comment on commande, comment on paie, comment on accède : les quatre temps. */
+export const ORDER_JOURNEY: readonly ProcessStep[] = [
+  {
+    title: 'Vous commandez',
+    description:
+      'En quelques minutes, en ligne : votre activité, vos coordonnées, votre projet et l’adresse souhaitée. Aucun compte à créer, aucun paiement à ce stade.',
+    detail: 'Accusé de réception immédiat par e-mail',
+  },
+  {
+    title: 'Vous réglez par virement',
+    description:
+      'Nous étudions votre demande et vous envoyons par e-mail les modalités de paiement : le montant convenu, nos coordonnées bancaires et la référence à indiquer.',
+    detail: 'Virement bancaire, aucune carte demandée',
+  },
+  {
+    title: 'Vous recevez votre code',
+    description:
+      'Dès que votre virement nous parvient, nous vous envoyons un code d’accès personnel, à usage unique, lié à votre adresse e-mail.',
+    detail: 'Code personnel, vérifié par nos serveurs',
+  },
+  {
+    title: 'Votre espace s’ouvre',
+    description:
+      'Vous saisissez votre code sur la page « Accès client » et choisissez votre mot de passe : vous suivez la création de votre site, puis le gérez vous-même.',
+    detail: 'Votre espace, et lui seul',
+  },
+];
+
 export const PROCESS_STEPS: readonly ProcessStep[] = [
   {
     title: 'Votre projet',
     description:
-      'Vous choisissez l’offre et nous expliquez votre activité : un questionnaire sur votre activité, puis vos textes, vos photos, votre logo et votre domaine, que vous déposez dans votre espace à votre rythme.',
-    detail: 'Seule la création est payée à la commande',
+      'Après votre commande et votre virement, votre espace s’ouvre avec votre code d’accès. Vous y déposez vos textes, vos photos et votre logo, à votre rythme, et vous échangez avec l’équipe.',
+    detail: 'Code d’accès personnel',
   },
   {
     title: 'Conception',
@@ -42,8 +71,8 @@ export const PROCESS_STEPS: readonly ProcessStep[] = [
   {
     title: 'Livraison',
     description:
-      'Votre site est déjà en ligne lorsque nous vous ouvrons l’éditeur Nemasus. La maintenance mensuelle commence à ce moment-là, et pas avant.',
-    detail: 'Début de la maintenance',
+      'Votre site est déjà en ligne lorsque nous vous ouvrons l’éditeur Nemasus : à partir de ce moment, il est entre vos mains.',
+    detail: 'L’éditeur s’ouvre',
   },
   {
     title: 'Vous gardez la main',
@@ -55,18 +84,18 @@ export const PROCESS_STEPS: readonly ProcessStep[] = [
 
 /**
  * Le principe, en sept points : ce que le visiteur doit avoir compris avant de
- * commander. Personne ne construit son site soi-meme chez Nemasus.
+ * commander. Personne ne construit son site soi-même chez Nemasus.
  */
 export const PRINCIPLE_POINTS: ReadonlyArray<{ title: string; description: string }> = [
   {
-    title: 'Vous choisissez votre offre',
+    title: 'Vous commandez votre site',
     description:
-      'Selon le nombre de pages, la richesse du design et les fonctionnalités dont vous avez besoin. Vous payez la création ; la maintenance attend la livraison.',
+      'Vous décrivez votre activité et votre projet en ligne. Il n’y a pas de grille tarifaire : chaque site est conçu sur mesure, et le montant est convenu avec vous.',
   },
   {
-    title: 'Vous nous présentez votre entreprise',
+    title: 'Vous réglez par virement',
     description:
-      'Un questionnaire sur votre activité, vos textes, vos photos, votre logo, votre domaine. Vous le complétez depuis votre espace, à votre rythme.',
+      'Nous vous envoyons les modalités de paiement par e-mail. Dès réception du virement, vous recevez votre code d’accès personnel, qui ouvre votre espace.',
   },
   {
     title: 'Nous concevons et développons votre site',
@@ -81,12 +110,12 @@ export const PRINCIPLE_POINTS: ReadonlyArray<{ title: string; description: strin
   {
     title: 'Nous vous le livrons',
     description:
-      'Votre site est en ligne quand nous vous le livrons. C’est à ce moment que l’éditeur s’ouvre et que la maintenance mensuelle commence.',
+      'Votre site est en ligne quand nous vous le livrons. C’est à ce moment que l’éditeur s’ouvre dans votre espace.',
   },
   {
     title: 'Vous modifiez son contenu depuis Nemasus',
     description:
-      'Textes, images, horaires, informations : tout ce que votre site prévoit de modifiable. Le design et la structure restent protégés ; un changement plus profond, nous nous en chargeons, sur devis si nécessaire.',
+      'Textes, images, horaires, informations : tout ce que votre site prévoit de modifiable. Le design et la structure restent protégés ; un changement plus profond, nous nous en chargeons après en avoir convenu avec vous.',
   },
   {
     title: 'Vous publiez, et c’est réellement en ligne',

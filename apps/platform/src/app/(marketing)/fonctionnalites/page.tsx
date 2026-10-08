@@ -1,22 +1,14 @@
 import type { Metadata } from 'next';
-import type { PlanSlug } from '@nemasus/types';
 import Link from 'next/link';
-import { Container, Reveal, Section, SectionHeading, ButtonLink, Badge } from '@nemasus/ui';
+import { Container, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 import { FEATURE_PAGES } from '~/content/features';
 
 export const metadata: Metadata = {
   title: 'Fonctionnalités',
   description:
     'Éditeur de contenu, domaines, formulaires, messages, statistiques, référencement, ' +
-    'paiements, réservations, vente en ligne : tout ce que fait la plateforme Nemasus.',
+    'réservations, vente en ligne : ce que fait la plateforme Nemasus.',
   alternates: { canonical: '/fonctionnalites' },
-};
-
-const PLAN_LABELS: Record<Exclude<PlanSlug, 'sur-mesure'>, string> = {
-  essentiel: 'Essentiel',
-  premium: 'Premium',
-  'ultra-premium': 'Ultra Premium',
-  exceptionnel: 'Exceptionnel',
 };
 
 export default function FeaturesIndexPage() {
@@ -49,15 +41,6 @@ export default function FeaturesIndexPage() {
                     {feature.subtitle}
                   </p>
                   <span className="flex items-center gap-4 md:justify-self-end">
-                    {feature.requiredPlan ? (
-                      <Badge tone="accent" size="sm">
-                        {PLAN_LABELS[feature.requiredPlan]}
-                      </Badge>
-                    ) : (
-                      <Badge tone="neutral" size="sm">
-                        Toutes offres
-                      </Badge>
-                    )}
                     <span
                       aria-hidden="true"
                       className="text-[var(--muted)] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[var(--accent-text)]"
@@ -79,14 +62,14 @@ export default function FeaturesIndexPage() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[var(--foreground-muted)]">
             Les projets sur mesure existent précisément pour cela. Décrivez votre besoin, nous
-            étudions sa faisabilité et vous adressons un devis détaillé.
+            étudions sa faisabilité et vous adressons une proposition détaillée.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink href="/devis" size="pill-lg">
-              Demander un devis
+              Décrire mon projet
             </ButtonLink>
-            <ButtonLink href="/tarifs" variant="secondary" size="pill-lg">
-              Voir les offres
+            <ButtonLink href="/commander" variant="secondary" size="pill-lg">
+              Commander mon site
             </ButtonLink>
           </div>
         </Container>

@@ -5,8 +5,8 @@ import { CreationTimeline } from '~/components/marketing/diagrams';
 export const metadata: Metadata = {
   title: 'Projets sur mesure',
   description:
-    'Application sur mesure, intégrations, reprise de données, volumétries importantes : ' +
-    'Nemasus étudie votre besoin et établit un devis détaillé, ligne par ligne.',
+    'Intégrations, espace client avancé, reprise de données : Nemasus étudie votre besoin ' +
+    'et vous adresse une proposition détaillée avant toute commande.',
   alternates: { canonical: '/sur-mesure' },
 };
 
@@ -21,7 +21,7 @@ const CASES = [
   },
   {
     title: 'Catalogue important',
-    body: 'Plusieurs milliers de références, tarification par volume ou par client, disponibilités complexes : nous concevons la structure de données adaptée.',
+    body: 'Plusieurs milliers de références, conditions par volume ou par client, disponibilités complexes : nous concevons la structure de données adaptée.',
   },
   {
     title: 'Plusieurs établissements',
@@ -41,7 +41,7 @@ const PROCESS = [
   {
     title: 'Vous décrivez votre besoin',
     description:
-      'Un formulaire structuré nous permet de comprendre votre activité, vos objectifs, vos contraintes et votre budget indicatif. Comptez dix minutes.',
+      'Un formulaire structuré nous permet de comprendre votre activité, vos objectifs, vos contraintes et votre budget indicatif.',
     detail: 'Sans engagement',
   },
   {
@@ -50,15 +50,14 @@ const PROCESS = [
       'Un échange pour préciser ce qui compte vraiment, écarter ce qui n’est pas nécessaire et identifier les points techniques à vérifier.',
   },
   {
-    title: 'Nous établissons un devis détaillé',
+    title: 'Nous vous adressons une proposition détaillée',
     description:
-      'Chaque ligne est chiffrée séparément : vous voyez ce que coûte chaque fonctionnalité et vous pouvez en retirer. Le devis précise aussi la maintenance mensuelle associée, qui commence à la livraison.',
-    detail: 'Valable 30 jours',
+      'Ce que nous réaliserons, comment, dans quel délai, et pour quel montant : vous savez exactement à quoi vous engager, et vous pouvez retirer ce qui n’est pas indispensable.',
   },
   {
-    title: 'Vous acceptez, le projet démarre',
+    title: 'Vous réglez par virement, le projet démarre',
     description:
-      'L’acceptation du devis ouvre automatiquement votre projet et votre espace client. Vous suivez ensuite l’avancement comme pour toute commande Nemasus.',
+      'Une fois la proposition acceptée, vous recevez les modalités de paiement par virement. À réception, votre code d’accès personnel ouvre votre espace : vous suivez l’avancement comme pour toute commande Nemasus.',
   },
 ];
 
@@ -72,15 +71,15 @@ export default function CustomPage() {
             align="center"
             eyebrow="Sur mesure"
             title="Quand le cadre standard ne suffit pas"
-            description="Nos trois offres couvrent la grande majorité des besoins. Quand ce n’est pas le cas, nous étudions votre projet et nous le chiffrons précisément, plutôt que de vous vendre une offre inadaptée."
+            description="La plupart des sites se commandent en quelques minutes. Quand votre projet demande une étude — intégrations, données, contraintes particulières —, nous l’examinons avec vous avant toute commande."
             className="mx-auto"
           />
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink href="/devis" size="pill-lg">
-              Demander un devis
+              Décrire mon projet
             </ButtonLink>
-            <ButtonLink href="/tarifs" variant="glass" size="pill-lg">
-              Comparer avec les offres standard
+            <ButtonLink href="/commander" variant="glass" size="pill-lg">
+              Commander directement
             </ButtonLink>
           </div>
         </Container>
@@ -110,7 +109,7 @@ export default function CustomPage() {
             <div className="lg:sticky lg:top-28">
               <SectionHeading
                 eyebrow="Le déroulé"
-                title="Comment se passe un devis"
+                title="Comment se passe l’étude"
                 description="Pas de chiffrage au doigt mouillé, pas de forfait opaque. Vous savez ce que vous payez, et pourquoi."
               />
             </div>
@@ -128,11 +127,11 @@ export default function CustomPage() {
               Parlons de votre projet
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
-              Le formulaire prend une dizaine de minutes. Plus vos réponses sont précises, plus le
-              devis sera juste — et plus vite nous pourrons vous répondre.
+              Plus vos réponses sont précises, plus notre proposition sera juste — et plus vite nous
+              pourrons vous répondre.
             </p>
             <ButtonLink href="/devis" size="pill-lg" className="mt-8">
-              Remplir le formulaire de devis
+              Décrire mon projet
             </ButtonLink>
           </Panel>
         </Container>

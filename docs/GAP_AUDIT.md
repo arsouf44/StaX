@@ -1,5 +1,12 @@
 # Audit d'écart — exigences contre code réel
 
+> **Historique.** Cet audit date d’avant la migration 0066. Depuis, Nemasus ne
+> publie plus de prix ni d’offres et n’encaisse plus ses prestations par
+> Stripe : commande en ligne, virement bancaire au montant convenu, code
+> d’accès personnel. Les lignes portant sur les offres, l’abonnement de
+> maintenance, les propositions par carte et `/recuperer` décrivent l’ancien
+> modèle. État actuel : [commande-virement.md](./commande-virement.md).
+
 Audit conduit **dans le code**, pas dans le README. Chaque ligne a été vérifiée
 par lecture de fichier, requête SQL ou exécution. Un écran présent sans backend
 complet est compté **non terminé**, comme demandé.

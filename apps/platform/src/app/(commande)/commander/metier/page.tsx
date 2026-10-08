@@ -1,51 +1,6 @@
-import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { listBusinesses, SECTORS } from '@nemasus/business';
-import { OrderSteps } from '~/components/order/order-steps';
-import { readOrderDraft } from '~/lib/order-draft';
-import { BusinessChoice } from './business-choice';
+import { permanentRedirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-
-export const metadata: Metadata = {
-  title: 'Votre métier',
-  robots: { index: false, follow: false },
-};
-
-export default async function OrderBusinessPage() {
-  const draft = await readOrderDraft();
-  // On ne saute pas d etape : sans offre choisie, il n y a rien a configurer.
-  if (!draft.planSlug) redirect('/commander');
-
-  const businesses = listBusinesses();
-
-  return (
-    <>
-      <OrderSteps current="/commander/metier" />
-
-      <h1 className="title-page">Quel est votre métier ?</h1>
-      <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-        Ce choix détermine les pages proposées, les fonctionnalités activées et le vocabulaire de
-        votre espace. Un restaurateur gère une carte, un plombier des zones d’intervention : ce
-        n’est pas la même chose.
-      </p>
-
-      <BusinessChoice
-        sectors={SECTORS.map((sector) => ({
-          id: sector.id,
-          name: sector.label,
-          icon: sector.icon,
-          description: sector.description,
-        }))}
-        businesses={businesses.map((business) => ({
-          id: business.id,
-          sector: business.sector,
-          name: business.name,
-          icon: business.icon,
-        }))}
-        selectedSector={draft.sectorSlug ?? null}
-        selectedBusiness={draft.businessTypeSlug ?? null}
-      />
-    </>
-  );
+/** Ancienne deuxième étape : le métier est désormais la première. */
+export default function LegacyBusinessStep(): never {
+  permanentRedirect('/commander');
 }

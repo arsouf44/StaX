@@ -14,8 +14,8 @@ import { BrowserFrame, SitePreview } from '~/components/marketing/product-visual
 export const metadata: Metadata = {
   title: 'Réalisations',
   description:
-    'Des exemples concrets de sites Nemasus, offre par offre. Ces démonstrations sont clairement ' +
-    'identifiées comme telles : nous ne présentons jamais un exemple comme un vrai client.',
+    'Exemples de sites conçus par Nemasus (restaurant, salon, artisan) : des démonstrations ' +
+    'identifiées comme telles, jamais présentées comme des clients.',
   alternates: { canonical: '/realisations' },
 };
 
@@ -23,7 +23,6 @@ const SHOWCASES = [
   {
     variant: 'restaurant' as const,
     name: 'Restaurant Dupont',
-    plan: 'Premium',
     host: 'restaurant-dupont.example',
     features: ['Carte & menus', 'Réservations en ligne', 'Horaires', 'Galerie'],
     note: 'Carte gérée par le restaurateur, réservations validées depuis le téléphone, horaires modifiables en trente secondes.',
@@ -31,15 +30,13 @@ const SHOWCASES = [
   {
     variant: 'coiffeur' as const,
     name: 'Atelier Camille',
-    plan: 'Premium',
     host: 'atelier-camille.example',
-    features: ['Prestations & tarifs', 'Prise de rendez-vous', 'Équipe', 'Avis clients'],
-    note: 'Prise de rendez-vous par prestation et par coiffeuse, avec durée et tarif affichés.',
+    features: ['Prestations', 'Prise de rendez-vous', 'Équipe', 'Avis clients'],
+    note: 'Prise de rendez-vous par prestation et par coiffeuse, avec la durée de chaque prestation.',
   },
   {
     variant: 'artisan' as const,
     name: 'Martin Plomberie',
-    plan: 'Essentiel',
     host: 'martin-plomberie.example',
     features: ['Prestations', 'Zones d’intervention', 'Galerie de chantiers', 'Demande de devis'],
     note: 'Formulaire de devis qualifiant la demande : nature de la panne, urgence, code postal.',
@@ -72,7 +69,10 @@ export default function ShowcasePage() {
               <Reveal key={item.variant} delay={index * 60}>
                 <article className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-center">
                   <div className={index % 2 === 1 ? 'lg:order-2' : undefined}>
-                    <BrowserFrame url={item.host}>
+                    <BrowserFrame
+                      url={item.host}
+                      label={`Démonstration : aperçu du site ${item.name}`}
+                    >
                       <SitePreview variant={item.variant} />
                     </BrowserFrame>
                   </div>
@@ -80,9 +80,6 @@ export default function ShowcasePage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone="warning" size="sm">
                         Démonstration
-                      </Badge>
-                      <Badge tone="accent" size="sm">
-                        Offre {item.plan}
                       </Badge>
                     </div>
                     <h2 className="mt-4 font-serif text-[2rem] leading-tight">{item.name}</h2>

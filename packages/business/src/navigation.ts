@@ -192,19 +192,11 @@ const CORE_ENTRIES: readonly DashboardEntry[] = [
   },
   {
     href: '/app/facturation',
-    label: 'Facturation',
+    label: 'Ma commande',
     icon: 'receipt',
     capability: 'billing.view',
     group: 'entreprise',
     sortOrder: 30,
-  },
-  {
-    href: '/app/abonnement',
-    label: 'Maintenance',
-    icon: 'shield-check',
-    capability: 'billing.view',
-    group: 'entreprise',
-    sortOrder: 40,
   },
   {
     href: '/app/securite',

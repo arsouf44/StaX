@@ -7,8 +7,7 @@ export const metadata: Metadata = {
   title: 'Infrastructure',
   description:
     'Où tournent vos sites : un dépôt GitHub et un projet Cloudflare par site, une base ' +
-    'PostgreSQL européenne chez Supabase pour votre espace, et chaque publication suivie ' +
-    'jusqu’à son déploiement.',
+    'européenne pour votre espace, chaque publication suivie jusqu’en ligne.',
   alternates: { canonical: '/infrastructure' },
 };
 
@@ -54,9 +53,9 @@ const LAYERS = [
     ],
   },
   {
-    name: 'Paiements',
+    name: 'Encaissements de votre site',
     provider: 'Stripe',
-    role: 'Traite les paiements de la plateforme et les encaissements de vos clients finaux, sur son infrastructure certifiée PCI.',
+    role: 'Si votre site vend en ligne ou prend des acomptes, Stripe traite ces paiements sur son infrastructure certifiée PCI. Votre commande Nemasus, elle, se règle par virement bancaire.',
     facts: [
       'Aucune donnée de carte chez Nemasus',
       'Vos encaissements sur votre propre compte connecté',

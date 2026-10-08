@@ -1,117 +1,62 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import type { PlanView } from '@nemasus/database';
-import { formatMoney, maintenancePeriodLabel } from '@nemasus/payments';
 import { ButtonLink, Reveal } from '@nemasus/ui';
 import { StudioArtSprite } from '~/components/marketing/studio-art';
 import { ProcessShowcase } from '~/components/marketing/process-showcase';
-import { deliveryWeeksLabel, entryPriceLabel, getPlans } from '~/lib/catalog';
-import { PLAN_EXAMPLES, PLAN_FALLBACK } from '~/content/plan-examples';
+import { HOMEPAGE_FAQ } from '~/content/faq';
+import { ORDER_JOURNEY } from '~/content/process';
+import {
+  faqJsonLd,
+  JsonLd,
+  organizationJsonLd,
+  serviceJsonLd,
+  webPageJsonLd,
+  websiteJsonLd,
+} from '~/lib/structured-data';
 
-/**
- * Cette page affiche un TARIF. Prerendue, elle figerait le prix du jour de la
- * compilation : un changement de catalogue resterait invisible jusqu'au
- * deploiement suivant. Une heure de cache suffit a garder la page rapide tout
- * en la laissant se corriger seule.
- */
-export const revalidate = 3600;
+const DESCRIPTION =
+  'Studio français de sites web sur mesure : nous concevons et mettons en ligne votre site, ' +
+  'puis vous le gérez. Commande en ligne, paiement par virement.';
 
-/**
- * Le tarif d'appel vient du CATALOGUE, jamais d'une chaine recopiee : une
- * description de page qui annonce un prix perime le fait la ou les moteurs de
- * recherche la citent.
- */
-export async function generateMetadata(): Promise<Metadata> {
-  const entry = await entryPriceLabel();
-  return {
-    title: 'Nous créons votre site. Vous le gérez ensuite.',
-    description:
-      'Nemasus conçoit et développe le site de votre entreprise, le met en ligne sur votre domaine ' +
-      'et vous le livre. Vous modifiez ensuite vos contenus et publiez quand vous voulez.' +
-      (entry ? ` ${entry}.` : ''),
-    alternates: { canonical: '/' },
-  };
-}
+export const metadata: Metadata = {
+  title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
+  description: DESCRIPTION,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: 'Nemasus',
+    title: 'Nemasus — Nous créons votre site. Vous le gérez ensuite.',
+    description: DESCRIPTION,
+    url: '/',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
+  },
+};
 
-interface OfferCell {
-  slug: string;
-  name: string;
-  /** « 300 € », « Sur devis », ou `null` si le catalogue est injoignable. */
-  price: string | null;
-  /** « 12 € HT par mois ». */
-  maintenance: string | null;
-  href: string;
-  quote: boolean;
-}
+/** Les repères sous le titre : ce que le visiteur doit retenir, sans chiffre inventé. */
+const FACTS: ReadonlyArray<{ label: string; value: string }> = [
+  { label: 'Conception', value: 'Sur mesure, sans modèle' },
+  { label: 'Paiement', value: 'Par virement bancaire' },
+  { label: 'Accès', value: 'Code personnel, vérifié' },
+  { label: 'Après la livraison', value: 'Éditeur Nemasus inclus' },
+];
 
-/** Les offres dans l'ordre du catalogue ; a defaut, leur seule structure. */
-function offerCells(plans: PlanView[]): OfferCell[] {
-  if (plans.length === 0) {
-    return PLAN_FALLBACK.map((plan) => ({
-      slug: plan.slug,
-      name: plan.name,
-      price: null,
-      maintenance: null,
-      href: '/tarifs',
-      quote: plan.slug === 'sur-mesure',
-    }));
-  }
-  return plans.map((plan) => ({
-    slug: plan.slug,
-    name: plan.name,
-    price: plan.isQuoteOnly
-      ? 'Sur devis'
-      : formatMoney(plan.setupPriceCents, plan.currency, { hideDecimalsWhenRound: true }),
-    maintenance: plan.isQuoteOnly
-      ? null
-      : `${formatMoney(plan.maintenancePriceCents, plan.currency, {
-          hideDecimalsWhenRound: true,
-        })} HT ${maintenancePeriodLabel(plan.billingInterval)}`,
-    href: plan.isQuoteOnly ? '/devis' : `/commander?offre=${plan.slug}`,
-    quote: plan.isQuoteOnly,
-  }));
-}
-
-/**
- * Les reperes sous le titre : prix d'entree et delais lus dans le catalogue.
- * Un repere que le catalogue ne peut pas confirmer n'est pas affiche.
- */
-function heroFacts(plans: PlanView[]): Array<{ label: string; value: string }> {
-  const priced = plans.filter((plan) => !plan.isQuoteOnly);
-  const cheapest = [...priced].sort((a, b) => a.setupPriceCents - b.setupPriceCents)[0];
-  const weeks = priced.flatMap((plan) => (plan.deliveryWeeks ? [plan.deliveryWeeks] : []));
-  const facts: Array<{ label: string; value: string }> = [];
-  if (cheapest) {
-    facts.push({
-      label: 'Création',
-      value: `dès ${formatMoney(cheapest.setupPriceCents, cheapest.currency, {
-        hideDecimalsWhenRound: true,
-      })} HT`,
-    });
-  }
-  if (weeks.length > 0) {
-    facts.push({
-      label: 'Délai',
-      value: deliveryWeeksLabel({
-        min: Math.min(...weeks.map((range) => range.min)),
-        max: Math.max(...weeks.map((range) => range.max)),
-      }),
-    });
-  }
-  facts.push(
-    { label: 'Mise en ligne', value: 'Votre domaine, en HTTPS' },
-    { label: 'Après la livraison', value: 'Éditeur Nemasus inclus' },
-  );
-  return facts;
-}
-
-export default async function HomePage() {
-  const plans = await getPlans();
-  const offers = offerCells(plans);
-  const facts = heroFacts(plans);
-
+export default function HomePage() {
   return (
     <>
+      <JsonLd
+        graph={[
+          organizationJsonLd(),
+          websiteJsonLd(),
+          serviceJsonLd(),
+          webPageJsonLd({
+            path: '/',
+            name: 'Nemasus — Studio de sites web professionnels sur mesure',
+            description: DESCRIPTION,
+          }),
+          faqJsonLd(HOMEPAGE_FAQ, '/'),
+        ]}
+      />
       <StudioArtSprite />
 
       {/* --- Titre ------------------------------------------------------------ */}
@@ -123,13 +68,13 @@ export default async function HomePage() {
           <p className="eyebrow-index mb-8">Studio de sites web sur mesure</p>
           <h1
             id="accueil-titre"
-            className="max-w-[17ch] font-serif text-[clamp(3rem,7vw,6.6rem)] leading-[1.01] font-normal tracking-[-0.018em] text-balance text-[var(--ink)]"
+            className="max-w-[17ch] font-serif text-[clamp(2.6rem,7vw,6.6rem)] leading-[1.01] font-normal tracking-[-0.018em] text-balance text-[var(--ink)]"
           >
             Un site fait pour vous, à la hauteur de votre <em>entreprise.</em>
           </h1>
 
           <div className="mt-[clamp(40px,6vh,64px)] grid items-end gap-x-16 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-            <p className="max-w-[20ch] font-serif text-[clamp(1.55rem,2.3vw,2.1rem)] leading-[1.18] text-[var(--ink-2)]">
+            <p className="max-w-[20ch] font-serif text-[clamp(1.45rem,2.3vw,2.1rem)] leading-[1.18] text-[var(--ink-2)]">
               Nous créons votre site. <em>Vous le gérez ensuite.</em>
             </p>
             <div>
@@ -143,8 +88,8 @@ export default async function HomePage() {
                   Commander mon site
                   <span aria-hidden="true">→</span>
                 </ButtonLink>
-                <Link href="#offres" className="text-link">
-                  Voir les offres
+                <Link href="#commander" className="text-link">
+                  Comment ça se passe
                   <span aria-hidden="true" className="arrow">
                     ↓
                   </span>
@@ -154,7 +99,7 @@ export default async function HomePage() {
           </div>
 
           <dl className="mt-[clamp(48px,7vh,88px)] grid grid-cols-2 border-t border-[var(--border)] lg:grid-cols-4">
-            {facts.map((fact, index) => (
+            {FACTS.map((fact, index) => (
               <div
                 key={fact.label}
                 className={
@@ -165,7 +110,7 @@ export default async function HomePage() {
                 }
               >
                 <dt className="kicker">{fact.label}</dt>
-                <dd className="font-serif text-[clamp(1.2rem,1.6vw,1.45rem)] leading-snug text-[var(--ink)]">
+                <dd className="font-serif text-[clamp(1.1rem,1.6vw,1.45rem)] leading-snug text-[var(--ink)]">
                   {fact.value}
                 </dd>
               </div>
@@ -174,102 +119,61 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* --- Les offres ----------------------------------------------------- */}
-      <section id="offres" aria-labelledby="offres-titre" className="py-[clamp(80px,12vh,148px)]">
+      {/* --- Commander -------------------------------------------------------- */}
+      <section
+        id="commander"
+        aria-labelledby="commander-titre"
+        className="py-[clamp(80px,12vh,148px)]"
+      >
         <div className="shell">
-          <p className="eyebrow-index mb-6">Les offres</p>
-          <h2 id="offres-titre" className="display-section max-w-[22ch]">
-            Un site à la mesure de <em>votre ambition.</em>
+          <p className="eyebrow-index mb-6">Commander</p>
+          <h2 id="commander-titre" className="display-section max-w-[22ch]">
+            Quatre étapes, <em>sans surprise.</em>
           </h2>
-          <p className="lead-text mt-6 max-w-[54ch]">
-            Quatre offres et le sur-mesure. Chacune contient la précédente : plus de pages, un
-            design plus poussé, plus de fonctionnalités. Vous réglez la création à la commande ; la
-            maintenance mensuelle ne commence qu’à la livraison.
+          <p className="lead-text mt-6 max-w-[56ch]">
+            Pas de grille tarifaire ni d’abonnement à choisir : chaque site est conçu sur mesure.
+            Vous commandez, nous vous adressons le montant convenu et les modalités de virement,
+            puis votre code d’accès personnel ouvre votre espace.
           </p>
 
-          <div className="mt-16 grid grid-cols-6 gap-x-7 gap-y-11 max-[900px]:grid-cols-2 max-[900px]:gap-x-5 max-[560px]:grid-cols-1">
-            {offers.map((offer, index) => {
-              const example = PLAN_EXAMPLES[offer.slug];
-              return (
-                <Reveal
-                  key={offer.slug}
-                  as="article"
-                  delay={Math.min(index * 70, 280)}
-                  className={
-                    index < 3
-                      ? 'col-span-2 max-[900px]:col-span-1'
-                      : 'col-span-3 max-[900px]:col-span-1 max-[900px]:last:col-span-2 max-[560px]:last:col-span-1'
-                  }
-                >
-                  <div className="group relative flex h-full flex-col border-t border-[var(--border)] pt-6">
-                    <span
-                      aria-hidden="true"
-                      className="absolute top-[-1px] left-0 h-px w-full origin-left scale-x-0 bg-[var(--ink)] transition-transform duration-700 ease-[cubic-bezier(0.19,0.85,0.22,1)] group-hover:scale-x-100"
-                    />
-                    <div className="flex items-baseline justify-between gap-4">
-                      <h3 className="font-serif text-[clamp(23px,2.1vw,29px)] leading-tight font-normal text-[var(--ink)]">
-                        {offer.name}
-                      </h3>
-                      <span className="text-[13px] text-[var(--ink-3)] tabular-nums">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                    </div>
+          <ol className="mt-16 grid gap-x-7 gap-y-11 md:grid-cols-2 xl:grid-cols-4">
+            {ORDER_JOURNEY.map((step, index) => (
+              <Reveal key={step.title} as="li" delay={Math.min(index * 70, 280)}>
+                <div className="group relative flex h-full flex-col border-t border-[var(--border)] pt-6">
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-[-1px] left-0 h-px w-full origin-left scale-x-0 bg-[var(--ink)] transition-transform duration-700 ease-[cubic-bezier(0.19,0.85,0.22,1)] group-hover:scale-x-100"
+                  />
+                  <span className="text-[13px] text-[var(--ink-3)] tabular-nums">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className="mt-3 font-serif text-[clamp(23px,2.1vw,29px)] leading-tight font-normal text-[var(--ink)]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-4 max-w-[36ch] text-[14.5px] leading-relaxed text-[var(--ink-2)]">
+                    {step.description}
+                  </p>
+                  {step.detail ? (
+                    <p className="mt-auto pt-5 text-[12.5px] tracking-[0.02em] text-[var(--muted)]">
+                      {step.detail}
+                    </p>
+                  ) : null}
+                </div>
+              </Reveal>
+            ))}
+          </ol>
 
-                    {offer.price ? (
-                      <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <span className="font-serif text-[clamp(30px,2.6vw,38px)] leading-none text-[var(--ink)] tabular-nums">
-                          {offer.price}
-                        </span>
-                        {offer.quote ? null : (
-                          <span className="text-[13px] text-[var(--muted)]">
-                            HT la création, puis {offer.maintenance}
-                          </span>
-                        )}
-                      </p>
-                    ) : null}
-
-                    {example ? (
-                      <>
-                        <p className="mt-4 max-w-[36ch] text-[14.5px] leading-relaxed text-[var(--ink-2)]">
-                          {example.audience}
-                        </p>
-                        <p className="sr-only">Par exemple :</p>
-                        <ul className="mt-4 flex flex-wrap gap-1.5">
-                          {example.examples.map((item) => (
-                            <li
-                              key={item}
-                              className="rounded-full border border-[var(--border)] bg-[rgb(255_255_255/0.55)] px-2.5 py-1 text-[12px] text-[var(--ink-2)]"
-                            >
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    ) : null}
-
-                    <div className="mt-auto pt-6">
-                      <Link href={offer.href} className="text-link">
-                        {offer.quote ? 'Demander un devis' : `Choisir ${offer.name}`}
-                        <span aria-hidden="true" className="arrow">
-                          ↗
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-
-          <p className="mt-12 text-[13.5px] text-[var(--muted)]">
-            Prix hors taxes.{' '}
-            <Link
-              href="/tarifs"
-              className="text-[var(--ink)] underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:decoration-[var(--ink)]"
-            >
-              Comparer les offres en détail
+          <div className="mt-14 flex flex-wrap items-center gap-x-9 gap-y-5">
+            <ButtonLink href="/commander" variant="primary" size="pill">
+              Commander mon site
+            </ButtonLink>
+            <Link href="/acces" className="text-link">
+              J’ai reçu mon code d’accès
+              <span aria-hidden="true" className="arrow">
+                ↗
+              </span>
             </Link>
-          </p>
+          </div>
         </div>
       </section>
 
@@ -345,6 +249,40 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* --- Questions -------------------------------------------------------- */}
+      <section
+        id="questions"
+        aria-labelledby="questions-titre"
+        className="py-[clamp(80px,12vh,148px)]"
+      >
+        <div className="shell">
+          <p className="eyebrow-index mb-6">Questions</p>
+          <h2 id="questions-titre" className="display-section max-w-[22ch]">
+            Ce que l’on nous demande <em>le plus souvent.</em>
+          </h2>
+          <dl className="mt-14 grid gap-x-16 gap-y-10 md:grid-cols-2">
+            {HOMEPAGE_FAQ.map((item) => (
+              <div key={item.question} className="border-t border-[var(--border)] pt-6">
+                <dt className="font-serif text-[clamp(1.25rem,1.7vw,1.5rem)] leading-snug text-[var(--ink)]">
+                  {item.question}
+                </dt>
+                <dd className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-[var(--ink-2)]">
+                  {item.answer}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-12">
+            <Link href="/faq" className="text-link">
+              Toutes les questions
+              <span aria-hidden="true" className="arrow">
+                ↗
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* --- Cloture --------------------------------------------------------- */}
       <section
         id="contact"
@@ -394,7 +332,7 @@ const SERVICES = [
   },
   {
     title: 'Suivi',
-    body: 'À la livraison, l’éditeur Nemasus s’ouvre : vous modifiez textes, photos et horaires. Vous publiez, et c’est réellement en ligne. Hébergement, sauvegardes et surveillance sont compris dans la maintenance.',
+    body: 'À la livraison, l’éditeur Nemasus s’ouvre : vous modifiez textes, photos et horaires. Vous publiez, et c’est réellement en ligne. Chaque version reste restaurable, et la disponibilité de votre site est surveillée.',
     href: '/fonctionnalites/editeur',
     icon: 'M240,56v64a8,8,0,0,1-16,0V75.31l-82.34,82.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,212.69,64H168a8,8,0,0,1,0-16h64A8,8,0,0,1,240,56Z',
   },

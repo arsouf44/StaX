@@ -139,15 +139,11 @@ const ACCOUNT_PATHS = [
   '/app/entreprise',
   '/app/equipe-nemasus',
   '/app/facturation',
-  '/app/abonnement',
   '/app/securite',
   '/app/donnees',
   '/app/activite',
   '/app/support',
   '/app/compte',
-  // Detail d une commande Nemasus (`/app/commande/[id]`), a ne pas confondre avec
-  // `/app/commandes`, les commandes de la boutique du site.
-  '/app/commande',
 ] as const;
 
 /** Chemin accessible pendant que Nemasus construit le site. */

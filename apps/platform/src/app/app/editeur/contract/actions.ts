@@ -222,7 +222,7 @@ const RELEASE_ERRORS: Record<string, string> = {
   release_in_progress: 'Une publication est déjà en cours : attendez qu’elle se termine.',
   schedule_exists: 'Une publication est déjà programmée : annulez-la d’abord.',
   conflict: 'Le brouillon a changé entre-temps : enregistrez-le de nouveau, puis publiez.',
-  feature_unavailable: 'La publication programmée n’est pas incluse dans votre offre.',
+  feature_unavailable: 'La publication programmée n’est pas activée pour votre site.',
   schedule_out_of_range: 'Choisissez une date entre dans 5 minutes et dans un an.',
   infrastructure_missing: 'L’hébergement du site n’est pas disponible : contactez Nemasus.',
   site_unavailable: 'Votre site est suspendu : la publication est impossible.',

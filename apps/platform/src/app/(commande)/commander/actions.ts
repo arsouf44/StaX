@@ -8,29 +8,15 @@ import { formDataToObject, hostnameSchema, slugSchema } from '@nemasus/validatio
 import { writeOrderDraft } from '~/lib/order-draft';
 
 /**
- * Etapes du parcours d achat.
+ * Etapes du parcours de commande.
  *
  * Aucune de ces actions n ecrit en base et aucune ne manipule de prix : elles
- * enregistrent des CHOIX dans un brouillon signe. Le prix est calcule par la
- * base au moment de creer la commande, a partir du catalogue — jamais a partir
- * de ce que le navigateur a envoye.
+ * enregistrent des CHOIX dans un brouillon signe. La commande n est creee
+ * qu a l envoi (recapitulatif), sans montant : le paiement se fait ensuite par
+ * virement, selon les modalites que l equipe adresse au client.
  */
 
 export type StepState = ActionState;
-
-const planSchema = z.object({ planSlug: slugSchema }).strict();
-
-export async function choosePlanAction(
-  _previous: StepState,
-  formData: FormData,
-): Promise<StepState> {
-  const parsed = planSchema.safeParse(formDataToObject(formData));
-  if (!parsed.success) {
-    return { status: 'error', message: 'Choisissez une offre pour continuer.' };
-  }
-  await writeOrderDraft({ planSlug: parsed.data.planSlug });
-  redirect('/commander/metier');
-}
 
 const businessSchema = z
   .object({ sectorSlug: slugSchema, businessTypeSlug: slugSchema })
@@ -68,6 +54,8 @@ export async function chooseBusinessAction(
 const informationSchema = z
   .object({
     organizationName: z.string().trim().min(2, 'Indiquez le nom de votre entreprise.').max(120),
+    contactFirstName: z.string().trim().min(1, 'Indiquez votre prénom.').max(80),
+    contactLastName: z.string().trim().min(1, 'Indiquez votre nom.').max(80),
     contactEmail: z.string().trim().email('Adresse e-mail invalide.').max(200),
     contactPhone: z.string().trim().max(40).optional().or(z.literal('')),
     city: z.string().trim().max(120).optional().or(z.literal('')),
@@ -101,7 +89,9 @@ export async function saveInformationAction(
 
   await writeOrderDraft({
     organizationName: parsed.data.organizationName,
-    contactEmail: parsed.data.contactEmail,
+    contactFirstName: parsed.data.contactFirstName,
+    contactLastName: parsed.data.contactLastName,
+    contactEmail: parsed.data.contactEmail.toLowerCase(),
     contactPhone: parsed.data.contactPhone || undefined,
     city: parsed.data.city || undefined,
     customerNotes: parsed.data.customerNotes || undefined,
@@ -112,15 +102,14 @@ export async function saveInformationAction(
 
 const domainSchema = z
   .object({
-    domainHandling: z.enum(['customer_owned', 'stax_purchase', 'subdomain_only']),
+    domainHandling: z.enum(['customer_owned', 'purchase', 'later']),
     domainHostname: z.string().trim().max(253).optional().or(z.literal('')),
-    subdomain: z.string().trim().max(63).optional().or(z.literal('')),
   })
   .strict()
   .superRefine((data, context) => {
     // Domaine choisi plus tard : le site est d abord servi sur l adresse
     // technique de son propre projet Cloudflare, communiquee a la mise en ligne.
-    if (data.domainHandling === 'subdomain_only') return;
+    if (data.domainHandling === 'later') return;
     const parsed = hostnameSchema.safeParse(data.domainHostname ?? '');
     if (!parsed.success) {
       context.addIssue({
@@ -144,11 +133,10 @@ export async function saveDomainAction(
     };
   }
 
-  const later = parsed.data.domainHandling === 'subdomain_only';
+  const later = parsed.data.domainHandling === 'later';
   await writeOrderDraft({
     domainHandling: parsed.data.domainHandling,
-    domainHostname: later ? undefined : parsed.data.domainHostname || undefined,
-    subdomain: undefined,
+    domainHostname: later ? undefined : parsed.data.domainHostname?.toLowerCase() || undefined,
   });
   redirect('/commander/recapitulatif');
 }

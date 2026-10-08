@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Alert, Button, Field, Input } from '@nemasus/ui';
+import { Alert, Button, FormErrorSummary } from '@nemasus/ui';
 import { PasswordField } from '~/components/auth/password-field';
 import { IDLE_STATE } from '~/lib/form-state';
 import { updatePasswordAction, type AuthFormState } from '../actions';
@@ -16,7 +16,7 @@ function SubmitButton() {
   );
 }
 
-export function NewPasswordForm() {
+export function NewPasswordForm({ token }: { token: string }) {
   const [state, action] = useActionState<AuthFormState, FormData>(updatePasswordAction, IDLE_STATE);
 
   return (
@@ -26,12 +26,17 @@ export function NewPasswordForm() {
           {state.message}
         </Alert>
       ) : null}
+      {state.errors ? <FormErrorSummary errors={state.errors} /> : null}
 
-      <PasswordField error={state.errors?.password} />
+      <input type="hidden" name="jeton" value={token} />
 
-      <Field label="Confirmer le mot de passe" error={state.errors?.confirmPassword} required>
-        <Input name="confirmPassword" type="password" autoComplete="new-password" required />
-      </Field>
+      <PasswordField label="Nouveau mot de passe" error={state.errors?.password} />
+      <PasswordField
+        name="confirmPassword"
+        label="Confirmez le mot de passe"
+        error={state.errors?.confirmPassword}
+        showStrength={false}
+      />
 
       <SubmitButton />
     </form>

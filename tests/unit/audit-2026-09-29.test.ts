@@ -7,7 +7,6 @@ import {
   setEnvSource,
 } from '@nemasus/config';
 import { isHumanHealthBusiness, resolveBusiness } from '@nemasus/business';
-import { subscriptionCancelledEmail } from '@nemasus/emails';
 import {
   createBlock,
   emptySiteData,
@@ -107,18 +106,6 @@ describe('fin de contrat (RGPD, art. 28 § 3 g)', () => {
       confirm: true,
     });
     expect(parsed.dataFate).toBe('restitution');
-  });
-
-  it('confirme le choix et la date de suppression par e-mail', () => {
-    const email = subscriptionCancelledEmail({
-      to: 'client@exemple.test',
-      endDate: '1 octobre 2026',
-      gracePeriodEnd: '31 octobre 2026',
-      billingUrl: 'https://nemasus.example/app/abonnement',
-      dataFate: 'suppression',
-      deletionDate: '31 octobre 2026',
-    });
-    expect(email.text).toContain('supprimées définitivement le 31 octobre 2026');
   });
 
   it('l’accord de traitement laisse le choix au client', () => {

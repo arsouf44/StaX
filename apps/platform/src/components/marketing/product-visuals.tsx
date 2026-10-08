@@ -18,14 +18,22 @@ export function BrowserFrame({
   children,
   className,
   secure = true,
+  label,
 }: {
   url: string;
   children: React.ReactNode;
   className?: string;
   secure?: boolean;
+  /**
+   * Description lue par les lecteurs d'écran : la maquette est une seule
+   * illustration, pas une suite de fragments d'interface en petits caractères.
+   */
+  label?: string;
 }) {
   return (
     <div
+      role="img"
+      aria-label={label ?? `Illustration : aperçu de ${url}`}
       className={cn(
         'overflow-hidden border border-[rgb(255_255_255/0.85)] bg-[rgb(250_251_251/0.86)] shadow-[var(--shadow-stage)] backdrop-blur-xl',
         className,
@@ -129,7 +137,7 @@ export function DashboardMock({ className }: { className?: string }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-[11px] font-medium">Restaurant Dupont</p>
-            <p className="truncate text-[9px] text-[#5e676f]">Offre Ultra Premium</p>
+            <p className="truncate text-[9px] text-[#5e676f]">Site livré · en ligne</p>
           </div>
         </div>
         <nav className="space-y-0.5">
@@ -252,7 +260,7 @@ export function ProjectMock({ className }: { className?: string }) {
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium">Votre projet — Restaurant Dupont</p>
             <p className="mt-0.5 text-[11px] text-[#5e676f]">
-              Offre Premium · votre site est en cours de développement
+              Paiement reçu · votre site est en cours de développement
             </p>
           </div>
           <span className="shrink-0 border border-[rgb(20_24_28/0.18)] px-2 py-1 text-[10px] text-[#4b545c]">

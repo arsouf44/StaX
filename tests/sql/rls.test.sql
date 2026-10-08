@@ -694,9 +694,7 @@ declare
   ];
   client_allowed text[] := array[
     'public.has_feature(uuid, text)',
-    'public.publish_site(uuid, text)',
-    'public.create_order(uuid, uuid, text, text, jsonb, text, text, text, text, text, text)',
-    'public.request_refund(uuid, text, int, int)'
+    'public.publish_site(uuid, text)'
   ];
 begin
   foreach fn in array server_only loop
@@ -1930,8 +1928,7 @@ begin
     json_build_object('sub', v_internal, 'role', 'authenticated')::text, true);
   set local role authenticated;
   v_result := public.create_internal_order(
-    (select id from public.plans where slug = 'essentiel' and is_active and valid_until is null),
-    'artisanat', 'plombier', 'Second site interne');
+    v_plan, 'artisanat', 'plombier', 'Second site interne');
   reset role;
   perform set_config('request.jwt.claims', null, true);
   perform t.assert((v_result ->> 'ok')::boolean, 'Le compte interne cree autant de sites qu''il veut');
@@ -2435,16 +2432,25 @@ declare
 begin
   perform set_config('request.jwt.claims', null, true);
 
+  -- 0066 : plus aucune offre n'est proposee au public (commande puis virement
+  -- d'un montant convenu). Les offres historiques restent en base, intactes,
+  -- pour les sites et contrats qui y sont deja rattaches.
   perform t.assert(
-    (select count(*) from public.plans where is_active and is_public and valid_until is null) = 5,
-    'Cinq offres publiques : Essentiel, Premium, Ultra Premium, Exceptionnel, Sur mesure');
+    (select count(*) from public.plans where is_active and is_public and valid_until is null) = 0,
+    '0066 : aucune offre n''est plus proposee au public');
   perform t.assert(
     (select string_agg(slug || ':' || setup_price_cents || ':' || maintenance_price_cents || ':'
                        || billing_interval, ',' order by sort_order)
-       from public.plans where is_active and is_public and not is_quote_only and valid_until is null)
+       from public.plans
+      where is_active and not is_quote_only and valid_until is null
+        and slug in ('essentiel', 'premium', 'ultra-premium', 'exceptionnel'))
     = 'essentiel:30000:1200:month,premium:55000:1400:month,ultra-premium:109900:1600:month,'
       || 'exceptionnel:179000:1800:month',
-    'Tarifs : 300/12, 550/14, 1099/16, 1790/18 EUR HT, maintenance mensuelle');
+    'Les offres historiques restent intactes pour les contrats en cours');
+  perform t.assert(
+    (select not is_public and setup_price_cents = 0 and maintenance_price_cents = 0
+       from public.plans where slug = 'site-nemasus' and is_active and valid_until is null),
+    '0066 : l''offre interne des sites commandes ne porte aucun prix');
   perform t.assert(
     (select is_quote_only and billing_interval = 'month' from public.plans
       where slug = 'sur-mesure' and is_active and valid_until is null),
@@ -3193,8 +3199,8 @@ begin
 
   perform t.assert(not has_function_privilege('anon', 'public.compute_order_pricing(uuid, text)', 'execute'),
     'anon ne peut PAS calculer un prix ni tester un code promotionnel');
-  perform t.assert(has_function_privilege('authenticated', 'public.compute_order_pricing(uuid, text)', 'execute'),
-    'Une personne connectee peut calculer le prix de sa commande');
+  perform t.assert(not has_function_privilege('authenticated', 'public.compute_order_pricing(uuid, text)', 'execute'),
+    '0066 : plus aucun prix de catalogue n''est calcule pour un client');
 end;
 $$;
 
@@ -3215,333 +3221,57 @@ end;
 $$;
 
 -- -----------------------------------------------------------------------------
---  Propositions de site : vente par telephone (0054)
+--  Ancienne vente par carte (0054 et precedentes) : retiree en 0066
+--
+--  Les propositions payees par carte, la commande au prix d'une offre, la
+--  session Stripe, le rattachement de facture et la demande de remboursement
+--  en ligne ne sont plus appelables par une session cliente. La vente passe
+--  par `site_orders` (commande, virement, code d'acces), testee plus bas.
 -- -----------------------------------------------------------------------------
-\echo '--- Propositions de site : code, paiement, livraison automatique (0054) ---'
+\echo '--- Ancienne vente par carte : surface retiree (0066) ---'
 do $$
 declare
-  staff     uuid := (select v from t.fixtures where k='staff');
-  bob       uuid := (select v from t.fixtures where k='bob');
-  dora      uuid;
-  v_result  jsonb;
-  v_org     uuid; v_site uuid;
-  v_manifest uuid;
-  v_prop    uuid;
-  v_order   uuid;
-  v_order2  uuid;
-  v_rev     int;
-  v_sites_before int;
-  v_account text := repeat('cd', 16);
-  sha text := repeat('7', 40);
-  v_essentiel uuid := (select id from public.plans where slug = 'essentiel' and is_active and valid_until is null);
-  v_premium   uuid := (select id from public.plans where slug = 'premium' and is_active and valid_until is null);
-  v_devis     uuid := (select id from public.plans where slug = 'sur-mesure' and is_active);
-  v_hash    text := repeat('a1', 32);
-  v_call    text;
+  staff  uuid := (select v from t.fixtures where k='staff');
+  fn     text;
+  v_result jsonb;
+  v_org  uuid; v_site uuid;
+  retired text[] := array[
+    'public.create_order(uuid, uuid, text, text, jsonb, text, text, text, text, text, text)',
+    'public.compute_order_pricing(uuid, text)',
+    'public.attach_checkout_session(uuid, text)',
+    'public.request_refund(uuid, text, integer, integer)',
+    'public.mark_maintenance_start_failed(uuid, text)',
+    'public.claim_sales_invoice(text, uuid, text, text)',
+    'public.peek_sales_invoice(text)',
+    'public.create_site_proposal(uuid, uuid, text, text, text, text, text, text, text, text, integer)',
+    'public.renew_site_proposal(uuid, text, text, integer)',
+    'public.withdraw_site_proposal(uuid, text)',
+    'public.erase_site_proposal_contact(uuid)',
+    'public.record_proposal_email(uuid, text, text)',
+    'public.site_proposal_for_site(uuid)',
+    'public.claim_site_proposal(text)',
+    'public.create_proposal_order(uuid, text, text)'
+  ];
 begin
-  perform set_config('request.jwt.claims', null, true);
-  insert into auth.users (email) values ('dora@prospect.test') returning id into dora;
-  insert into t.fixtures (k, v) values ('dora', dora) on conflict (k) do update set v = excluded.v;
+  foreach fn in array retired loop
+    perform t.assert(to_regprocedure(fn) is not null
+                     and not has_function_privilege('authenticated', fn, 'execute')
+                     and not has_function_privilege('anon', fn, 'execute'),
+      format('Retiree : aucune session cliente n''execute %s', split_part(fn, '(', 1)));
+  end loop;
 
-  -- Le site est construit hors de Nemasus, rattache, deploye.
+  -- Organisation preparee par l'equipe, reutilisee par les tests d'invitation.
   v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
-    'Boulangerie Z', 'restaurant', v_essentiel, 'Nantes'));
+    'Boulangerie Z', 'restaurant', null, 'Nantes'));
   v_org := (v_result ->> 'organizationId')::uuid; v_site := (v_result ->> 'siteId')::uuid;
+  perform t.assert(v_org is not null
+                   and (select plan_id from public.sites where id = v_site) = app.default_site_plan_id(),
+    'Un site prepare par l''equipe recoit l''offre interne, sans prix');
   insert into t.fixtures (k, v) values ('site_z', v_site), ('org_z', v_org)
     on conflict (k) do update set v = excluded.v;
-  perform t.json_as(staff, format(
-    'public.connect_site_repository(%L::uuid, 1001, 9101, %L, 5001, %L, %L, %L, %L, %L)',
-    v_site, 'nemasus-sites', 'boulangerie-z', 'nemasus-sites/boulangerie-z',
-    'https://github.com/nemasus-sites/boulangerie-z', 'main', 'main'));
-  perform t.json_as(staff, format('public.connect_site_hosting(%L::uuid, %L, %L, %L, %L, %L, %L)',
-    v_site, 'cloudflare_pages', v_account, 'boulangerie-z', 'proj-boulangerie-z', 'main',
-    'https://boulangerie-z.pages.dev'));
-  v_result := t.json_as(staff, format(
-    'public.record_site_manifest(%L::uuid, %L, %L, 1, %L::jsonb, %L, %L, %L::jsonb, %L::jsonb, %L::jsonb, true)',
-    v_site, sha, 'nemasus.manifest.json', '{"contract":1,"site":{"name":"Boulangerie Z"}}',
-    'hash-manifest-z', 'valid', '[]', '[]', '{"pages":3,"locales":1,"forms":1,"collections":0}'));
-  v_manifest := (v_result ->> 'manifestId')::uuid;
-  perform t.json_as(staff, format(
-    'public.initialize_site_content(%L::uuid, %L::uuid, %L::jsonb, %L, %L, %L::jsonb)',
-    v_site, v_manifest, '{"pages":{"home":{"hero":{"title":"Pain au levain"}}}}', 'hash-z1', sha,
-    '{"status":"success","providerDeploymentId":"dep-z1","url":"https://z1.boulangerie-z.pages.dev"}'));
-
-  v_call := format(
-    'public.create_site_proposal(%L::uuid, %L::uuid, %L, %L, %L, %L, %L, %L, %L, %L, 14)',
-    v_site, v_premium, 'Dora@Prospect.test', 'Boulangerie Z', 'Dora', '0600000000',
-    'Comme convenu au telephone.', 'Rappeler mardi, tres interessee', v_hash, 'QXP4');
-
-  perform t.assert(t.denied_as(dora, 'select ' || v_call),
-    'Un client ne peut pas envoyer de proposition');
-
-  -- Checklist incomplete : rien n'est envoye, l'offre du site est retablie.
-  v_result := t.json_as(staff, v_call);
-  perform t.assert(v_result ->> 'code' = 'checklist_incomplete'
-                   and v_result -> 'missing' ? 'https' and not (v_result -> 'missing' ? 'domain')
-                   and not (v_result -> 'missing' ? 'client_account'),
-    'Pas de proposition sans site verifie (le domaine et le compte client sont dispenses)');
-  perform t.assert((select plan_id from public.sites where id = v_site) = v_essentiel,
-    'Une proposition refusee ne change pas l''offre du site');
-
-  perform t.json_as(staff, format('public.attest_delivery_check(%L::uuid, %L, true, %L)',
-    v_site, 'forms', 'Formulaire de contact envoye et recu'));
-  perform t.json_as(staff, format('public.attest_delivery_check(%L::uuid, %L, true, %L)',
-    v_site, 'responsive', 'Verifie sur telephone, tablette et ordinateur'));
-  perform set_config('request.jwt.claims', null, true);
-  perform public.record_delivery_check(v_site, 'deployed', true, '{"deployment":"dep-z1"}'::jsonb);
-  perform public.record_delivery_check(v_site, 'https', true, '{"status":200}'::jsonb);
-  perform public.record_delivery_check(v_site, 'seo', true, '{"title":true}'::jsonb);
-
-  v_result := t.json_as(staff, format(
-    'public.create_site_proposal(%L::uuid, %L::uuid, %L, %L, null, null, null, null, %L, %L, 14)',
-    v_site, v_devis, 'dora@prospect.test', 'Boulangerie Z', repeat('b2', 32), 'AAAA'));
-  perform t.assert(v_result ->> 'code' = 'plan_unavailable',
-    'Une offre sur devis ne se propose pas : prix du catalogue uniquement');
-
-  v_result := t.json_as(staff, v_call);
-  v_prop := (v_result ->> 'proposalId')::uuid;
-  perform t.assert((v_result ->> 'ok')::boolean and v_prop is not null,
-    'L''administration envoie une proposition pour un site verifie');
-  perform t.assert(
-    (select setup_price_cents = 55000 and vat_cents = 11000 and total_cents = 66000
-            and maintenance_price_cents = 1400 and billing_interval = 'month'
-            and prospect_email = 'dora@prospect.test'
-            and expires_at between now() + interval '13 days' and now() + interval '15 days'
-       from public.site_proposals where id = v_prop),
-    'Prix du catalogue fige, adresse normalisee, valable 14 jours');
-  perform t.assert((select plan_id from public.sites where id = v_site) = v_premium,
-    'L''offre proposee devient celle du site');
-
-  v_result := t.json_as(staff, format(
-    'public.create_site_proposal(%L::uuid, %L::uuid, %L, %L, null, null, null, null, %L, %L, 14)',
-    v_site, v_premium, 'autre@prospect.test', 'Autre', repeat('c3', 32), 'BBBB'));
-  perform t.assert(v_result ->> 'code' = 'proposal_open',
-    'Un site n''est propose qu''a un seul prospect a la fois');
-
-  perform t.assert(t.count_as(dora, 'select 1 from site_proposals') = 0,
-    'Un client ne lit jamais la table des propositions (notes internes)');
-  perform t.assert(t.denied_as(dora, format(
-    'update site_proposals set total_cents = 1 where id = %L', v_prop)),
-    'Un client ne modifie pas une proposition');
-
-  -- Recuperation par le code : il ne vaut qu'avec l'adresse du prospect.
-  v_result := t.json_as(dora, format('public.claim_site_proposal(%L)', repeat('ff', 32)));
-  perform t.assert(v_result ->> 'code' = 'invalid', 'Un code inconnu est refuse');
-  v_result := t.json_as(bob, format('public.claim_site_proposal(%L)', v_hash));
-  perform t.assert(v_result ->> 'code' = 'email_mismatch',
-    'Le code ne vaut pas avec une autre adresse que celle du prospect');
-  perform t.assert(not exists (select 1 from public.organization_members
-                                where organization_id = v_org and user_id = bob),
-    'Un code intercepte n''ouvre rien');
-
-  v_result := t.json_as(dora, format('public.claim_site_proposal(%L)', v_hash));
-  perform t.assert((v_result ->> 'ok')::boolean and (v_result ->> 'siteId')::uuid = v_site,
-    'Le prospect recupere son site avec son code');
-  perform t.assert(exists (select 1 from public.organization_members
-                            where organization_id = v_org and user_id = dora and role = 'owner'),
-    'Le prospect devient proprietaire de l''espace du site');
-  v_result := t.json_as(dora, format('public.claim_site_proposal(%L)', v_hash));
-  perform t.assert(v_result ->> 'code' = 'already_claimed' and (v_result ->> 'ok')::boolean,
-    'Revenir sur le lien ne bloque pas le prospect');
-
-  v_result := t.json_as(dora, format('public.site_proposal_for_site(%L::uuid)', v_site));
-  perform t.assert(v_result ->> 'status' = 'claimed'
-                   and (v_result ->> 'totalCents')::int = 66000
-                   and v_result ->> 'siteUrl' = 'https://boulangerie-z.pages.dev'
-                   and not (v_result ? 'internalNotes') and not (v_result ? 'codeHash')
-                   and position('mardi' in v_result::text) = 0,
-    'Le client voit son site et son prix, jamais les notes internes ni le code');
-  perform t.assert(t.json_as(bob, format('public.site_proposal_for_site(%L::uuid)', v_site))
-                     is null,
-    'Une autre entreprise ne voit pas la proposition');
-
-  v_rev := (select revision from public.site_content_drafts where site_id = v_site);
-  perform t.assert(t.denied_as(dora, format(
-    'select public.save_site_draft(%L, %L::jsonb, %s)', v_site, '{"x":1}', v_rev)),
-    'Avant le paiement, le prospect ne modifie pas le site');
-  perform t.assert(t.denied_as(dora, format('select public.complete_paid_proposal(%L::uuid)',
-    gen_random_uuid())),
-    'Le prospect ne peut pas se livrer le site lui-meme');
-  perform t.assert(t.denied_as(dora, format('select public.deliver_site(%L)', v_site)),
-    'Le prospect ne peut pas appeler la livraison manuelle');
-
-  -- Commande : le site existant, les montants de la proposition.
-  v_result := t.json_as(bob, format('public.create_proposal_order(%L::uuid, %L)', v_prop, 'cgv-test'));
-  perform t.assert(v_result ->> 'code' = 'not_found',
-    'Une autre entreprise ne peut pas commander cette proposition');
-  v_result := t.json_as(dora, format('public.create_proposal_order(%L::uuid, %L)', v_prop, 'cgv-test'));
-  v_order := (v_result ->> 'orderId')::uuid;
-  perform t.assert((v_result ->> 'ok')::boolean and v_order is not null,
-    'Le prospect commande sa proposition');
-  perform t.assert(
-    (select site_id = v_site and total_cents = 66000 and setup_price_cents = 55000
-            and status = 'draft' and billing_mode = 'stripe'
-       from public.orders where id = v_order),
-    'La commande porte le site deja construit et le prix de la proposition');
-  v_result := t.json_as(dora, format('public.create_proposal_order(%L::uuid, %L)', v_prop, 'cgv-test'));
-  perform t.assert((v_result ->> 'orderId')::uuid = v_order and (v_result ->> 'reused')::boolean,
-    'Un second clic reutilise la commande en attente');
-
-  perform t.assert(t.json_as(bob, format('public.attach_checkout_session(%L::uuid, %L)',
-    v_order, 'cs_test_intrus_123456')) = 'false'::jsonb,
-    'Une autre entreprise n''attache pas de session de paiement a cette commande');
-  perform t.assert(t.denied_as(dora, format('select public.attach_checkout_session(%L::uuid, %L)',
-    v_order, 'pas-une-session')),
-    'Une session de paiement mal formee est refusee');
-  v_result := t.json_as(dora, format('public.attach_checkout_session(%L::uuid, %L)',
-    v_order, 'cs_test_proposal_123456'));
-  perform t.assert(v_result = 'true'::jsonb
-    and (select status::text = 'checkout_pending' and stripe_checkout_session_id = 'cs_test_proposal_123456'
-           from public.orders where id = v_order),
-    'Le client inscrit la session de paiement de sa commande (paiement en cours)');
-  perform set_config('request.jwt.claims', null, true);
-
-  -- Paiement confirme par le webhook signe (role de service).
-  perform set_config('request.jwt.claims', null, true);
-  v_sites_before := (select count(*) from public.sites where organization_id = v_org);
-  v_result := public.apply_order_paid(v_order, 'pi_test_proposal', 'cs_test_proposal');
-  perform t.assert((v_result ->> 'siteId')::uuid = v_site
-                   and (select count(*) from public.sites where organization_id = v_org) = v_sites_before
-                   and (select count(*) from public.projects where site_id = v_site) = 1,
-    'Le paiement ne cree ni second site ni second projet');
-  perform t.assert((select maintenance_status from public.orders where id = v_order) = 'pending_delivery',
-    'La maintenance attend la livraison');
-
-  v_result := public.complete_paid_proposal(v_order);
-  perform t.assert((v_result ->> 'delivered')::boolean,
-    'Paiement confirme : le site est livre automatiquement');
-  perform t.assert((select delivered_at is not null and status = 'live' from public.sites where id = v_site)
-                   and (select status from public.site_proposals where id = v_prop) = 'delivered',
-    'Le site livre est en ligne et la proposition est close');
-  v_result := public.complete_paid_proposal(v_order);
-  perform t.assert(v_result ->> 'code' = 'already_delivered',
-    'La livraison automatique est idempotente');
-
-  v_rev := (select revision from public.site_content_drafts where site_id = v_site);
-  v_result := t.json_as(dora, format('public.save_site_draft(%L::uuid, %L::jsonb, %s)',
-    v_site, '{"pages":{"home":{"hero":{"title":"Pain au levain naturel"}}}}', v_rev));
-  perform t.assert((v_result ->> 'ok')::boolean, 'Apres le paiement, le client modifie son site');
-
-  v_result := t.json_as(dora, format('public.create_proposal_order(%L::uuid, %L)', v_prop, 'cgv-test'));
-  perform t.assert(v_result ->> 'code' = 'already_paid', 'Une proposition ne se paie qu''une fois');
 end;
 $$;
 
-\echo '--- Propositions : expiration, relance, retrait ---'
-do $$
-declare
-  staff    uuid := (select v from t.fixtures where k='staff');
-  dora     uuid := (select v from t.fixtures where k='dora');
-  erwan    uuid;
-  v_result jsonb;
-  v_org    uuid; v_site uuid; v_prop uuid;
-  v_premium uuid := (select id from public.plans where slug = 'premium' and is_active and valid_until is null);
-  v_old    text := repeat('d4', 32);
-  v_new    text := repeat('e5', 32);
-begin
-  perform set_config('request.jwt.claims', null, true);
-  insert into auth.users (email) values ('erwan@prospect.test') returning id into erwan;
-  v_result := t.json_as(staff, format('public.admin_create_site(%L, %L, %L::uuid, %L)',
-    'Garage W', 'restaurant', v_premium, 'Brest'));
-  v_org := (v_result ->> 'organizationId')::uuid; v_site := (v_result ->> 'siteId')::uuid;
-
-  -- Proposition deja expiree (inscrite directement : la date est le seul sujet ici).
-  insert into public.site_proposals
-    (reference, site_id, organization_id, plan_id, plan_slug, plan_version, plan_name,
-     setup_price_cents, maintenance_price_cents, billing_interval, vat_rate_bps, vat_cents,
-     total_cents, prospect_email, company_name, code_hash, code_hint, expires_at, created_by)
-  values ('PRO-TEST1', v_site, v_org, v_premium, 'premium', 1, 'Premium', 55000, 1400, 'month',
-          2000, 11000, 66000, 'erwan@prospect.test', 'Garage W', v_old, 'OLD1',
-          now() - interval '1 day', staff)
-  returning id into v_prop;
-
-  v_result := t.json_as(erwan, format('public.claim_site_proposal(%L)', v_old));
-  perform t.assert(v_result ->> 'code' = 'expired', 'Un code expire ne donne acces a rien');
-  perform t.assert((select count(*) from public.sites where id = v_site) = 1,
-    'Rien n''est efface a l''expiration');
-
-  perform t.assert(t.denied_as(erwan, format(
-    'select public.renew_site_proposal(%L::uuid, %L, %L, 14)', v_prop, v_new, 'NEW1')),
-    'Seule l''administration relance une proposition');
-  v_result := t.json_as(staff, format('public.renew_site_proposal(%L::uuid, %L, %L, 14)',
-    v_prop, v_new, 'NEW1'));
-  perform t.assert((v_result ->> 'ok')::boolean and (v_result ->> 'newCode')::boolean,
-    'Relancer donne un nouveau delai et un nouveau code');
-  v_result := t.json_as(erwan, format('public.claim_site_proposal(%L)', v_old));
-  perform t.assert(v_result ->> 'code' = 'invalid', 'L''ancien code ne vaut plus apres relance');
-  v_result := t.json_as(erwan, format('public.claim_site_proposal(%L)', v_new));
-  perform t.assert((v_result ->> 'ok')::boolean, 'Le nouveau code fonctionne');
-
-  perform t.assert(t.denied_as(erwan, format('select public.withdraw_site_proposal(%L::uuid)', v_prop)),
-    'Le client ne retire pas une proposition');
-  v_result := t.json_as(staff, format('public.withdraw_site_proposal(%L::uuid, %L)', v_prop, 'Pas interesse'));
-  perform t.assert((v_result ->> 'ok')::boolean and (v_result ->> 'accessRemoved')::boolean,
-    'Retirer une proposition recuperee retire l''acces du prospect');
-  perform t.assert(not exists (select 1 from public.organization_members
-                                where organization_id = v_org and user_id = erwan)
-                   and exists (select 1 from auth.users where id = erwan)
-                   and exists (select 1 from public.sites where id = v_site),
-    'Le compte du prospect et le site restent ; seul l''acces est retire');
-  v_result := t.json_as(erwan, format('public.create_proposal_order(%L::uuid, %L)', v_prop, 'cgv-test'));
-  perform t.assert(v_result ->> 'code' in ('not_found', 'withdrawn'),
-    'Une proposition retiree ne se paie plus');
-
-  -- Opposition du prospect (0057) : effacement immediat, sur une proposition retiree.
-  perform t.assert(t.denied_as(erwan, format('select public.erase_site_proposal_contact(%L::uuid)', v_prop)),
-    'Le client n''efface pas les coordonnees d''une proposition');
-  perform t.assert(not has_function_privilege('anon', 'public.erase_site_proposal_contact(uuid)', 'execute'),
-    'Effacement ferme aux visiteurs');
-
-  -- (Le cas « effacement a la demande » est verifie ci-dessous, sur une autre proposition.)
-
-  -- Conservation : trois ans après le dernier échange, le prospect est anonymisé.
-  perform set_config('request.jwt.claims', null, true);
-  update public.site_proposals
-     set last_sent_at = now() - interval '4 years', expires_at = now() - interval '4 years',
-         claimed_at = now() - interval '4 years', withdrawn_at = now() - interval '4 years',
-         sent_at = now() - interval '4 years'
-   where id = v_prop;
-  perform app.apply_retention();
-  perform t.assert(
-    (select prospect_email like 'efface-%@anonymise.invalid' and prospect_name is null
-            and prospect_phone is null and internal_notes is null
-       from public.site_proposals where id = v_prop),
-    'Proposition non conclue : le prospect est anonymise apres trois ans');
-
-  -- Effacement a la demande : refuse tant que la proposition n'est pas retiree.
-  perform set_config('request.jwt.claims', null, true);
-  insert into public.site_proposals
-    (reference, site_id, organization_id, plan_id, plan_slug, plan_version, plan_name,
-     setup_price_cents, maintenance_price_cents, billing_interval, vat_rate_bps, vat_cents,
-     total_cents, prospect_email, prospect_name, prospect_phone, company_name, code_hash,
-     code_hint, expires_at, created_by)
-  values ('PRO-TEST2', v_site, v_org, v_premium, 'premium', 1, 'Premium', 55000, 1400, 'month',
-          2000, 11000, 66000, 'stop@prospect.test', 'Yann Stop', '0600000000', 'Garage Stop',
-          repeat('f6', 32), 'STP1', now() + interval '14 days', staff)
-  returning id into v_prop;
-  v_result := t.json_as(staff, format('public.erase_site_proposal_contact(%L::uuid)', v_prop));
-  perform t.assert(v_result ->> 'code' = 'not_withdrawn'
-                   and (select prospect_email from public.site_proposals where id = v_prop) = 'stop@prospect.test',
-    'Une proposition en cours ne s''efface pas : la retirer d''abord');
-  v_result := t.json_as(staff, format('public.withdraw_site_proposal(%L::uuid, %L)', v_prop, 'STOP'));
-  v_result := t.json_as(staff, format('public.erase_site_proposal_contact(%L::uuid)', v_prop));
-  perform t.assert(
-    (v_result ->> 'ok')::boolean
-    and (select prospect_email like 'efface-%@anonymise.invalid' and prospect_name is null
-                and prospect_phone is null and company_name = 'Coordonnées effacées'
-           from public.site_proposals where id = v_prop),
-    'Opposition du prospect : ses coordonnees sont effacees de la proposition retiree');
-
-  perform t.assert(not has_function_privilege('authenticated', 'public.complete_paid_proposal(uuid)', 'execute')
-                   and not has_function_privilege('anon', 'public.claim_site_proposal(text)', 'execute')
-                   and not has_function_privilege('authenticated', 'public.proposals_awaiting_delivery(int)', 'execute'),
-    'Livraison automatique reservee au serveur ; aucune recuperation sans compte');
-end;
-$$;
-
--- -----------------------------------------------------------------------------
---  Discussion client / equipe et invitations (0055)
--- -----------------------------------------------------------------------------
 \echo '--- Discussion client / equipe Nemasus et invitations (0055) ---'
 do $$
 declare
@@ -4511,6 +4241,295 @@ begin
   update public.site_settings set notification_emails = '{}' where site_id = v_site_a;
   delete from public.form_submissions where form_id = v_form;
   delete from public.forms where id = v_form;
+end;
+$$;
+
+\echo '--- 0066 : commande par virement, code d''acces, mot de passe oublie ---'
+-- Appel sous l'identite d'un administrateur de la plateforme (second facteur valide).
+create or replace function t.staff_json(p_sql text)
+returns jsonb language plpgsql as $$
+declare v_result jsonb;
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', (select v from t.fixtures where k = 'staff'),
+                      'role', 'authenticated', 'aal', 'aal2')::text, true);
+  set local role authenticated;
+  execute 'select to_jsonb(' || p_sql || ')' into v_result;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  return v_result;
+exception when others then
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  raise;
+end;
+$$;
+
+-- Appel du serveur de la plateforme (cle de service).
+create or replace function t.service_json(p_sql text)
+returns jsonb language plpgsql as $$
+declare v_result jsonb;
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
+  set local role service_role;
+  execute 'select to_jsonb(' || p_sql || ')' into v_result;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  return v_result;
+exception when others then
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  raise;
+end;
+$$;
+
+-- Indique si un appel est refuse (exception) sous une identite donnee.
+create or replace function t.refused_as(p_user uuid, p_sql text)
+returns boolean language plpgsql as $$
+begin
+  perform t.json_as(p_user, p_sql);
+  return false;
+exception when others then
+  return true;
+end;
+$$;
+
+do $$
+declare
+  v_alice   uuid := (select v from t.fixtures where k = 'alice');
+  v_bob     uuid := (select v from t.fixtures where k = 'bob');
+  v_staff   uuid := (select v from t.fixtures where k = 'staff');
+  v_org_a   uuid := (select v from t.fixtures where k = 'org_a');
+  v_order   jsonb;
+  v_again   jsonb;
+  v_result  jsonb;
+  v_check   jsonb;
+  v_id      uuid;
+  v_org     uuid;
+  v_site    uuid;
+  v_client  uuid;
+  v_row     public.site_orders%rowtype;
+  v_hash    text := encode(sha256('code-0066-premier'::bytea), 'hex');
+  v_hash2   text := encode(sha256('code-0066-second'::bytea), 'hex');
+  v_hash3   text := encode(sha256('code-0066-troisieme'::bytea), 'hex');
+  v_rt1     text := encode(sha256('reset-0066-1'::bytea), 'hex');
+  v_rt2     text := encode(sha256('reset-0066-2'::bytea), 'hex');
+  v_staff_order uuid;
+  v_n       integer;
+begin
+  -- Surface exposee : rien de ce parcours n'est appelable sans le serveur.
+  perform t.assert(
+    not has_function_privilege('anon', 'public.check_access_code(text)', 'execute')
+    and not has_function_privilege('authenticated', 'public.check_access_code(text)', 'execute'),
+    'La verification d''un code d''acces est reservee au serveur');
+  perform t.assert(
+    not has_function_privilege('authenticated', 'public.redeem_activation_code(text, uuid, text)', 'execute')
+    and not has_function_privilege('anon', 'public.redeem_activation_code(text, uuid, text)', 'execute'),
+    'Un client ne consomme pas un code lui-meme : seul le serveur, apres verification');
+  perform t.assert(
+    not has_function_privilege('anon',
+      'public.submit_site_order(text, text, text, text, text, text, text, text, text, jsonb, text, text, text, text)', 'execute')
+    and not has_function_privilege('authenticated',
+      'public.submit_site_order(text, text, text, text, text, text, text, text, text, jsonb, text, text, text, text)', 'execute'),
+    'Une commande publique passe par le serveur (limitation de debit, anti-robot)');
+  perform t.assert(
+    not has_function_privilege('authenticated', 'public.create_password_reset(text, text, text, integer)', 'execute')
+    and not has_function_privilege('authenticated', 'public.consume_password_reset(text)', 'execute')
+    and not has_function_privilege('anon', 'public.peek_password_reset(text)', 'execute'),
+    'Les jetons de reinitialisation ne sont manipules que par le serveur');
+  perform t.assert(t.denied_as(v_alice, 'select * from public.password_reset_tokens'),
+    'Aucun client ne lit les jetons de reinitialisation');
+  perform t.assert(t.denied_as(v_alice,
+      $q$insert into public.site_orders (reference, company_name, contact_email, terms_version)
+         values ('CMD-2026-99999', 'Forge', 'forge@x.test', 'v')$q$),
+    'Aucune commande ne s''ecrit directement dans la table');
+
+  -- 1. Le visiteur commande : la commande est enregistree, sans prix.
+  v_order := t.service_json($q$public.submit_site_order('Boulangerie Zero', 'Jeanne', 'Martin',
+      'Jeanne.0066@Client.test', '0600000000', 'Nimes', null, null, 'Un site vitrine',
+      '{}'::jsonb, 'later', null, '2026-10-08', 'iphash')$q$);
+  v_id := (v_order ->> 'orderId')::uuid;
+  perform t.assert((v_order ->> 'ok')::boolean and v_order ->> 'reference' ~ '^CMD-\d{4}-\d{5}$',
+    'La commande du visiteur recoit une reference CMD-AAAA-NNNNN');
+  select * into v_row from public.site_orders where id = v_id;
+  perform t.assert(v_row.status = 'received' and v_row.amount_cents is null
+                   and v_row.contact_email = 'jeanne.0066@client.test',
+    'Commande recue : aucun montant, adresse normalisee');
+  v_again := t.service_json($q$public.submit_site_order('Boulangerie Zero', 'Jeanne', 'Martin',
+      'jeanne.0066@client.test', null, null, null, null, null, '{}'::jsonb, 'later', null,
+      '2026-10-08', null)$q$);
+  perform t.assert((v_again ->> 'duplicate')::boolean and (v_again ->> 'orderId')::uuid = v_id,
+    'Un double envoi ne cree pas une seconde commande');
+  v_result := t.service_json($q$public.submit_site_order('Sans conditions', null, null,
+      'x.0066@client.test', null, null, null, null, null, '{}'::jsonb, 'later', null, '', null)$q$);
+  perform t.assert(v_result ->> 'code' = 'terms_required',
+    'Une commande sans acceptation des conditions est refusee');
+
+  perform t.assert(t.count_as(v_alice, 'select 1 from public.site_orders') = 0,
+    'Un client ne lit aucune commande, ni la sienne ni celle d''un autre');
+  perform t.assert(t.refused_as(v_alice,
+      format('public.request_site_order_payment(%L::uuid, 120000, null)', v_id)),
+    'Un client ne peut pas envoyer de modalites de paiement');
+  perform t.assert(t.refused_as(v_alice,
+      format('public.confirm_site_order_payment(%L::uuid, 120000, %L, %L, 30, null)', v_id, v_hash, 'AAAA')),
+    'Un client ne peut pas se declarer paye');
+
+  -- 2. L'equipe envoie les modalites de paiement, avec le montant convenu.
+  v_result := t.staff_json(format('public.request_site_order_payment(%L::uuid, 120000, %L)',
+                                  v_id, 'Creation du site'));
+  select * into v_row from public.site_orders where id = v_id;
+  perform t.assert((v_result ->> 'ok')::boolean and v_row.status = 'payment_requested'
+                   and v_row.amount_cents = 120000 and v_row.payment_request_count = 1,
+    'Modalites envoyees : montant convenu, virement attendu');
+
+  -- 3. Virement recu : organisation, site, projet et code d'acces sont crees.
+  v_result := t.staff_json(format(
+    'public.confirm_site_order_payment(%L::uuid, 120000, %L, %L, 30, null)', v_id, v_hash, 'PREM'));
+  v_org := (v_result ->> 'organizationId')::uuid;
+  v_site := (v_result ->> 'siteId')::uuid;
+  select * into v_row from public.site_orders where id = v_id;
+  perform t.assert((v_result ->> 'ok')::boolean and v_row.status = 'paid'
+                   and v_row.paid_amount_cents = 120000 and v_row.organization_id = v_org,
+    'Le virement confirme passe la commande en payee');
+  perform t.assert(
+    (select plan_id from public.sites where id = v_site) = app.default_site_plan_id()
+    and exists (select 1 from public.projects where site_id = v_site and status = 'ordered'),
+    'Le site recoit l''offre interne et son projet s''ouvre');
+  perform t.assert(
+    exists (select 1 from public.activation_codes
+             where site_order_id = v_id and code_hash = v_hash and code_hint = 'PREM'
+               and email_constraint = 'jeanne.0066@client.test'
+               and expires_at between now() + interval '29 days' and now() + interval '31 days'),
+    'Le code n''est conserve que sous forme d''empreinte, lie a l''adresse du client, 30 jours');
+  v_again := t.staff_json(format(
+    'public.confirm_site_order_payment(%L::uuid, 120000, %L, %L, 30, null)', v_id, v_hash2, 'XXXX'));
+  perform t.assert(v_again ->> 'code' = 'already_paid',
+    'Une commande ne se confirme qu''une fois (pas de second code par erreur)');
+
+  -- 4. Verification du code, cote serveur uniquement.
+  v_check := t.service_json(format('public.check_access_code(%L)', encode(sha256('faux'::bytea), 'hex')));
+  perform t.assert(v_check ->> 'reason' = 'invalid', 'Un code inconnu est refuse');
+  v_check := t.service_json(format('public.check_access_code(%L)', v_hash));
+  perform t.assert((v_check ->> 'ok')::boolean
+                   and (v_check ->> 'organizationId')::uuid = v_org
+                   and (v_check ->> 'siteId')::uuid = v_site
+                   and v_check ->> 'userId' is null
+                   and v_check ->> 'email' = 'jeanne.0066@client.test',
+    'Un code valide designe SON organisation et SON site, et rien d''autre');
+
+  insert into auth.users (email) values ('jeanne.0066@client.test') returning id into v_client;
+  v_result := t.service_json(format('public.redeem_activation_code(%L, %L::uuid, %L)',
+                                    v_hash, v_client, 'jeanne.0066@client.test'));
+  perform t.assert((v_result ->> 'ok')::boolean and (v_result ->> 'organization_id')::uuid = v_org,
+    'Le serveur consomme le code pour le compte du client');
+  v_check := t.service_json(format('public.check_access_code(%L)', v_hash));
+  perform t.assert(v_check ->> 'reason' = 'already_used', 'Un code ne sert qu''une fois');
+
+  -- 5. Isolation : le client voit son site, jamais celui d'un autre.
+  perform t.assert(t.count_as(v_client, format('select 1 from public.sites where id = %L', v_site)) = 1,
+    'Le client voit son site');
+  perform t.assert(t.count_as(v_client, format('select 1 from public.sites where organization_id = %L', v_org_a)) = 0
+                   and t.count_as(v_client, 'select 1 from public.form_submissions') = 0,
+    'Le client ne voit ni le site ni les messages d''une autre societe');
+  perform t.assert(t.count_as(v_bob, format('select 1 from public.sites where id = %L', v_site)) = 0,
+    'Une autre societe ne voit pas le nouveau site');
+  perform t.assert(t.json_as(v_client, format('public.site_order_for_organization(%L::uuid)', v_org)) ->> 'reference'
+                     = v_order ->> 'reference'
+                   and not (t.json_as(v_client, format('public.site_order_for_organization(%L::uuid)', v_org)) ? 'internalNotes'),
+    'Le client lit sa commande, sans les notes internes');
+  perform t.assert(t.json_as(v_bob, format('public.site_order_for_organization(%L::uuid)', v_org)) = 'null'::jsonb
+                   or t.json_as(v_bob, format('public.site_order_for_organization(%L::uuid)', v_org)) is null,
+    'Une autre societe ne lit pas cette commande');
+
+  -- 6. Nouveau code : les codes encore ouverts sont revoques.
+  v_result := t.staff_json(format('public.issue_site_order_code(%L::uuid, %L, %L, 30)', v_id, v_hash2, 'SECO'));
+  perform t.assert((v_result ->> 'ok')::boolean, 'L''equipe peut emettre un nouveau code');
+  update public.activation_codes set expires_at = now() - interval '1 second' where code_hash = v_hash2;
+  v_check := t.service_json(format('public.check_access_code(%L)', v_hash2));
+  perform t.assert(v_check ->> 'reason' = 'expired', 'Un code expire est refuse');
+
+  v_result := t.staff_json(format('public.issue_site_order_code(%L::uuid, %L, %L, 30)', v_id, v_hash3, 'TROI'));
+  perform t.assert(t.refused_as(v_alice, format('public.revoke_access_code(%L::uuid)', v_result ->> 'codeId')),
+    'Un client ne peut pas desactiver un code');
+  perform t.staff_json(format('public.revoke_access_code(%L::uuid)', v_result ->> 'codeId'));
+  v_check := t.service_json(format('public.check_access_code(%L)', v_hash3));
+  perform t.assert(v_check ->> 'reason' = 'revoked', 'Un code desactive est refuse');
+
+  -- 7. Force brute : au-dela de dix essais, le code est bloque, meme juste.
+  update public.activation_codes set revoked_at = null, attempt_count = 10 where code_hash = v_hash3;
+  v_check := t.service_json(format('public.check_access_code(%L)', v_hash3));
+  perform t.assert(v_check ->> 'reason' = 'too_many_attempts', 'Trop d''essais : le code est bloque');
+  update public.activation_codes set attempt_count = 0 where code_hash = v_hash3;
+
+  -- Organisation suspendue : le code ne l'ouvre plus.
+  update public.organizations set suspended_at = now() where id = v_org;
+  v_check := t.service_json(format('public.check_access_code(%L)', v_hash3));
+  perform t.assert(v_check ->> 'reason' = 'revoked', 'Le code d''une organisation suspendue est refuse');
+  update public.organizations set suspended_at = null where id = v_org;
+
+  -- 8. Jamais de code sur un compte de l'equipe.
+  v_result := t.staff_json($q$public.admin_create_site_order('Societe Equipe', null, null,
+      'staff@nemasus.test', null, null, null, null, null)$q$);
+  v_staff_order := (v_result ->> 'orderId')::uuid;
+  v_result := t.staff_json(format(
+    'public.confirm_site_order_payment(%L::uuid, 0, %L, %L, 30, null)', v_staff_order,
+    encode(sha256('code-0066-equipe'::bytea), 'hex'), 'EQUI'));
+  perform t.assert(v_result ->> 'code' = 'staff_email',
+    'Un code ne peut pas ouvrir de session sur un compte de l''equipe');
+  perform t.assert(t.refused_as(v_alice,
+      $q$public.admin_create_site_order('Forge', null, null, 'forge@x.test', null, null, null, null, null)$q$),
+    'Un client ne saisit pas de commande pour l''equipe');
+
+  -- La file de l'equipe compte les commandes.
+  v_result := t.staff_json('public.staff_work_queue()');
+  perform t.assert((v_result ->> 'ordersReceived')::int >= 1,
+    'La file de l''equipe compte les commandes a traiter');
+
+  -- 9. Mot de passe oublie : jeton unique, temporaire, a usage limite.
+  v_result := t.service_json(format('public.create_password_reset(%L, %L, null, 60)',
+                                    'inconnu.0066@client.test', v_rt1));
+  perform t.assert(v_result ->> 'code' = 'no_account' and not exists
+                     (select 1 from public.password_reset_tokens where token_hash = v_rt1),
+    'Adresse inconnue : aucun jeton (la page affiche le meme message)');
+  v_result := t.service_json(format('public.create_password_reset(%L, %L, null, 60)',
+                                    'Jeanne.0066@client.test', v_rt1));
+  perform t.assert((v_result ->> 'ok')::boolean
+                   and (select expires_at from public.password_reset_tokens where token_hash = v_rt1)
+                       <= now() + interval '61 minutes',
+    'Un jeton de reinitialisation valable une heure est cree');
+  v_result := t.service_json(format('public.create_password_reset(%L, %L, null, 60)',
+                                    'jeanne.0066@client.test', v_rt2));
+  perform t.assert(t.service_json(format('public.peek_password_reset(%L)', v_rt1)) ->> 'reason' = 'replaced',
+    'Un nouveau lien remplace le precedent');
+  v_result := t.service_json(format('public.consume_password_reset(%L)', v_rt2));
+  perform t.assert((v_result ->> 'ok')::boolean and (v_result ->> 'userId')::uuid = v_client,
+    'Le jeton designe le bon compte');
+  perform t.assert(t.service_json(format('public.consume_password_reset(%L)', v_rt2)) ->> 'reason' = 'used',
+    'Un jeton ne sert qu''une fois');
+  perform t.service_json(format('public.release_password_reset(%L::uuid)', v_result ->> 'tokenId'));
+  perform t.assert((t.service_json(format('public.peek_password_reset(%L)', v_rt2)) ->> 'ok')::boolean,
+    'Un echec du changement de mot de passe rend le lien a nouveau utilisable');
+  perform t.service_json(format('public.complete_password_reset(%L::uuid)', v_client));
+  perform t.assert(t.service_json(format('public.peek_password_reset(%L)', v_rt2)) ->> 'reason' = 'replaced',
+    'Mot de passe change : plus aucun lien ouvert');
+
+  update public.password_reset_tokens set expires_at = now() - interval '1 second', revoked_at = null
+   where token_hash = v_rt2;
+  perform t.assert(t.service_json(format('public.consume_password_reset(%L)', v_rt2)) ->> 'reason' = 'expired',
+    'Un lien expire est refuse');
+  update public.password_reset_tokens set attempt_count = 5 where token_hash = v_rt2;
+  perform t.assert(t.service_json(format('public.consume_password_reset(%L)', v_rt2)) ->> 'reason' = 'too_many_attempts',
+    'Un lien essaye trop souvent est bloque');
+
+  select count(*) into v_n from public.password_reset_tokens where user_id = v_client;
+  for i in 1..(5 - v_n) loop
+    perform t.service_json(format('public.create_password_reset(%L, %L, null, 60)',
+      'jeanne.0066@client.test', encode(sha256(('reset-0066-x' || i)::bytea), 'hex')));
+  end loop;
+  v_result := t.service_json(format('public.create_password_reset(%L, %L, null, 60)',
+    'jeanne.0066@client.test', encode(sha256('reset-0066-trop'::bytea), 'hex')));
+  perform t.assert(v_result ->> 'code' = 'throttled',
+    'Au-dela de cinq demandes par heure, aucun nouvel e-mail ne part');
 end;
 $$;
 

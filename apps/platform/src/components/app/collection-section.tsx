@@ -182,7 +182,7 @@ export async function CollectionSection({ collection }: { collection: Collection
     };
   });
 
-  // Quota d'offre : on annonce la limite AVANT que la personne ne remplisse un
+  // Quota du site : on annonce la limite AVANT que la personne ne remplisse un
   // formulaire pour rien.
   let quotaNotice: string | null = null;
   let addBlockedReason: string | null = null;
@@ -193,10 +193,10 @@ export async function CollectionSection({ collection }: { collection: Collection
     if (limit !== null) {
       const used = rows.length;
       if (used >= limit) {
-        addBlockedReason = `Votre offre inclut ${limit} ${descriptor.title.toLowerCase()} au maximum. Changez d’offre pour en ajouter davantage.`;
+        addBlockedReason = `Votre site prévoit ${limit} ${descriptor.title.toLowerCase()} au maximum. Écrivez-nous pour en ajouter davantage.`;
         quotaNotice = addBlockedReason;
       } else if (used >= limit - 2) {
-        quotaNotice = `${used} sur ${limit} utilisés dans votre offre.`;
+        quotaNotice = `${used} sur ${limit} prévus pour votre site.`;
       }
     }
   }

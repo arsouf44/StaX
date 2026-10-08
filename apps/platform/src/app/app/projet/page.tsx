@@ -256,9 +256,6 @@ export default async function ProjectPage() {
                 </time>
                 .
               </p>
-              <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
-                C’est cette date qui fait courir votre garantie commerciale de remboursement.
-              </p>
             </Panel>
           ) : null}
         </aside>

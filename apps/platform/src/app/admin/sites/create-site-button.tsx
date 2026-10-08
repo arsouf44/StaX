@@ -12,29 +12,22 @@ export interface CreateSiteOption {
 
 /**
  * « Créer un site » : un site vide, que l'equipe construit puis confie au
- * client. Le metier et l'offre sont facultatifs — ils peuvent se decider en
- * cours de construction — mais l'offre determine les fonctionnalites du site.
+ * client. Le metier est facultatif ; les droits techniques du site sont ceux
+ * de la formule interne (aucune grille tarifaire).
  */
-export function CreateSiteButton({
-  businessTypes,
-  plans,
-}: {
-  businessTypes: CreateSiteOption[];
-  plans: CreateSiteOption[];
-}) {
+export function CreateSiteButton({ businessTypes }: { businessTypes: CreateSiteOption[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [businessType, setBusinessType] = useState('');
-  const [planId, setPlanId] = useState('');
   const [city, setCity] = useState('');
 
   const submit = () => {
     setError(null);
     startTransition(() => {
-      void createSiteAction({ name, businessType, planId, city }).then((result) => {
+      void createSiteAction({ name, businessType, city }).then((result) => {
         if (result.status === 'error' || !result.siteId) {
           setError(result.message ?? 'Le site n’a pas pu être créé.');
           return;
@@ -99,23 +92,6 @@ export function CreateSiteButton({
             >
               <option value="">À définir</option>
               {businessTypes.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field
-            label="Offre"
-            hint="Détermine les fonctionnalités du site (réservations, boutique…)."
-          >
-            <Select
-              name="planId"
-              value={planId}
-              onChange={(event) => setPlanId(event.target.value)}
-            >
-              <option value="">À définir</option>
-              {plans.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

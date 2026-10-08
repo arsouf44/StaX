@@ -80,7 +80,7 @@ async function resolveCollection(raw: FormDataEntryValue | null): Promise<Resolu
         ok: false,
         state: {
           status: 'error',
-          message: 'Cette fonctionnalité n’est pas incluse dans votre offre actuelle.',
+          message: 'Cette fonctionnalité n’est pas activée pour votre site : écrivez-nous.',
         },
       };
     }

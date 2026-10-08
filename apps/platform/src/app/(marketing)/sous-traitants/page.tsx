@@ -3,6 +3,7 @@ import { Alert, EmptyState, Table, TableWrapper, TBody, TD, TH, THead, TR } from
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
 import { getSubprocessors } from '~/lib/catalog';
+import { metaDescription } from '~/lib/seo';
 
 /**
  * La liste provient de la base, jamais d'un fichier de contenu : une page
@@ -15,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const document = getLegalDocument('sous-traitants');
   return {
     title: document.title,
-    description: document.description,
+    description: metaDescription(document.description),
     alternates: { canonical: '/sous-traitants' },
     robots: { index: true, follow: true },
   };

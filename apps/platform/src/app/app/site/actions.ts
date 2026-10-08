@@ -592,7 +592,7 @@ export async function restorePageAction(
   if (error) {
     return failure(
       error.message.includes('Limite')
-        ? 'Votre offre a atteint son nombre de pages. Supprimez-en une autre avant de restaurer celle-ci.'
+        ? 'Votre site a atteint le nombre de pages prévu. Supprimez-en une autre avant de restaurer celle-ci.'
         : 'Cette page n’a pas pu être restaurée.',
     );
   }

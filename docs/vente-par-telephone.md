@@ -1,159 +1,96 @@
-# Vente par téléphone — le mode d'emploi de l'équipe
+# Vente par téléphone — le mode d’emploi de l’équipe
 
-**L'idée :** on appelle une entreprise. Si l'appel est concluant, on lui
-prépare son site, on le met en ligne sur son projet Cloudflare, et on lui
-envoie un e-mail : « Votre site est prêt ». Elle le regarde, crée son compte
-avec un code, nous écrit si elle veut une retouche, et paie. Le site lui est
-alors **livré automatiquement** : elle peut le modifier elle-même, la
-maintenance mensuelle démarre.
+Un appel concluant suit **le même chemin qu’une commande en ligne** : il n’y a
+plus de proposition payée par carte ni de prix de catalogue. Le montant est
+celui convenu au téléphone, réglé par virement ; l’espace du client s’ouvre
+avec son code d’accès personnel. Référence complète :
+[commande-virement.md](./commande-virement.md).
 
 ```
-APPEL CONCLUANT → SITE CONSTRUIT ET VÉRIFIÉ → PROPOSITION (e-mail + code, 14 jours)
-→ LE PROSPECT CRÉE SON COMPTE ET SAISIT SON CODE → IL VOIT SON SITE ET LE PRIX
-→ (MESSAGES / RETOUCHES) → PAIEMENT → LIVRAISON AUTOMATIQUE
+APPEL CONCLUANT → COMMANDE SAISIE PAR L’ÉQUIPE → MODALITÉS DE VIREMENT
+→ VIREMENT REÇU → CODE D’ACCÈS → LE CLIENT OUVRE SON ESPACE → PROJET → LIVRAISON
 ```
 
-Règles décidées :
+## 1. Saisir la commande
 
-| Question | Règle |
+**Commandes → Saisir une commande** (`/admin/commandes/nouvelle`) : entreprise,
+adresse e-mail du client (celle qui recevra le code), contact, métier, ce qui a
+été convenu, notes internes (jamais montrées au client). La commande reçoit sa
+référence `CMD-AAAA-NNNNN`.
+
+Le client accepte les conditions générales lors de son premier accès : la
+commande saisie par l’équipe le note (`saisie-equipe`).
+
+## 2. Envoyer les modalités
+
+Sur la fiche de la commande, « 1. Modalités de paiement » : montant convenu,
+message facultatif. Le client reçoit le montant, les coordonnées bancaires de la
+configuration et la référence à indiquer dans le libellé du virement. On peut
+renvoyer un rappel ou corriger le montant tant que le virement n’est pas reçu.
+
+## 3. Constater le virement
+
+Vérifiez sur le relevé bancaire le virement portant la référence, puis
+« 2. Virement reçu » : montant reçu, validité du code, et, si le site a déjà
+été préparé (Sites → Créer un site), le site à rattacher. Cochez la
+confirmation : l’organisation, le projet et le code d’accès sont créés, et le
+code part par e-mail.
+
+Si l’e-mail ne part pas, le code s’affiche **une seule fois** : transmettez-le
+par téléphone ou SMS, puis cliquez sur « J’ai noté le code ».
+
+## 4. Après l’accès du client
+
+Le client saisit son code sur `/acces`, choisit son mot de passe et suit son
+projet. La suite (développement hors de Nemasus, rattachement, checklist,
+livraison) est décrite dans [site-delivery.md](./site-delivery.md).
+
+| Situation | Geste |
 | --- | --- |
-| Quel prix ? | Une des 4 offres du catalogue (Essentiel, Premium, Ultra Premium, Exceptionnel), **sans remise**, figée à l'envoi |
-| Combien de temps ? | **14 jours**. Ensuite le code ne marche plus ; **rien n'est effacé** : on relance ou on retire |
-| Le code ? | 12 caractères (`7K2M-9QXP-4HTA`), prérempli par le lien de l'e-mail, **valable uniquement avec l'adresse du prospect** |
-| Avant de payer ? | Le prospect **voit** son site et le prix, et peut **écrire** à l'équipe. Il ne peut **rien modifier** (la base le refuse) |
-| Après le paiement ? | Livraison **automatique** : éditeur ouvert, maintenance démarrée, e-mails envoyés |
-| Le domaine ? | Le site est livré sur son adresse Cloudflare (`…pages.dev` / `…workers.dev`). Le client demande son domaine ensuite, par la messagerie |
+| Code perdu ou expiré | « Envoyer un nouveau code » : les codes encore ouverts sont désactivés |
+| Code envoyé à une mauvaise adresse | « Désactiver », corriger l’adresse avec le client, émettre un nouveau code |
+| Commande abandonnée | « Annuler la commande » (motif interne facultatif) |
+| Adresse d’un compte de l’équipe | Refusée : un code n’ouvre jamais un compte de l’équipe |
 
----
-
-## 1. Préparer le site
-
-1. **Sites → Créer un site** : nom de l'entreprise, métier, ville. L'offre
-   peut rester « À définir » : elle sera fixée par la proposition.
-2. Développez le site dans son **dépôt GitHub**, déployé par son **projet
-   Cloudflare** (comme tout site Nemasus : [site-delivery.md](./site-delivery.md)).
-3. **Fiche du site → Infrastructure & livraison** : rattachez le dépôt et le
-   projet, importez le manifeste (contenu initial = version 1), puis faites la
-   **checklist** :
-   - « Formulaires testés » et « Responsive vérifié » : attestez-les ;
-   - contrôles automatiques (déployé, HTTPS, SEO) : « Lancer les vérifications » ;
-   - **le domaine n'est pas nécessaire** pour une proposition.
-
-Pourquoi tout vérifier avant d'envoyer ? Parce qu'après le paiement, le site
-est livré **sans intervention** : il doit être prêt avant.
-
-## 2. Envoyer la proposition
-
-**Fiche du site → « Proposer ce site à un prospect »** (ou **Propositions →
-Nouvelle proposition**) :
-
-| Champ | Conseil |
-| --- | --- |
-| Offre convenue | Celle annoncée au téléphone. Le prix affiché est celui du catalogue |
-| Adresse e-mail | **Celle que le prospect utilisera pour créer son compte.** Faites-la épeler au téléphone |
-| Nom de l'entreprise, prénom | Repris dans l'e-mail : « Bonjour Marie, le site de la Boulangerie Martin est prêt » |
-| Petit mot | Facultatif, repris dans l'e-mail et sur sa page : « Ravi de notre échange de ce matin » |
-| Notes internes | Jamais montrées au prospect |
-
-« Envoyer la proposition » vérifie d'abord le site (contrôles de moins de
-20 h, sinon ils sont refaits), puis envoie l'e-mail. Si l'e-mail ne part pas
-(fournisseur non configuré, adresse refusée), **le code et le lien s'affichent
-une seule fois** : copiez-les et envoyez-les vous-même.
-
-## 3. Suivre
-
-**Propositions** affiche, pour chaque prospect :
-
-| État | Ce que ça veut dire | Quoi faire |
-| --- | --- | --- |
-| Envoyée | E-mail parti, code pas encore utilisé | Rappeler au bout de quelques jours |
-| Compte créé · paiement attendu | Il a vu son site | Répondre à ses messages, rappeler |
-| Payée · site livré | Vendu | Rien : il a reçu son e-mail de livraison |
-| Payée · livraison à terminer | Un contrôle a échoué au moment du paiement | Ouvrir la checklist, corriger : la livraison se refait seule (toutes les 5 min), ou livrez à la main |
-| Expirée | 14 jours écoulés | **Relancer** ou **Retirer** |
-| Retirée | Abandonnée | — |
-
-- **Relancer (+14 jours)** : si le code n'a pas servi, un **nouveau code** est
-  envoyé (l'ancien ne marche plus) ; si le prospect a déjà son compte, il
-  reçoit un rappel « Une dernière étape ».
-- **Retirer** : le code cesse de fonctionner ; si le prospect avait récupéré le
-  site, il n'y a plus accès (son compte reste). Rien n'est effacé. Impossible
-  pendant un paiement en cours.
-
-Vous recevez un e-mail quand un prospect **récupère** son site, quand il vous
-**écrit**, et quand il **paie** (ou si la livraison attend un contrôle).
-
-## 4. Ce que voit le prospect
-
-1. **L'e-mail** : « Le site de … est prêt », un bouton **Récupérer mon site**,
-   le prix (HT et TTC), la maintenance, la date limite, son code.
-2. **`/recuperer`** : trois étapes expliquées ; « Créer mon compte » (adresse
-   préremplie) ou « J'ai déjà un compte ». L'e-mail de confirmation le ramène
-   directement sur cette page, connecté ; le code est prérempli : un clic.
-3. **Son espace** : son site en grand, le prix, ce que comprend l'offre,
-   « Payer … et récupérer mon site », et en dessous la discussion
-   « Une question ou une petite retouche ? Écrivez-nous ».
-4. **Le paiement** (Stripe) : deux cases à cocher (usage professionnel, CGV),
-   puis la page de paiement Stripe.
-5. **« Merci ! Votre site est à vous »** : bouton « Modifier mon site », carte
-   « Vos premiers pas », e-mail de livraison.
-
-## 5. Cas particuliers
-
-| Situation | Réponse |
-| --- | --- |
-| « Je n'ai pas reçu l'e-mail » | Vérifier les indésirables ; sinon **Relancer** (nouveau code) ou dicter le code affiché |
-| Il a créé son compte avec une autre adresse | Le code est refusé (message clair). Il se déconnecte et crée son compte avec la bonne adresse — ou retirez et renvoyez une proposition à la nouvelle adresse |
-| Il veut une retouche avant de payer | Faites-la dans le dépôt (nouveau déploiement) : il la voit aussitôt sur son espace. Répondez-lui dans *Messages clients* |
-| Il veut une autre offre | Retirez la proposition et envoyez-en une nouvelle avec la bonne offre |
-| Il veut payer par virement | Ce parcours encaisse par carte (Stripe), ce qui permet aussi de prélever la maintenance. Un règlement par virement n'est pas automatisé ici : utilisez le parcours *Factures de vente*, et livrez à la main |
-| Il abandonne le paiement | Il revient sur son espace (« Paiement interrompu, rien n'a été débité ») et peut reprendre |
-| Il dit « STOP », « ne me rappelez plus » ou répond STOP à l'e-mail | **Retirer** la proposition, puis **Effacer les coordonnées** (même ligne, `/admin/propositions`). Retirez-le aussi de votre fichier de prospection et notez-le dans votre liste d'opposition |
-
-## 6. Les règles du démarchage — à respecter à chaque appel
+## 5. Les règles du démarchage — à respecter à chaque appel
 
 Le démarchage des **entreprises** est permis ; celui des **particuliers** ne
-l'est plus sans leur accord préalable (loi n° 2025-594 du 30 juin 2025, en
+l’est plus sans leur accord préalable (loi n° 2025-594 du 30 juin 2025, en
 vigueur depuis le **11 août 2026**, article L.223-1 du Code de la
-consommation). D'où ces règles, qui protègent la société :
+consommation). D’où ces règles, qui protègent la société :
 
-1. **N'appeler que des numéros professionnels** (standard, ligne de
-   l'établissement, numéro publié pour l'activité). Un artisan ou un
+1. **N’appeler que des numéros professionnels** (standard, ligne de
+   l’établissement, numéro publié pour l’activité). Un artisan ou un
    indépendant joint sur son numéro **personnel** peut être regardé comme un
-   consommateur : en cas de doute, on n'appelle pas.
-2. **Parler de son activité professionnelle** : l'offre (un site pour son
+   consommateur : en cas de doute, on n’appelle pas.
+2. **Parler de son activité professionnelle** : l’offre (un site pour son
    entreprise) doit être en rapport avec elle.
-3. **Se présenter** dès le début de l'appel : votre prénom, « Nemasus », l'objet
-   de l'appel. Si l'appel est enregistré, le dire et demander l'accord. Si la
-   personne accepte la proposition, dire avant de raccrocher (information
-   RGPD, art. 14) :
-   > « Je vous envoie la proposition par e-mail. Nous avons trouvé le numéro
-   > de votre établissement dans un annuaire professionnel ; vos coordonnées
-   > ne servent qu'à cette proposition, et vous pouvez nous demander à tout
-   > moment de les effacer — il suffit de répondre STOP à l'e-mail. »
+3. **Se présenter** dès le début de l’appel : votre prénom, « Nemasus », l’objet
+   de l’appel. Si l’appel est enregistré, le dire et demander l’accord. Si la
+   personne commande, dire avant de raccrocher (information RGPD) :
+   > « Je vous envoie les modalités de paiement par e-mail. Nous avons trouvé le
+   > numéro de votre établissement dans un annuaire professionnel ; vos
+   > coordonnées ne servent qu’à votre commande, et vous pouvez nous demander à
+   > tout moment de les effacer. »
 4. **Respecter le refus immédiatement** : « pas intéressé » → on raccroche
-   poliment et on inscrit l'entreprise dans la liste d'opposition (3 ans) ;
+   poliment et on inscrit l’entreprise dans la liste d’opposition (3 ans) ;
    « ne me rappelez plus » → idem, et on efface le reste.
-5. **N'envoyer l'e-mail de proposition qu'après un « oui »** pendant l'appel,
-   à l'adresse que la personne a donnée. Jamais d'envoi en masse.
-6. **Horaires raisonnables** : jours ouvrés, pendant les heures d'ouverture
-   de l'entreprise appelée.
-7. **Fichiers** : ne constituer les listes qu'à partir de sources publiques
-   (registres, annuaires professionnels, fiches d'établissement, sites des
+5. **Ne saisir la commande qu’après un « oui »** pendant l’appel, avec
+   l’adresse que la personne a donnée. Jamais d’envoi en masse.
+6. **Horaires raisonnables** : jours ouvrés, pendant les heures d’ouverture
+   de l’entreprise appelée.
+7. **Fichiers** : ne constituer les listes qu’à partir de sources publiques
+   (registres, annuaires professionnels, fiches d’établissement, sites des
    entreprises) ; ne conserver un prospect que 3 ans après son dernier
    contact ; le traitement est décrit dans
    [REGISTRE_TRAITEMENTS.md § A9](./REGISTRE_TRAITEMENTS.md).
 
-Chaque e-mail de proposition porte automatiquement l'information complète due
-au prospect (RGPD, art. 14) : responsable du traitement, finalité, intérêt
-légitime, source des coordonnées, durée de conservation, droits, et
-opposition immédiate en répondant « STOP ».
+Chaque e-mail envoyé au client renvoie à la politique de confidentialité
+(« Vos données et vos droits »).
 
----
+## Données des prospects
 
-Côté technique : table `site_proposals` et fonctions `app.*_site_proposal`
-(migrations 0054 et 0057 pour l'effacement sur opposition), `lib/proposals.ts`, `/admin/propositions`, `/recuperer`,
-`/app` (tableau de bord du prospect), webhook Stripe → `completePaidProposal`,
-reprise par `/api/cron/sites`. Preuves : `tests/sql/rls.test.sql`
-(« Propositions de site »), `tests/unit/proposals.test.ts`,
-`tests/e2e/journeys/cold-call.spec.ts`.
+Une commande non payée (reçue, en attente de virement ou annulée) est anonymisée
+trois ans après le dernier échange (`app.apply_retention()`). Les anciennes
+propositions (avant 0066) restent soumises à leurs règles de conservation
+d’origine.

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Nous contacter',
   description:
-    'Une question sur nos offres, un projet à discuter, un besoin d’assistance : écrivez-nous, ' +
+    'Une question sur votre projet ou votre commande, un besoin d’assistance : écrivez-nous, ' +
     'nous répondons sous un jour ouvré.',
   alternates: { canonical: '/contact' },
 };

@@ -41,12 +41,12 @@ export function SiteFooter() {
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <FooterColumn
-            title="Offres"
+            title="Votre site"
             links={[
-              { label: 'Toutes les offres', href: '/tarifs' },
-              { label: 'Projet sur mesure', href: '/sur-mesure' },
-              { label: 'Demander un devis', href: '/devis' },
               { label: 'Commander mon site', href: '/commander' },
+              { label: 'Comment ça marche', href: '/comment-ca-marche' },
+              { label: 'Projet sur mesure', href: '/sur-mesure' },
+              { label: 'Accès client', href: '/acces' },
             ]}
           />
           <FooterColumn
@@ -77,16 +77,6 @@ export function SiteFooter() {
               </Link>
             </li>
           ))}
-          <li>
-            {/* Fonction de resiliation accessible depuis toutes les pages
-                (article L215-1-1 du Code de la consommation). */}
-            <Link
-              href="/app/abonnement"
-              className="text-xs text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
-            >
-              Résilier votre contrat
-            </Link>
-          </li>
         </ul>
 
         {!status.configured && !isProduction() ? (

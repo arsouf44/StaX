@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { createUserClient } from '@nemasus/database';
+import { createUserClient, tryCreateServiceClient } from '@nemasus/database';
 import { ButtonLink, Container, Logo, Panel } from '@nemasus/ui';
 import { getSession } from '~/lib/session';
 import { invitationTokenHash } from '~/lib/invitations';
-import { AcceptInvitationForm } from './accept-form';
+import { AcceptInvitationForm, InvitationSignupForm } from './accept-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,8 @@ const ROLE_LABELS: Record<string, string> = {
 
 /**
  * Lien reçu par e-mail : « X vous invite à rejoindre son espace Nemasus ».
- * Sans compte, la page mène à l'inscription, qui ramène ici.
+ * Sans compte, la personne le crée ici même, pour l'adresse invitée ; avec un
+ * compte, elle se connecte et revient ici.
  */
 export default async function InvitationPage({
   searchParams,
@@ -35,6 +36,28 @@ export default async function InvitationPage({
   let organizationName: string | null = null;
   let role: string | null = null;
   let code: string | null = null;
+  let invitedEmail: string | null = null;
+  let hasAccount = false;
+  if (!session.user && token) {
+    const service = tryCreateServiceClient();
+    const { data } = service
+      ? await service.rpc('invitation_signup_context', {
+          p_token_hash: await invitationTokenHash(token),
+        })
+      : { data: null };
+    const context = (data ?? {}) as {
+      code?: string;
+      email?: string;
+      organizationName?: string;
+      role?: string;
+      hasAccount?: boolean;
+    };
+    code = context.code ?? 'invalid';
+    organizationName = context.organizationName ?? null;
+    role = context.role ?? null;
+    invitedEmail = context.email ?? null;
+    hasAccount = context.hasAccount === true;
+  }
   if (session.user && token) {
     const db = createUserClient(session.user.accessToken);
     const { data } = await db.rpc('peek_organization_invitation', {
@@ -69,26 +92,20 @@ export default async function InvitationPage({
                 <p className="text-sm text-[var(--foreground-muted)]">
                   Ce lien est incomplet. Ouvrez-le à nouveau depuis l’e-mail d’invitation.
                 </p>
-              ) : !session.user ? (
+              ) : !session.user && code === 'valid' && invitedEmail && !hasAccount ? (
+                <InvitationSignupForm token={token} email={invitedEmail} />
+              ) : !session.user && code === 'valid' ? (
                 <div className="space-y-4">
                   <p className="text-sm text-[var(--foreground-muted)]">
-                    Créez votre compte avec l’adresse e-mail qui a reçu l’invitation, ou
-                    connectez-vous.
+                    Un compte existe déjà pour l’adresse invitée : connectez-vous pour accepter
+                    l’invitation.
                   </p>
                   <ButtonLink
-                    href={`/inscription?suivant=${encodeURIComponent(here)}`}
-                    size="lg"
-                    block
-                  >
-                    Créer mon compte
-                  </ButtonLink>
-                  <ButtonLink
                     href={`/connexion?suivant=${encodeURIComponent(here)}`}
-                    variant="secondary"
                     size="lg"
                     block
                   >
-                    J’ai déjà un compte
+                    Me connecter
                   </ButtonLink>
                 </div>
               ) : code === 'valid' ? (

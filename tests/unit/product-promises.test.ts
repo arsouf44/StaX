@@ -2,15 +2,9 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import {
-  buildRefundPolicy,
-  buildTerms,
-  buildTermsOfUse,
-  type LegalDocument,
-} from '~/content/legal';
+import { buildTerms, buildTermsOfUse, type LegalDocument } from '~/content/legal';
 import { FAQ_ITEMS, HOMEPAGE_FAQ } from '~/content/faq';
-import { PRINCIPLE_POINTS, PROCESS_STEPS } from '~/content/process';
-import { MAINTENANCE_EXCLUDES, MAINTENANCE_INCLUDES } from '~/content/maintenance';
+import { ORDER_JOURNEY, PRINCIPLE_POINTS, PROCESS_STEPS } from '~/content/process';
 import { FEATURE_PAGES } from '~/content/features';
 
 /**
@@ -41,7 +35,8 @@ const CUSTOMER_FACING = [
   'apps/platform/src/components/marketing',
   'apps/platform/src/content',
   'apps/platform/src/app/app/projet',
-  'apps/platform/src/app/app/abonnement',
+  'apps/platform/src/app/app/facturation',
+  'apps/platform/src/app/(auth)/acces',
   'packages/emails/src',
 ].flatMap((directory) => sourceFiles(join(ROOT, directory)));
 
@@ -113,16 +108,27 @@ describe('le vrai produit, dit clairement', () => {
     expect(home).toContain('Vous publiez, et c’est réellement en ligne');
   });
 
-  it('le message tient en sept points, du choix de l’offre à la publication réelle', () => {
+  it('le message tient en sept points, de la commande à la publication réelle', () => {
     expect(PRINCIPLE_POINTS.map((point) => point.title)).toEqual([
-      'Vous choisissez votre offre',
-      'Vous nous présentez votre entreprise',
+      'Vous commandez votre site',
+      'Vous réglez par virement',
       'Nous concevons et développons votre site',
       'Nous le mettons réellement en ligne',
       'Nous vous le livrons',
       'Vous modifiez son contenu depuis Nemasus',
       'Vous publiez, et c’est réellement en ligne',
     ]);
+  });
+
+  it('commander suit quatre temps : commande, virement, code, espace', () => {
+    expect(ORDER_JOURNEY.map((step) => step.title)).toEqual([
+      'Vous commandez',
+      'Vous réglez par virement',
+      'Vous recevez votre code',
+      'Votre espace s’ouvre',
+    ]);
+    expect(ORDER_JOURNEY[0]?.description).toMatch(/Aucun compte à créer, aucun paiement/);
+    expect(ORDER_JOURNEY[2]?.description).toMatch(/usage unique/);
   });
 
   it('« Comment ça marche » suit exactement six étapes', () => {
@@ -148,20 +154,12 @@ describe('le vrai produit, dit clairement', () => {
     ).toBe(true);
   });
 
-  it('la maintenance dit ce qu’elle comprend, et ce qu’elle ne comprend pas', () => {
-    const included = MAINTENANCE_INCLUDES.join(' ');
-    for (const expected of [
-      'Cloudflare',
-      'HTTPS',
-      'publication',
-      'Versions',
-      'Surveillance',
-      'éditeur',
-      'Support',
-    ]) {
-      expect(included.toLowerCase()).toContain(expected.toLowerCase());
-    }
-    expect(MAINTENANCE_EXCLUDES.join(' ')).toMatch(/fonctionnalités/);
+  it('la FAQ explique le prix, le virement et le code d’accès', () => {
+    const answers = FAQ_ITEMS.map((item) => `${item.question} ${item.answer}`).join(' ');
+    expect(answers).toMatch(/pas de grille tarifaire/i);
+    expect(answers).toMatch(/virement bancaire/);
+    expect(answers).toMatch(/code d’accès/);
+    expect(answers).toMatch(/Mot de passe oublié/);
   });
 
   it('la FAQ de l’accueil est complète et répond d’abord « non, vous ne construisez rien »', () => {
@@ -172,7 +170,7 @@ describe('le vrai produit, dit clairement', () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*  Offres : cinq niveaux, Exceptionnel partout                                */
+/*  Aucun prix, aucune offre, aucun abonnement                                 */
 /* -------------------------------------------------------------------------- */
 
 function text(document: LegalDocument): string {
@@ -193,63 +191,73 @@ function text(document: LegalDocument): string {
   ].join('\n');
 }
 
-describe('Exceptionnel existe partout où une offre se nomme', () => {
-  const migration = readFileSync(
-    join(ROOT, 'supabase/migrations/20260101000043_monthly_offers.sql'),
-    'utf8',
-  );
+/**
+ * Ce que voit le public : pages vitrines, contenus, parcours de commande,
+ * accès client, e-mails. Les maquettes de sites de démonstration
+ * (`product-visuals`, `diagrams`) montrent les prix d'un restaurant ou d'un
+ * salon fictifs, jamais ceux de Nemasus : elles sont hors de cette règle.
+ */
+const PUBLIC_PRICING_SCOPE = CUSTOMER_FACING.filter(
+  (file) =>
+    !file.endsWith('product-visuals.tsx') &&
+    !file.endsWith('diagrams.tsx') &&
+    // Le formulaire de projet sur mesure demande le budget du visiteur : ce
+    // n'est pas un prix de Nemasus.
+    !file.endsWith('quote-form.tsx'),
+);
 
-  it('au catalogue : 1 790 € HT, 18 € HT par mois, catégorie « signature »', () => {
-    expect(migration).toMatch(
-      /\('exceptionnel', 1, 'Exceptionnel',[\s\S]*?'signature', 179000, 1800, 'month'/,
-    );
-    const inclusions = migration.match(/\(v_except, '/g) ?? [];
-    expect(inclusions.length).toBeGreaterThanOrEqual(12);
-  });
-
-  it('dans les CGV, la FAQ et les pages de fonctionnalités', () => {
-    expect(text(buildTerms())).toContain('Exceptionnel');
-    expect(FAQ_ITEMS.map((item) => item.answer).join(' ')).toContain('Exceptionnel');
-    for (const page of [
-      'apps/platform/src/app/(marketing)/fonctionnalites/page.tsx',
-      'apps/platform/src/app/(marketing)/fonctionnalites/[slug]/page.tsx',
-    ]) {
-      expect(readFileSync(join(ROOT, page), 'utf8')).toMatch(/exceptionnel:/);
+describe('aucune grille tarifaire visible', () => {
+  it('aucun montant en euros, aucune offre, aucun abonnement dans les pages publiques', () => {
+    const offenders: string[] = [];
+    const rules: Array<{ rule: RegExp; why: string }> = [
+      { rule: /\d\s?€|€\s?\d/, why: 'montant affiché' },
+      { rule: /\b(Essentiel|Premium|Ultra Premium|Exceptionnel)\b/, why: 'nom d’offre' },
+      { rule: /\/tarifs\b/, why: 'lien vers les tarifs' },
+      { rule: /maintenance mensuelle|abonnement mensuel|par mois\b/i, why: 'abonnement' },
+      { rule: /\bHT\b.*\bTTC\b/, why: 'prix HT/TTC' },
+    ];
+    for (const file of PUBLIC_PRICING_SCOPE) {
+      // Les e-mails transactionnels affichent le montant CONVENU d'une
+      // commande (modalités de virement) : c'est une donnée, pas un tarif.
+      const isEmail = file.includes('/packages/emails/src/');
+      for (const { line, number } of visibleLines(file)) {
+        for (const { rule, why } of rules) {
+          if (isEmail && why === 'montant affiché') continue;
+          if (rule.test(line)) {
+            offenders.push(
+              `${file.slice(ROOT.length)}:${number} (${why}) — ${line.trim().slice(0, 90)}`,
+            );
+          }
+        }
+      }
     }
+    expect(offenders, offenders.join('\n')).toEqual([]);
   });
 
-  it('dans les cartes tarifaires et le tunnel de commande, traitée comme catégorie supérieure', () => {
-    const cards = readFileSync(
-      join(ROOT, 'apps/platform/src/components/marketing/pricing-cards.tsx'),
-      'utf8',
-    );
-    const choice = readFileSync(
-      join(ROOT, 'apps/platform/src/app/(commande)/commander/plan-choice.tsx'),
-      'utf8',
-    );
-    expect(cards).toContain("plan.highlight === 'signature'");
-    expect(choice).toContain('plan.signature');
-    // Plus aucune grille pensee pour trois ou quatre offres, ni texte en dur.
-    expect(cards).not.toMatch(/HIGHLIGHTS/);
-    expect(cards).toMatch(/xl:grid-cols-4/);
+  it('les anciennes pages d’offres redirigent vers l’explication du parcours', () => {
+    const config = readFileSync(join(ROOT, 'apps/platform/next.config.ts'), 'utf8');
+    expect(config).toMatch(/source: '\/tarifs', destination: '\/comment-ca-marche'/);
+    expect(config).toMatch(/source: '\/remboursements', destination: '\/cgv'/);
   });
 });
 
 /* -------------------------------------------------------------------------- */
-/*  Juridique : maintenance mensuelle, qui commence a la livraison             */
+/*  Juridique : commande, virement, code d'accès                               */
 /* -------------------------------------------------------------------------- */
 
 describe('textes juridiques cohérents avec le fonctionnement réel', () => {
   const cgv = text(buildTerms());
 
-  it('les CGV décrivent une maintenance mensuelle, sans durée minimale, dès la livraison', () => {
-    expect(cgv).toMatch(/abonnement mensuel/);
-    expect(cgv).toMatch(/commence le jour de la Livraison/);
-    expect(cgv).toMatch(/sans durée minimale/);
-    expect(cgv).toMatch(/terme de la période mensuelle en cours/);
+  it('les CGV décrivent la commande, le virement et le code d’accès, sans abonnement', () => {
+    expect(cgv).toMatch(/Modalités de paiement/);
+    expect(cgv).toMatch(/virement bancaire/);
+    expect(cgv).toMatch(/Code d’accès/);
+    expect(cgv).toMatch(/ne publie pas de grille tarifaire/);
+    expect(cgv).toMatch(/Aucun abonnement/);
     expect(cgv).not.toMatch(
-      /maintenance annuelle|abonnement annuel|périodes successives d’un an|par an\b/i,
+      /carte bancaire, par l’intermédiaire de Stripe|abonnement mensuel|prélev/i,
     );
+    expect(cgv).not.toMatch(/\b(Essentiel|Ultra Premium|Exceptionnel)\b/);
   });
 
   it('les CGV décrivent la livraison, la réversibilité et le code source du site', () => {
@@ -257,16 +265,10 @@ describe('textes juridiques cohérents avec le fonctionnement réel', () => {
     expect(cgv).toMatch(/projet indépendant|projet qui lui est propre/);
     expect(cgv).toMatch(/copie du code source/);
     expect(cgv).toMatch(/Aucun modèle préexistant/);
-    expect(cgv).toMatch(/ne comprend pas de travaux de développement illimités/);
+    expect(cgv).toMatch(/ne comprennent pas de travaux de développement illimités/);
   });
 
-  it('la garantie court à partir de la livraison', () => {
-    const refund = text(buildRefundPolicy());
-    expect(refund).toMatch(/livraison/);
-    expect(refund).not.toMatch(/maintenance annuelle/);
-  });
-
-  it('les CGU restent cohérentes (aucune promesse de maintenance annuelle)', () => {
-    expect(text(buildTermsOfUse())).not.toMatch(/maintenance annuelle|abonnement annuel/i);
+  it('les CGU restent cohérentes (aucun abonnement)', () => {
+    expect(text(buildTermsOfUse())).not.toMatch(/abonnement|maintenance annuelle/i);
   });
 });

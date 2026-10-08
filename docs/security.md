@@ -108,7 +108,7 @@ permission DNS, facturation ou membres.
 | --- | --- | --- |
 | `/api/webhooks/github` | `X-Hub-Signature-256` (HMAC SHA-256 du corps brut, temps constant) | 401 avant lecture |
 | `/api/webhooks/cloudflare` | `cf-webhook-auth` (secret de destination, temps constant) | 401 avant lecture |
-| `/api/webhooks/stripe`, `stripe-connect` | signature Stripe | 400 |
+| `/api/webhooks/stripe-connect` | signature Stripe | 400 |
 | `/api/cron/sites` | `Authorization: Bearer <CRON_SECRET>` | 401 |
 
 Un secret absent ou trop court (moins de 16 caractères) refuse tout. Chaque
@@ -170,34 +170,45 @@ une origine arbitraire.
 
 ---
 
-## 4. Intégrité financière
+## 4. Paiement par virement, codes d’accès, mot de passe oublié
 
-- **Aucun montant ne vient du navigateur.** `app.create_order` lit le prix dans
-  le catalogue ; le webhook crédite le montant figé dans la commande.
-- **L’argent est en centimes entiers.** Aucun flottant. Les arrondis TypeScript
-  reproduisent la division entière tronquée de PostgreSQL, et un test compare
-  les deux implémentations sur les prix réels du catalogue.
-- **Une règle de lint interdit `xxxCents / 100`** dans tout le dépôt.
-- **Un déclencheur rend immuables les montants d’une commande payée.**
-- **L’éligibilité au remboursement est calculée en base**, à partir de la date
-  réelle de mise en ligne. La déduction liée au domaine ne s’applique que si un
-  domaine a **effectivement** été acheté — condition vérifiée sur l’état réel du
-  dossier, jamais déclarée par le client.
-- **La vérité vient du webhook signé.** La page de confirmation ne lit même pas
-  le `session_id` renvoyé par Stripe.
-- **Idempotence.** Stripe rejoue un événement jusqu’à trois jours. Chaque
-  identifiant est enregistré sous contrainte d’unicité, et chaque fonction
-  appliquée est idempotente — prouvé par test : un rejeu ne crée ni paiement, ni
-  site, ni projet, ni abonnement en double.
+- **Aucun paiement n’est déclaré par le navigateur.** Le virement est constaté
+  sur le relevé bancaire par un administrateur de la plateforme, qui le
+  confirme ; seule `app.confirm_site_order_payment` (administrateur
+  uniquement) crée alors l’organisation, le site, le projet et le code.
+- **Aucune écriture directe** sur `site_orders` : tout passe par des fonctions
+  réservées au serveur (commande publique) ou à l’administration. Un client ne
+  lit aucune commande ; il lit la sienne par une fonction qui ne renvoie jamais
+  les notes internes.
+- **Le code d’accès n’est jamais stocké en clair** (HMAC-SHA-256 avec
+  `NEMASUS_SECRET_KEY`), n’est vérifié que **côté serveur** (fonctions
+  exécutables par la clé de service seule), expire, se révoque, ne sert qu’une
+  fois, et se bloque au-delà de dix essais ; la page d’accès est limitée à
+  huit essais par quart d’heure et par adresse IP.
+- **Isolation.** Le code désigne une organisation et un site ; la session
+  ouverte est celle du compte lié à l’adresse de la commande, jamais un
+  identifiant fourni par le navigateur. Un compte de l’équipe ne s’ouvre jamais
+  par un code.
+- **Mot de passe oublié.** Jeton de 256 bits, conservé haché, valable une heure,
+  un seul lien ouvert par compte, consommé à l’envoi du formulaire (pas à
+  l’ouverture du lien), toutes les sessions fermées après le changement.
+  Réponse identique pour toute adresse, et e-mail envoyé après la réponse.
+- **L’argent est en centimes entiers.** Aucun flottant ; une règle de lint
+  interdit `xxxCents / 100` dans tout le dépôt.
+- **L’ancienne vente par carte est retirée.** Les fonctions de commande au
+  prix d’une offre, de session Stripe, de proposition, de facture et de
+  remboursement en ligne ne sont plus exécutables par une session cliente
+  (0066) ; la route `/api/webhooks/stripe` n’existe plus.
+
+Détail : [commande-virement.md](./commande-virement.md).
 
 ---
 
 ## 5. Données de paiement
 
-**Aucune donnée de carte n’est collectée, transmise ou stockée.** Le paiement se
-fait sur les pages hébergées de Stripe. Nous ne conservons que des identifiants
-Stripe, la marque de la carte et ses quatre derniers chiffres — ce que Stripe
-expose explicitement à cette fin.
+**Aucune donnée de carte n’est collectée, transmise ou stockée** par Nemasus
+pour ses prestations : le client règle par virement, et la plateforme ne
+connaît que le montant reçu et la date.
 
 Les encaissements réalisés sur les sites des clients passent par **Stripe
 Connect** : l’argent va directement sur le compte du client, ouvert à son nom.

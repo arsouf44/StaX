@@ -1,22 +1,27 @@
-import { refundPolicyConfig } from '@nemasus/config';
 /**
- * Questions frequentes.
+ * Questions fréquentes.
  *
- * Une seule source, reutilisee par la page d accueil, la page /faq et les
- * donnees structurees FAQPage. Les reponses sont concretes et ne promettent
- * rien que le produit ne fasse reellement : nous creons le site, le client le
- * gere ensuite ; la maintenance est mensuelle et commence a la livraison.
+ * Une seule source, réutilisée par la page d'accueil, la page /faq et les
+ * données structurées FAQPage. Les réponses sont concrètes et ne promettent
+ * rien que le produit ne fasse réellement : nous créons le site, le client le
+ * gère ensuite ; il commande sans prix public, règle par virement selon les
+ * modalités que nous lui adressons, puis accède à son espace avec un code
+ * personnel. Aucun chiffre, aucun délai, aucune garantie inventés.
  */
 
 export interface FaqItem {
   question: string;
   answer: string;
-  category: 'general' | 'tarifs' | 'technique' | 'contenu' | 'juridique';
+  category: 'general' | 'commande' | 'acces' | 'contenu' | 'technique' | 'juridique';
 }
 
-const refund = refundPolicyConfig();
-
 export const FAQ_ITEMS: readonly FaqItem[] = [
+  {
+    category: 'general',
+    question: 'Qu’est-ce que Nemasus ?',
+    answer:
+      'Nemasus est un studio français de conception et de développement de sites web professionnels. Notre équipe conçoit, développe et met en ligne le site de votre entreprise, puis vous le confie avec un éditeur simple : vous modifiez ensuite vous-même vos textes, vos photos et vos informations, et vous publiez quand vous le souhaitez.',
+  },
   {
     category: 'general',
     question: 'Est-ce que je construis mon site moi-même ?',
@@ -25,18 +30,66 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   },
   {
     category: 'general',
+    question: 'À qui s’adresse Nemasus ?',
+    answer:
+      'Aux professionnels et aux associations : commerces, artisans, restaurants, professions libérales, cabinets, hôtels, indépendants. Chaque site est conçu pour l’activité qu’il présente — un restaurant gère une carte, un artisan des zones d’intervention, un cabinet des prises de rendez-vous.',
+  },
+  {
+    category: 'commande',
+    question: 'Comment commander mon site ?',
+    answer:
+      'Depuis la page « Commander mon site » : vous choisissez votre activité, indiquez vos coordonnées et décrivez votre projet, puis l’adresse web souhaitée. Aucun compte à créer et aucun paiement à ce stade. Vous recevez aussitôt un e-mail de confirmation avec la référence de votre commande.',
+  },
+  {
+    category: 'commande',
+    question: 'Combien coûte un site ?',
+    answer:
+      'Il n’y a pas de grille tarifaire : chaque site est conçu sur mesure, selon ce dont votre activité a besoin. Après votre commande, nous étudions votre projet et vous adressons par e-mail le montant convenu, avec les modalités de paiement. Rien n’est dû tant que vous n’avez pas effectué le virement.',
+  },
+  {
+    category: 'commande',
+    question: 'Comment se passe le paiement ?',
+    answer:
+      'Par virement bancaire. Nous vous envoyons par e-mail le montant, nos coordonnées bancaires (IBAN) et une référence à indiquer dans le libellé du virement. Aucune carte bancaire n’est demandée sur Nemasus. Nos coordonnées bancaires ne changent jamais par e-mail : en cas de doute sur un message, contactez-nous avant de payer.',
+  },
+  {
+    category: 'commande',
     question: 'Combien de temps faut-il pour avoir mon site en ligne ?',
     answer:
-      'Le délai dépend de l’offre : il est indiqué pour chacune sur la page Tarifs et rappelé dans votre commande. Il court à partir de la réception de tous vos éléments (textes, photos, logo), pas de la commande : c’est souvent ce qui fait la différence. Pendant la conception, nous vous soumettons les étapes importantes, et vos demandes de correction sont incluses.',
+      'Le délai dépend de votre projet : nous vous l’indiquons avec les modalités de paiement. Il court à partir de la réception de tous vos éléments (textes, photos, logo) : c’est souvent ce qui fait la différence. Pendant la conception, nous vous soumettons les étapes importantes depuis votre espace.',
   },
   {
-    category: 'general',
+    category: 'acces',
+    question: 'Qu’est-ce que le code d’accès ?',
+    answer:
+      'C’est un code personnel de 12 caractères que nous vous envoyons par e-mail dès réception de votre virement. Vous le saisissez sur la page « Accès client » : votre espace s’ouvre, puis vous choisissez votre mot de passe. Le code est vérifié par nos serveurs, ne sert qu’une seule fois, expire après quelques semaines et ne fonctionne qu’avec votre adresse e-mail.',
+  },
+  {
+    category: 'acces',
+    question: 'Mon code ne fonctionne pas : que faire ?',
+    answer:
+      'Vérifiez la saisie (les tirets et les espaces sont facultatifs). Si le message indique que le code a expiré ou a été désactivé, écrivez-nous : nous vous en envoyons un nouveau. Si le code a déjà servi, connectez-vous avec votre adresse e-mail et votre mot de passe — ou utilisez « Mot de passe oublié ».',
+  },
+  {
+    category: 'acces',
+    question: 'Comment me connecter ensuite ?',
+    answer:
+      'Avec votre adresse e-mail et le mot de passe choisi lors de votre premier accès. En cas d’oubli, « Mot de passe oublié » vous envoie un lien personnel, valable une heure et utilisable une seule fois, pour en choisir un nouveau.',
+  },
+  {
+    category: 'acces',
+    question: 'Quelqu’un d’autre peut-il voir mon espace ?',
+    answer:
+      'Non. Chaque espace est isolé : les données de votre entreprise ne sont accessibles qu’aux personnes de votre organisation, et la règle est appliquée par la base de données elle-même. Vous pouvez inviter des collaborateurs, chacun avec son propre compte et son rôle.',
+  },
+  {
+    category: 'contenu',
     question: 'Dois-je savoir utiliser un ordinateur ?',
     answer:
-      'Savoir écrire un e-mail suffit. Pendant la construction, votre espace vous montre l’avancement et ce que nous attendons de vous. Après la livraison, vous cliquez sur un texte ou une image de votre site, modifiez les champs proposés, puis publiez. Aucune notion de code, de serveur ou de base de données n’est nécessaire.',
+      'Savoir écrire un e-mail suffit. Pendant la construction, votre espace vous montre l’avancement et ce que nous attendons de vous. Après la livraison, vous modifiez les champs proposés par votre site, voyez l’aperçu, puis publiez. Aucune notion de code, de serveur ou de base de données n’est nécessaire.',
   },
   {
-    category: 'general',
+    category: 'contenu',
     question: 'Que se passe-t-il si je n’ai ni logo ni photos ?',
     answer:
       'Ce n’est pas bloquant. Nous construisons une identité typographique soignée et vous guidons sur les visuels à produire, en vous indiquant précisément ce qui est utile. Beaucoup d’entreprises s’en sortent très bien avec quelques photos prises au téléphone, dans de bonnes conditions de lumière.',
@@ -45,7 +98,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'contenu',
     question: 'Puis-je modifier mon site moi-même après la livraison ?',
     answer:
-      'Oui, c’est le principe. Textes, photos, horaires, tarifs, prestations, actualités : vous modifiez les contenus que votre site prévoit, voyez l’aperçu de votre vrai site, enregistrez un brouillon, puis publiez. La publication est réellement déployée sur votre site, et vous pouvez restaurer une version antérieure.',
+      'Oui, c’est le principe. Textes, photos, horaires, prestations, actualités : vous modifiez les contenus que votre site prévoit, voyez l’aperçu de votre vrai site, enregistrez un brouillon, puis publiez. La publication est réellement déployée, et vous pouvez restaurer une version antérieure.',
   },
   {
     category: 'contenu',
@@ -57,43 +110,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'contenu',
     question: 'Et si je veux une modification importante que je ne sais pas faire ?',
     answer:
-      'Écrivez-nous depuis votre espace : le support est inclus dans la maintenance mensuelle. Le design, la structure et le code de votre site restent entre nos mains, pour que rien ne se casse par inadvertance. Une nouvelle page, une nouvelle fonctionnalité ou une refonte font l’objet d’un devis avant toute intervention.',
-  },
-  {
-    category: 'tarifs',
-    question: 'Quelle différence entre les offres ?',
-    answer:
-      'La quantité et la nature du travail : nombre de pages, richesse du design, fonctionnalités (réservations, boutique, multilingue…) et accompagnement. Il n’existe pas d’offre « modèle » et d’offre « personnalisée » : dès l’Essentiel, votre site est conçu pour votre entreprise. L’offre Exceptionnel ajoute une direction artistique poussée, travaillée écran par écran. La page Tarifs détaille ce que comprend chaque offre.',
-  },
-  {
-    category: 'tarifs',
-    question: 'Pourquoi un paiement initial ET une maintenance mensuelle ?',
-    answer:
-      'Le paiement initial couvre la conception, le développement et la mise en ligne de votre site : c’est un travail réalisé pour votre entreprise. La maintenance mensuelle, qui ne commence qu’à la livraison, couvre l’hébergement, le certificat HTTPS, l’infrastructure de publication, la conservation des versions, la surveillance, les mises à jour nécessaires, le support et l’accès à l’éditeur. Un site web n’est pas un objet qu’on livre et qu’on oublie : il doit rester à jour et disponible.',
-  },
-  {
-    category: 'tarifs',
-    question: 'Quand la maintenance commence-t-elle ?',
-    answer:
-      'Le jour de la livraison de votre site, et pas avant : rien n’est prélevé au titre de la maintenance pendant sa conception et son développement. Elle est ensuite prélevée chaque mois, à la même date, sur la carte utilisée pour votre commande.',
-  },
-  {
-    category: 'tarifs',
-    question: 'Prenez-vous une commission sur mes ventes ?',
-    answer:
-      'Non. Les paiements encaissés sur votre site passent par votre propre compte Stripe, ouvert à votre nom. Nemasus n’est pas dans ce circuit financier et ne prélève aucune commission. Seuls les frais bancaires de Stripe s’appliquent, facturés directement par Stripe.',
-  },
-  {
-    category: 'tarifs',
-    question: 'Puis-je arrêter la maintenance ?',
-    answer:
-      'Oui, à tout moment, en ligne depuis votre espace, sans justification ni durée minimale. La résiliation prend effet à la fin du mois en cours : aucun prélèvement n’intervient ensuite. Votre site reste en ligne jusqu’à cette date, puis pendant une période de continuité. Vous choisissez en résiliant ce que deviennent vos données : les récupérer puis les supprimer (choix par défaut), ou les supprimer tout de suite.',
-  },
-  {
-    category: 'tarifs',
-    question: 'Que devient mon site si j’arrête la maintenance ?',
-    answer:
-      'À la fin de la période payée, votre site reste accessible pendant une période de continuité. Ensuite, selon votre choix : il est suspendu et, pendant un délai de restitution, vous exportez vos contenus, vos messages et vos contacts, obtenez une copie du code source de votre site ou réactivez la maintenance ; puis tout est supprimé. Vous pouvez aussi demander la suppression dès la fin de la période de continuité.',
+      'Écrivez-nous depuis votre espace. Le design, la structure et le code de votre site restent entre nos mains, pour que rien ne se casse par inadvertance. Une nouvelle page, une nouvelle fonctionnalité ou une refonte font l’objet d’un accord préalable avec vous avant toute intervention.',
   },
   {
     category: 'technique',
@@ -105,7 +122,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'technique',
     question: 'À qui appartient mon nom de domaine ?',
     answer:
-      'À vous. Si vous le possédez déjà, nous le connectons sans le transférer. Si nous l’achetons pour vous, il est enregistré pour votre compte et nous vous transmettons les informations nécessaires pour en reprendre la main quand vous le souhaitez. Dans les deux cas, il pointe vers le déploiement de votre propre site.',
+      'À vous. Si vous le possédez déjà, nous le connectons sans le transférer. Si nous l’achetons pour vous, il est enregistré à votre nom et nous vous transmettons les informations nécessaires pour en reprendre la main quand vous le souhaitez.',
   },
   {
     category: 'technique',
@@ -120,15 +137,22 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
       'Nous mettons en place tout ce qui relève de la technique : structure des pages, balises, données structurées adaptées à votre activité, plan du site, vitesse d’affichage, version mobile. Nous ne promettons pas une position précise sur Google — personne ne peut honnêtement le garantir. Le référencement dépend aussi de votre concurrence locale et de la fraîcheur de vos contenus.',
   },
   {
-    category: 'juridique',
-    question: 'Et si le site ne me convient pas ?',
-    answer: `Vous disposez de ${refund.windowDays} jours après la livraison de votre site pour demander un remboursement. Si un nom de domaine a réellement été acheté pour vous, son coût est déduit puisqu’il est déjà engagé ; sinon rien n’est retenu. Cette garantie commerciale s’ajoute à vos droits légaux et ne les remplace pas.`,
+    category: 'technique',
+    question: 'Prenez-vous une commission sur mes ventes ?',
+    answer:
+      'Non. Si votre site encaisse des paiements (boutique, acomptes), ils passent par votre propre compte Stripe, ouvert à votre nom. Nemasus n’est pas dans ce circuit financier et ne prélève aucune commission ; seuls les frais de Stripe s’appliquent, facturés directement par Stripe.',
   },
   {
     category: 'juridique',
     question: 'Qui est propriétaire du contenu de mon site ?',
     answer:
-      'Vous. Vos textes, vos photos et vos données vous appartiennent. Vous pouvez les exporter à tout moment depuis votre espace, dans un format réutilisable, et obtenir en fin de contrat une copie du code source de votre site.',
+      'Vous. Vos textes, vos photos et vos données vous appartiennent. Vous pouvez les exporter à tout moment depuis votre espace, dans un format réutilisable.',
+  },
+  {
+    category: 'juridique',
+    question: 'Qui se cache derrière Nemasus ?',
+    answer:
+      'Nemasus est le nom commercial d’une société française. Son identité complète (raison sociale, siège, numéro d’immatriculation, direction de la publication) figure dans les mentions légales, et nos conditions générales de vente encadrent chaque commande.',
   },
 ];
 
@@ -142,11 +166,11 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
  */
 const HOMEPAGE_QUESTIONS: readonly string[] = [
   'Est-ce que je construis mon site moi-même ?',
+  'Combien coûte un site ?',
+  'Comment se passe le paiement ?',
+  'Qu’est-ce que le code d’accès ?',
   'Puis-je modifier mon site moi-même après la livraison ?',
-  'Quand la maintenance commence-t-elle ?',
-  'Pourquoi un paiement initial ET une maintenance mensuelle ?',
-  'Prenez-vous une commission sur mes ventes ?',
-  'Et si le site ne me convient pas ?',
+  'Mon site apparaîtra-t-il sur Google ?',
 ];
 
 export const HOMEPAGE_FAQ: readonly FaqItem[] = HOMEPAGE_QUESTIONS.map((question) => {
@@ -157,8 +181,9 @@ export const HOMEPAGE_FAQ: readonly FaqItem[] = HOMEPAGE_QUESTIONS.map((question
 
 export const FAQ_CATEGORIES: Record<FaqItem['category'], string> = {
   general: 'Questions générales',
-  tarifs: 'Tarifs et abonnement',
+  commande: 'Commande et paiement',
+  acces: 'Code d’accès et compte',
   contenu: 'Contenu et modifications',
   technique: 'Technique et hébergement',
-  juridique: 'Garanties et droits',
+  juridique: 'Droits et identité',
 };

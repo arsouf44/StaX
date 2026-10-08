@@ -30,8 +30,8 @@ export default function NotFound() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/">Retour à l’accueil</ButtonLink>
-              <ButtonLink href="/tarifs" variant="secondary">
-                Voir les offres
+              <ButtonLink href="/commander" variant="secondary">
+                Commander mon site
               </ButtonLink>
               <ButtonLink href="/contact" variant="ghost">
                 Nous écrire
@@ -45,8 +45,8 @@ export default function NotFound() {
                 </Link>
               </li>
               <li>
-                <Link href="/tarifs" className="underline underline-offset-4">
-                  Nos offres
+                <Link href="/comment-ca-marche" className="underline underline-offset-4">
+                  Comment ça marche
                 </Link>
               </li>
               <li>

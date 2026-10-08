@@ -15,9 +15,9 @@ GitHub dans [github-integration.md](./github-integration.md).
 
 ```
                          ┌──────────────────────── Nemasus (apps/platform, Next.js) ────────────────────────┐
-  Visiteur ─ marketing ─▶│ offres · commande · paiement Stripe · compte · questionnaire · suivi du projet │
+  Visiteur ─ marketing ─▶│ commande · virement · code d’accès · questionnaire · suivi du projet          │
                          │ administration : Projet › Infrastructure & livraison (checklist, livraison)   │
-  Client ── /app ───────▶│ éditeur du contrat · brouillon · Publier · versions · restaurer · abonnement   │
+  Client ── /app ───────▶│ éditeur du contrat · brouillon · Publier · versions · restaurer · commande     │
                          └──────┬──────────────────────┬──────────────────────────┬──────────────────────┘
                                 │ RLS + fonctions app.*│ GitHub App (serveur)     │ API Cloudflare (serveur)
                                 ▼                      ▼                          ▼
@@ -42,7 +42,7 @@ DELIVER → CLIENT EDITS DRAFT → PUBLISH → GITHUB COMMIT → CLOUDFLARE DEPL
 | `packages/site-contract` | contrat `nemasus.manifest.json` : schéma, validation, fichier de contenu, pont d’aperçu, contrôle de l’offre |
 | `packages/infrastructure` | clients serveur GitHub App et Cloudflare, vérification des webhooks, sonde HTTPS |
 | `packages/database` | clients Supabase (anonyme, utilisateur, service) et requêtes typées |
-| `packages/payments` | Stripe, prix, machines à états des commandes et abonnements |
+| `packages/payments` | Arithmétique monétaire, Stripe Connect (boutiques des clients), machines à états |
 | `packages/business` | secteurs et métiers : questionnaire, vocabulaire, modules — **aucune structure de site** |
 | `packages/site-engine`, `site-data` | ancien moteur de rendu, conservé pour les sites construits avant (voir § 11) |
 | `supabase/migrations` | schéma, RLS, fonctions `app.*` : la règle fait foi en base |
@@ -208,16 +208,18 @@ Cloudflare.
 
 ---
 
-## 9. La maintenance commence à la livraison
+## 9. Ni prix public, ni paiement en ligne : virement et code d’accès
 
-**Le choix.** Le paiement de la commande règle la création (paiement unique)
-et enregistre le moyen de paiement. L’abonnement **mensuel** de maintenance
-est créé **à la livraison** ; la base refuse un abonnement pour un site non
-livré (`site_not_delivered`).
+**Le choix.** Chaque site est conçu sur mesure : le montant est convenu avec le
+client, réglé par virement, constaté par l’équipe sur le relevé bancaire. La
+confirmation crée l’espace du client et un code d’accès personnel, haché,
+vérifié côté serveur, à usage unique (migration 0066).
 
-**Pourquoi.** Facturer un service de maintenance sur un site qui n’existe pas
-encore serait injuste et contraire aux conditions de vente. Détails :
-[stripe.md](./stripe.md).
+**Pourquoi.** Une grille tarifaire publique ne correspondait pas à un travail
+fait site par site ; un paiement par virement ne demande ni moyen de paiement
+enregistré ni abonnement. Le code remplace l’inscription libre : un compte
+n’existe que pour un client qui a commandé et payé, ou un collaborateur invité.
+Détails : [commande-virement.md](./commande-virement.md).
 
 ---
 

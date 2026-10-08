@@ -2,21 +2,17 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSessionClient, peekActivationCode, redeemActivationCode } from '@nemasus/auth';
-import { isLegalValueConfigured, legalValue } from '@nemasus/config';
-import { tryCreateServiceClient } from '@nemasus/database';
+import { after } from 'next/server';
+import { createSessionClient } from '@nemasus/auth';
 import {
-  activationCompleteSchema,
-  activationSchema,
   fieldErrors,
   formDataToObject,
   passwordResetRequestSchema,
   passwordResetSchema,
   signInSchema,
-  signUpSchema,
 } from '@nemasus/validation';
-import { TERMS_OF_USE_VERSION } from '~/content/legal';
-import { absolutePlatformUrl, guardAction } from '~/lib/action-guard';
+import { guardAction } from '~/lib/action-guard';
+import { requestPasswordReset, resetPassword } from '~/lib/password-reset';
 import { safeRedirectTarget } from '~/lib/session';
 
 /**
@@ -29,10 +25,10 @@ import { safeRedirectTarget } from '~/lib/session';
  *     seules reponses possibles — sinon le formulaire devient un outil
  *     d enumeration de la base clients.
  *
- *  2. AUCUN role n est attribue ici. Un compte cree par ce formulaire est un
- *     compte ordinaire, quelle que soit son adresse e-mail. Le role de
- *     plateforme vient de `profiles.platform_role`, ecrit uniquement par le
- *     script d approvisionnement avec la cle de service.
+ *  2. AUCUN role n est attribue ici. Les comptes clients naissent du code
+ *     d acces personnel (`/acces`) ; le role de plateforme vient de
+ *     `profiles.platform_role`, ecrit uniquement par le script
+ *     d approvisionnement avec la cle de service.
  *
  *  3. La destination apres connexion est toujours filtree : seul un chemin
  *     interne est accepte, jamais une URL absolue.
@@ -82,11 +78,11 @@ class AuthTimeoutError extends Error {
   }
 }
 
-function withAuthTimeout<T>(operation: Promise<T>): Promise<T> {
+function withAuthTimeout<T>(operation: Promise<T>, timeoutMs = AUTH_TIMEOUT_MS): Promise<T> {
   return Promise.race([
     operation,
     new Promise<T>((_resolve, reject) => {
-      const timer = setTimeout(() => reject(new AuthTimeoutError()), AUTH_TIMEOUT_MS);
+      const timer = setTimeout(() => reject(new AuthTimeoutError()), timeoutMs);
       // Le minuteur ne doit pas retenir le processus une fois la course gagnee.
       void operation.finally(() => clearTimeout(timer)).catch(() => undefined);
     }),
@@ -174,90 +170,6 @@ export async function signInAction(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Creation de compte                                                         */
-/* -------------------------------------------------------------------------- */
-
-export async function signUpAction(
-  _previous: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  // Les cases a cocher sont converties par le schema lui-meme : une case
-  // arrive sous la forme « on », ou pas du tout. Voir `checkboxSchema`.
-  const parsed = signUpSchema.safeParse(formDataToObject(formData));
-
-  if (!parsed.success) {
-    return {
-      status: 'error',
-      message: 'Certains champs doivent être corrigés.',
-      errors: fieldErrors(parsed.error),
-    };
-  }
-
-  const guard = await guardAction({
-    limit: 'signup',
-    honeypot: parsed.data.website,
-    turnstileToken: parsed.data.turnstileToken,
-  });
-  if (!guard.ok) return { status: 'error', message: guard.message };
-
-  const store = await cookies();
-  const client = createSessionClient(cookieAdapter(store));
-
-  let error: Awaited<ReturnType<typeof client.auth.signUp>>['error'];
-  try {
-    ({ error } = await withAuthTimeout(
-      client.auth.signUp({
-        email: parsed.data.email,
-        password: parsed.data.password,
-        options: {
-          // Le lien de confirmation ouvre la session (route de retour) puis
-          // ramene la personne ou elle allait : sa page « Recuperer mon site »,
-          // une invitation, ou son espace.
-          emailRedirectTo: absolutePlatformUrl(
-            `/auth/confirmation?suivant=${encodeURIComponent(
-              safeRedirectTarget(parsed.data.redirectTo),
-            )}`,
-          ),
-          data: {
-            first_name: parsed.data.firstName,
-            last_name: parsed.data.lastName,
-            phone: parsed.data.phone ?? null,
-            locale: parsed.data.locale,
-            marketing_opt_in: parsed.data.marketingOptIn,
-            // Version des CGU acceptees, conservee comme preuve. Les CGV sont
-            // acceptees, et leur version enregistree, a chaque commande.
-            terms_of_use_version: TERMS_OF_USE_VERSION,
-            terms_accepted_at: new Date().toISOString(),
-          },
-        },
-      }),
-    ));
-  } catch {
-    return { status: 'error', message: SERVICE_UNAVAILABLE };
-  }
-
-  if (error) {
-    // Supabase distingue « adresse deja utilisee » des autres erreurs. On ne
-    // repercute PAS cette distinction : elle permettrait de tester si une
-    // adresse est cliente. Le message est identique dans les deux cas, et un
-    // e-mail est envoye a l adresse — la personne legitime saura quoi faire.
-    return {
-      status: 'success',
-      message:
-        'Si cette adresse peut être utilisée, un e-mail de confirmation vient de vous être ' +
-        'envoyé. Vérifiez votre boîte de réception, y compris les indésirables.',
-    };
-  }
-
-  return {
-    status: 'success',
-    message:
-      'Votre compte est créé. Un e-mail de confirmation vient de vous être envoyé : ' +
-      'cliquez sur le lien qu’il contient pour activer votre accès.',
-  };
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Mot de passe oublie                                                        */
 /* -------------------------------------------------------------------------- */
 
@@ -272,8 +184,9 @@ export async function requestPasswordResetAction(
   const uniformAnswer: AuthFormState = {
     status: 'success',
     message:
-      'Si un compte existe pour cette adresse, un e-mail de réinitialisation vient d’être ' +
-      'envoyé. Le lien est valable une heure.',
+      'Si un compte correspond à cette adresse, vous recevrez un e-mail permettant de ' +
+      'réinitialiser votre mot de passe. Le lien est valable une heure. Pensez à vérifier vos ' +
+      'courriers indésirables.',
   };
 
   if (!parsed.success) return uniformAnswer;
@@ -285,28 +198,40 @@ export async function requestPasswordResetAction(
   });
   if (!guard.ok) return { status: 'error', message: guard.message };
 
-  const store = await cookies();
-  const client = createSessionClient(cookieAdapter(store));
-  try {
-    await withAuthTimeout(
-      client.auth.resetPasswordForEmail(parsed.data.email, {
-        redirectTo: absolutePlatformUrl('/auth/confirmation?suivant=%2Fnouveau-mot-de-passe'),
-      }),
-    );
-  } catch {
-    // La reponse reste identique : meme en panne, ce formulaire ne doit pas
-    // permettre de distinguer une adresse connue d une adresse inconnue.
-    return uniformAnswer;
-  }
-
+  // Le lien part APRES la reponse : la duree de l envoi (qui n a lieu que si
+  // le compte existe) ne doit pas permettre de distinguer une adresse connue.
+  // Meme en panne, la reponse reste identique.
+  const email = parsed.data.email;
+  const ipHash = guard.ipHash;
+  after(async () => {
+    try {
+      await withAuthTimeout(requestPasswordReset(email, ipHash), 15_000);
+    } catch {
+      // Journalise par requestPasswordReset ; rien a montrer au visiteur.
+    }
+  });
   return uniformAnswer;
 }
+
+const RESET_MESSAGES: Record<string, string> = {
+  invalid: 'Ce lien de réinitialisation n’est pas valide. Demandez-en un nouveau.',
+  expired: 'Ce lien a expiré (il est valable une heure). Demandez-en un nouveau.',
+  used: 'Ce lien a déjà servi. Si vous n’êtes pas à l’origine du changement, demandez un nouveau lien.',
+  weak_password:
+    'Ce mot de passe a été refusé : il est trop faible ou figure dans une liste de mots de passe compromis. Choisissez-en un autre.',
+  unavailable:
+    'Le mot de passe n’a pas pu être modifié pour le moment. Votre lien reste valable : réessayez dans un instant.',
+};
 
 export async function updatePasswordAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const parsed = passwordResetSchema.safeParse(formDataToObject(formData));
+  const token = String(formData.get('jeton') ?? '');
+  const parsed = passwordResetSchema.safeParse({
+    password: formData.get('password') ?? '',
+    confirmPassword: formData.get('confirmPassword') ?? '',
+  });
   if (!parsed.success) {
     return {
       status: 'error',
@@ -315,196 +240,29 @@ export async function updatePasswordAction(
     };
   }
 
-  const store = await cookies();
-  const client = createSessionClient(cookieAdapter(store));
+  const guard = await guardAction({ limit: 'passwordReset' });
+  if (!guard.ok) return { status: 'error', message: guard.message };
 
-  // Le lien de reinitialisation a ouvert une session : sans elle, il n y a
-  // rien a modifier. On ne cree jamais de session depuis ce formulaire.
-  const { data } = await client.auth.getUser();
-  if (!data.user) {
+  let outcome: Awaited<ReturnType<typeof resetPassword>>;
+  try {
+    // Plusieurs appels successifs (jeton, session, mot de passe, fermeture des
+    // sessions) : un delai plus long que pour une simple connexion.
+    outcome = await withAuthTimeout(resetPassword(token, parsed.data.password), 25_000);
+  } catch {
+    return { status: 'error', message: RESET_MESSAGES['unavailable'] };
+  }
+  if (!outcome.ok) {
     return {
       status: 'error',
-      message:
-        'Ce lien de réinitialisation a expiré ou a déjà été utilisé. Demandez-en un nouveau.',
+      message: RESET_MESSAGES[outcome.reason] ?? RESET_MESSAGES['invalid'],
     };
   }
 
-  const { error } = await client.auth.updateUser({ password: parsed.data.password });
-  if (error) {
-    return { status: 'error', message: 'Ce mot de passe n’a pas pu être enregistré.' };
-  }
-
-  // Toutes les autres sessions sont fermees : si le compte etait compromis,
-  // l attaquant perd son acces au moment meme du changement.
-  await client.auth.signOut({ scope: 'others' });
+  // Toutes les sessions du compte sont fermees, y compris celle de ce
+  // navigateur s il en avait une : on repart d une connexion propre.
+  const store = await cookies();
+  const client = createSessionClient(cookieAdapter(store));
+  await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
 
   redirect('/connexion?reinitialise=1');
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Activation par code                                                        */
-/* -------------------------------------------------------------------------- */
-
-export interface ActivationState extends AuthFormState {
-  /** Etape atteinte : verification du code, puis creation du compte. */
-  step?: 'verify' | 'complete';
-  code?: string;
-  email?: string;
-  organizationName?: string;
-}
-
-/**
- * Configuration incomplete cote serveur.
- *
- * Le code d activation reste valide et utilisable : rien n est consomme, rien
- * n est perdu. Le message le dit, au lieu d afficher un numero d incident.
- */
-function activationUnavailable(): string {
-  const support = isLegalValueConfigured('SUPPORT_EMAIL')
-    ? ` ou écrivez-nous à ${legalValue('SUPPORT_EMAIL')}`
-    : '';
-  return (
-    'Nous ne pouvons pas vérifier votre code pour le moment. Votre code reste valide : ' +
-    `réessayez dans quelques minutes${support}.`
-  );
-}
-
-export async function verifyActivationCodeAction(
-  _previous: ActivationState,
-  formData: FormData,
-): Promise<ActivationState> {
-  const parsed = activationSchema.safeParse(formDataToObject(formData));
-  if (!parsed.success) {
-    return {
-      status: 'error',
-      step: 'verify',
-      message: 'Vérifiez le code et l’adresse e-mail saisis.',
-      errors: fieldErrors(parsed.error),
-    };
-  }
-
-  const guard = await guardAction({
-    limit: 'activation',
-    turnstileToken: parsed.data.turnstileToken,
-  });
-  if (!guard.ok) return { status: 'error', step: 'verify', message: guard.message };
-
-  // Verification SANS consommation : le compte n est cree qu une fois le code
-  // reconnu valide. La tentative est tout de meme comptee en base, donc un
-  // code ne peut pas etre teste indefiniment.
-  // Sans cle de service, on ne peut pas verifier le code. On le dit, plutot
-  // que de laisser l exception remonter jusqu a « Une erreur est survenue » :
-  // la personne tient un code valide et doit savoir que le defaut est chez
-  // nous, pas dans ce qu elle a saisi.
-  const service = tryCreateServiceClient();
-  if (service === null) {
-    return { status: 'error', step: 'verify', message: activationUnavailable() };
-  }
-
-  const preview = await peekActivationCode(service, {
-    code: parsed.data.code,
-    email: parsed.data.email,
-  });
-
-  if (!preview.ok) {
-    return { status: 'error', step: 'verify', message: preview.error.message };
-  }
-
-  return {
-    status: 'success',
-    step: 'complete',
-    code: parsed.data.code,
-    email: parsed.data.email,
-    organizationName: preview.data.organizationName ?? undefined,
-    message: 'Code valide. Créez votre mot de passe pour terminer.',
-  };
-}
-
-export async function completeActivationAction(
-  _previous: ActivationState,
-  formData: FormData,
-): Promise<ActivationState> {
-  // `raw` est conserve pour reafficher ce que la personne avait saisi : un
-  // formulaire qui se vide apres une erreur fait recommencer a zero.
-  const raw = formDataToObject(formData);
-  const parsed = activationCompleteSchema.safeParse(raw);
-
-  if (!parsed.success) {
-    return {
-      status: 'error',
-      step: 'complete',
-      code: typeof raw.code === 'string' ? raw.code : undefined,
-      email: typeof raw.email === 'string' ? raw.email : undefined,
-      message: 'Certains champs doivent être corrigés.',
-      errors: fieldErrors(parsed.error),
-    };
-  }
-
-  const guard = await guardAction({ limit: 'activation' });
-  if (!guard.ok) return { status: 'error', step: 'complete', message: guard.message };
-
-  const service = tryCreateServiceClient();
-  if (service === null) {
-    return {
-      status: 'error',
-      step: 'complete',
-      code: parsed.data.code,
-      email: parsed.data.email,
-      message: activationUnavailable(),
-    };
-  }
-
-  // Le code prouve que la personne a recu notre e-mail : l adresse est donc
-  // deja verifiee, et lui redemander une confirmation n apporterait rien.
-  const { data: created, error: createError } = await service.auth.admin.createUser({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    email_confirm: true,
-    user_metadata: {
-      first_name: parsed.data.firstName,
-      last_name: parsed.data.lastName,
-      terms_of_use_version: TERMS_OF_USE_VERSION,
-      terms_accepted_at: new Date().toISOString(),
-    },
-  });
-
-  if (createError || !created.user) {
-    // Une adresse deja utilisee doit se connecter : le code lui sera rattache
-    // apres authentification. On ne cree jamais de doublon.
-    return {
-      status: 'error',
-      step: 'complete',
-      code: parsed.data.code,
-      email: parsed.data.email,
-      message:
-        'Un compte existe déjà pour cette adresse. Connectez-vous, puis saisissez votre code ' +
-        'depuis votre espace.',
-    };
-  }
-
-  const outcome = await redeemActivationCode(service, {
-    code: parsed.data.code,
-    userId: created.user.id,
-    email: parsed.data.email,
-  });
-
-  if (!outcome.ok) {
-    // Le code a ete consomme entre la verification et ici (ou revoque) :
-    // on retire le compte tout juste cree plutot que de laisser un orphelin.
-    await service.auth.admin.deleteUser(created.user.id);
-    return { status: 'error', step: 'verify', message: outcome.error.message };
-  }
-
-  const store = await cookies();
-  const client = createSessionClient(cookieAdapter(store));
-  const { error } = await client.auth.signInWithPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-  });
-
-  if (error) {
-    redirect('/connexion?active=1');
-  }
-
-  redirect('/app?bienvenue=1');
 }

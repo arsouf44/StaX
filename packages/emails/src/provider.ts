@@ -1,4 +1,4 @@
-import { readEnv } from '@nemasus/config';
+import { emailSettings } from '@nemasus/config';
 
 /**
  * Envoi d e-mails transactionnels.
@@ -57,6 +57,8 @@ export class ResendEmailProvider implements EmailProvider {
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
+        // Un fournisseur lent ne doit jamais immobiliser une action serveur.
+        signal: AbortSignal.timeout(10_000),
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
@@ -73,6 +75,8 @@ export class ResendEmailProvider implements EmailProvider {
       });
 
       if (!response.ok) {
+        // Le corps d erreur de Resend decrit la requete (adresse refusee,
+        // domaine non verifie) ; il ne contient jamais la cle.
         const body = await response.text();
         return { ok: false, error: `Resend ${response.status}: ${body.slice(0, 200)}` };
       }
@@ -96,6 +100,7 @@ export class PostmarkEmailProvider implements EmailProvider {
     try {
       const response = await fetch('https://api.postmarkapp.com/email', {
         method: 'POST',
+        signal: AbortSignal.timeout(10_000),
         headers: {
           'X-Postmark-Server-Token': this.serverToken,
           'Content-Type': 'application/json',
@@ -126,16 +131,18 @@ export class PostmarkEmailProvider implements EmailProvider {
 
 let cached: EmailProvider | null = null;
 
+/**
+ * Fournisseur actif. Resend est choisi des que `RESEND_API_KEY` est posee
+ * (variable SERVEUR : ce module n est jamais importe par du code navigateur).
+ */
 export function getEmailProvider(): EmailProvider {
   if (cached) return cached;
-  const provider = readEnv('EMAIL_PROVIDER') ?? 'console';
-  const apiKey = readEnv('EMAIL_API_KEY');
-  const from = readEnv('EMAIL_FROM') ?? 'Nemasus <bonjour@localhost>';
+  const settings = emailSettings();
 
-  if (provider === 'resend' && apiKey) {
-    cached = new ResendEmailProvider(apiKey, from);
-  } else if (provider === 'postmark' && apiKey) {
-    cached = new PostmarkEmailProvider(apiKey, from);
+  if (settings.provider === 'resend' && settings.apiKey) {
+    cached = new ResendEmailProvider(settings.apiKey, settings.from);
+  } else if (settings.provider === 'postmark' && settings.apiKey) {
+    cached = new PostmarkEmailProvider(settings.apiKey, settings.from);
   } else {
     cached = new ConsoleEmailProvider();
   }

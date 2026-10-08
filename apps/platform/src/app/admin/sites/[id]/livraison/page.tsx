@@ -12,7 +12,7 @@ import {
 } from '@nemasus/infrastructure';
 import { sitesApiOrigin } from '@nemasus/config';
 import { CONTRACT_VERSION, MANIFEST_SCHEMA_URL } from '@nemasus/site-contract';
-import { PROJECT_STATUS_LABELS, formatMoney } from '@nemasus/payments';
+import { PROJECT_STATUS_LABELS } from '@nemasus/payments';
 import { Alert, Badge, DescriptionList, Panel, StatusPill, type StatusTone } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 import {
@@ -28,7 +28,6 @@ import {
   refreshDeploymentsAction,
   refreshRepositoryAction,
   retryDeploymentAction,
-  retryMaintenanceAction,
   runChecksAction,
   syncDomainsAction,
   syncInstallationsAction,
@@ -59,8 +58,7 @@ export const dynamic = 'force-dynamic';
  *   2. importe le contrat d'edition (`nemasus.manifest.json`) et le contenu initial ;
  *   3. rattache et verifie le domaine ;
  *   4. deroule la checklist de livraison (controles reels + attestations) ;
- *   5. livre le site au client — ce qui ouvre son editeur et demarre la
- *      maintenance mensuelle.
+ *   5. livre le site au client — ce qui ouvre son editeur.
  *
  * Lecture avec le jeton de la personne : les policies decident. Aucun jeton
  * GitHub ou Cloudflare n'est lu ni affiche ici : il n'en existe aucun en base.
@@ -344,23 +342,12 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
         .limit(1)
         .maybeSingle()) as never,
     ),
-    unwrapMaybe<{
-      reference: string;
-      status: string;
-      maintenance_status: string;
-      maintenance_started_at: string | null;
-      maintenance_price_cents: number;
-      billing_interval: string;
-    }>(
+    unwrapMaybe<{ id: string; reference: string; paid_at: string | null }>(
       (await db
-        .from('orders')
-        .select(
-          'reference, status, maintenance_status, maintenance_started_at, maintenance_price_cents, billing_interval',
-        )
+        .from('site_orders')
+        .select('id, reference, paid_at')
         .eq('site_id', site.id)
-        .in('status', ['paid', 'partially_refunded', 'internal'])
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('status', 'paid')
         .maybeSingle()) as never,
     ),
     unwrapList<{
@@ -1013,35 +1000,22 @@ export default async function InfrastructurePage({ params }: { params: Promise<{
             </p>
             {order ? (
               <p className="text-[var(--foreground-muted)]">
-                Maintenance (
-                {formatMoney(order.maintenance_price_cents, 'EUR', { hideDecimalsWhenRound: true })}{' '}
-                HT / {order.billing_interval === 'month' ? 'mois' : 'an'}) :{' '}
-                <strong>
-                  {order.maintenance_status === 'started'
-                    ? `démarrée le ${when(order.maintenance_started_at)}`
-                    : order.maintenance_status === 'failed'
-                      ? 'démarrage en échec'
-                      : order.maintenance_status === 'pending_delivery'
-                        ? 'en attente'
-                        : order.maintenance_status === 'waived'
-                          ? 'non facturée (compte interne)'
-                          : 'non applicable'}
-                </strong>
+                Commande{' '}
+                <Link
+                  href={`/admin/commandes/${order.id}`}
+                  className="underline underline-offset-4"
+                >
+                  {order.reference}
+                </Link>
+                {order.paid_at ? `, réglée le ${when(order.paid_at)}` : ''}.
               </p>
-            ) : null}
-            {canAdmin &&
-            order &&
-            ['failed', 'pending_delivery'].includes(order.maintenance_status) ? (
-              <ActionButton action={retryMaintenanceAction} payload={{ siteId: site.id }}>
-                Démarrer la maintenance
-              </ActionButton>
             ) : null}
           </div>
         ) : (
           <div className="mt-3 space-y-4">
             <p className="text-sm text-[var(--foreground-muted)]">
               Livrer le site ouvre l’éditeur au client (et à lui seul, avec les rôles de son
-              organisation) et démarre la maintenance mensuelle. Avant, le client ne peut rien
+              organisation) et lui envoie l’e-mail de livraison. Avant, le client ne peut rien
               modifier : c’est la base de données qui l’interdit.
             </p>
             <p className="text-sm">

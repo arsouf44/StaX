@@ -15,13 +15,12 @@ permanence ce qui manque encore.
 
 | Parcours | État | Détail |
 | --- | --- | --- |
-| **Vente en ligne** : offre → paiement → création en 1 à 10 semaines selon l'offre → livraison | ✅ | [site-delivery.md](./site-delivery.md) |
-| **Vente par téléphone** : site prêt → e-mail + code → compte → paiement → livraison automatique | ✅ | [vente-par-telephone.md](./vente-par-telephone.md) |
+| **Commande en ligne** (aucun prix public) → modalités de virement → virement reçu → code d'accès → espace client → livraison | ✅ | [commande-virement.md](./commande-virement.md) |
+| **Vente par téléphone** : commande saisie par l'équipe, même suite | ✅ | [vente-par-telephone.md](./vente-par-telephone.md) |
 | Le client modifie son site seul (éditeur, aperçu, publier, restaurer) | ✅ | premiers pas guidés, menu court |
 | Discussion client ↔ équipe, avec e-mail des deux côtés | ✅ | `/app/discussion`, `/admin/messages` |
 | Alertes e-mail à l'équipe : message, ticket, contact, devis, prospect, paiement, site en panne | ✅ | envoyées à `SUPPORT_EMAIL` (à défaut `ADMIN_EMAIL`) |
-| Maintenance mensuelle qui démarre à la livraison, résiliable en ligne | ✅ | [stripe.md](./stripe.md) |
-| Mot de passe oublié, confirmation d'inscription, invitations de collaborateurs | ✅ | corrigés (voir [GAP_AUDIT.md § 13](./GAP_AUDIT.md)) |
+| Mot de passe oublié par Resend (jeton haché, une heure, usage unique) ; invitations de collaborateurs | ✅ | [commande-virement.md § 6](./commande-virement.md) |
 | Statistiques réelles des sites (visiteurs, sources, appareils, contacts, encaissé), recalculées chaque heure | ✅ | `/app/statistiques` ; mesure en une ligne pour les sites indépendants ([contrat](./editable-site-contract.md)) |
 | Bilan de santé du site : disponibilité sur 30 jours, bilan qualité hebdomadaire | ✅ | `/app/site/sante` |
 | Bilan mensuel envoyé aux clients le 1er du mois | ✅ | part dès que Resend est branché (étape 4) |
@@ -88,13 +87,18 @@ d'erreur, notifications), renommé les tâches planifiées
 des sous-traitants (Resend ajouté). La **0058** (2026-09-29) inscrit Vercel,
 hébergeur de la plateforme, et recentre Cloudflare sur les sites des clients.
 
-**À faire : migrations 0060 à 0065** (2026-09-30 et 2026-10-01). La **0059**
+**À faire : migrations 0060 à 0066** (2026-09-30 au 2026-10-08). La **0059**
 (statistiques réellement calculées) est appliquée en production et inscrite
 avec son empreinte ; l'agrégation horaire y tourne déjà. Les suivantes sont
 prêtes et toutes additives — état des services dérivé des journaux (0060),
 libellés accentués (0061), pilotage de l'équipe (0062), bilan de santé des
 sites (0063), bilan mensuel des clients (0064), e-mail au commerçant pour
-chaque message, réservation ou commande reçus par son site (0065) :
+chaque message, réservation ou commande reçus par son site (0065), et
+**commande par virement, codes d'accès, mot de passe oublié (0066)**. La 0066
+n'efface rien : elle retire les offres du public, ajoute l'offre interne
+`site-nemasus`, les tables `site_orders` et `password_reset_tokens`, et retire
+l'ancienne vente par carte des sessions clientes. **Déployez le code et la 0066
+ensemble** : l'ancien code appellerait des fonctions retirées.
 
 ```
 DATABASE_URL="postgresql://…" pnpm db:migrate
@@ -149,8 +153,9 @@ Le détail est dans [vercel.md](./vercel.md). En bref :
 4. **Cloudflare → Workers & Pages → `stax`** : *Settings → Build →
    Disconnect*, puis supprimez ce Worker. Il a servi la plateforme quelques
    jours ; le dépôt n'en contient plus la configuration.
-5. Redéployez, puis vérifiez `/tarifs`, `/mentions-legales`, `/inscription` et
-   `/admin/sante`.
+5. Redéployez, puis vérifiez `/`, `/comment-ca-marche`, `/commander`,
+   `/acces`, `/mentions-legales` et `/admin/sante` (`/tarifs` doit rediriger
+   vers `/comment-ca-marche`).
 
 **Supabase reste sur l'offre gratuite** : pas de sauvegarde automatique
 téléchargeable, et un projet sans activité pendant 7 jours peut être mis en
@@ -164,48 +169,50 @@ copie : la page `/sous-traitants` et le registre y renvoient.
 
 ## Étape 4 — E-mails (sans eux, le produit paraît cassé)
 
-Deux choses distinctes, toutes deux nécessaires :
+Tous les e-mails passent par **Resend** depuis la plateforme : accusé de
+commande, modalités de virement, code d'accès, **mot de passe oublié**,
+livraison, réponses de l'équipe, alertes. Le mot de passe oublié ne dépend plus
+des e-mails de Supabase, et il n'y a plus d'inscription libre (le compte
+s'ouvre avec le code d'accès ou le lien d'invitation).
 
-1. **E-mails de Nemasus** (propositions, livraison, réponses de l'équipe,
-   alertes). Créez un compte **Resend** (ou Postmark), vérifiez votre domaine
-   d'envoi (enregistrements SPF et DKIM chez votre registrar), puis dans les
-   variables Vercel (étape 3) :
+1. Dans Resend, vérifiez le domaine d'envoi (enregistrements SPF et DKIM chez
+   votre registrar), ici `lallianse.com`.
+2. Dans les variables Vercel (étape 3), **en secret, jamais dans le dépôt ni
+   dans une variable `NEXT_PUBLIC_*`** :
    ```
-   EMAIL_PROVIDER=resend
-   EMAIL_API_KEY=re_…                          (secret)
+   RESEND_API_KEY=re_…                         (secret)
    EMAIL_FROM=Nemasus <nemasus@lallianse.com>
    EMAIL_REPLY_TO=nemasus@lallianse.com
    ```
-   Le domaine d'envoi à vérifier chez Resend est donc `lallianse.com`.
-2. **E-mails de connexion** (confirmation d'inscription, mot de passe
-   oublié), envoyés par Supabase. Dans **Supabase → Authentication** :
-   - *SMTP Settings* : activez un SMTP personnalisé (Resend fournit des
-     identifiants SMTP). Le SMTP par défaut de Supabase est limité à quelques
-     messages par heure : un client ne recevrait pas son lien ;
-   - *URL Configuration* : **Site URL** = `https://votre-domaine` ;
-     **Redirect URLs** = `https://votre-domaine/auth/confirmation` ;
-   - *Password security* : activez la **protection contre les mots de passe
-     compromis** (signalée par l'analyseur de sécurité Supabase).
+   Sans `EMAIL_FROM` d'un domaine vérifié, Resend ne livre qu'à l'adresse du
+   compte Resend.
+3. **Supabase → Authentication** : *URL Configuration* : **Site URL** =
+   `https://votre-domaine` ; *Password security* : activez la **protection
+   contre les mots de passe compromis**.
 
-**Vérifier :** créez un compte avec une adresse à vous, cliquez le lien reçu :
-vous devez arriver **connecté** dans votre espace. Puis « Mot de passe oublié »
-jusqu'au bout.
+**Vérifier :** `/admin/sante` ne signale plus « Envoi d’e-mails transactionnels » comme manquant ; puis « Mot de
+passe oublié » avec votre adresse, jusqu'à la reconnexion.
 
-## Étape 5 — Stripe (encaisser)
+## Étape 5 — Coordonnées bancaires (encaisser par virement)
 
-1. Activez le compte Stripe (identité, IBAN).
-2. Clé **live** dans les variables Vercel : `STRIPE_SECRET_KEY`.
-3. **Développeurs → Webhooks → Ajouter un point de terminaison** :
-   `https://votre-domaine/api/webhooks/stripe`, événements
-   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-   `checkout.session.expired`, `customer.subscription.*`, `invoice.*`,
-   `charge.refunded`. Copiez le secret de signature dans
-   `STRIPE_WEBHOOK_SECRET`.
-4. (Facultatif, offres avec paiement en ligne sur le site du client)
-   Stripe Connect : voir [stripe-connect.md](./stripe-connect.md).
+Nemasus n'encaisse rien en ligne : les modalités envoyées au client reprennent
+le compte de l'entreprise. Dans les variables Vercel :
 
-**Vérifier :** faites d'abord tout le parcours en **mode test** (carte
-`4242 4242 4242 4242`) — voir l'étape 9.
+```
+BANK_TRANSFER_HOLDER=LallianSe
+BANK_TRANSFER_IBAN=FR76 …
+BANK_TRANSFER_BIC=…
+BANK_TRANSFER_BANK=…                        (facultatif)
+```
+
+Sans titulaire ni IBAN, l'administration bloque l'envoi des modalités et le
+signale. Stripe ne sert plus qu'aux encaissements des boutiques **des
+clients** (facultatif) : [stripe-connect.md](./stripe-connect.md). L'ancien
+webhook `/api/webhooks/stripe` n'existe plus : supprimez-le du tableau de bord
+Stripe s'il y est encore déclaré.
+
+**Vérifier :** une commande de test reçoit des modalités avec le bon IBAN
+(étape 9).
 
 **Téléphone de l'éditeur (bloquant, obligatoire — LCEN art. 6 III).** La
 variable `LEGAL_PHONE` n'est pas posée sur Vercel : les mentions légales en
@@ -276,7 +283,7 @@ un autre mandataire est placé devant la plateforme.
 `pnpm admin:bootstrap` (voir [admin-bootstrap.md](./admin-bootstrap.md)),
 puis connexion, **double facteur**, changement du mot de passe. Chaque
 personne de l'équipe a son propre compte ; le rôle `platform_admin` suffit pour
-envoyer des propositions et livrer.
+traiter les commandes (modalités, virement reçu, codes) et livrer.
 
 **À faire maintenant sur le compte propriétaire existant.** Le 2026-09-27, le
 seul compte de l'équipe en production (`platform_owner`) avait
@@ -295,21 +302,21 @@ demandé avant l'administration.
 
 ## Étape 9 — Répétition générale (1 heure, avant le premier client)
 
-En **mode test Stripe**, avec votre propre adresse comme « prospect » :
+Avec votre propre adresse comme client :
 
-1. *Sites → Créer un site* ; rattachez un petit site de test (dépôt + projet
-   Cloudflare), importez son manifeste, faites la checklist.
-2. *Fiche du site → Proposer ce site à un prospect* → votre adresse.
-3. Dans votre boîte : l'e-mail « Le site de … est prêt ». Cliquez
-   « Récupérer mon site », créez le compte, confirmez l'adresse.
-4. Vérifiez : votre site s'affiche, le prix est juste, l'éditeur est fermé.
-   Écrivez un message ; répondez depuis *Messages clients* ; vérifiez l'e-mail.
-5. Payez avec `4242 4242 4242 4242`. En quelques secondes : « Merci ! Votre
-   site est à vous », l'éditeur s'ouvre, l'e-mail de livraison arrive,
-   l'abonnement de maintenance apparaît dans Stripe.
-6. Modifiez un titre, publiez, vérifiez le site en ligne.
-7. Refaites un paiement en **annulant** sur la page Stripe : retour sur
-   l'espace, « Paiement interrompu », rien de débité.
+1. `/commander` : commandez un site (aucun prix ne doit apparaître). Vérifiez
+   l'accusé de réception et sa référence `CMD-…`.
+2. *Commandes* → la commande → « Modalités de paiement » : un petit montant.
+   Vérifiez l'e-mail : montant, IBAN, référence à rappeler.
+3. Faites réellement le virement (ou, pour la répétition, constatez-le
+   fictivement) → « Virement reçu » → cochez la confirmation.
+4. Dans votre boîte : « Votre code d'accès Nemasus ». Cliquez « Accéder à mon
+   espace », validez, choisissez votre mot de passe : vous arrivez dans votre
+   espace, projet ouvert, « Ma commande » affiche la référence.
+5. Ressaisissez le même code : « déjà servi ». Déconnectez-vous, reconnectez-
+   vous ; puis « Mot de passe oublié » jusqu'au bout.
+6. *Sites* → rattachez un petit site de test (dépôt + projet Cloudflare),
+   checklist, livraison ; modifiez un titre, publiez, vérifiez le site en ligne.
 
 Si une étape bloque, `/admin/sante` et `/admin/taches` disent pourquoi.
 
@@ -355,7 +362,7 @@ principe suivi ici. Reste à faire :
    quelques centaines d'euros par an au plus) supprime le risque. Renseignez
    ensuite `LEGAL_MEDIATOR` (nom et site du médiateur).
 4. **Démarchage** : faites lire à chaque personne qui appelle les règles de
-   [vente-par-telephone.md § 6](./vente-par-telephone.md) — depuis le
+   [vente-par-telephone.md § 5](./vente-par-telephone.md) — depuis le
    11 août 2026, appeler un particulier sans son accord préalable est
    interdit ; le démarchage des entreprises reste permis.
 5. **Suppression de compte** : elle se fait à la main, sur demande (voir
@@ -369,7 +376,7 @@ principe suivi ici. Reste à faire :
 
 | Écran | Pour quoi faire |
 | --- | --- |
-| **Propositions** (`/admin/propositions`) | Envoyer, relancer, retirer ; voir qui a créé son compte, qui a payé |
+| **Commandes** (`/admin/commandes`) | À traiter, virement attendu, payées ; modalités, virement reçu, codes d'accès |
 | **Messages clients** (`/admin/messages`) | Répondre aux clients et prospects (pastille = en attente) |
 | **Tickets** (`/admin/support`) | Demandes d'assistance ouvertes depuis « Aide & support » |
 | **Production** (`/admin/production`) | Chaque projet dans son étape, les retards, ce qui attend le client, les sites en panne |

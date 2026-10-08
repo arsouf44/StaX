@@ -27,12 +27,14 @@ export SITES_PUBLIC_SCHEME=http
 export SITES_PUBLIC_PORT=3101
 # Secret jetable, propre a la pile locale : il signe les jetons anti-CSRF.
 export NEMASUS_SECRET_KEY="${NEMASUS_SECRET_KEY:-$(cat "$STACK_DIR/jwt-secret")-nemasus-e2e-secret}"
-# Stripe n'est jamais joint depuis la pile locale. Ces valeurs jetables
-# permettent seulement de VERIFIER la signature d'un webhook que les tests
-# signent eux-memes (meme derivation que tests/e2e/journeys/support/stack.ts) :
-# c'est le vrai chemin « paiement recu -> site prepare », sans le reseau.
+# Coordonnees bancaires FICTIVES (IBAN de test au format valide) : elles
+# n'apparaissent que dans les e-mails de modalites de la pile locale.
+export BANK_TRANSFER_HOLDER="${BANK_TRANSFER_HOLDER:-Nemasus (pile de test)}"
+export BANK_TRANSFER_IBAN="${BANK_TRANSFER_IBAN:-FR7630006000011234567890189}"
+export BANK_TRANSFER_BIC="${BANK_TRANSFER_BIC:-AGRIFRPP}"
+# Stripe (encaissements des boutiques clientes, Connect) n'est jamais joint
+# depuis la pile locale : valeur jetable, sans aucun droit.
 export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_test_nemasus_e2e_local_only}"
-export STRIPE_WEBHOOK_SECRET="${STRIPE_WEBHOOK_SECRET:-whsec_$(printf '%s' "$(cat "$STACK_DIR/jwt-secret")-stripe-webhook" | sha256sum | cut -c1-48)}"
 
 case "${1:-}" in
   platform)

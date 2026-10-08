@@ -81,14 +81,17 @@ parisien verrait « aujourd’hui » basculer à 2 h du matin.
 | `app.quota_exceeded(org, key)` | Quotas de l’offre appliqués en base (0046) |
 | `app.resolve_published_site(hostname)` | Ancien moteur : résolution du tenant par le seul nom d’hôte |
 | `app.publish_site(site, label)` / `app.rollback_site(...)` | Ancien moteur : instantané figé, retour arrière |
-| `app.compute_order_pricing(plan, coupon)` | Prix lu dans le catalogue, jamais fourni |
-| `app.create_order(...)` | Commande créée avec un prix serveur et une preuve d’acceptation des CGV |
-| `app.request_refund(order, reason)` | Éligibilité calculée, déduction domaine conditionnelle |
-| `app.apply_order_paid(...)` | Paiement appliqué une seule fois, quoi qu’il arrive |
-| `app.upsert_subscription_from_stripe(...)` | Abonnement synchronisé, prix figé ; **refusé pour un site non livré** (`site_not_delivered`) |
+| `app.submit_site_order(...)` | Commande du visiteur (clé de service seule) : CGV acceptées, double envoi dédoublonné, aucun prix (0066) |
+| `app.request_site_order_payment(order, amount, message)` | Modalités de virement, administrateur uniquement |
+| `app.confirm_site_order_payment(...)` | Virement constaté : organisation, site, projet, code d’accès haché ; une seule fois ; jamais pour un compte de l’équipe |
+| `app.issue_site_order_code(...)` / `app.revoke_access_code(code)` | Nouveau code (les ouverts sont désactivés), désactivation |
+| `app.check_access_code(hash)` | Vérification côté serveur : essais comptés, expiré, désactivé, déjà utilisé, organisation suspendue |
+| `app.site_order_for_organization(org)` | La commande vue par son client, sans notes internes |
+| `app.create_password_reset(...)` / `app.consume_password_reset(hash)` | Jeton haché, une heure, un seul ouvert, 5 demandes par heure, 5 essais |
+| `app.create_order(...)`, `app.compute_order_pricing(...)`, `app.request_refund(...)`, propositions | Ancienne vente par carte : conservées pour l’historique, **non exécutables par une session cliente** depuis 0066 |
 | `app.submit_form(...)` | Liste blanche de champs, résolution par couple (site, slug) |
 | `app.available_slots(...)` / `app.create_booking(...)` | Capacité vérifiée sous verrou |
-| `app.redeem_activation_code(...)` | Consommation atomique, réponse identique pour tout échec |
+| `app.redeem_activation_code(...)` | Consommation atomique, réponse identique pour tout échec ; **clé de service seule** depuis 0066 |
 | `app.write_audit(...)` | Journal purgé de toute clé sensible |
 
 ---
@@ -116,7 +119,8 @@ Ces règles ne peuvent pas être contournées par un défaut applicatif.
 | Un manifeste importé est immuable | `app.freeze_site_manifest` |
 | Un site externe ne reçoit jamais d’instantané de l’ancien moteur | `app.forbid_engine_snapshot_for_external` |
 | Le domaine d’un site externe n’est modifié que par l’équipe | `app.guard_external_domain` |
-| Pas d’abonnement de maintenance avant la livraison | `app.upsert_subscription_from_stripe` |
+| Aucune commande de site ne s’écrit directement ; un client n’en lit aucune | RLS de `site_orders` (lecture équipe), fonctions `app.*_site_order` |
+| Un code d’accès n’existe que haché, ne sert qu’une fois et n’ouvre qu’une organisation | `activation_codes`, `app.check_access_code`, `app.redeem_activation_code` |
 | Un site suspendu n’est ni modifié ni publié ; une publication en attente échoue | `app.site_content_access`, `app.claim_site_release` (0051) |
 
 ---

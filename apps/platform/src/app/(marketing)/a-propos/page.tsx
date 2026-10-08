@@ -5,8 +5,8 @@ import { ButtonLink, Container, Panel, Section, SectionHeading } from '@nemasus/
 export const metadata: Metadata = {
   title: 'À propos',
   description:
-    'Pourquoi Nemasus existe : rendre accessible aux petites entreprises un site professionnel ' +
-    'bien construit, bien hébergé et réellement maintenu.',
+    'Qui est Nemasus : un studio qui conçoit pour chaque entreprise un site professionnel, ' +
+    'le met en ligne pour de bon, puis le lui confie.',
   alternates: { canonical: '/a-propos' },
 };
 
@@ -29,11 +29,11 @@ const PRINCIPLES = [
   },
   {
     title: 'Le client garde la main',
-    body: 'Vous modifiez vos contenus sans nous. Vous exportez vos données quand vous voulez. Vous résiliez sans négociation. Un service qu’on ne peut pas quitter n’est pas un service.',
+    body: 'Vous modifiez vos contenus sans nous. Vous exportez vos données quand vous voulez. Un service qu’on ne peut pas quitter n’est pas un service.',
   },
   {
-    title: 'Pas de jargon inutile',
-    body: 'Votre espace parle de pages, de contenu et de publication. Les mots « déploiement », « schéma » ou « composant » restent de notre côté.',
+    title: 'Un parcours simple et transparent',
+    body: 'Pas de grille tarifaire à décrypter : vous commandez, nous convenons du montant avec vous, vous réglez par virement et un code personnel ouvre votre espace. Votre espace parle de pages et de publication, pas de jargon.',
   },
 ];
 
@@ -48,23 +48,25 @@ export default function AboutPage() {
             as="h1"
             eyebrow="À propos"
             title="Pourquoi Nemasus existe"
-            description="Beaucoup de petites entreprises n’ont pas de site, ou en ont un qui ne leur sert plus : mal référencé, impossible à modifier, abandonné par son prestataire. Souvent parce qu’un site correct coûte cher, et qu’un site bon marché finit par coûter du temps."
+            description="Beaucoup d’entreprises n’ont pas de site, ou en ont un qui ne leur sert plus : mal référencé, impossible à modifier, abandonné par son prestataire. Nemasus est né pour que chacune ait un site à sa hauteur — et puisse le faire vivre elle-même."
           />
           <div className="measure mt-10 space-y-5 text-base leading-relaxed text-[var(--foreground-muted)]">
             <p>
-              Nemasus prend le problème à l’envers : plutôt que de vendre un outil et de laisser le
-              professionnel se débrouiller, nous construisons le site, nous l’hébergeons, nous le
-              maintenons — et nous lui donnons les clés de son contenu.
+              Nemasus est un studio français de conception et de développement de sites web. Plutôt
+              que de vendre un outil et de laisser le professionnel se débrouiller, nous
+              construisons le site, nous le mettons en ligne — et nous lui donnons les clés de son
+              contenu.
             </p>
             <p>
-              L’infrastructure est mutualisée, donc le coût de l’hébergement et de la maintenance
-              est partagé. Le travail de conception, lui, reste individuel : un restaurant n’a pas
-              les mêmes besoins qu’un plombier, et les traiter pareil donne de mauvais sites.
+              Le travail de conception est individuel : un restaurant n’a pas les mêmes besoins
+              qu’un plombier, et les traiter pareil donne de mauvais sites. C’est pourquoi il n’y a
+              pas de grille tarifaire : chaque projet est étudié, puis le montant est convenu avec
+              le client, qui le règle par virement.
             </p>
             <p>
-              Concrètement, un site Nemasus est construit sur un moteur multi-tenant : une seule
-              infrastructure sert tous les sites, chacun strictement isolé des autres. C’est ce qui
-              permet un prix accessible sans sacrifier la qualité technique.
+              Concrètement, chaque site Nemasus est un projet indépendant : son propre code, son
+              propre dépôt GitHub, son propre déploiement sur le réseau de Cloudflare. L’espace
+              client, lui, est commun, et chaque entreprise y est strictement isolée des autres.
             </p>
           </div>
         </Container>
@@ -96,7 +98,7 @@ export default function AboutPage() {
             <h2 className="text-base font-medium">L’éditeur</h2>
             <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
               Nemasus est édité par {company}. Les informations légales complètes — forme juridique,
-              siège, immatriculation, directeur de la publication et hébergeur — figurent dans les{' '}
+              siège, immatriculation, direction de la publication et hébergeur — figurent dans les{' '}
               <a href="/mentions-legales" className="underline underline-offset-4">
                 mentions légales
               </a>

@@ -43,11 +43,12 @@ const HEALTH_VIEW: Record<string, { label: string; tone: StatusTone }> = {
 };
 
 const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
-  stripe: 'Paiements Stripe (clé secrète et secret de webhook)',
-  stripe_connect: 'Stripe Connect (encaissement sur les sites clients)',
+  stripe: 'Stripe (non utilisé pour les commandes : paiement par virement)',
+  stripe_connect: 'Stripe Connect (encaissement sur les boutiques des sites clients)',
+  bank_transfer: 'Coordonnées bancaires des modalités de virement (BANK_TRANSFER_*)',
   cloudflare_domains: 'Rattachement automatique des domaines (API Cloudflare)',
   turnstile: 'Vérification anti-robot Turnstile',
-  email: 'Envoi d’e-mails transactionnels',
+  email: 'Envoi d’e-mails transactionnels (RESEND_API_KEY)',
   github_app: 'Application GitHub (publication dans le dépôt de chaque site)',
   cloudflare_sites: 'API Cloudflare des sites (suivi réel des déploiements)',
   cron: 'Tâches de fond planifiées (CRON_SECRET)',
@@ -302,23 +303,24 @@ select vault.create_secret('<valeur de CRON_SECRET>', 'nemasus_cron_secret');`}
 
         <section aria-labelledby="webhooks" className="space-y-3">
           <h2 id="webhooks" className="text-base font-medium">
-            Webhooks Stripe
+            Webhooks entrants
           </h2>
           <Panel level={failedWebhooks > 0 ? 2 : 1} padding="lg">
             {recentWebhooks.length === 0 ? (
               <p className="text-sm text-[var(--foreground-muted)]">
-                Aucun événement reçu pour le moment. C’est normal avant la première vente.
+                Aucun événement reçu pour le moment (GitHub, Cloudflare, Stripe Connect). C’est
+                normal avant la première livraison.
               </p>
             ) : (
               <p className="text-sm text-[var(--foreground-muted)]">
                 {failedWebhooks === 0
                   ? `Les ${recentWebhooks.length} derniers événements ont été traités sans erreur.`
-                  : `${failedWebhooks} événement${failedWebhooks > 1 ? 's' : ''} en échec sur les ${recentWebhooks.length} derniers. Un paiement peut ne pas avoir été appliqué.`}
+                  : `${failedWebhooks} événement${failedWebhooks > 1 ? 's' : ''} en échec sur les ${recentWebhooks.length} derniers : un déploiement ou un encaissement peut ne pas avoir été pris en compte.`}
               </p>
             )}
             <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
-              La vérité d’un paiement vient de ces événements signés, jamais d’un retour de
-              navigateur. Un webhook en échec doit être rejoué depuis le tableau de bord Stripe.
+              Ces événements sont signés et vérifiés avant d’être lus. Un événement en échec est
+              rejoué par la tâche de fond, ou depuis le tableau de bord du prestataire.
             </p>
           </Panel>
         </section>

@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { Container, Wordmark } from '@nemasus/ui';
 
 /**
- * Enveloppe du parcours d achat.
+ * Enveloppe du parcours de commande.
  *
  * Aucune navigation marketing : une personne en train de commander ne doit pas
- * etre distraite par dix liens sortants. Seuls le retour a l accueil et les
- * mentions indispensables restent accessibles.
+ * etre distraite par dix liens sortants. Seuls le retour a l accueil, l aide
+ * et les mentions indispensables restent accessibles.
  */
 export default function OrderLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,10 +16,10 @@ export default function OrderLayout({ children }: { children: React.ReactNode })
           <Wordmark size={24} />
         </Link>
         <Link
-          href="/tarifs"
+          href="/comment-ca-marche"
           className="nav-link text-[13.5px] tracking-[0.01em] text-[var(--foreground-muted)] hover:text-[var(--ink)]"
         >
-          Revoir les offres
+          Comment ça marche
         </Link>
       </header>
 
@@ -30,12 +30,15 @@ export default function OrderLayout({ children }: { children: React.ReactNode })
       <footer className="py-8 text-[12.5px] tracking-[0.01em] text-[var(--muted)]">
         <Container size="default">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span>Paiement sécurisé — aucune donnée de carte ne transite par Nemasus.</span>
+            <span>Paiement par virement bancaire, après réception des modalités.</span>
             <Link href="/cgv" className="hover:text-[var(--ink)]">
               Conditions générales de vente
             </Link>
-            <Link href="/remboursements" className="hover:text-[var(--ink)]">
-              Garantie de remboursement
+            <Link href="/confidentialite" className="hover:text-[var(--ink)]">
+              Confidentialité
+            </Link>
+            <Link href="/contact" className="hover:text-[var(--ink)]">
+              Nous écrire
             </Link>
           </div>
         </Container>

@@ -1,5 +1,8 @@
-/** Espaces qui exigent une session : l'espace client et l'administration. */
-const PROTECTED = /^\/(app|admin)(\/|$)/;
+/**
+ * Espaces qui exigent une session : l'espace client, l'administration, et le
+ * choix du premier mot de passe qui suit l'accès par code.
+ */
+const PROTECTED = /^\/(app|admin|acces\/mot-de-passe)(\/|$)/;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED.test(pathname);

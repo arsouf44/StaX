@@ -93,7 +93,7 @@ export const RESOURCE_LINKS: NavLink[] = [
   {
     label: 'Réalisations',
     href: '/realisations',
-    description: 'Des exemples concrets, offre par offre.',
+    description: 'Des exemples concrets, métier par métier.',
   },
 ];
 
@@ -103,11 +103,11 @@ export const RESOURCE_LINKS: NavLink[] = [
  * pied de page et le panneau mobile.
  */
 export const PRIMARY_NAV: NavLink[] = [
-  { label: 'Offres', href: '/tarifs' },
-  { label: 'Méthode', href: '/comment-ca-marche' },
+  { label: 'Comment ça marche', href: '/comment-ca-marche' },
   { label: 'Fonctionnalités', href: '/fonctionnalites' },
   { label: 'Réalisations', href: '/realisations' },
   { label: 'Sur mesure', href: '/sur-mesure' },
+  { label: 'Questions', href: '/faq' },
 ];
 
 export const LEGAL_LINKS: NavLink[] = [
@@ -117,7 +117,6 @@ export const LEGAL_LINKS: NavLink[] = [
   { label: 'Accord de traitement des données', href: '/accord-de-traitement' },
   { label: 'Politique de confidentialité', href: '/confidentialite' },
   { label: 'Cookies', href: '/cookies' },
-  { label: 'Remboursements', href: '/remboursements' },
   { label: 'Données personnelles', href: '/donnees-personnelles' },
   { label: 'Sous-traitants', href: '/sous-traitants' },
   { label: 'Signaler un contenu', href: '/signaler-un-contenu' },
@@ -137,10 +136,9 @@ export const SITEMAP_ROUTES: Array<{
     priority: 0.7,
     changeFrequency: 'monthly' as const,
   })),
-  { path: '/tarifs', priority: 0.9, changeFrequency: 'monthly' },
   { path: '/sur-mesure', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/realisations', priority: 0.7, changeFrequency: 'weekly' },
-  { path: '/comment-ca-marche', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/comment-ca-marche', priority: 0.9, changeFrequency: 'monthly' },
   { path: '/securite', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/infrastructure', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/a-propos', priority: 0.5, changeFrequency: 'yearly' },

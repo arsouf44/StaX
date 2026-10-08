@@ -45,13 +45,13 @@ const PUBLIC_CSP = [
   // desactiverait 'unsafe-inline' et bloquerait tous les scripts d'amorcage de
   // Next sur les pages prerendues — qui, eux, n'ont pas d'empreinte stable.
   // Le script de theme est couvert par 'unsafe-inline' comme les autres.
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   ["img-src 'self' data: blob: https:", STORAGE_ORIGIN].filter(Boolean).join(' '),
   "media-src 'self' https:",
-  "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com",
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com",
+  "connect-src 'self' https://challenges.cloudflare.com",
+  "frame-src 'self' https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'self'",
@@ -135,7 +135,7 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value:
-              'accelerometer=(), camera=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), payment=(self "https://js.stripe.com"), usb=(), interest-cohort=()',
+              'accelerometer=(), camera=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()',
           },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         ],
@@ -171,15 +171,30 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: '/login', destination: '/connexion', permanent: true },
-      { source: '/signup', destination: '/inscription', permanent: true },
-      { source: '/pricing', destination: '/tarifs', permanent: true },
+      { source: '/signup', destination: '/acces', permanent: true },
       { source: '/dashboard', destination: '/app', permanent: true },
       { source: '/cgu-cgv', destination: '/cgv', permanent: true },
-      // Les pages par metier n existent plus : le site presente les offres,
-      // avec des exemples, plutot qu une liste de metiers. Les anciens liens
-      // menent aux offres.
-      { source: '/metiers', destination: '/tarifs', permanent: true },
-      { source: '/metiers/:path*', destination: '/tarifs', permanent: true },
+      // Plus de grille tarifaire : chaque site est concu sur mesure, le montant
+      // est convenu avec le client et regle par virement. Les anciennes pages
+      // d offres menent a l explication du parcours.
+      { source: '/tarifs', destination: '/comment-ca-marche', permanent: true },
+      { source: '/pricing', destination: '/comment-ca-marche', permanent: true },
+      { source: '/offres', destination: '/comment-ca-marche', permanent: true },
+      { source: '/metiers', destination: '/comment-ca-marche', permanent: true },
+      { source: '/metiers/:path*', destination: '/comment-ca-marche', permanent: true },
+      { source: '/remboursements', destination: '/cgv', permanent: true },
+      { source: '/connexion-client', destination: '/acces', permanent: true },
+      // Plus d'inscription libre ni de « récupération » par carte : le compte
+      // s'ouvre avec le code d'accès (la chaîne de requête, `?code=`, suit).
+      { source: '/inscription', destination: '/acces', permanent: true },
+      { source: '/activation', destination: '/acces', permanent: true },
+      { source: '/recuperer', destination: '/acces', permanent: true },
+      { source: '/facture', destination: '/acces', permanent: true },
+      { source: '/app/abonnement', destination: '/app/facturation', permanent: true },
+      { source: '/app/abonnement/:path*', destination: '/app/facturation', permanent: true },
+      { source: '/app/commande/:path*', destination: '/app/facturation', permanent: true },
+      { source: '/app/proposition', destination: '/app', permanent: true },
+      { source: '/app/proposition/:path*', destination: '/app', permanent: true },
     ];
   },
 };

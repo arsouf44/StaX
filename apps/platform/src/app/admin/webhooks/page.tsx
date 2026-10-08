@@ -169,7 +169,7 @@ export default async function AdminWebhooksPage({
         <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
           Le rejeu se déclenche depuis le tableau de bord de notre prestataire bancaire, qui est la
           source de vérité. Rejouer est <strong>sans danger</strong> : un événement déjà appliqué ne
-          crée ni paiement, ni site, ni abonnement en double.
+          crée ni déploiement, ni encaissement, ni notification en double.
         </p>
       </Panel>
 

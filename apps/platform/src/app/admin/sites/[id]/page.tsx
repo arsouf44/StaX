@@ -361,15 +361,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             <div className="min-w-0">
               <h2 className="text-sm font-medium">Vente par téléphone</h2>
               <p className="mt-2 max-w-2xl text-sm text-[var(--foreground-muted)]">
-                Site préparé pour un prospect ? Envoyez-lui une proposition : il reçoit le lien et
-                un code, crée son compte, paie, et le site lui est livré automatiquement.
+                Site préparé pour un prospect ? Saisissez sa commande, envoyez-lui les modalités de
+                virement, puis, à réception, confirmez le paiement en choisissant ce site : son code
+                d’accès lui est envoyé et l’espace lui est rattaché.
               </p>
             </div>
             <Link
-              href={`/admin/propositions?site=${site.id}`}
+              href="/admin/commandes/nouvelle"
               className="inline-flex h-10 items-center rounded-[var(--radius-md)] border border-[var(--border-strong)] px-4 text-sm font-medium hover:bg-[var(--surface-hover)]"
             >
-              Proposer ce site à un prospect
+              Saisir une commande
             </Link>
           </div>
         </Panel>

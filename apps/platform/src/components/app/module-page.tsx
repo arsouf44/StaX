@@ -14,7 +14,7 @@ import { PageHeader } from './page-header';
  *
  * Trois verifications, toutes cote serveur :
  *  - le site a-t-il ce module ? sinon la page n'existe pas (404) ;
- *  - l'offre inclut-elle la fonctionnalite ? sinon on explique, sans mentir ;
+ *  - le site comporte-t-il la fonctionnalite ? sinon on explique, sans mentir ;
  *  - la personne a-t-elle la capacite de consultation ? sinon la RLS ne
  *    renverrait de toute facon aucune ligne, et l'ecran le dit clairement.
  *
@@ -79,23 +79,23 @@ export async function ModulePage({
               </span>
               <div className="min-w-0">
                 <h2 className="text-sm font-medium">
-                  Cette rubrique n’est pas incluse dans votre offre
+                  Cette rubrique n’est pas encore activée pour votre site
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
                   {definition?.description ??
-                    'Cette fonctionnalité fait partie d’une offre supérieure.'}{' '}
-                  Nous pouvons l’activer sur votre site : elle est facturée dans le cadre d’une
-                  évolution de votre offre, sans refaire votre site.
+                    'Cette fonctionnalité n’a pas été prévue lors de la conception de votre site.'}{' '}
+                  Nous pouvons l’activer sans refaire votre site : écrivez-nous, nous en convenons
+                  avec vous avant toute intervention.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <ButtonLink href="/app/support" variant="secondary">
                     Demander l’activation
                   </ButtonLink>
                   <Link
-                    href="/tarifs"
+                    href="/fonctionnalites"
                     className="self-center text-sm text-[var(--accent)] underline underline-offset-4"
                   >
-                    Comparer les offres
+                    Voir les fonctionnalités
                   </Link>
                 </div>
               </div>

@@ -55,7 +55,8 @@ async function requireDomainManager(): Promise<Gate> {
       ok: false,
       state: {
         status: 'error',
-        message: 'Le nom de domaine personnalisé n’est pas inclus dans votre offre actuelle.',
+        message:
+          'Le nom de domaine personnalisé n’est pas encore activé pour votre site : écrivez-nous.',
       },
     };
   }

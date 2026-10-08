@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ROLE_LABELS, statusLabel, type StatusLabel } from '@nemasus/business';
 import { unwrapList, unwrapMaybe } from '@nemasus/database';
-import { formatMaintenance, formatMoney, ORDER_STATUS_LABELS } from '@nemasus/payments';
+import { formatMoney } from '@nemasus/payments';
 import {
   Alert,
   Badge,
@@ -15,13 +15,8 @@ import {
 } from '@nemasus/ui';
 import { requireAdminRole } from '~/lib/admin';
 import { auditActionLabel } from '~/lib/audit-labels';
-import {
-  INVOICE_STATUSES,
-  PROJECT_STATUSES,
-  SITE_STATUSES,
-  SUBSCRIPTION_STATUSES,
-  TICKET_STATUSES,
-} from '~/lib/admin-views';
+import { PROJECT_STATUSES, SITE_STATUSES, TICKET_STATUSES } from '~/lib/admin-views';
+import { SITE_ORDER_STATUS_LABELS, type SiteOrderStatus } from '~/lib/site-orders';
 
 export const metadata: Metadata = { title: 'Organisation' };
 
@@ -29,7 +24,7 @@ export const metadata: Metadata = { title: 'Organisation' };
  * Fiche d'une organisation cliente.
  *
  * Tout ce qu'il faut avoir sous les yeux quand un client appelle : qui il est,
- * qui a accès à son espace, ses sites, ce qu'il a commandé et ce qu'il paie,
+ * qui a accès à son espace, ses sites, ce qu'il a commandé et réglé,
  * ses demandes en cours et les dernières actions tracées.
  *
  * Lecture avec le JETON de la personne : les policies `app.is_platform_staff()`
@@ -45,12 +40,10 @@ const DATE_TIME = new Intl.DateTimeFormat('fr-FR', {
 });
 
 const ORDER_TONES: Record<string, StatusTone> = {
-  draft: 'neutral',
-  checkout_pending: 'info',
+  received: 'warning',
+  payment_requested: 'info',
   paid: 'success',
   cancelled: 'neutral',
-  refunded: 'warning',
-  partially_refunded: 'warning',
 };
 
 function Pill({ table, value }: { table: Record<string, StatusLabel>; value: string }) {
@@ -138,58 +131,46 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   // Inexistante ou hors de portée : même réponse, la RLS a déjà filtré.
   if (!organization) notFound();
 
-  const [members, sites, orders, subscriptions, invoices, projects, tickets, journal] =
-    await Promise.all([
-      db
-        .from('organization_members')
-        .select(
-          'user_id, role, created_at, profiles!organization_members_user_id_fkey ( email, first_name, last_name, platform_role, last_seen_at, disabled_at )',
-        )
-        .eq('organization_id', id)
-        .order('created_at'),
-      db
-        .from('sites')
-        .select('id, name, status, is_demo, delivered_at, last_published_at, created_at')
-        .eq('organization_id', id)
-        .order('created_at', { ascending: false }),
-      db
-        .from('orders')
-        .select('id, reference, status, plan_slug, total_cents, currency, created_at, paid_at')
-        .eq('organization_id', id)
-        .order('created_at', { ascending: false })
-        .limit(10),
-      db
-        .from('subscriptions')
-        .select(
-          'id, status, maintenance_price_cents, billing_interval, current_period_end, cancel_at_period_end, sites ( name )',
-        )
-        .eq('organization_id', id)
-        .order('created_at', { ascending: false }),
-      db
-        .from('sales_invoices')
-        .select('id, number, status, total_cents, issued_at, paid_at')
-        .eq('organization_id', id)
-        .order('issued_at', { ascending: false })
-        .limit(10),
-      db
-        .from('projects')
-        .select('id, reference, title, status, due_at, site_id')
-        .eq('organization_id', id)
-        .order('created_at', { ascending: false })
-        .limit(10),
-      db
-        .from('support_tickets')
-        .select('id, reference, subject, status, created_at')
-        .eq('organization_id', id)
-        .order('created_at', { ascending: false })
-        .limit(10),
-      db
-        .from('audit_logs')
-        .select('id, action, actor_email, actor_type, impersonated_by, created_at')
-        .eq('organization_id', id)
-        .order('created_at', { ascending: false })
-        .limit(15),
-    ]);
+  const [members, sites, orders, projects, tickets, journal] = await Promise.all([
+    db
+      .from('organization_members')
+      .select(
+        'user_id, role, created_at, profiles!organization_members_user_id_fkey ( email, first_name, last_name, platform_role, last_seen_at, disabled_at )',
+      )
+      .eq('organization_id', id)
+      .order('created_at'),
+    db
+      .from('sites')
+      .select('id, name, status, is_demo, delivered_at, last_published_at, created_at')
+      .eq('organization_id', id)
+      .order('created_at', { ascending: false }),
+    db
+      .from('site_orders')
+      .select(
+        'id, reference, status, paid_amount_cents, amount_cents, currency, created_at, paid_at',
+      )
+      .eq('organization_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    db
+      .from('projects')
+      .select('id, reference, title, status, due_at, site_id')
+      .eq('organization_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    db
+      .from('support_tickets')
+      .select('id, reference, subject, status, created_at')
+      .eq('organization_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    db
+      .from('audit_logs')
+      .select('id, action, actor_email, actor_type, impersonated_by, created_at')
+      .eq('organization_id', id)
+      .order('created_at', { ascending: false })
+      .limit(15),
+  ]);
 
   const memberRows = unwrapList<{
     user_id: string;
@@ -216,30 +197,13 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const orderRows = unwrapList<{
     id: string;
     reference: string;
-    status: string;
-    plan_slug: string | null;
-    total_cents: number;
+    status: SiteOrderStatus;
+    paid_amount_cents: number | null;
+    amount_cents: number | null;
     currency: string;
     created_at: string;
     paid_at: string | null;
   }>(orders as never);
-  const subscriptionRows = unwrapList<{
-    id: string;
-    status: string;
-    maintenance_price_cents: number;
-    billing_interval: 'month' | 'year';
-    current_period_end: string | null;
-    cancel_at_period_end: boolean;
-    sites: { name: string } | null;
-  }>(subscriptions as never);
-  const invoiceRows = unwrapList<{
-    id: string;
-    number: string;
-    status: string;
-    total_cents: number;
-    issued_at: string | null;
-    paid_at: string | null;
-  }>(invoices as never);
   const projectRows = unwrapList<{
     id: string;
     reference: string;
@@ -266,10 +230,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   const paidTotal = orderRows
     .filter((order) => order.status === 'paid')
-    .reduce((sum, order) => sum + order.total_cents, 0);
-  const activeSubscription = subscriptionRows.find((row) =>
-    ['active', 'trialing', 'past_due', 'cancel_at_period_end'].includes(row.status),
-  );
+    .reduce((sum, order) => sum + (order.paid_amount_cents ?? 0), 0);
   const openTickets = ticketRows.filter((row) => !['resolved', 'closed'].includes(row.status));
   const address = [
     organization.address_line1,
@@ -315,26 +276,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Sites" value={String(siteRows.length)} />
         <Stat
-          label="Encaissé (commandes)"
+          label="Virements reçus"
           value={formatMoney(paidTotal, 'EUR', { hideDecimalsWhenRound: true })}
         />
-        <Stat
-          label="Maintenance"
-          value={
-            activeSubscription
-              ? formatMaintenance(
-                  activeSubscription.maintenance_price_cents,
-                  'EUR',
-                  activeSubscription.billing_interval,
-                )
-              : '—'
-          }
-          hint={
-            activeSubscription
-              ? statusLabel(SUBSCRIPTION_STATUSES, activeSubscription.status).label
-              : 'Aucun contrat en cours'
-          }
-        />
+        <Stat label="Commandes" value={String(orderRows.length)} />
         <Stat label="Demandes ouvertes" value={String(openTickets.length)} />
       </div>
 
@@ -505,65 +450,27 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           {orderRows.map((order) => (
             <Row key={order.id}>
               <span className="min-w-0">
-                <span className="block font-mono text-xs">{order.reference}</span>
+                <Link
+                  href={`/admin/commandes/${order.id}`}
+                  className="block font-mono text-xs underline-offset-4 hover:underline"
+                >
+                  {order.reference}
+                </Link>
                 <span className="block text-xs text-[var(--muted)]">
                   {DATE.format(new Date(order.paid_at ?? order.created_at))}
-                  {order.plan_slug ? ` · ${order.plan_slug}` : ''}
                 </span>
               </span>
               <span className="flex flex-wrap items-center gap-2 text-xs">
                 <StatusPill tone={ORDER_TONES[order.status] ?? 'neutral'}>
-                  {ORDER_STATUS_LABELS[order.status as keyof typeof ORDER_STATUS_LABELS] ??
-                    order.status}
+                  {SITE_ORDER_STATUS_LABELS[order.status] ?? order.status}
                 </StatusPill>
-                <span className="font-medium tabular-nums">
-                  {formatMoney(order.total_cents, 'EUR', {
-                    hideDecimalsWhenRound: true,
-                  })}
-                </span>
-              </span>
-            </Row>
-          ))}
-        </Section>
-
-        <Section
-          title="Maintenance et factures"
-          count={subscriptionRows.length + invoiceRows.length}
-          empty="Aucun contrat de maintenance ni facture."
-        >
-          {subscriptionRows.map((subscription) => (
-            <Row key={subscription.id}>
-              <span className="min-w-0">
-                <span className="block font-medium">
-                  Maintenance{subscription.sites ? ` · ${subscription.sites.name}` : ''}
-                </span>
-                <span className="block text-xs text-[var(--muted)]">
-                  {formatMaintenance(
-                    subscription.maintenance_price_cents,
-                    'EUR',
-                    subscription.billing_interval,
-                  )}
-                  {subscription.current_period_end
-                    ? ` · ${subscription.cancel_at_period_end ? 'fin' : 'échéance'} le ${DATE.format(new Date(subscription.current_period_end))}`
-                    : ''}
-                </span>
-              </span>
-              <Pill table={SUBSCRIPTION_STATUSES} value={subscription.status} />
-            </Row>
-          ))}
-          {invoiceRows.map((invoice) => (
-            <Row key={invoice.id}>
-              <span className="min-w-0">
-                <span className="block font-mono text-xs">Facture {invoice.number}</span>
-                <span className="block text-xs text-[var(--muted)]">
-                  {invoice.issued_at ? `émise le ${DATE.format(new Date(invoice.issued_at))}` : ''}
-                </span>
-              </span>
-              <span className="flex flex-wrap items-center gap-2 text-xs">
-                <Pill table={INVOICE_STATUSES} value={invoice.status} />
-                <span className="font-medium tabular-nums">
-                  {formatMoney(invoice.total_cents, 'EUR', { hideDecimalsWhenRound: true })}
-                </span>
+                {(order.paid_amount_cents ?? order.amount_cents) ? (
+                  <span className="font-medium tabular-nums">
+                    {formatMoney(order.paid_amount_cents ?? order.amount_cents ?? 0, 'EUR', {
+                      hideDecimalsWhenRound: true,
+                    })}
+                  </span>
+                ) : null}
               </span>
             </Row>
           ))}

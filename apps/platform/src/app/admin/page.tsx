@@ -6,6 +6,7 @@ import { Alert, Card, Icon, Panel, Stat } from '@nemasus/ui';
 import { getAdminContext } from '~/lib/admin';
 import { loadWorkQueue } from '~/lib/staff-board';
 import { agree, countOf } from '~/lib/plural';
+import { isoDaysAgo } from '~/lib/site-orders';
 
 export const metadata: Metadata = { title: 'Vue d’ensemble' };
 
@@ -28,6 +29,20 @@ export default async function AdminHomePage() {
   }
   // Ce qui fait qu'un client attend : lu par une fonction reservee a l'equipe.
   const work = await loadWorkQueue(db);
+
+  // Virements confirmes et commandes recues sur 30 jours (lecture sous RLS :
+  // la table est reservee a l'equipe).
+  const since = isoDaysAgo(30);
+  const [paidRows, receivedCount] = await Promise.all([
+    db.from('site_orders').select('paid_amount_cents').eq('status', 'paid').gte('paid_at', since),
+    db.from('site_orders').select('id', { count: 'exact', head: true }).gte('created_at', since),
+  ]);
+  const paid = (paidRows.data ?? []) as Array<{ paid_amount_cents: number | null }>;
+  const transfers = {
+    count: paid.length,
+    amountCents: paid.reduce((sum, row) => sum + (row.paid_amount_cents ?? 0), 0),
+    received: receivedCount.count ?? 0,
+  };
 
   if (!overview) {
     return (
@@ -59,12 +74,28 @@ export default async function AdminHomePage() {
       tone: 'danger' as const,
     },
     {
-      href: '/admin/propositions',
-      label: 'livraison automatique en échec après paiement',
-      plural: 'livraisons automatiques en échec après paiement',
-      count: work?.deliveriesFailed ?? 0,
-      icon: 'zap',
+      href: '/admin/commandes?filtre=a_traiter',
+      label: 'commande reçue : modalités de paiement à envoyer',
+      plural: 'commandes reçues : modalités de paiement à envoyer',
+      count: work?.ordersReceived ?? 0,
+      icon: 'receipt',
       tone: 'danger' as const,
+    },
+    {
+      href: '/admin/commandes?filtre=virement_attendu',
+      label: 'virement attendu',
+      plural: 'virements attendus',
+      count: work?.ordersAwaitingPayment ?? 0,
+      icon: 'euro',
+      tone: 'accent' as const,
+    },
+    {
+      href: '/admin/commandes?filtre=payees',
+      label: 'code d’accès inutilisé proche de son expiration',
+      plural: 'codes d’accès inutilisés proches de leur expiration',
+      count: work?.codesUnused ?? 0,
+      icon: 'key-round',
+      tone: 'warning' as const,
     },
     {
       href: '/admin/production?filtre=retard',
@@ -72,14 +103,6 @@ export default async function AdminHomePage() {
       plural: 'projets en retard sur leur date de livraison',
       count: work?.lateProjects ?? 0,
       icon: 'clock',
-      tone: 'warning' as const,
-    },
-    {
-      href: '/admin/propositions',
-      label: 'proposition qui expire dans 3 jours',
-      plural: 'propositions qui expirent dans 3 jours',
-      count: work?.proposalsExpiring ?? 0,
-      icon: 'send',
       tone: 'warning' as const,
     },
     {
@@ -91,14 +114,6 @@ export default async function AdminHomePage() {
       tone: 'accent' as const,
     },
     {
-      href: '/admin/commandes?filtre=a_traiter',
-      label: 'commande à traiter',
-      plural: 'commandes à traiter',
-      count: overview.ordersToProcess,
-      icon: 'receipt',
-      tone: 'accent' as const,
-    },
-    {
       href: '/admin/sites?filtre=relecture',
       label: 'site en attente de relecture',
       plural: 'sites en attente de relecture',
@@ -107,17 +122,9 @@ export default async function AdminHomePage() {
       tone: 'accent' as const,
     },
     {
-      href: '/admin/remboursements',
-      label: 'demande de remboursement',
-      plural: 'demandes de remboursement',
-      count: overview.openRefundRequests,
-      icon: 'euro',
-      tone: 'warning' as const,
-    },
-    {
       href: '/admin/devis',
-      label: 'devis à établir',
-      plural: 'devis à établir',
+      label: 'demande sur mesure à étudier',
+      plural: 'demandes sur mesure à étudier',
       count: overview.openQuotes,
       icon: 'file-text',
       tone: 'accent' as const,
@@ -128,14 +135,6 @@ export default async function AdminHomePage() {
       plural: 'domaines en échec',
       count: overview.domainsFailed,
       icon: 'map-pin',
-      tone: 'danger' as const,
-    },
-    {
-      href: '/admin/abonnements?filtre=impaye',
-      label: 'paiement en échec',
-      plural: 'paiements en échec',
-      count: overview.failedPayments,
-      icon: 'zap',
       tone: 'danger' as const,
     },
     {
@@ -193,16 +192,13 @@ export default async function AdminHomePage() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat
-            label="Revenu récurrent annuel"
-            value={formatMoney(overview.arrCents, 'EUR', { hideDecimalsWhenRound: true })}
-            hint={`${countOf(overview.activeSubscriptions, 'abonnement actif', 'abonnements actifs')} · mensualités ramenées à l’année`}
+            label="Virements reçus sur 30 jours"
+            value={formatMoney(transfers.amountCents, 'EUR', { hideDecimalsWhenRound: true })}
+            hint={countOf(transfers.count, 'commande réglée', 'commandes réglées')}
           />
           <Stat
-            label="Encaissé sur 30 jours"
-            value={formatMoney(overview.revenueLast30dCents, 'EUR', {
-              hideDecimalsWhenRound: true,
-            })}
-            hint={countOf(overview.paidOrdersLast30d, 'commande payée', 'commandes payées')}
+            label="Commandes reçues sur 30 jours"
+            value={transfers.received.toLocaleString('fr-FR')}
           />
           <Stat label="Clients" value={overview.clients.toLocaleString('fr-FR')} />
           <Stat
@@ -213,31 +209,12 @@ export default async function AdminHomePage() {
         </div>
       </section>
 
-      {overview.atRiskSubscriptions > 0 ? (
-        <Alert tone="warning" live="status" title="Abonnements à risque">
-          {countOf(overview.atRiskSubscriptions, 'abonnement')}{' '}
-          {agree(
-            overview.atRiskSubscriptions,
-            'est en retard de paiement ou résilié',
-            'sont en retard de paiement ou résiliés',
-          )}{' '}
-          à échéance. Une relance humaine vaut mieux qu’une suspension automatique.{' '}
-          <Link href="/admin/abonnements?filtre=risque" className="underline underline-offset-4">
-            Les consulter
-          </Link>
-        </Alert>
-      ) : null}
-
       <Panel level={1} padding="lg">
         <h2 className="text-sm font-medium">Ce que ces chiffres ne disent pas</h2>
         <ul className="mt-3 space-y-1.5 text-sm text-[var(--foreground-muted)]">
           <li>
-            Le revenu récurrent est la somme des abonnements actifs au tarif de leur commande, pas
-            une projection.
-          </li>
-          <li>
-            L’encaissement sur 30 jours est net des remboursements déjà confirmés par notre
-            prestataire bancaire.
+            Les virements reçus sont ceux que l’équipe a confirmés sur une commande, au montant
+            inscrit lors de la confirmation.
           </li>
           <li>
             Aucune de ces valeurs n’est estimée ni extrapolée : ce sont des comptages, lus à

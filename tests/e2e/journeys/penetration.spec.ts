@@ -9,7 +9,6 @@ import {
   fetchPublicPage,
   resetRateLimits,
   serviceClient,
-  signedWebhook,
   uniqueSuffix,
   userClient,
   type CustomerSite,
@@ -118,29 +117,30 @@ test.beforeAll(async () => {
  * ========================================================================== */
 
 // Tables porteuses de données d'un client, avec la colonne qui les rattache.
-const SCOPED_TABLES: Array<{ table: string; column: 'organization_id' | 'site_id'; key: string }> =
-  [
-    { table: 'organizations', column: 'id', key: 'orgId' },
-    { table: 'sites', column: 'organization_id', key: 'orgId' },
-    { table: 'site_settings', column: 'site_id', key: 'siteId' },
-    { table: 'products', column: 'site_id', key: 'siteId' },
-    { table: 'orders', column: 'organization_id', key: 'orgId' },
-    { table: 'projects', column: 'organization_id', key: 'orgId' },
-    { table: 'project_messages', column: 'project_id', key: 'projectId' },
-    { table: 'support_tickets', column: 'organization_id', key: 'orgId' },
-    { table: 'support_messages', column: 'ticket_id', key: 'ticketId' },
-    { table: 'invoices', column: 'organization_id', key: 'orgId' },
-    { table: 'site_customers', column: 'site_id', key: 'siteId' },
-    { table: 'form_submissions', column: 'site_id', key: 'siteId' },
-    { table: 'media', column: 'organization_id', key: 'orgId' },
-    { table: 'organization_members', column: 'organization_id', key: 'orgId' },
-    { table: 'audit_logs', column: 'organization_id', key: 'orgId' },
-    { table: 'subscriptions', column: 'organization_id', key: 'orgId' },
-    { table: 'payments', column: 'organization_id', key: 'orgId' },
-    { table: 'site_domains', column: 'site_id', key: 'siteId' },
-    { table: 'site_repositories', column: 'site_id', key: 'siteId' },
-    { table: 'site_hosting', column: 'site_id', key: 'siteId' },
-  ];
+const SCOPED_TABLES: Array<{ table: string; column: string; key: string }> = [
+  { table: 'organizations', column: 'id', key: 'orgId' },
+  { table: 'sites', column: 'organization_id', key: 'orgId' },
+  { table: 'site_settings', column: 'site_id', key: 'siteId' },
+  { table: 'products', column: 'site_id', key: 'siteId' },
+  { table: 'orders', column: 'organization_id', key: 'orgId' },
+  { table: 'site_orders', column: 'organization_id', key: 'orgId' },
+  { table: 'activation_codes', column: 'organization_id', key: 'orgId' },
+  { table: 'projects', column: 'organization_id', key: 'orgId' },
+  { table: 'project_messages', column: 'project_id', key: 'projectId' },
+  { table: 'support_tickets', column: 'organization_id', key: 'orgId' },
+  { table: 'support_messages', column: 'ticket_id', key: 'ticketId' },
+  { table: 'invoices', column: 'organization_id', key: 'orgId' },
+  { table: 'site_customers', column: 'site_id', key: 'siteId' },
+  { table: 'form_submissions', column: 'site_id', key: 'siteId' },
+  { table: 'media', column: 'organization_id', key: 'orgId' },
+  { table: 'organization_members', column: 'organization_id', key: 'orgId' },
+  { table: 'audit_logs', column: 'organization_id', key: 'orgId' },
+  { table: 'subscriptions', column: 'organization_id', key: 'orgId' },
+  { table: 'payments', column: 'organization_id', key: 'orgId' },
+  { table: 'site_domains', column: 'site_id', key: 'siteId' },
+  { table: 'site_repositories', column: 'site_id', key: 'siteId' },
+  { table: 'site_hosting', column: 'site_id', key: 'siteId' },
+];
 
 test('un client ne lit aucune ligne d’un autre client, même en connaissant son identifiant', async () => {
   for (const { table, column, key } of SCOPED_TABLES) {
@@ -319,7 +319,17 @@ test('les fonctions réservées au serveur refusent un client', async () => {
 test('un visiteur anonyme (sans compte) ne lit aucune donnée client', async () => {
   // On frappe directement l'API REST Supabase avec la clé anonyme publique.
   const rest = anonRestClient();
-  for (const table of ['organizations', 'sites', 'products', 'orders', 'profiles', 'invoices']) {
+  for (const table of [
+    'organizations',
+    'sites',
+    'products',
+    'orders',
+    'site_orders',
+    'activation_codes',
+    'password_reset_tokens',
+    'profiles',
+    'invoices',
+  ]) {
     const res = await rest(`/${table}?select=id&limit=5`);
     // 200 avec liste vide (RLS) ou 401/403/404 — jamais des lignes.
     if (res.status === 200) {
@@ -420,26 +430,100 @@ test('la tâche de fond refuse toute requête sans le bon secret', async () => {
   }
 });
 
-test('le webhook Stripe rejette une signature invalide', async () => {
-  const forged = await fetch(`${PLATFORM_URL}/api/webhooks/stripe`, {
+test('l’ancien webhook de paiement par carte n’existe plus ; Connect vérifie sa signature', async () => {
+  const legacy = await fetch(`${PLATFORM_URL}/api/webhooks/stripe`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'stripe-signature': 't=1,v1=faux' },
     body: JSON.stringify({ id: 'evt_forge', type: 'checkout.session.completed' }),
     redirect: 'manual',
   });
-  expect([400, 401, 403]).toContain(forged.status);
+  expect([404, 405]).toContain(legacy.status);
 
-  // La preuve inverse : une signature VALIDE, elle, est acceptée (helper signé).
-  const signed = await signedWebhook({
-    id: `evt_ping_${uniqueSuffix()}`,
-    object: 'event',
-    type: 'ping',
-    api_version: '2025-01-27.acacia',
-    created: Math.floor(Date.now() / 1000),
-    livemode: false,
-    data: { object: {} },
+  const forged = await fetch(`${PLATFORM_URL}/api/webhooks/stripe-connect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'stripe-signature': 't=1,v1=faux' },
+    body: JSON.stringify({ id: 'evt_forge', type: 'payment_intent.succeeded' }),
+    redirect: 'manual',
   });
-  expect(signed.status).toBeLessThan(500);
+  expect([400, 401, 403, 503]).toContain(forged.status);
+});
+
+test('commande et code d’accès : l’attaquant ne voit, ne valide ni ne consomme rien', async () => {
+  // Les commandes ne sont lisibles que par l'équipe, ni par leur client.
+  const orders = await attackerDb.from('site_orders').select('id, reference, contact_email');
+  expect(orders.data ?? []).toHaveLength(0);
+
+  // La commande de la victime, vue par une fonction cliente : rien.
+  const order = await attackerDb.rpc('site_order_for_organization', { p_org: loot.orgId });
+  expect(order.data ?? null).toBeNull();
+
+  // Vérifier ou consommer un code : réservé au serveur.
+  const check = await attackerDb.rpc('check_access_code', { p_code_hash: 'a'.repeat(64) });
+  expect(check.error, 'check_access_code depuis un client').not.toBeNull();
+  const redeem = await attackerDb.rpc('redeem_activation_code', {
+    p_code_hash: 'a'.repeat(64),
+    p_user_id: attacker.organizationId,
+    p_email: attacker.email,
+  });
+  expect(redeem.error, 'redeem_activation_code depuis un client').not.toBeNull();
+
+  // Se déclarer payé, émettre un code ou désactiver celui d'un autre : refusé.
+  for (const [fn, args] of [
+    [
+      'confirm_site_order_payment',
+      {
+        p_order: loot.orderId,
+        p_amount_cents: 0,
+        p_code_hash: 'b'.repeat(64),
+        p_code_hint: 'BBBB',
+        p_valid_days: 30,
+        p_site: null,
+      },
+    ],
+    [
+      'issue_site_order_code',
+      { p_order: loot.orderId, p_code_hash: 'c'.repeat(64), p_code_hint: 'CCCC', p_valid_days: 30 },
+    ],
+    ['request_site_order_payment', { p_order: loot.orderId, p_amount_cents: 1, p_message: null }],
+    ['cancel_site_order', { p_order: loot.orderId, p_reason: 'pirate' }],
+  ] as const) {
+    const result = await attackerDb.rpc(fn, args);
+    expect(result.error, `${fn} par un client`).not.toBeNull();
+  }
+
+  // Jetons de mot de passe : ni lecture, ni création depuis un client.
+  const tokens = await attackerDb.from('password_reset_tokens').select('id');
+  expect(tokens.error !== null || (tokens.data ?? []).length === 0).toBe(true);
+  const reset = await attackerDb.rpc('create_password_reset', {
+    p_email: victim.email,
+    p_token_hash: 'd'.repeat(64),
+    p_ip_hash: null,
+    p_valid_minutes: 60,
+  });
+  expect(reset.error, 'create_password_reset depuis un client').not.toBeNull();
+});
+
+test('la page d’accès ne consomme rien sur un code inventé et finit par bloquer', async ({
+  browser,
+}) => {
+  await resetRateLimits();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const messages: string[] = [];
+  for (let attempt = 0; attempt < 9; attempt += 1) {
+    await page.goto('/acces');
+    await page.getByLabel('Code d’accès').fill(`ZZZZ-ZZZZ-ZZ${'ABCDEFGHJ'[attempt]}Q`);
+    await page.getByRole('button', { name: 'Accéder à mon site' }).click();
+    const alert = page.getByRole('alert').filter({ hasText: /./ }).first();
+    await expect(alert).toBeVisible();
+    messages.push((await alert.textContent()) ?? '');
+  }
+  // Huit essais par quart d'heure : le neuvième est refusé sans être vérifié.
+  expect(messages.slice(0, 8).every((text) => /pas reconnu/.test(text))).toBe(true);
+  expect(messages[8]).toMatch(/trop de tentatives|réessayez/i);
+  expect(page.url()).toContain('/acces');
+  await context.close();
+  await resetRateLimits();
 });
 
 /** Connexion réelle dans un navigateur, jusqu'à l'espace de la personne. */
@@ -460,7 +544,7 @@ async function loginBrowser(browser: Browser, email: string, password: string) {
     .getByRole('button', { name: /se connecter/i })
     .first()
     .click();
-  await page.waitForURL(/\/(app|admin|bienvenue|recuperer)/);
+  await page.waitForURL(/\/(app|admin|bienvenue)/);
   return page;
 }
 

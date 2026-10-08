@@ -4,6 +4,7 @@ import { Panel } from '@nemasus/ui';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
 import { ContentReportForm } from './report-form';
+import { metaDescription } from '~/lib/seo';
 
 /**
  * Mecanisme de notification des contenus illicites (DSA, article 16).
@@ -15,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const document = getLegalDocument('signaler-un-contenu');
   return {
     title: document.title,
-    description: document.description,
+    description: metaDescription(document.description),
     alternates: { canonical: '/signaler-un-contenu' },
     robots: { index: true, follow: true },
   };

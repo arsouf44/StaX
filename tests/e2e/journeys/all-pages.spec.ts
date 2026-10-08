@@ -25,7 +25,6 @@ const ERROR_TEXT = 'Cette page n’a pas pu s’afficher';
 
 const PUBLIC_PAGES = [
   '/',
-  '/tarifs',
   '/fonctionnalites',
   '/comment-ca-marche',
   '/realisations',
@@ -44,42 +43,39 @@ const PUBLIC_PAGES = [
   '/mentions-legales',
   '/cookies',
   '/accord-de-traitement',
-  '/remboursements',
   '/sous-traitants',
   '/donnees-personnelles',
   '/accessibilite',
   '/signaler-un-contenu',
   '/connexion',
-  '/inscription',
   '/mot-de-passe-oublie',
   '/mot-de-passe-oublie?lien=expire',
-  '/recuperer',
-  '/recuperer?code=AAAA-BBBB-CCCC&email=prospect%40exemple.test',
+  '/acces',
+  '/acces?code=AAAA-BBBB-CCCC',
+  '/nouveau-mot-de-passe?jeton=inconnu',
+  '/commander/merci?reference=CMD-2026-00001',
   '/invitation?jeton=inconnu',
 ];
 
 const ADMIN_PAGES = [
   '/admin',
-  '/admin/abonnements',
   '/admin/activite',
   '/admin/assistance',
-  '/admin/catalogue',
   '/admin/commandes',
+  '/admin/commandes?filtre=toutes',
+  '/admin/commandes?filtre=virement_attendu',
+  '/admin/commandes/nouvelle',
   '/admin/confidentialite',
-  '/admin/coupons',
   '/admin/devis',
   '/admin/domaines',
-  '/admin/factures',
   '/admin/feature-flags',
+  '/admin/integrations',
   '/admin/messages',
   '/admin/metiers',
   '/admin/organisations',
   '/admin/production',
   '/admin/production?filtre=retard',
   '/admin/projets',
-  '/admin/propositions',
-  '/admin/propositions?filtre=toutes',
-  '/admin/remboursements',
   '/admin/sante',
   '/admin/securite',
   '/admin/securite/violations',
@@ -94,7 +90,6 @@ const ADMIN_PAGES = [
 
 const CLIENT_PAGES = [
   '/app',
-  '/app/abonnement',
   '/app/activite',
   '/app/actualites',
   '/app/avis',
@@ -139,8 +134,6 @@ const CLIENT_PAGES = [
   '/app/zones',
   '/commander',
   '/bienvenue',
-  '/facture',
-  '/activation',
   '/mfa/configuration',
 ];
 
@@ -202,7 +195,6 @@ test.beforeAll(async () => {
   delivered = await createCustomerWithPaidOrder({
     businessName: `Restaurant confié ${suffix}`,
     subdomain: `confie-${suffix}`,
-    planSlug: 'ultra-premium',
     sectorSlug: 'restauration',
     businessType: 'restaurant',
   });
@@ -229,6 +221,9 @@ test('administration, avec le rôle le plus large', async ({ browser }) => {
     `/admin/sites/${delivered.siteId}/livraison`,
     `/admin/sites/${underConstruction.siteId}`,
     `/admin/sites/${underConstruction.siteId}/livraison`,
+    `/admin/commandes/${delivered.orderId}`,
+    `/admin/commandes/${underConstruction.orderId}`,
+    `/admin/organisations/${delivered.organizationId}`,
   ]);
   expect(failures).toEqual([]);
   await page.context().close();
@@ -236,10 +231,7 @@ test('administration, avec le rôle le plus large', async ({ browser }) => {
 
 test('espace client, site confié', async ({ browser }) => {
   const page = await login(browser, delivered.email, delivered.password);
-  const failures = await crawl(page, [
-    ...CLIENT_PAGES,
-    `/app/commande/${delivered.orderId}/confirmation`,
-  ]);
+  const failures = await crawl(page, [...CLIENT_PAGES, '/acces/mot-de-passe']);
   expect(failures).toEqual([]);
   await page.context().close();
 });

@@ -6,7 +6,7 @@ import { Alert, Button, Field, Input, cn } from '@nemasus/ui';
 import { IDLE_STATE as STEP_IDLE } from '~/lib/form-state';
 import { saveDomainAction, type StepState } from '../actions';
 
-type Handling = 'customer_owned' | 'stax_purchase' | 'subdomain_only';
+type Handling = 'customer_owned' | 'purchase' | 'later';
 
 const CHOICES: Array<{ value: Handling; title: string; description: string }> = [
   {
@@ -16,16 +16,16 @@ const CHOICES: Array<{ value: Handling; title: string; description: string }> = 
       'Nous le connectons à votre nouveau site sans le transférer. Il reste à votre nom, chez votre bureau d’enregistrement actuel.',
   },
   {
-    value: 'stax_purchase',
+    value: 'purchase',
     title: 'Achetez-le pour moi',
     description:
-      'Nous vérifions sa disponibilité, l’achetons à votre nom et le connectons. Son coût est inclus dans votre offre la première année.',
+      'Nous vérifions sa disponibilité, l’enregistrons à votre nom et le connectons. Nous en convenons avec vous avant tout achat.',
   },
   {
-    value: 'subdomain_only',
+    value: 'later',
     title: 'Je choisirai plus tard',
     description:
-      'Votre site est d’abord mis en ligne sur l’adresse technique de son hébergement. Vous pourrez relier votre propre nom de domaine à tout moment, sans frais supplémentaires : nous faisons les réglages.',
+      'Votre site est d’abord mis en ligne sur l’adresse technique de son hébergement. Vous pourrez relier votre propre nom de domaine ensuite : nous faisons les réglages.',
   },
 ];
 
@@ -40,7 +40,11 @@ function SubmitButton() {
 
 export function DomainForm({ draft }: { draft: { handling: string | null; hostname: string } }) {
   const [handling, setHandling] = useState<Handling>(
-    (draft.handling as Handling) ?? 'customer_owned',
+    draft.handling === 'customer_owned' ||
+      draft.handling === 'purchase' ||
+      draft.handling === 'later'
+      ? draft.handling
+      : 'customer_owned',
   );
   const [state, action] = useActionState<StepState, FormData>(saveDomainAction, STEP_IDLE);
 
@@ -84,7 +88,7 @@ export function DomainForm({ draft }: { draft: { handling: string | null; hostna
         </div>
       </fieldset>
 
-      {handling === 'subdomain_only' ? (
+      {handling === 'later' ? (
         <p className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
           À la mise en ligne, nous vous communiquons l’adresse technique de votre site (par exemple
           « votre-entreprise.pages.dev »). Vous nous indiquerez votre nom de domaine quand vous
@@ -93,11 +97,11 @@ export function DomainForm({ draft }: { draft: { handling: string | null; hostna
       ) : (
         <Field
           label={
-            handling === 'stax_purchase' ? 'Nom de domaine souhaité' : 'Votre nom de domaine actuel'
+            handling === 'purchase' ? 'Nom de domaine souhaité' : 'Votre nom de domaine actuel'
           }
           error={state.errors?.domainHostname}
           hint={
-            handling === 'stax_purchase'
+            handling === 'purchase'
               ? 'Nous vérifierons sa disponibilité avant tout achat. Si la première proposition est prise, nous vous en proposerons d’autres.'
               : 'Sans « https:// » ni « www. ». Par exemple : mon-entreprise.fr'
           }
