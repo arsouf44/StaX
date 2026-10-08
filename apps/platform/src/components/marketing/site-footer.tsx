@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { legalStatus, legalValue, isProduction } from '@nemasus/config';
+import { isLegalValueConfigured, legalStatus, legalValue, isProduction } from '@nemasus/config';
 import { Wordmark } from '@nemasus/ui';
 import { COMPANY_LINKS, FEATURE_LINKS, LEGAL_LINKS, RESOURCE_LINKS } from '~/lib/navigation';
+import { internationalPhone } from '~/lib/phone';
 
 /**
  * Pied de page.
@@ -16,6 +17,7 @@ export function SiteFooter() {
   const status = legalStatus();
   const company = legalValue('LEGAL_COMPANY_NAME');
   const support = legalValue('SUPPORT_EMAIL');
+  const phone = isLegalValueConfigured('SUPPORT_PHONE') ? legalValue('SUPPORT_PHONE') : null;
   const year = new Date().getFullYear();
 
   return (
@@ -94,6 +96,17 @@ export function SiteFooter() {
           <a href={`mailto:${support}`} className="transition-colors hover:text-[var(--ink)]">
             {support}
           </a>
+          {phone ? (
+            <>
+              {' · '}
+              <a
+                href={`tel:${internationalPhone(phone)}`}
+                className="whitespace-nowrap transition-colors hover:text-[var(--ink)]"
+              >
+                {phone}
+              </a>
+            </>
+          ) : null}
         </p>
         <p>
           © {year} {company}

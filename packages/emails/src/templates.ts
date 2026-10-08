@@ -255,8 +255,16 @@ export function bankTransferInstructionsEmail(
     bank: BankDetails;
     message: string | null;
     reminder: boolean;
+    /** Version des CGV en vigueur : le virement vaut leur acceptation (CGV, article 5). */
+    termsVersion?: string;
   },
 ): EmailMessage {
+  const termsUrl = `${platformUrl().replace(/\/+$/, '')}/cgv`;
+  const termsLine =
+    'Ces modalités sont valables trente jours. Votre virement vaut acceptation de nos ' +
+    `conditions générales de vente${ctx.termsVersion ? ` (version du ${ctx.termsVersion})` : ''}, ` +
+    `consultables sur ${termsUrl}. Tant que la réalisation n’a pas commencé, vous pouvez annuler ` +
+    'votre commande et être intégralement remboursé.';
   const rows: Array<[string, string]> = [
     ['Montant à régler', ctx.amountLabel],
     ['Bénéficiaire', ctx.bank.holder],
@@ -286,6 +294,7 @@ export function bankTransferInstructionsEmail(
           'personnel. Selon les banques, un virement met de quelques heures à deux jours ouvrés ' +
           'pour arriver.',
       ),
+      paragraph(termsLine),
     ].join(''),
     bodyText: [
       hello(ctx.firstName),
@@ -294,6 +303,7 @@ export function bankTransferInstructionsEmail(
       ...rows.map(([label, value]) => `${label} : ${value}`),
       `Indiquez la référence ${ctx.reference} dans le libellé du virement.`,
       'Dès réception, nous vous envoyons votre code d’accès personnel.',
+      termsLine,
     ],
     footerNote:
       'Pour votre sécurité : nos coordonnées bancaires ne changent jamais par e-mail. En cas de ' +

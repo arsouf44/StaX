@@ -3,6 +3,7 @@ import { serializeJsonLd } from '@nemasus/security';
 import { BRAND } from '@nemasus/ui/brand';
 import type { FaqItem } from '~/content/faq';
 import type { ProcessStep } from '~/content/process';
+import { internationalPhone } from './phone';
 
 /**
  * Données structurées Schema.org du site public.
@@ -64,7 +65,7 @@ export function organizationJsonLd(): Json {
             contactType: 'customer support',
             availableLanguage: 'French',
             ...(email ? { email } : {}),
-            ...(phone ? { telephone: phone } : {}),
+            ...(phone ? { telephone: internationalPhone(phone) } : {}),
           },
         }
       : {}),

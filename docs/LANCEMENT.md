@@ -115,14 +115,10 @@ Tout est renseigné dans `packages/config/src/legal.ts` (valeurs publiques,
 remplaçables par variable d'environnement si elles changent) : LallianSe, SAS
 au capital de 3 000 €, siège, SIREN, SIRET, RCS, TVA ; nom commercial
 Nemasus ; directrice de la publication Julie Rachline Gomez ; contact et
-demandes RGPD `nemasus@lallianse.com` ; hébergeur de la plateforme Vercel
-Inc. (adresse et téléphone) ; sites des clients chez Cloudflare, Inc.
-
-**Reste une valeur à fournir (bloquant)** : le **téléphone de LallianSe**, que
-la LCEN (art. 6, III) exige dans les mentions légales d'une personne morale.
-Variable Vercel `LEGAL_PHONE` (par exemple `+33 1 23 45 67 89`), puis
-redéployez. Tant qu'elle manque, `pnpm legal:check` échoue et `/admin/sante`
-le signale.
+demandes RGPD `a.gomez@contact-nemasus.com` ; téléphone de l'éditeur et du
+support `07 82 09 37 51` (exigé par la LCEN, art. 6, III) ; hébergeur de la
+plateforme Vercel Inc. (adresse et téléphone) ; sites des clients chez
+Cloudflare, Inc.
 
 **À vérifier** : la directrice de la publication d'une société est son
 représentant légal (loi du 29 juillet 1982, art. 93-2). Si la présidente de
@@ -130,11 +126,11 @@ LallianSe est une société (SELALLIAN), indiquez la chaîne exacte dans
 `LEGAL_REPRESENTATIVE` (par exemple « SELALLIAN, présidente, représentée par
 Julie Rachline Gomez ») et faites valider la formulation.
 
-Facultatif : `SUPPORT_PHONE` (affiché aux clients ; à défaut `LEGAL_PHONE`),
-`LEGAL_MEDIATOR` (voir étape 10).
+Facultatif : `LEGAL_MEDIATOR` (voir étape 10).
 
-`nemasus@lallianse.com` a **deux rôles** : l'adresse affichée aux clients, et
-la boîte qui reçoit toutes les alertes de l'équipe. Elle doit être lue.
+`a.gomez@contact-nemasus.com` a **deux rôles** : l'adresse affichée aux
+clients (et qui reçoit leurs réponses aux e-mails), et la boîte qui reçoit
+toutes les alertes de l'équipe. Elle doit être lue.
 
 ## Étape 3 — Vercel : la plateforme en ligne (bloquant)
 
@@ -175,17 +171,20 @@ livraison, réponses de l'équipe, alertes. Le mot de passe oublié ne dépend p
 des e-mails de Supabase, et il n'y a plus d'inscription libre (le compte
 s'ouvre avec le code d'accès ou le lien d'invitation).
 
-1. Dans Resend, vérifiez le domaine d'envoi (enregistrements SPF et DKIM chez
-   votre registrar), ici `lallianse.com`.
+1. Domaines dans Resend : `nemasus.com` est **vérifié** ;
+   `contact-nemasus.com` attend ses trois enregistrements DNS chez Infomaniak
+   (TXT `resend._domainkey`, CNAME `rsend` et `send`, valeurs dans Resend).
 2. Dans les variables Vercel (étape 3), **en secret, jamais dans le dépôt ni
    dans une variable `NEXT_PUBLIC_*`** :
    ```
    RESEND_API_KEY=re_…                         (secret)
-   EMAIL_FROM=Nemasus <nemasus@lallianse.com>
-   EMAIL_REPLY_TO=nemasus@lallianse.com
    ```
-   Sans `EMAIL_FROM` d'un domaine vérifié, Resend ne livre qu'à l'adresse du
-   compte Resend.
+   C'est la seule variable indispensable : sans `EMAIL_FROM`, les e-mails
+   partent de `Nemasus <notifications@nemasus.com>` et les réponses vont à
+   `a.gomez@contact-nemasus.com`. **Ne laissez pas d'ancien `EMAIL_FROM`** sur
+   un domaine non vérifié (par exemple `lallianse.com`) : Resend refuserait
+   tous les envois. Une fois `contact-nemasus.com` vérifié, vous pouvez poser
+   `EMAIL_FROM=Nemasus <a.gomez@contact-nemasus.com>`.
 3. **Supabase → Authentication** : *URL Configuration* : **Site URL** =
    `https://votre-domaine` ; *Password security* : activez la **protection
    contre les mots de passe compromis**.

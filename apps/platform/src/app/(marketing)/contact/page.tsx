@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { legalValue, readEnv } from '@nemasus/config';
 import { Container, Panel, Section, SectionHeading } from '@nemasus/ui';
 import { ContactForm } from './contact-form';
+import { internationalPhone } from '~/lib/phone';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,14 @@ export default function ContactPage() {
                 </a>
               </p>
               {phone && !phone.startsWith('[') ? (
-                <p className="mt-1 text-sm text-[var(--foreground-muted)]">{phone}</p>
+                <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+                  <a
+                    href={`tel:${internationalPhone(phone)}`}
+                    className="underline underline-offset-4"
+                  >
+                    {phone}
+                  </a>
+                </p>
               ) : null}
             </Panel>
 

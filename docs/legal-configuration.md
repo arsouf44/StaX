@@ -12,14 +12,13 @@ Le dépôt contient les seules informations **publiques** de l’éditeur, que l
 loi impose d’afficher : dénomination (LallianSe), nom commercial (Nemasus),
 forme, capital (3 000 €), siège, SIREN, SIRET, RCS, TVA, directrice de la
 publication (Julie Rachline Gomez), adresse de contact et RGPD
-(`nemasus@lallianse.com`), ainsi que l’hébergeur de la plateforme (Vercel
-Inc.). Elles sont lues dans `packages/config/src/legal.ts` et remplaçables par
-variable d’environnement si elles changent.
+(`a.gomez@contact-nemasus.com`), téléphone de l’éditeur et du support
+(`07 82 09 37 51`, exigé par la LCEN pour une personne morale), ainsi que
+l’hébergeur de la plateforme (Vercel Inc.). Elles sont lues dans
+`packages/config/src/legal.ts` et remplaçables par variable d’environnement si
+elles changent.
 
-**Une seule valeur n’y figure pas : le téléphone de l’éditeur** (`LEGAL_PHONE`),
-exigé par la LCEN pour une personne morale. Elle se pose dans les variables
-Vercel (et du Worker des sites). Une valeur absente affiche un marqueur
-explicite :
+Une valeur absente affiche un marqueur explicite :
 
 ```
 [A CONFIGURER — SIREN]

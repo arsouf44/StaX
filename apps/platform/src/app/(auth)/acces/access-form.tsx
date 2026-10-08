@@ -74,6 +74,19 @@ export function AccessForm({
 
       <SubmitButton />
 
+      {/* Le compte s'ouvre ici : l'acceptation des CGU est enregistrée à ce moment. */}
+      <p className="text-center text-xs leading-relaxed text-[var(--muted)]">
+        En accédant à votre espace, vous acceptez les{' '}
+        <Link href="/cgu" target="_blank" className="underline underline-offset-2">
+          conditions générales d’utilisation
+        </Link>
+        . Votre commande est régie par les{' '}
+        <Link href="/cgv" target="_blank" className="underline underline-offset-2">
+          conditions générales de vente
+        </Link>
+        .
+      </p>
+
       <p className="text-center text-sm text-[var(--foreground-muted)]">
         Vous avez déjà utilisé votre code ?{' '}
         <Link href="/connexion" className="text-[var(--foreground)] underline underline-offset-4">

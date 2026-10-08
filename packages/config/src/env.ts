@@ -436,10 +436,13 @@ export interface EmailSettings {
  * n envoie rien : aucun message ne part par accident depuis un poste de
  * developpement.
  *
- * Sans `EMAIL_FROM`, Resend n accepte que son adresse de test
- * (`onboarding@resend.dev`), qui ne delivre qu au titulaire du compte Resend :
- * suffisant pour verifier la cle, jamais pour des clients.
+ * Sans `EMAIL_FROM`, l expediteur est une adresse du domaine `nemasus.com`,
+ * verifie dans Resend (SPF et DKIM) : l envoi fonctionne avec la seule cle.
+ * Les reponses vont a `EMAIL_REPLY_TO`, a defaut a l adresse de support.
  */
+/** Expediteur par defaut : domaine `nemasus.com`, verifie dans Resend. */
+export const DEFAULT_RESEND_FROM = 'Nemasus <notifications@nemasus.com>';
+
 export function emailSettings(): EmailSettings {
   const resendKey = readEnv('RESEND_API_KEY') ?? null;
   const declared = readEnv('EMAIL_PROVIDER');
@@ -457,7 +460,7 @@ export function emailSettings(): EmailSettings {
 
   const from =
     readEnv('EMAIL_FROM') ??
-    (provider === 'resend' ? 'Nemasus <onboarding@resend.dev>' : 'Nemasus <bonjour@localhost>');
+    (provider === 'resend' ? DEFAULT_RESEND_FROM : 'Nemasus <bonjour@localhost>');
   return { provider, apiKey, from, replyTo: readEnv('EMAIL_REPLY_TO') ?? null };
 }
 

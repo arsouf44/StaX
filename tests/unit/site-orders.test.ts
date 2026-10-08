@@ -124,6 +124,22 @@ describe('e-mails de la commande', () => {
     expect(email.text).toContain('Libellé du virement : CMD-2026-00001');
     expect(email.text).toContain('1 200 €');
     expect(email.html).toMatch(/ne changent jamais par e-mail/);
+    // Le virement forme le contrat : l'e-mail renvoie aux CGV et à leur version.
+    const withTerms = bankTransferInstructionsEmail({
+      to: 'jeanne@boulangerie.example',
+      reference: 'CMD-2026-00001',
+      companyName: 'Boulangerie Martin',
+      amountLabel: '1 200 €',
+      bank,
+      message: null,
+      reminder: false,
+      termsVersion: '2026-10-08',
+    });
+    expect(withTerms.text).toMatch(/valables trente jours/);
+    expect(withTerms.text).toMatch(/vaut acceptation de nos conditions générales de vente/);
+    expect(withTerms.text).toContain('version du 2026-10-08');
+    expect(withTerms.text).toMatch(/\/cgv/);
+    expect(withTerms.text).toMatch(/\/confidentialite/);
   });
 
   it('les champs saisis sont échappés dans le HTML', () => {
@@ -204,5 +220,28 @@ describe('configuration Resend et virement', () => {
       bic: 'AGRIFRPP',
       bank: null,
     });
+  });
+});
+
+describe('textes juridiques, alignés sur le produit', () => {
+  it('CGV : prix déterminé par le projet, validité des modalités, factures', async () => {
+    const { buildTerms } = await import('~/content/legal');
+    const cgv = JSON.stringify(buildTerms());
+    expect(cgv).toContain('éléments de détermination du prix');
+    expect(cgv).toContain('valables trente jours');
+    expect(cgv).toContain('facture d’acompte');
+    expect(cgv).toContain('payable en totalité avant le début de la réalisation');
+    expect(cgv).toMatch(/accepte par son paiement/);
+  });
+
+  it('CGU et confidentialité : accès par code, commandes, messagerie de l’équipe', async () => {
+    const { buildTermsOfUse, buildPrivacyPolicy } = await import('~/content/legal');
+    const cgu = JSON.stringify(buildTermsOfUse());
+    expect(cgu).toContain('première saisie du code');
+    expect(cgu).toContain('pas d’inscription libre');
+    const privacy = JSON.stringify(buildPrivacyPolicy());
+    expect(privacy).toContain('Données de commande');
+    expect(privacy).toContain('Infomaniak');
+    expect(privacy).not.toMatch(/lors de leur inscription/);
   });
 });

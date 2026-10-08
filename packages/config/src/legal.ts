@@ -157,6 +157,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Téléphone de l’éditeur',
     required: true,
     placeholder: '[A CONFIGURER — téléphone de l’éditeur]',
+    defaultValue: '07 82 09 37 51',
     hint: 'Exigé pour une personne morale par l’article 6 III de la LCEN, avec la dénomination et le siège. À défaut, SUPPORT_PHONE est utilisé.',
   },
   {
@@ -189,7 +190,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Contact données personnelles',
     required: true,
     placeholder: '[A CONFIGURER — contact RGPD]',
-    defaultValue: 'nemasus@lallianse.com',
+    defaultValue: 'a.gomez@contact-nemasus.com',
     hint: 'Adresse de contact pour l’exercice des droits RGPD.',
   },
   {
@@ -204,7 +205,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'E-mail de support',
     required: true,
     placeholder: '[A CONFIGURER — email de support]',
-    defaultValue: 'nemasus@lallianse.com',
+    defaultValue: 'a.gomez@contact-nemasus.com',
     hint: 'Adresse de contact affichee publiquement.',
   },
   {
@@ -212,6 +213,7 @@ export const LEGAL_FIELDS: readonly LegalField[] = [
     label: 'Téléphone de support',
     required: false,
     placeholder: '[A CONFIGURER — téléphone du support]',
+    defaultValue: '07 82 09 37 51',
     hint: 'Facultatif mais recommande pour la confiance client. À défaut, LEGAL_PHONE est affiché.',
   },
 ] as const;

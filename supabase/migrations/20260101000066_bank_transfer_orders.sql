@@ -1609,3 +1609,18 @@ update public.subprocessors
                  || 'propres prestations par Stripe.',
        updated_at = now()
  where name = 'Stripe Payments Europe, Ltd.';
+
+-- La boîte de l'équipe (a.gomez@contact-nemasus.com) est hébergée par
+-- Infomaniak : les messages des clients et prospects y transitent.
+insert into public.subprocessors
+  (name, purpose, location, transfer_safeguards, privacy_url, dpa_url, category, sort_order)
+select 'Infomaniak Network SA',
+       'Messagerie électronique de l’équipe Nemasus (a.gomez@contact-nemasus.com) : réception '
+       || 'et conservation des messages échangés avec les clients et les prospects.',
+       'Suisse (Genève)',
+       'Décision d’adéquation de la Commission européenne : la Suisse assure un niveau de '
+       || 'protection adéquat des données personnelles.',
+       'https://www.infomaniak.com/fr/cgv/politique-de-confidentialite',
+       null,
+       'email', 45
+ where not exists (select 1 from public.subprocessors where name = 'Infomaniak Network SA');

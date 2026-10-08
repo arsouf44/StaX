@@ -15,6 +15,7 @@ import {
   normalizeActivationCode,
 } from '@nemasus/security';
 import { absolutePlatformUrl } from './action-guard';
+import { TERMS_VERSION } from '~/content/legal';
 
 /**
  * Commandes réglées par virement, et code d'accès personnel.
@@ -244,6 +245,7 @@ export async function sendPaymentInstructionsEmail(
         bank,
         message: order.payment_message,
         reminder: options.reminder ?? false,
+        termsVersion: TERMS_VERSION,
       }),
       { organizationId: order.organization_id ?? undefined },
     ),

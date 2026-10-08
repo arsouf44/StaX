@@ -60,12 +60,14 @@ describe('mentions légales', () => {
     expect(notice).toContain('anciennement StaX');
   });
 
-  it('exigent le téléphone de l’éditeur, sans jamais afficher de marqueur', () => {
+  it('sont complètes : téléphone et e-mail de l’éditeur, sans aucun marqueur', () => {
     setEnvSource({});
-    expect(legalStatus().missingRequired).toContain('LEGAL_PHONE');
+    expect(legalStatus().missingRequired).toEqual([]);
     const notice = text(buildLegalNotice());
     expect(notice).not.toContain('A CONFIGURER');
-    expect(notice).not.toContain('"term":"Téléphone","description":"+33');
+    expect(notice).toContain('07 82 09 37 51');
+    expect(notice).toContain('a.gomez@contact-nemasus.com');
+    expect(notice).not.toContain('lallianse.com');
   });
 
   it('affichent le téléphone de l’éditeur dès qu’il est configuré', () => {

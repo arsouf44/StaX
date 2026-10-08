@@ -136,9 +136,11 @@ texte, champs échappés, aucun secret. Chaque envoi est journalisé
 
 `RESEND_API_KEY` suffit à activer Resend. C’est un **secret serveur** : à
 renseigner dans les variables d’environnement du déploiement (jamais dans le
-dépôt, jamais dans une variable `NEXT_PUBLIC_*`). `EMAIL_FROM` doit être une
-adresse d’un domaine vérifié dans Resend ; à défaut, l’adresse de test
-`onboarding@resend.dev` n’est livrée qu’au propriétaire du compte Resend.
+dépôt, jamais dans une variable `NEXT_PUBLIC_*`). Sans `EMAIL_FROM`, les
+e-mails partent de `Nemasus <notifications@nemasus.com>` — le domaine
+`nemasus.com` est vérifié dans Resend — et les réponses vont à l’adresse de
+support, `a.gomez@contact-nemasus.com`. Un `EMAIL_FROM` sur un autre domaine
+doit d’abord être vérifié dans Resend, sinon l’envoi est refusé.
 Sans clé, les e-mails sont seulement journalisés (mode console).
 
 ## 8. Tests

@@ -41,15 +41,23 @@ export const LEGAL_DOCUMENTS_REQUIRE_REVIEW = LEGAL_REVIEW_REQUIRED;
  * remboursement, exclusion des résultats de référencement, délai d'action ;
  * CGU acceptées à l'inscription ; prospection auprès des professionnels.
  * 2026-10-08 : plus de grille tarifaire ni d'abonnement : commande, modalités
- * de paiement par virement, code d'accès personnel à réception du virement,
- * annulation et remboursement ; mot de passe oublié envoyé par Nemasus.
+ * de paiement par virement (valables trente jours, éléments de détermination
+ * du prix, facturation), code d'accès personnel à réception du virement,
+ * annulation et remboursement ; acceptation des CGV par le paiement d'une
+ * commande enregistrée par l'équipe ; CGU acceptées au premier accès par code
+ * ou à l'invitation ; mot de passe oublié envoyé par Nemasus ; commandes et
+ * jetons dans la politique de confidentialité ; messagerie de l'équipe
+ * (Infomaniak) ; téléphone et adresse de contact de l'éditeur.
  */
 export const TERMS_VERSION = '2026-10-08';
 export const PRIVACY_VERSION = '2026-10-08';
-export const TERMS_OF_USE_VERSION = '2026-09-29';
-export const DPA_VERSION = '2026-09-29';
+export const TERMS_OF_USE_VERSION = '2026-10-08';
+export const DPA_VERSION = '2026-10-08';
 
-const UPDATED_AT = '2026-09-29';
+/** Date de la dernière révision des textes modifiés le 2026-10-08. */
+const UPDATED_AT = '2026-10-08';
+/** Textes inchangés depuis la révision précédente. */
+const PREVIOUS_UPDATED_AT = '2026-09-29';
 
 export interface LegalBlock {
   kind: 'paragraph' | 'list' | 'note' | 'definitions';
@@ -331,8 +339,9 @@ export function buildTerms(): LegalDocument {
     intro:
       'Les présentes conditions régissent la vente des prestations de conception, de ' +
       'développement, de mise en ligne et d’hébergement de sites internet proposées sous la ' +
-      `marque ${brand}. Elles sont acceptées lors de chaque commande ; la version acceptée est ` +
-      'conservée avec sa date et son numéro.',
+      `marque ${brand}. Elles sont acceptées lors de chaque commande en ligne, ou par le paiement ` +
+      'd’une commande enregistrée par l’équipe ; la version acceptée est conservée avec sa date et ' +
+      'son numéro.',
     articles: [
       {
         id: 'objet',
@@ -486,15 +495,23 @@ export function buildTerms(): LegalDocument {
           p(
             'Une Commande peut aussi être enregistrée par le Prestataire à la suite d’un échange ' +
               'avec le Client, qui en reçoit alors les Modalités de paiement par e-mail. Ni ' +
-              'l’échange ni la Commande n’engagent le Client à payer.',
+              'l’échange ni la Commande n’engagent le Client à payer. Les Modalités de paiement ' +
+              'renvoient expressément aux présentes CGV, accessibles en ligne : le Client les ' +
+              'accepte par son paiement, et confirme cette acceptation lors de son premier accès ' +
+              'à l’Espace client.',
           ),
           p(
             'En réponse à la Commande, le Prestataire adresse au Client les Modalités de ' +
               'paiement. Le contrat est formé à la réception, par le Prestataire, du virement du ' +
               'montant indiqué dans les Modalités de paiement : ce paiement vaut acceptation des ' +
-              'Modalités de paiement et des présentes CGV. L’acceptation des CGV lors de la ' +
-              'Commande est horodatée et conservée avec le numéro de version du texte accepté, à ' +
-              'titre de preuve.',
+              'Modalités de paiement et des présentes CGV. L’acceptation des CGV est horodatée et ' +
+              'conservée avec le numéro de version du texte accepté, à titre de preuve.',
+          ),
+          p(
+            'Sauf mention contraire, les Modalités de paiement sont valables trente jours. Un ' +
+              'virement reçu après ce délai, ou d’un montant différent de celui indiqué, est soit ' +
+              'accepté par le Prestataire, qui le confirme alors au Client par écrit, soit ' +
+              'intégralement remboursé.',
           ),
           p(
             'Le Client s’engage à fournir des informations exactes et à jour. Le Prestataire peut ' +
@@ -516,6 +533,16 @@ export function buildTerms(): LegalDocument {
               'd’établissement du Client, et apparaît sur la facture.',
           ),
           p(
+            'Le montant est déterminé selon l’étendue du projet : nombre et nature des pages, ' +
+              'fonctionnalités (formulaires, réservations, vente en ligne, comptes clients), ' +
+              'intégrations à d’autres outils, contenus à produire, achat d’un nom de domaine, ' +
+              'durée de l’hébergement et des services de la plateforme, et délai de réalisation ' +
+              'demandé. Ces éléments de détermination du prix sont communiqués à tout ' +
+              'professionnel qui en fait la demande (article L.441-1 du Code de commerce). Le ' +
+              'montant est indiqué par écrit avant tout paiement et ne peut être modifié ' +
+              'unilatéralement après la formation du contrat.',
+          ),
+          p(
             'Pour un Client établi dans un autre État membre de l’Union européenne, assujetti et ' +
               'disposant d’un numéro de TVA valide, la facture est établie hors TVA française avec ' +
               'la mention « Autoliquidation » (article 283-2 du Code général des impôts et ' +
@@ -534,8 +561,10 @@ export function buildTerms(): LegalDocument {
         title: 'Article 7 — Paiement, code d’accès et facturation',
         blocks: [
           p(
-            'Le paiement s’effectue par virement bancaire, sur le compte indiqué dans les ' +
-              'Modalités de paiement, en rappelant la référence de la Commande dans le libellé. ' +
+            'Sauf stipulation contraire des Modalités de paiement, le montant est payable en ' +
+              'totalité avant le début de la réalisation. Le paiement s’effectue par virement ' +
+              'bancaire, sur le compte indiqué dans les Modalités de paiement, en rappelant la ' +
+              'référence de la Commande dans le libellé. ' +
               'Aucune carte bancaire n’est demandée par le Prestataire. Les coordonnées bancaires ' +
               'du Prestataire ne sont jamais modifiées par e-mail : en cas de doute sur un message, ' +
               'le Client contacte le Prestataire avant tout virement.',
@@ -549,12 +578,16 @@ export function buildTerms(): LegalDocument {
               'est désactivé et remplacé sur simple demande.',
           ),
           p(
-            'Une facture conforme à la réglementation est émise pour chaque paiement et adressée ' +
-              'au Client sur simple demande depuis son Espace client.',
+            'Le Prestataire émet une facture pour chaque paiement reçu — facture d’acompte ' +
+              'lorsque le paiement précède l’achèvement de la prestation, puis facture de solde — ' +
+              'et l’adresse au Client par e-mail ; un duplicata est fourni sur simple demande ' +
+              'depuis l’Espace client (article L.441-9 du Code de commerce, article 289 du Code ' +
+              'général des impôts).',
           ),
           p(
-            'Lorsque les Modalités de paiement prévoient un paiement échelonné, toute somme non ' +
-              'payée à son échéance porte de plein droit, dès le lendemain de l’échéance et sans ' +
+            'Toute somme due par un Client professionnel et non payée à son échéance, notamment ' +
+              'en cas de paiement échelonné prévu par les Modalités de paiement, porte de plein ' +
+              'droit, dès le lendemain de l’échéance et sans ' +
               'qu’un rappel soit nécessaire, conformément à l’article L.441-10 du Code de ' +
               'commerce : des pénalités de retard calculées au taux d’intérêt appliqué par la ' +
               'Banque centrale européenne à son opération de refinancement la plus récente majoré ' +
@@ -655,7 +688,8 @@ export function buildTerms(): LegalDocument {
           ),
           list([
             'l’hébergement du Site sur l’infrastructure retenue par le Prestataire (à ce jour, ' +
-              'Cloudflare pour le Site, Vercel pour l’Espace client) et l’Espace client ;',
+              'Cloudflare pour le Site, Vercel pour l’Espace client, Supabase pour les données, ' +
+              'stockées en France) et l’Espace client ;',
             'la connexion du nom de domaine et le certificat de sécurité (HTTPS), renouvelé ' +
               'automatiquement ;',
             'l’infrastructure de publication : l’enregistrement de chaque publication dans le ' +
@@ -725,7 +759,8 @@ export function buildTerms(): LegalDocument {
             'récupérer ses contenus : textes, photographies et documents qu’il a fournis ou qui ' +
               'lui ont été cédés ;',
             'obtenir le code de transfert de son nom de domaine, sur simple demande ;',
-            `conserver son compte de paiement Stripe, ouvert à son nom, indépendamment de ${brand}.`,
+            'le cas échéant, conserver son compte de paiement Stripe, ouvert à son nom, ' +
+              `indépendamment de ${brand}.`,
           ]),
           p(
             'Le Client ayant payé intégralement la Création obtient en outre, sur demande et au ' +
@@ -1180,8 +1215,8 @@ export function buildDataProcessingAgreement(): LegalDocument {
     version: DPA_VERSION,
     updatedAt: UPDATED_AT,
     intro:
-      'Cet accord fait partie intégrante des conditions générales de vente. Il est accepté lors de ' +
-      'la commande et s’applique pendant toute la durée du contrat, puis jusqu’à la suppression ' +
+      'Cet accord fait partie intégrante des conditions générales de vente. Il est accepté avec ' +
+      'elles et s’applique pendant toute la durée du contrat, puis jusqu’à la suppression ' +
       'des données. Pour ce qui concerne les données personnelles, il prévaut sur les conditions ' +
       'générales de vente.',
     articles: [
@@ -1480,7 +1515,8 @@ export function buildTermsOfUse(): LegalDocument {
               'dispose d’un compte.',
           ),
           p(
-            'Elles sont acceptées lors de la création du compte, qui en conserve la version et la ' +
+            'Elles sont acceptées lors de la création du compte — à la première saisie du code ' +
+              'd’accès, ou à l’acceptation d’une invitation —, qui en conserve la version et la ' +
               'date. L’utilisation de l’espace client suppose leur acceptation dans leur version en ' +
               'vigueur.',
           ),
@@ -1498,6 +1534,8 @@ export function buildTermsOfUse(): LegalDocument {
           p(
             'L’accès à l’espace client est ouvert par le code d’accès personnel remis au Client ' +
               'après le paiement de sa commande, puis par son adresse e-mail et son mot de passe. ' +
+              'Un collaborateur invité par le Client ouvre son compte par le lien personnel reçu ' +
+              'par e-mail, valable sept jours. Il n’existe pas d’inscription libre. ' +
               'Les prestations sont payantes dans les conditions des conditions générales de ' +
               'vente. Les frais de connexion et d’équipement restent à la charge de l’Utilisateur.',
           ),
@@ -1514,6 +1552,12 @@ export function buildTermsOfUse(): LegalDocument {
           ),
           list([
             'un compte est personnel : il ne doit pas être partagé entre plusieurs personnes ;',
+            'le code d’accès est personnel, à usage unique et valable pour une durée limitée ; il ' +
+              'ne doit être communiqué à personne, et le Prestataire ne le demande jamais par ' +
+              'téléphone ni par e-mail ;',
+            'le mot de passe compte au moins douze caractères ; en cas d’oubli, un lien de ' +
+              'réinitialisation, valable une heure et à usage unique, est envoyé à l’adresse du ' +
+              'compte, et le changement de mot de passe ferme toutes les autres sessions ;',
             'plusieurs personnes peuvent être invitées sur un même espace, chacune avec son ' +
               'propre compte et son propre niveau d’accès ; l’entreprise qui les invite répond ' +
               'de leurs actions ;',
@@ -1781,12 +1825,20 @@ export function buildPrivacyPolicy(): LegalDocument {
                 'messages échangés avec l’équipe.',
             },
             {
-              term: 'Prospection et propositions',
+              term: 'Données de commande',
+              description:
+                'Nom de l’entreprise, nom, prénom, adresse e-mail et téléphone du contact, ' +
+                'ville, activité, description du projet et réponses au questionnaire, choix ' +
+                'relatif au nom de domaine, version des conditions acceptées et date, empreinte ' +
+                'de l’adresse IP de l’envoi, montant convenu, dates d’envoi des modalités de ' +
+                'paiement et de réception du virement, notes internes de l’équipe.',
+            },
+            {
+              term: 'Prospection',
               description:
                 'Pour une entreprise que nous contactons : nom de l’entreprise, nom du ' +
                 'dirigeant ou du contact, téléphone et adresse e-mail professionnels, adresse ' +
-                'de l’établissement, secteur d’activité, et, si une proposition lui est faite, ' +
-                'l’offre et le prix proposés, les dates d’envoi, de consultation et de paiement.',
+                'de l’établissement, secteur d’activité, date et suite des échanges.',
             },
             {
               term: 'Demandes et signalements',
@@ -1799,8 +1851,10 @@ export function buildPrivacyPolicy(): LegalDocument {
               term: 'Données techniques',
               description:
                 'Journaux de connexion (date, empreinte d’adresse IP, agent utilisateur) ' +
-                'conservés à des fins de sécurité, et journaux d’audit des actions sensibles ' +
-                'réalisées dans l’espace client.',
+                'conservés à des fins de sécurité, journaux d’audit des actions sensibles ' +
+                'réalisées dans l’espace client, et empreintes — jamais la valeur en clair — des ' +
+                'codes d’accès et des liens de réinitialisation du mot de passe, avec leur nombre ' +
+                'd’essais.',
             },
           ]),
           note(
@@ -1855,8 +1909,9 @@ export function buildPrivacyPolicy(): LegalDocument {
               'précontractuelles puis exécution du contrat (article 6.1.b).',
             'Informations liées à votre contrat (livraison, fin du contrat) — exécution du ' +
               'contrat et obligation légale.',
-            'Actualités de Nemasus adressées aux personnes qui l’ont demandé lors de leur ' +
-              'inscription — consentement (article 6.1.a), retirable à tout moment en un clic.',
+            'Actualités de Nemasus adressées aux personnes qui l’ont demandé depuis leur espace ' +
+              '(« Mon compte ») — consentement (article 6.1.a), retirable à tout moment au même ' +
+              'endroit ou en un clic depuis chaque message.',
             'Défense de nos droits en cas de litige — intérêt légitime (article 6.1.f).',
           ]),
           p(
@@ -1887,8 +1942,14 @@ export function buildPrivacyPolicy(): LegalDocument {
             'Signalements de contenus : un an après la clôture de leur traitement.',
             'Prospects, demandes de contact et de devis restées sans suite : trois ans à compter ' +
               'du dernier contact émanant du prospect.',
-            'Propositions de site non conclues (expirées ou retirées) : trois ans à compter du ' +
-              'dernier échange ; conclues : comme les données de compte et de facturation.',
+            'Commandes non conclues (reçues, en attente de virement ou annulées) : coordonnées ' +
+              'et contenu anonymisés trois ans après le dernier échange ; commandes payées : comme ' +
+              'les données de compte et de facturation.',
+            'Codes d’accès : leur empreinte est conservée avec la commande, pour la preuve de ' +
+              'l’ouverture de l’espace ; liens de réinitialisation du mot de passe : supprimés sept ' +
+              'jours après leur expiration.',
+            'Propositions de site envoyées avant le 8 octobre 2026 et non conclues : trois ans à ' +
+              'compter du dernier échange.',
             'Opposition à la prospection : les seules données nécessaires pour ne plus vous ' +
               'contacter (entreprise, téléphone ou e-mail concerné), pendant trois ans.',
           ]),
@@ -1911,7 +1972,8 @@ export function buildPrivacyPolicy(): LegalDocument {
               'strictement nécessaires au fonctionnement du service : hébergement de la ' +
               'plateforme (Vercel), hébergement et diffusion des sites (Cloudflare), base de ' +
               'données et fichiers (Supabase), code source des sites (GitHub), envoi des e-mails ' +
-              'transactionnels (Resend). La liste ' +
+              'transactionnels (Resend), messagerie électronique de l’équipe (Infomaniak, en ' +
+              'Suisse). La liste ' +
               'complète et à jour, avec la localisation et les garanties de chacun, est publiée ' +
               'sur la page « Sous-traitants ».',
           ),
@@ -1943,7 +2005,9 @@ export function buildPrivacyPolicy(): LegalDocument {
               'des clients sont servis par le réseau mondial de Cloudflare ; certains prestataires ' +
               '— hébergement et diffusion, code source des ' +
               'sites, envoi des e-mails — sont des sociétés établies hors de l’Union européenne, ' +
-              'principalement aux États-Unis.',
+              'principalement aux États-Unis. La messagerie de l’équipe est hébergée en Suisse, ' +
+              'pays reconnu par la Commission européenne comme assurant un niveau de protection ' +
+              'adéquat.',
           ),
           p(
             'Ces transferts sont encadrés par les clauses contractuelles types adoptées par la ' +
@@ -2130,6 +2194,14 @@ export function buildCookiePolicy(): LegalDocument {
                 'de consentement.',
             },
             {
+              term: 'Session d’assistance (équipe Nemasus uniquement)',
+              description:
+                'Lorsqu’une personne de l’équipe ouvre, à votre demande, une session ' +
+                'd’assistance sur votre espace, un cookie de son propre navigateur en limite la ' +
+                'durée (« nemasus_support_view »). Strictement nécessaire, exempté de ' +
+                'consentement ; jamais déposé chez les clients.',
+            },
+            {
               term: 'Préférences',
               description:
                 'Affichage de la navigation et des guides de l’éditeur. Stockées localement dans ' +
@@ -2252,8 +2324,12 @@ export function buildDataPolicy(): LegalDocument {
             'messages reçus et contacts, au format CSV lisible par un tableur ;',
             'réservations et commandes, avec leur historique ;',
             'comptes clients ouverts sur votre site ;',
-            'factures et justificatifs de paiement.',
+            'le récapitulatif de votre commande, dans « Ma commande ».',
           ]),
+          p(
+            'Vos factures vous sont adressées par e-mail ; un duplicata vous est envoyé sur ' +
+              'simple demande depuis « Aide & support ».',
+          ),
           p(
             'Les exports CSV sont protégés contre l’injection de formule : une valeur commençant ' +
               'par un signe interprétable par un tableur est neutralisée avant l’écriture.',
@@ -2277,9 +2353,10 @@ export function buildDataPolicy(): LegalDocument {
         title: 'Article 4 — Corriger vos informations',
         blocks: [
           p(
-            'Les informations de compte et de facturation se modifient directement depuis votre ' +
-              'espace. Une adresse e-mail de connexion modifiée fait l’objet d’une vérification ' +
-              'du nouvel e-mail avant d’être prise en compte.',
+            'Vos nom, prénom, téléphone et les informations de votre entreprise se modifient ' +
+              'directement depuis votre espace (« Mon compte », « Mon entreprise »). Pour changer ' +
+              'l’adresse e-mail de connexion, écrivez-nous depuis « Aide & support » : nous ' +
+              'vérifions que la demande émane bien de vous avant de la modifier.',
           ),
         ],
       },
@@ -2363,7 +2440,7 @@ export function buildNoticeAndAction(): LegalDocument {
     description:
       'Un contenu vous semble illicite sur un site hébergé par Nemasus ? Signalez-le : chaque ' +
       'signalement est examiné par une personne et reçoit une réponse motivée.',
-    updatedAt: UPDATED_AT,
+    updatedAt: PREVIOUS_UPDATED_AT,
     intro:
       'Ce mécanisme répond à l’article 16 du règlement (UE) 2022/2065 sur les services numériques ' +
       'et à l’article 6 de la loi du 21 juin 2004 pour la confiance dans l’économie numérique.',
@@ -2471,7 +2548,7 @@ export function buildAccessibility(): LegalDocument {
     description:
       'Notre démarche d’accessibilité numérique : ce qui est en place, ce qui ne l’est pas ' +
       'encore, et comment nous signaler une difficulté.',
-    updatedAt: UPDATED_AT,
+    updatedAt: PREVIOUS_UPDATED_AT,
     intro:
       'Nous préférons une déclaration exacte à une déclaration flatteuse. Aucun audit de ' +
       'conformité externe n’a encore été réalisé : nous ne revendiquons donc aucun taux de ' +
