@@ -59,10 +59,16 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
       'Le délai dépend de votre projet : nous vous l’indiquons avec les modalités de paiement. Il court à partir de la réception de tous vos éléments (textes, photos, logo) : c’est souvent ce qui fait la différence. Pendant la conception, nous vous soumettons les étapes importantes depuis votre espace.',
   },
   {
+    category: 'commande',
+    question: 'Et si le résultat ne me convient pas ?',
+    answer:
+      'Vous n’attendez pas la fin pour le découvrir : nous vous soumettons les étapes importantes depuis votre espace, et vous demandez vos corrections à chacune d’elles. Tant que la réalisation n’a pas commencé, vous pouvez annuler votre commande et être intégralement remboursé. Ensuite, une annulation donne lieu au remboursement des sommes versées, déduction faite du travail accompli, dont nous justifions (article 18 des conditions générales de vente).',
+  },
+  {
     category: 'acces',
     question: 'Qu’est-ce que le code d’accès ?',
     answer:
-      'C’est un code personnel de 12 caractères que nous vous envoyons par e-mail dès réception de votre virement. Vous le saisissez sur la page « Accès client » : votre espace s’ouvre, puis vous choisissez votre mot de passe. Le code est vérifié par nos serveurs, ne sert qu’une seule fois, expire après quelques semaines et ne fonctionne qu’avec votre adresse e-mail.',
+      'C’est votre clé d’inscription : un code de 12 caractères, propre à une seule personne, que nous vous envoyons par e-mail dès réception de votre virement. Vous le saisissez une fois sur la page « Accès client » : il crée votre compte et l’ouvre sur votre site, et lui seul. Vous choisissez alors votre mot de passe, puis vous vous connectez avec votre adresse e-mail. Le code est vérifié par nos serveurs, ne sert qu’une seule fois, expire après quelques semaines et ne fonctionne qu’avec votre adresse e-mail.',
   },
   {
     category: 'acces',
@@ -167,10 +173,12 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
 const HOMEPAGE_QUESTIONS: readonly string[] = [
   'Est-ce que je construis mon site moi-même ?',
   'Combien coûte un site ?',
+  'Combien de temps faut-il pour avoir mon site en ligne ?',
+  'Et si le résultat ne me convient pas ?',
   'Comment se passe le paiement ?',
-  'Qu’est-ce que le code d’accès ?',
   'Puis-je modifier mon site moi-même après la livraison ?',
   'Mon site apparaîtra-t-il sur Google ?',
+  'Qu’est-ce que le code d’accès ?',
 ];
 
 export const HOMEPAGE_FAQ: readonly FaqItem[] = HOMEPAGE_QUESTIONS.map((question) => {

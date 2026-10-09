@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { deliveryPolicyConfig } from '@nemasus/config';
 import { ButtonLink, Reveal } from '@nemasus/ui';
 import { StudioArtSprite } from '~/components/marketing/studio-art';
 import { ProcessShowcase } from '~/components/marketing/process-showcase';
+import { SITE_EXAMPLE, SiteExampleFrame } from '~/components/marketing/site-example';
+import { supportContact } from '~/lib/contact';
 import { HOMEPAGE_FAQ } from '~/content/faq';
 import { ORDER_JOURNEY } from '~/content/process';
 import {
@@ -15,8 +18,8 @@ import {
 } from '~/lib/structured-data';
 
 const DESCRIPTION =
-  'Studio français de sites web sur mesure : nous concevons et mettons en ligne votre site, ' +
-  'puis vous le gérez. Commande en ligne, paiement par virement.';
+  'Studio français de sites web professionnels sur mesure : nous concevons, développons et ' +
+  'mettons en ligne votre site, puis vous le gérez. Commande gratuite et sans engagement.';
 
 export const metadata: Metadata = {
   title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
@@ -33,15 +36,23 @@ export const metadata: Metadata = {
   },
 };
 
-/** Les repères sous le titre : ce que le visiteur doit retenir, sans chiffre inventé. */
-const FACTS: ReadonlyArray<{ label: string; value: string }> = [
-  { label: 'Conception', value: 'Sur mesure, sans modèle' },
-  { label: 'Paiement', value: 'Par virement bancaire' },
-  { label: 'Accès', value: 'Code personnel, vérifié' },
-  { label: 'Après la livraison', value: 'Éditeur Nemasus inclus' },
-];
+/**
+ * Les repères sous le titre : ce que le visiteur doit retenir, sans chiffre
+ * inventé. Le délai est celui des CGV (article 8), lu dans la même
+ * configuration qu'elles.
+ */
+function facts(): ReadonlyArray<{ label: string; value: string }> {
+  return [
+    { label: 'Conception', value: 'Sur mesure, sans modèle' },
+    { label: 'Délai de référence', value: `${deliveryPolicyConfig().label} après vos éléments` },
+    { label: 'Sans risque', value: 'Remboursé tant que rien n’a commencé' },
+    { label: 'Après la livraison', value: 'Vos textes et photos, modifiés par vous' },
+  ];
+}
 
 export default function HomePage() {
+  const contact = supportContact();
+  const keyFacts = facts();
   return (
     <>
       <JsonLd
@@ -70,7 +81,7 @@ export default function HomePage() {
             id="accueil-titre"
             className="max-w-[17ch] font-serif text-[clamp(2.6rem,7vw,6.6rem)] leading-[1.01] font-normal tracking-[-0.018em] text-balance text-[var(--ink)]"
           >
-            Un site fait pour vous, à la hauteur de votre <em>entreprise.</em>
+            Un site fait pour vous, qui donne envie <em>de vous choisir.</em>
           </h1>
 
           <div className="mt-[clamp(40px,6vh,64px)] grid items-end gap-x-16 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
@@ -79,27 +90,32 @@ export default function HomePage() {
             </p>
             <div>
               <p className="lead-text max-w-[46ch]">
-                Notre équipe conçoit et code chaque site, un par un, le met en ligne sur votre
-                domaine, puis vous le livre avec un éditeur simple pour modifier vos textes, vos
-                photos et vos horaires.
+                Votre site est souvent le premier contact d’un client avec vous. Notre équipe le
+                conçoit et le développe pour votre activité, le met en ligne sur votre domaine, puis
+                vous le confie avec un éditeur simple pour modifier vos textes, vos photos et vos
+                horaires.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-x-9 gap-y-5">
                 <ButtonLink href="/commander" variant="primary" size="pill-lg">
                   Commander mon site
                   <span aria-hidden="true">→</span>
                 </ButtonLink>
-                <Link href="#commander" className="text-link">
-                  Comment ça se passe
+                <Link href="#exemple" className="text-link">
+                  Voir un exemple
                   <span aria-hidden="true" className="arrow">
                     ↓
                   </span>
                 </Link>
               </div>
+              <p className="mt-5 max-w-[52ch] text-[13px] leading-relaxed text-[var(--muted)]">
+                Gratuit et sans engagement : aucun paiement à la commande. Vous recevez le montant
+                et le délai par écrit, puis vous décidez.
+              </p>
             </div>
           </div>
 
           <dl className="mt-[clamp(48px,7vh,88px)] grid grid-cols-2 border-t border-[var(--border)] lg:grid-cols-4">
-            {FACTS.map((fact, index) => (
+            {keyFacts.map((fact, index) => (
               <div
                 key={fact.label}
                 className={
@@ -119,6 +135,76 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- Exemple ---------------------------------------------------------- */}
+      <section
+        id="exemple"
+        aria-labelledby="exemple-titre"
+        className="scroll-mt-20 py-[clamp(72px,11vh,132px)]"
+      >
+        <div className="shell">
+          <p className="eyebrow-index mb-6">Exemple</p>
+          <div className="grid items-end gap-x-16 gap-y-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+            <h2 id="exemple-titre" className="display-section max-w-[20ch]">
+              Le niveau de finition <em>que nous livrons.</em>
+            </h2>
+            <p className="lead-text max-w-[52ch]">
+              Voici la page d’accueil d’{SITE_EXAMPLE.name}, architecture intérieure à Paris, une
+              maquette de présentation réalisée par notre studio. Une promesse claire dès le premier
+              écran, des réalisations mises en valeur, un contact toujours à portée de main.
+              Faites-la défiler.
+            </p>
+          </div>
+          <Reveal>
+            <SiteExampleFrame className="mt-12" />
+          </Reveal>
+          <div className="mt-10 flex flex-wrap items-center gap-x-9 gap-y-5">
+            <ButtonLink href="/commander" variant="primary" size="pill">
+              Je veux un site de ce niveau
+            </ButtonLink>
+            <Link href="/realisations" className="text-link">
+              Ce qui rend cette page efficace
+              <span aria-hidden="true" className="arrow">
+                ↗
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* --- Pourquoi --------------------------------------------------------- */}
+      <section
+        id="pourquoi"
+        aria-labelledby="pourquoi-titre"
+        className="py-[clamp(80px,12vh,148px)]"
+      >
+        <div className="shell">
+          <p className="eyebrow-index mb-6">Pourquoi un vrai site</p>
+          <h2 id="pourquoi-titre" className="display-section max-w-[22ch]">
+            Avant de vous appeler, vos clients <em>regardent votre site.</em>
+          </h2>
+          <p className="lead-text mt-6 max-w-[58ch]">
+            Un site daté, lent ou illisible sur téléphone fait douter, même d’un excellent
+            professionnel. Un site clair rassure et donne envie de prendre contact. C’est ce que
+            nous construisons, sans vous demander de devenir technicien.
+          </p>
+          <ul className="mt-14 grid gap-x-7 gap-y-11 md:grid-cols-3">
+            {REASONS.map((reason, index) => (
+              <Reveal key={reason.title} as="li" delay={index * 70}>
+                <div className="flex h-full flex-col border-t border-[var(--border)] pt-6">
+                  <span className="kicker">{reason.kicker}</span>
+                  <h3 className="mt-3 font-serif text-[clamp(23px,2.1vw,29px)] leading-tight font-normal text-[var(--ink)]">
+                    {reason.title}
+                  </h3>
+                  <p className="mt-4 max-w-[38ch] text-[14.5px] leading-relaxed text-[var(--ink-2)]">
+                    {reason.body}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* --- Commander -------------------------------------------------------- */}
       <section
         id="commander"
@@ -131,9 +217,10 @@ export default function HomePage() {
             Quatre étapes, <em>sans surprise.</em>
           </h2>
           <p className="lead-text mt-6 max-w-[56ch]">
-            Pas de grille tarifaire ni d’abonnement à choisir : chaque site est conçu sur mesure.
-            Vous commandez, nous vous adressons le montant convenu et les modalités de virement,
-            puis votre code d’accès personnel ouvre votre espace.
+            Pas de grille tarifaire ni de formule à choisir : chaque site est conçu sur mesure. Vous
+            décrivez votre projet, nous vous adressons par écrit le montant convenu et le délai, et
+            vous ne payez qu’une fois d’accord. Votre code d’accès personnel crée ensuite votre
+            compte.
           </p>
 
           <ol className="mt-16 grid gap-x-7 gap-y-11 md:grid-cols-2 xl:grid-cols-4">
@@ -163,7 +250,31 @@ export default function HomePage() {
             ))}
           </ol>
 
-          <div className="mt-14 flex flex-wrap items-center gap-x-9 gap-y-5">
+          <div className="mt-14 grid gap-6 border border-[var(--border)] bg-[rgb(255_255_255/0.55)] p-[clamp(22px,3vw,36px)] md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 256 256"
+              fill="currentColor"
+              className="size-10 text-[var(--ink-3)]"
+            >
+              <path d="M208,40H48A16,16,0,0,0,32,56v58.77c0,89.62,75.82,119.34,91,124.38a15.44,15.44,0,0,0,10,0c15.2-5.05,91-34.77,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z" />
+            </svg>
+            <div>
+              <p className="font-serif text-[clamp(1.25rem,1.8vw,1.6rem)] leading-snug text-[var(--ink)]">
+                Votre engagement commence au virement, pas avant.
+              </p>
+              <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--ink-2)]">
+                Commander est gratuit. Le montant et le délai vous sont communiqués par écrit avant
+                tout paiement, et tant que la réalisation n’a pas commencé, vous pouvez annuler et
+                être intégralement remboursé.{' '}
+                <Link href="/cgv#remboursement" className="underline underline-offset-4">
+                  Conditions de remboursement
+                </Link>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-center gap-x-9 gap-y-5">
             <ButtonLink href="/commander" variant="primary" size="pill">
               Commander mon site
             </ButtonLink>
@@ -296,17 +407,30 @@ export default function HomePage() {
             <i className="absolute top-[34px] left-[9px] h-[11px] w-16 rounded-[4px] bg-[linear-gradient(180deg,#2a3138,#1d2328)] shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_12px_22px_-12px_rgb(20_24_28/0.7)]" />
           </div>
           <h2 id="cloture-titre" className="display-closing mx-auto max-w-[20ch]">
-            Votre site est la seule partie de votre entreprise que vous maîtrisez{' '}
-            <em>entièrement.</em>
+            Un site dont vous serez <em>fier de donner l’adresse.</em>
           </h2>
-          <div className="mt-11 flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
-            <Link href="/commander" className="text-link !text-[clamp(16px,1.5vw,19px)]">
+          <p className="lead-text mx-auto mt-7 max-w-[52ch]">
+            Décrivez votre activité en quelques minutes : nous revenons vers vous par écrit avec le
+            montant et le délai. Vous préférez en parler d’abord ? Une personne de l’équipe vous
+            répond.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+            <ButtonLink href="/commander" variant="primary" size="pill-lg">
               Commander mon site
-            </Link>
+              <span aria-hidden="true">→</span>
+            </ButtonLink>
+            {contact.phone && contact.phoneHref ? (
+              <a href={contact.phoneHref} className="text-link !text-[clamp(16px,1.5vw,19px)]">
+                Appeler le {contact.phone}
+              </a>
+            ) : null}
             <Link href="/contact" className="text-link !text-[clamp(16px,1.5vw,19px)]">
               Nous écrire
             </Link>
           </div>
+          <p className="mt-6 text-[13px] text-[var(--muted)]">
+            Sans engagement · aucun paiement à la commande · remboursé tant que rien n’a commencé
+          </p>
         </div>
       </section>
     </>
@@ -316,6 +440,25 @@ export default function HomePage() {
 /* -------------------------------------------------------------------------- */
 /*  Contenu de la page                                                         */
 /* -------------------------------------------------------------------------- */
+
+/** Les trois inquiétudes d'un dirigeant devant son site, et la réponse que nous y apportons. */
+const REASONS = [
+  {
+    kicker: 'Votre image',
+    title: 'Paraître aussi sérieux que vous l’êtes',
+    body: 'Un design conçu pour votre activité, des pages rapides, une lecture parfaite sur téléphone : votre site inspire confiance dès le premier écran.',
+  },
+  {
+    kicker: 'Votre temps',
+    title: 'Rien de technique à faire',
+    body: 'Nous concevons, développons et mettons en ligne votre site, jusqu’au branchement de votre nom de domaine en HTTPS. Vous transmettez vos éléments et validez les étapes importantes depuis votre espace.',
+  },
+  {
+    kicker: 'Votre liberté',
+    title: 'Un site qui vous appartient',
+    body: 'Le code écrit pour votre site vous est cédé dès son paiement intégral, votre nom de domaine est à vous, vos contenus s’exportent à tout moment. Aucune commission sur vos ventes.',
+  },
+] as const;
 
 const SERVICES = [
   {

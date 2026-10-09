@@ -140,6 +140,33 @@ describe('e-mails de la commande', () => {
     expect(withTerms.text).toContain('version du 2026-10-08');
     expect(withTerms.text).toMatch(/\/cgv/);
     expect(withTerms.text).toMatch(/\/confidentialite/);
+    // Le délai de réalisation figure par écrit, avant tout paiement (CGV, article 8).
+    expect(withTerms.text).not.toMatch(/Délai de réalisation/);
+    const withDelay = bankTransferInstructionsEmail({
+      to: 'jeanne@boulangerie.example',
+      reference: 'CMD-2026-00001',
+      companyName: 'Boulangerie Martin',
+      amountLabel: '1 200 €',
+      bank,
+      message: null,
+      reminder: false,
+      deliveryLabel: '1 à 3 semaines',
+    });
+    expect(withDelay.text).toContain(
+      'Délai de réalisation : 1 à 3 semaines à compter de la réception de vos éléments',
+    );
+    expect(withDelay.text).not.toMatch(/sauf indication contraire/);
+    const withMessage = bankTransferInstructionsEmail({
+      to: 'jeanne@boulangerie.example',
+      reference: 'CMD-2026-00001',
+      companyName: 'Boulangerie Martin',
+      amountLabel: '1 200 €',
+      bank,
+      message: 'Site de cinq pages, livré en quatre semaines.',
+      reminder: false,
+      deliveryLabel: '1 à 3 semaines',
+    });
+    expect(withMessage.text).toMatch(/sauf indication contraire ci-dessus/);
   });
 
   it('les champs saisis sont échappés dans le HTML', () => {

@@ -156,7 +156,8 @@ const activationSchema = z
  * nous — ce qui est le but. Un code perdu se remplace, il ne se retrouve pas.
  *
  * Le code est de plus lie a une adresse : meme intercepte, il ne sert a
- * personne d'autre.
+ * personne d'autre. Un code par personne : en emettre un nouveau pour la meme
+ * adresse sur ce site desactive d'abord celui qu'elle n'a pas encore utilise.
  */
 export async function issueActivationCodeAction(
   payload: unknown,
@@ -182,6 +183,27 @@ export async function issueActivationCodeAction(
   );
   if (!site) return { status: 'error', message: 'Ce site est introuvable.' };
 
+  const email = parsed.data.email.trim().toLowerCase();
+
+  // Un seul code valable par personne et par site.
+  const { data: replaced, error: replaceError } = await db
+    .from('activation_codes')
+    .update({ revoked_at: new Date().toISOString(), revoked_by: session.user.id })
+    .eq('site_id', site.id)
+    .eq('email_constraint', email)
+    .is('used_at', null)
+    .is('revoked_at', null)
+    .select('id');
+  if (replaceError) {
+    console.error(
+      '[nemasus:activation] remplacement refuse',
+      replaceError.code,
+      replaceError.message,
+    );
+    return { status: 'error', message: explain(replaceError.code, replaceError.message) };
+  }
+  const replacedCount = Array.isArray(replaced) ? replaced.length : 0;
+
   const code = generateActivationCode();
   const expiresAt = new Date(Date.now() + parsed.data.validForDays * 86_400_000).toISOString();
 
@@ -193,7 +215,7 @@ export async function issueActivationCodeAction(
       code_hash: await hashActivationCode(code),
       code_hint: activationCodeHint(code),
       granted_role: parsed.data.role,
-      email_constraint: parsed.data.email.trim().toLowerCase(),
+      email_constraint: email,
       expires_at: expiresAt,
       created_by: session.user.id,
     })
@@ -210,7 +232,7 @@ export async function issueActivationCodeAction(
   // ici, au cas où l'e-mail ne partirait pas.
   const sent = await sendEmail(
     accessCodeEmail({
-      to: parsed.data.email.trim().toLowerCase(),
+      to: email,
       code,
       companyName: site.name,
       orderReference: null,
@@ -231,7 +253,7 @@ export async function issueActivationCodeAction(
     p_site: site.id,
     p_target_type: 'activation_code',
     p_target_id: activationCodeHint(code),
-    p_metadata: { email: parsed.data.email.trim().toLowerCase(), role: parsed.data.role },
+    p_metadata: { email, role: parsed.data.role, replaced: replacedCount },
   });
 
   revalidatePath(`/admin/sites/${site.id}`);
@@ -239,8 +261,11 @@ export async function issueActivationCodeAction(
     status: 'success',
     message:
       (sent.ok && !sent.skipped
-        ? 'Code créé et envoyé par e-mail. '
+        ? `Code créé et envoyé par e-mail à ${email}. `
         : 'Code créé, mais l’e-mail n’est pas parti : transmettez-le vous-même. ') +
+      (replacedCount > 0
+        ? 'Le code que cette personne n’avait pas encore utilisé est désactivé. '
+        : '') +
       'Il ne sera plus affiché après fermeture de cette fenêtre.',
     code,
   };

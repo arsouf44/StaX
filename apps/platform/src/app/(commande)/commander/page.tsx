@@ -33,9 +33,9 @@ export default async function OrderBusinessPage() {
 
       <h1 className="title-page">Quelle est votre activité ?</h1>
       <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-        Commander ne vous engage à aucun paiement immédiat. Vous nous décrivez votre entreprise,
-        nous vous envoyons les modalités de paiement par virement, puis votre code d’accès personnel
-        dès réception.{' '}
+        Quelques minutes suffisent, et rien ne vous engage : vous décrivez votre entreprise, nous
+        vous répondons par écrit avec le montant et le délai, et vous décidez ensuite. Aucun
+        paiement à cette étape.{' '}
         <Link href="/comment-ca-marche" className="underline underline-offset-4">
           Comment ça marche
         </Link>

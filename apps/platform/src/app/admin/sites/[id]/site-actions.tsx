@@ -124,6 +124,7 @@ export function SiteAdminActions({
   const [restoring, setRestoring] = useState<AdminVersionView | null>(null);
   const [codeOpen, setCodeOpen] = useState(false);
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
+  const [issuedMessage, setIssuedMessage] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('owner');
   const [validForDays, setValidForDays] = useState('14');
@@ -230,10 +231,12 @@ export function SiteAdminActions({
       <Panel level={1} padding="lg">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-medium">Codes d’activation</h2>
+            <h2 className="text-sm font-medium">Codes d’accès — un par personne</h2>
             <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Un code remet l’accès de l’espace client à une personne précise. Il est lié à son
-              adresse e-mail : même intercepté, il ne sert à personne d’autre.
+              Chaque personne reçoit son propre code, à usage unique : à son inscription, il crée
+              son compte et l’ouvre sur ce site. Il est lié à son adresse e-mail : même intercepté,
+              il ne sert à personne d’autre. Un nouveau code pour la même adresse désactive celui
+              qu’elle n’a pas encore utilisé.
             </p>
           </div>
           <Button
@@ -242,6 +245,7 @@ export function SiteAdminActions({
             disabled={pending}
             onClick={() => {
               setIssuedCode(null);
+              setIssuedMessage(null);
               setFormError(null);
               setCodeOpen(true);
             }}
@@ -364,16 +368,19 @@ export function SiteAdminActions({
       <Dialog
         open={codeOpen}
         onClose={() => setCodeOpen(false)}
-        title="Créer un code d’activation"
+        title="Créer un code d’accès"
         description="Le code n’est affiché qu’une seule fois : seule son empreinte est conservée."
       >
         {issuedCode ? (
           <div className="space-y-4">
             <Alert tone="success" live="status" title="Code créé">
-              Transmettez-le à {email} par un canal qu’il ou elle utilise déjà. Il ne sera plus
-              affiché après fermeture de cette fenêtre.
+              {issuedMessage ??
+                `Transmettez-le à ${email} par un canal que cette personne utilise déjà. Il ne sera plus affiché après fermeture de cette fenêtre.`}
             </Alert>
-            <p className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-center font-mono text-lg tracking-[0.25em]">
+            <p
+              data-testid="issued-access-code"
+              className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-center font-mono text-lg tracking-[0.25em]"
+            >
               {issuedCode}
             </p>
             <Button variant="secondary" block onClick={() => setCodeOpen(false)}>
@@ -429,6 +436,7 @@ export function SiteAdminActions({
                       return;
                     }
                     setIssuedCode(result.code ?? null);
+                    setIssuedMessage(result.message ?? null);
                     router.refresh();
                   });
                 });

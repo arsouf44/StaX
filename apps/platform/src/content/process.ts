@@ -20,25 +20,25 @@ export const ORDER_JOURNEY: readonly ProcessStep[] = [
   {
     title: 'Vous commandez',
     description:
-      'En quelques minutes, en ligne : votre activité, vos coordonnées, votre projet et l’adresse souhaitée. Aucun compte à créer, aucun paiement à ce stade.',
+      'En quelques minutes, en ligne : votre activité, vos coordonnées, votre projet et l’adresse souhaitée. Aucun compte à créer, aucun paiement à ce stade, aucun engagement.',
     detail: 'Accusé de réception immédiat par e-mail',
   },
   {
     title: 'Vous réglez par virement',
     description:
-      'Nous étudions votre demande et vous envoyons par e-mail les modalités de paiement : le montant convenu, nos coordonnées bancaires et la référence à indiquer.',
+      'Nous étudions votre demande et vous envoyons par écrit le montant convenu, le délai de réalisation, nos coordonnées bancaires et la référence à indiquer. Vous ne payez qu’une fois d’accord.',
     detail: 'Virement bancaire, aucune carte demandée',
   },
   {
     title: 'Vous recevez votre code',
     description:
-      'Dès que votre virement nous parvient, nous vous envoyons un code d’accès personnel, à usage unique, lié à votre adresse e-mail.',
+      'Dès que votre virement nous parvient, nous vous envoyons votre code d’accès : un code par personne, à usage unique, lié à votre adresse e-mail.',
     detail: 'Code personnel, vérifié par nos serveurs',
   },
   {
     title: 'Votre espace s’ouvre',
     description:
-      'Vous saisissez votre code sur la page « Accès client » et choisissez votre mot de passe : vous suivez la création de votre site, puis le gérez vous-même.',
+      'Sur la page « Accès client », votre code crée votre compte et l’ouvre sur votre site. Vous choisissez votre mot de passe, suivez la création de votre site, puis le gérez vous-même.',
     detail: 'Votre espace, et lui seul',
   },
 ];

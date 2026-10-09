@@ -75,9 +75,19 @@ export function SiteHeader() {
           >
             Se connecter
           </Link>
+          {/* L'action principale se distingue des liens : un bouton à partir de
+              900 px, un lien souligné en dessous, où la place manque. */}
+          <ButtonLink
+            href="/commander"
+            variant="primary"
+            size="pill-sm"
+            className="max-[900px]:hidden"
+          >
+            Commander mon site
+          </ButtonLink>
           <Link
             href="/commander"
-            className="text-link !pt-2 !text-[13.5px] max-[400px]:!text-[13px]"
+            className="text-link !pt-2 !text-[13.5px] max-[400px]:!text-[13px] min-[901px]:hidden"
           >
             Commander mon site
           </Link>

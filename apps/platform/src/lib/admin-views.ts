@@ -280,7 +280,7 @@ export const ADMIN_VIEWS = {
     emptyTitle: 'Aucun compte',
     emptyDescription: 'Les comptes créés sur la plateforme apparaissent ici.',
     icon: 'users',
-    note: 'Lecture seule. Un changement de rôle interne se fait en base, avec trace au journal : il ne doit jamais tenir à un clic.',
+    note: 'Lecture seule. Chaque compte client naît de son code d’accès personnel (un par personne, à usage unique), émis depuis la fiche d’un site ou d’une commande payée. Un changement de rôle interne se fait en base, avec trace au journal : il ne doit jamais tenir à un clic.',
   },
 
   domaines: {

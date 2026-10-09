@@ -257,6 +257,11 @@ export function bankTransferInstructionsEmail(
     reminder: boolean;
     /** Version des CGV en vigueur : le virement vaut leur acceptation (CGV, article 5). */
     termsVersion?: string;
+    /**
+     * Délai de réalisation de référence (« 1 à 3 semaines ») : celui des CGV
+     * (article 8), sauf si le message de l'équipe en indique un autre.
+     */
+    deliveryLabel?: string;
   },
 ): EmailMessage {
   const termsUrl = `${platformUrl().replace(/\/+$/, '')}/cgv`;
@@ -267,6 +272,15 @@ export function bankTransferInstructionsEmail(
     'votre commande et être intégralement remboursé.';
   const rows: Array<[string, string]> = [
     ['Montant à régler', ctx.amountLabel],
+    ...(ctx.deliveryLabel
+      ? ([
+          [
+            'Délai de réalisation',
+            `${ctx.deliveryLabel} à compter de la réception de vos éléments` +
+              (ctx.message ? ', sauf indication contraire ci-dessus' : ''),
+          ],
+        ] as Array<[string, string]>)
+      : []),
     ['Bénéficiaire', ctx.bank.holder],
     ['IBAN', ctx.bank.iban],
   ];

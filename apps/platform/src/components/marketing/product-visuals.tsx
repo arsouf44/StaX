@@ -83,8 +83,8 @@ const DASHBOARD_NAV = [
   { label: 'Mon projet', icon: 'route' },
   { label: 'Modifier mon site', icon: 'pencil' },
   { label: 'Messages', icon: 'inbox', badge: 3 },
-  { label: 'Réservations', icon: 'calendar', badge: 7 },
-  { label: 'Carte', icon: 'utensils' },
+  { label: 'Rendez-vous', icon: 'calendar', badge: 2 },
+  { label: 'Réalisations', icon: 'grid' },
   { label: 'Statistiques', icon: 'chart' },
   { label: 'Paiements', icon: 'card' },
 ];
@@ -99,7 +99,6 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
     <path d="M1.5 9.5h3l1 2h5l1-2h3M1.5 9.5 3 3h10l1.5 6.5v3a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-3Z" />
   ),
   calendar: <path d="M2 4h12v10H2V4Zm3-2v3m6-3v3M2 7h12" />,
-  utensils: <path d="M4 1v6m0 0v8m0-8H2.5V1M4 7h1.5V1M11 1c-1 0-2 2-2 4.5S10 9 11 9m0-8v14" />,
   chart: <path d="M2 14V8m4 6V3m4 11V6m4 8V9" />,
   card: <path d="M1.5 4.5h13v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7Zm0 2.5h13" />,
 };
@@ -133,10 +132,10 @@ export function DashboardMock({ className }: { className?: string }) {
       <aside className="hidden w-52 shrink-0 flex-col border-r border-[rgb(20_24_28/0.14)] p-3 sm:flex">
         <div className="mb-4 flex items-center gap-2 border border-[rgb(20_24_28/0.14)] bg-white/80 p-2">
           <span className="flex size-6 shrink-0 items-center justify-center bg-[#14181c] text-[10px] font-semibold text-[#f1f2f3]">
-            RD
+            AV
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium">Restaurant Dupont</p>
+            <p className="truncate text-[11px] font-medium">Atelier Voltaire</p>
             <p className="truncate text-[9px] text-[#5e676f]">Site livré · en ligne</p>
           </div>
         </div>
@@ -165,7 +164,7 @@ export function DashboardMock({ className }: { className?: string }) {
           <p className="text-[10px] text-[#4b545c]">Site en ligne</p>
           <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#2c7659]">
             <span className="size-1.5 rounded-full bg-[#2c7659]" />
-            restaurant-dupont.example
+            atelier-voltaire.example
           </p>
         </div>
       </aside>
@@ -174,7 +173,7 @@ export function DashboardMock({ className }: { className?: string }) {
       <div className="min-w-0 flex-1 p-4 sm:p-5">
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-[13px] font-medium">Bonjour Marc.</p>
+            <p className="text-[13px] font-medium">Bonjour Claire.</p>
             <p className="mt-0.5 text-[11px] text-[#5e676f]">
               Votre site est en ligne depuis 42 jours.
             </p>
@@ -188,8 +187,8 @@ export function DashboardMock({ className }: { className?: string }) {
           {[
             { label: 'Visiteurs', value: '1 284', delta: '+12,4 %', good: true },
             { label: 'Messages', value: '23', delta: '+4', good: true },
-            { label: 'Réservations', value: '61', delta: '+9,1 %', good: true },
-            { label: 'Couverts', value: '184', delta: null, good: true },
+            { label: 'Demandes de projet', value: '9', delta: '+3', good: true },
+            { label: 'Rendez-vous', value: '6', delta: null, good: true },
           ].map((stat) => (
             <div key={stat.label} className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
               <p className="text-[10px] text-[#5e676f]">{stat.label}</p>
@@ -209,19 +208,19 @@ export function DashboardMock({ className }: { className?: string }) {
             <SparkChart className="mt-3" />
           </div>
           <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
-            <p className="text-[11px] font-medium">Prochaines réservations</p>
+            <p className="text-[11px] font-medium">Prochains rendez-vous</p>
             <ul className="mt-2.5 space-y-2">
               {[
-                { time: '19:30', name: 'Famille Léger', size: 4 },
-                { time: '20:00', name: 'C. Moreau', size: 2 },
-                { time: '20:45', name: 'Table 12', size: 6 },
+                { time: '09:30', name: 'Famille Léger', kind: 'Visite' },
+                { time: '14:00', name: 'C. Moreau', kind: 'Premier échange' },
+                { time: '17:15', name: 'M. Garnier', kind: 'Choix des matières' },
               ].map((booking) => (
                 <li key={booking.time} className="flex items-center gap-2.5 text-[10px]">
                   <span className="bg-[rgb(20_24_28/0.08)] px-1.5 py-0.5 font-mono text-[#14181c]">
                     {booking.time}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[#14181c]">{booking.name}</span>
-                  <span className="text-[#5e676f]">{booking.size} pers.</span>
+                  <span className="truncate text-[#5e676f]">{booking.kind}</span>
                 </li>
               ))}
             </ul>
@@ -258,7 +257,7 @@ export function ProjectMock({ className }: { className?: string }) {
       <div className="min-w-0 flex-1 p-4 sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-medium">Votre projet — Restaurant Dupont</p>
+            <p className="truncate text-[13px] font-medium">Votre projet — Atelier Voltaire</p>
             <p className="mt-0.5 text-[11px] text-[#5e676f]">
               Paiement reçu · votre site est en cours de développement
             </p>
@@ -303,7 +302,7 @@ export function ProjectMock({ className }: { className?: string }) {
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
             <p className="text-[10px] text-[#5e676f]">Éléments demandés</p>
-            <p className="mt-1 text-[11px]">Photos de la salle · 2 fichiers attendus</p>
+            <p className="mt-1 text-[11px]">Photos des réalisations · 2 fichiers attendus</p>
           </div>
           <div className="border border-[rgb(20_24_28/0.14)] bg-white/70 p-3">
             <p className="text-[10px] text-[#5e676f]">Éditeur</p>
@@ -378,8 +377,8 @@ export function EditorMock({ className }: { className?: string }) {
         <ul className="space-y-1">
           {[
             { label: 'Accueil', active: true },
-            { label: 'La carte' },
-            { label: 'Réservation' },
+            { label: 'Projets' },
+            { label: 'Approche' },
             { label: 'Contact' },
           ].map((page) => (
             <li
@@ -428,7 +427,7 @@ export function EditorMock({ className }: { className?: string }) {
 
         <div className="p-4">
           <p className="text-[9px] text-[#5e676f]">
-            Aperçu de votre site — restaurant-dupont.example
+            Aperçu de votre site — atelier-voltaire.example
           </p>
           <div className="mt-2 border border-[rgb(20_24_28/0.14)] p-4">
             <div className="outline-1 outline-offset-4 outline-[#2f5f86] outline-dashed">
@@ -437,9 +436,11 @@ export function EditorMock({ className }: { className?: string }) {
             </div>
             <div className="mt-2 h-2 w-1/2 bg-[rgb(20_24_28/0.14)]" />
             <div className="mt-3 flex gap-2">
-              <span className="bg-[#14181c] px-3 py-1 text-[9px] text-[#f1f2f3]">Réserver</span>
+              <span className="bg-[#14181c] px-3 py-1 text-[9px] text-[#f1f2f3]">
+                Découvrir nos projets
+              </span>
               <span className="border border-[rgb(20_24_28/0.3)] px-3 py-1 text-[9px] text-[#14181c]">
-                Voir la carte
+                Prendre contact
               </span>
             </div>
           </div>
@@ -464,19 +465,19 @@ export function EditorMock({ className }: { className?: string }) {
           <div>
             <p className="text-[9px] text-[#5e676f]">Titre</p>
             <div className="mt-1 border border-[#2f5f86]/55 bg-white/80 px-2 py-1.5 text-[10px] text-[#14181c]">
-              Une cuisine qui vous ressemble
+              L’art de concevoir des intérieurs uniques.
             </div>
           </div>
           <div>
             <p className="text-[9px] text-[#5e676f]">Texte</p>
             <div className="mt-1 h-10 border border-[rgb(20_24_28/0.18)] bg-white/80 px-2 py-1.5 text-[9px] leading-relaxed text-[#4b545c]">
-              Découvrez notre carte et réservez votre table.
+              Des lieux singuliers, pensés pour vous, à Paris et à l’international.
             </div>
           </div>
           <div>
             <p className="text-[9px] text-[#5e676f]">Image</p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="h-7 w-10 bg-[linear-gradient(135deg,#d8d6d2,#9fb7cb)]" />
+              <span className="h-7 w-10 bg-[linear-gradient(135deg,#e4d8c6,#8d7457)]" />
               <span className="border border-[rgb(20_24_28/0.2)] px-2 py-1 text-[9px] text-[#4b545c]">
                 Remplacer
               </span>
@@ -485,283 +486,11 @@ export function EditorMock({ className }: { className?: string }) {
           <div>
             <p className="text-[9px] text-[#5e676f]">Bouton — texte et lien</p>
             <div className="mt-1 border border-[rgb(20_24_28/0.18)] bg-white/80 px-2 py-1.5 text-[10px] text-[#4b545c]">
-              Réserver · /reservation
+              Découvrir nos projets · #projets
             </div>
           </div>
         </div>
       </aside>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Site client rendu                                                          */
-/* -------------------------------------------------------------------------- */
-
-export type SitePreviewVariant = 'restaurant' | 'coiffeur' | 'artisan';
-
-const SITE_PREVIEWS: Record<
-  SitePreviewVariant,
-  {
-    name: string;
-    nav: string[];
-    title: string;
-    subtitle: string;
-    cta: string;
-    accent: string;
-    bg: string;
-    fg: string;
-    surface: string;
-    cards: Array<{ title: string; meta: string }>;
-    sectionLabel: string;
-  }
-> = {
-  restaurant: {
-    name: 'Restaurant Dupont',
-    nav: ['La carte', 'Le restaurant', 'Réserver', 'Contact'],
-    title: 'Une cuisine de saison,\nau cœur de Lyon.',
-    subtitle: 'Produits frais, carte renouvelée chaque mois, réservation en ligne.',
-    cta: 'Réserver une table',
-    accent: '#C2703A',
-    bg: '#14100D',
-    fg: '#FAF6F1',
-    surface: 'rgba(255,255,255,0.05)',
-    sectionLabel: 'Suggestions du moment',
-    cards: [
-      { title: 'Velouté de courge', meta: '9 €' },
-      { title: 'Filet de bar, beurre blanc', meta: '24 €' },
-      { title: 'Tarte fine aux pommes', meta: '8 €' },
-    ],
-  },
-  coiffeur: {
-    name: 'Atelier Camille',
-    nav: ['Prestations', 'L’équipe', 'Rendez-vous', 'Contact'],
-    title: 'Votre coupe,\npensée pour vous.',
-    subtitle: 'Diagnostic personnalisé, produits soignés, rendez-vous en ligne 7j/7.',
-    cta: 'Prendre rendez-vous',
-    accent: '#B08D6A',
-    bg: '#FDFCFB',
-    fg: '#1A1715',
-    surface: 'rgba(0,0,0,0.035)',
-    sectionLabel: 'Prestations',
-    cards: [
-      { title: 'Coupe & brushing', meta: '45 min · 42 €' },
-      { title: 'Couleur végétale', meta: '1 h 30 · 78 €' },
-      { title: 'Soin profond', meta: '30 min · 28 €' },
-    ],
-  },
-  artisan: {
-    name: 'Martin Plomberie',
-    nav: ['Prestations', 'Zones', 'Réalisations', 'Devis'],
-    title: 'Depannage plomberie,\n7j/7 en Haute-Savoie.',
-    subtitle: 'Intervention rapide, devis gratuit, travail garanti et assuré.',
-    cta: 'Demander un devis',
-    accent: '#3B82F6',
-    bg: '#0B0D12',
-    fg: '#F5F7FA',
-    surface: 'rgba(255,255,255,0.05)',
-    sectionLabel: 'Nos interventions',
-    cards: [
-      { title: 'Fuite & dépannage', meta: 'Urgence 7j/7' },
-      { title: 'Chauffe-eau', meta: 'Devis gratuit' },
-      { title: 'Salle de bain', meta: 'Sur devis' },
-    ],
-  },
-};
-
-export function SitePreview({
-  variant,
-  className,
-}: {
-  variant: SitePreviewVariant;
-  className?: string;
-}) {
-  const site = SITE_PREVIEWS[variant];
-  const isLight = variant === 'coiffeur';
-
-  return (
-    <div
-      className={cn('h-full min-h-[22rem] overflow-hidden', className)}
-      style={{ background: site.bg, color: site.fg }}
-    >
-      <div
-        className="flex items-center justify-between px-5 py-3 text-[10px]"
-        style={{
-          borderBottom: `1px solid ${isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.08)'}`,
-        }}
-      >
-        <span className="font-medium tracking-tight">{site.name}</span>
-        <nav aria-hidden="true" className="hidden gap-4 opacity-60 sm:flex">
-          {site.nav.map((item) => (
-            <span key={item}>{item}</span>
-          ))}
-        </nav>
-        <span
-          className="rounded-full px-2.5 py-1 text-[9px] font-medium"
-          style={{ background: site.accent, color: isLight ? '#fff' : '#fff' }}
-        >
-          {site.cta}
-        </span>
-      </div>
-
-      <div className="px-5 py-8 sm:px-8 sm:py-10">
-        <h3 className="text-xl leading-[1.15] font-medium tracking-[-0.03em] whitespace-pre-line sm:text-2xl">
-          {site.title}
-        </h3>
-        <p className="mt-3 max-w-md text-[11px] leading-relaxed opacity-60">{site.subtitle}</p>
-        <div className="mt-5 flex gap-2">
-          <span
-            className="rounded-md px-3.5 py-1.5 text-[10px] font-medium"
-            style={{ background: site.accent, color: '#fff' }}
-          >
-            {site.cta}
-          </span>
-          <span
-            className="rounded-md px-3.5 py-1.5 text-[10px]"
-            style={{
-              border: `1px solid ${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.16)'}`,
-            }}
-          >
-            En savoir plus
-          </span>
-        </div>
-
-        <p className="mt-8 text-[9px] font-medium tracking-[0.14em] uppercase opacity-40">
-          {site.sectionLabel}
-        </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          {site.cards.map((card) => (
-            <div
-              key={card.title}
-              className="rounded-lg p-3"
-              style={{
-                background: site.surface,
-                border: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.07)'}`,
-              }}
-            >
-              <div
-                className="mb-2.5 h-12 rounded"
-                style={{ background: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)' }}
-              />
-              <p className="text-[10px] font-medium">{card.title}</p>
-              <p className="mt-0.5 text-[9px] opacity-55">{card.meta}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Panneaux flottants                                                         */
-/* -------------------------------------------------------------------------- */
-
-export function InboxPanel({ className }: { className?: string }) {
-  return (
-    <div className={cn('p-3.5 glass-3', className)}>
-      <div className="flex items-center justify-between">
-        <p className="kicker !text-[10px]">Messages</p>
-        <span className="bg-[var(--accent)] px-1.5 text-[9px] font-semibold text-white">3</span>
-      </div>
-      <ul className="mt-2.5 space-y-2">
-        {[
-          {
-            name: 'Claire Besson',
-            text: 'Bonjour, avez-vous une table pour 6…',
-            time: 'il y a 4 min',
-          },
-          { name: 'Julien M.', text: 'Proposez-vous un menu sans gluten ?', time: 'il y a 1 h' },
-        ].map((message) => (
-          <li key={message.name} className="flex gap-2.5">
-            <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-[var(--foreground)]">{message.name}</p>
-              <p className="truncate text-[10px] text-[var(--muted)]">{message.text}</p>
-              <p className="text-[9px] text-[var(--muted)] opacity-70">{message.time}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export function PaymentPanel({ className }: { className?: string }) {
-  return (
-    <div className={cn('p-3.5 glass-3', className)}>
-      <p className="kicker !text-[10px]">Paiement reçu</p>
-      <p className="mt-2 text-2xl font-bold tracking-[-0.05em] tabular-nums">48,00 €</p>
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--success)]">
-        <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor" className="size-3">
-          <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
-        </svg>
-        Versé sur votre compte
-      </div>
-      <p className="mt-2.5 border-t border-[var(--border)] pt-2.5 text-[9px] leading-relaxed text-[var(--muted)]">
-        Encaissé sur votre propre compte Stripe. Nemasus ne prélève aucune commission.
-      </p>
-    </div>
-  );
-}
-
-export function BookingPanel({ className }: { className?: string }) {
-  return (
-    <div className={cn('p-3.5 glass-3', className)}>
-      <p className="kicker !text-[10px]">Nouvelle réservation</p>
-      <div className="mt-2.5 space-y-1.5 text-[10px]">
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Samedi 14 mars</span>
-          <span className="font-mono">20:00</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Personnes</span>
-          <span>4</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Nom</span>
-          <span>C. Besson</span>
-        </div>
-      </div>
-      <div className="mt-3 flex gap-1.5">
-        <span className="flex-1 bg-[var(--primary)] py-1 text-center text-[9px] font-medium text-[var(--primary-foreground)]">
-          Confirmer
-        </span>
-        <span className="border border-[var(--border)] px-2.5 py-1 text-[9px] text-[var(--muted)]">
-          Refuser
-        </span>
-      </div>
-    </div>
-  );
-}
-
-export function DeployPanel({ className }: { className?: string }) {
-  return (
-    <div className={cn('p-3.5 glass-3', className)}>
-      <p className="kicker !text-[10px]">Publication</p>
-      <ul className="mt-2 space-y-1.5 text-[10px]">
-        {[
-          { label: 'Contenu validé', done: true },
-          { label: 'Commit 47ab91c', done: true },
-          { label: 'Déploiement Cloudflare', done: true },
-          { label: 'En ligne, confirmé', done: true },
-        ].map((step) => (
-          <li key={step.label} className="flex items-center gap-2">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="size-3 text-[var(--success)]"
-            >
-              <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm3.2 4.55-4 4.25-2.4-2.3 1.04-1.08 1.33 1.28 2.96-3.15 1.07 1Z" />
-            </svg>
-            <span className="text-[var(--foreground-muted)]">{step.label}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-2.5 border-t border-[var(--border)] pt-2 text-[9px] text-[var(--muted)]">
-        version 14 · publiée par Marc
-      </p>
     </div>
   );
 }

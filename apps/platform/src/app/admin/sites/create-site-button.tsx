@@ -47,7 +47,7 @@ export function CreateSiteButton({ businessTypes }: { businessTypes: CreateSiteO
         dismissible={!pending}
         size="md"
         title="Créer un site"
-        description="Le site part de zéro. Vous le construisez dans l’éditeur, puis vous le confiez à son client : il n’y a accès qu’à partir de ce moment. Vous en gardez la main."
+        description="Le site part de zéro. Vous le construisez dans l’éditeur, puis vous le confiez à son client en lui envoyant, depuis la fiche du site, son code d’accès personnel : il n’y a accès qu’à partir de ce moment. Vous en gardez la main."
         footer={
           <>
             <Button variant="ghost" disabled={pending} onClick={() => setOpen(false)}>

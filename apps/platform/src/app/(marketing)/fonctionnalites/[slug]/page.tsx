@@ -12,12 +12,8 @@ import {
   SectionHeading,
 } from '@nemasus/ui';
 import { FEATURE_PAGES, getFeaturePage } from '~/content/features';
-import {
-  BrowserFrame,
-  DashboardMock,
-  EditorMock,
-  SitePreview,
-} from '~/components/marketing/product-visuals';
+import { BrowserFrame, DashboardMock, EditorMock } from '~/components/marketing/product-visuals';
+import { SiteExampleStill } from '~/components/marketing/site-example';
 import { DomainRoutingDiagram, PaymentRoutingDiagram } from '~/components/marketing/diagrams';
 import { metaDescription } from '~/lib/seo';
 
@@ -177,24 +173,20 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
 function FeatureVisual({ visual }: { visual: string }) {
   if (visual === 'editor') {
     return (
-      <BrowserFrame url="nemasus.fr/app/editeur">
+      <BrowserFrame url="nemasus.com/app/editeur">
         <EditorMock />
       </BrowserFrame>
     );
   }
   if (visual === 'dashboard') {
     return (
-      <BrowserFrame url="nemasus.fr/app">
+      <BrowserFrame url="nemasus.com/app">
         <DashboardMock />
       </BrowserFrame>
     );
   }
   if (visual === 'site') {
-    return (
-      <BrowserFrame url="restaurant-dupont.example">
-        <SitePreview variant="restaurant" />
-      </BrowserFrame>
-    );
+    return <SiteExampleStill />;
   }
   if (visual === 'domains') {
     return (

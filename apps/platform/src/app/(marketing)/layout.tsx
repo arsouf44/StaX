@@ -1,5 +1,7 @@
+import { MobileCtaBar } from '~/components/marketing/mobile-cta';
 import { SiteHeader } from '~/components/marketing/site-header';
 import { SiteFooter } from '~/components/marketing/site-footer';
+import { supportContact } from '~/lib/contact';
 
 /**
  * Enveloppe du site public.
@@ -10,6 +12,7 @@ import { SiteFooter } from '~/components/marketing/site-footer';
  * consentement serait ajoute, un bandeau devrait l'etre dans le meme temps.
  */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+  const contact = supportContact();
   return (
     <div className="relative flex min-h-dvh flex-col">
       <SiteHeader />
@@ -17,6 +20,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <SiteFooter />
+      <MobileCtaBar phone={contact.phone} phoneHref={contact.phoneHref} />
     </div>
   );
 }

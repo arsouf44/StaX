@@ -1,5 +1,5 @@
 import 'server-only';
-import { bankTransferDetails } from '@nemasus/config';
+import { bankTransferDetails, deliveryPolicyConfig } from '@nemasus/config';
 import type { Db } from '@nemasus/database';
 import {
   accessCodeEmail,
@@ -246,6 +246,7 @@ export async function sendPaymentInstructionsEmail(
         message: order.payment_message,
         reminder: options.reminder ?? false,
         termsVersion: TERMS_VERSION,
+        deliveryLabel: deliveryPolicyConfig().label,
       }),
       { organizationId: order.organization_id ?? undefined },
     ),

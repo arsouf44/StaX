@@ -157,6 +157,24 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Exemple de site (page d accueil statique, affichee dans un cadre
+        // isole sur /realisations et l accueil). Sa propre CSP, plus stricte
+        // que celle des pages publiques : ses images, sa feuille de style
+        // inline, son unique script, rien d autre. Jamais indexee : c est
+        // une illustration, pas une page du site.
+        source: '/exemples/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value:
+              "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'self'; " +
+              "base-uri 'none'; form-action 'none'; frame-ancestors 'self'",
+          },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
+        ],
+      },
+      {
         // Polices des sites clients, auto-hebergees : l apercu de l editeur
         // est un document isole (origine opaque), qui les charge en CORS.
         source: '/_nemasus/fonts/:file*',

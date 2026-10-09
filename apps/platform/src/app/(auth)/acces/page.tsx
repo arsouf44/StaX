@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Accès client',
   description:
-    'Saisissez le code d’accès personnel reçu après votre paiement pour ouvrir votre espace Nemasus et retrouver votre site.',
+    'Saisissez le code d’accès personnel reçu après votre paiement : il crée votre compte Nemasus et l’ouvre sur votre site.',
   alternates: { canonical: '/acces' },
   robots: { index: false, follow: true },
 };
@@ -50,10 +50,17 @@ export default async function AccessPage({
   return (
     <AuthCard
       title="Entrez votre code d’accès"
-      description="Votre code personnel vous a été envoyé par e-mail dès réception de votre paiement. Il ouvre votre espace et votre site."
+      description="Votre code personnel vous a été envoyé par e-mail dès réception de votre paiement. Il ne sert qu’une fois, à votre inscription : il crée votre compte et l’ouvre sur votre site. Ensuite, vous vous connectez avec votre e-mail et votre mot de passe."
       footer={
         <>
-          Pas encore de code ?{' '}
+          Déjà inscrit ?{' '}
+          <Link
+            href="/connexion"
+            className="whitespace-nowrap text-[var(--foreground)] underline underline-offset-4"
+          >
+            Se connecter
+          </Link>{' '}
+          · Pas encore de code ?{' '}
           <Link
             href="/commander"
             className="whitespace-nowrap text-[var(--foreground)] underline underline-offset-4"

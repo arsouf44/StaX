@@ -38,9 +38,11 @@ exactement le même chemin.
 ## 2. Modalités de paiement (équipe)
 
 `/admin/commandes/{id}` → « 1. Modalités de paiement » : montant convenu (TTC)
-et message facultatif. L’e-mail contient le montant, le titulaire, l’IBAN, le
-BIC et la **référence à indiquer dans le libellé du virement**, avec un
-avertissement : *nos coordonnées bancaires ne changent jamais par e-mail*.
+et message facultatif. L’e-mail contient le montant, le **délai de réalisation**
+de référence des CGV (article 8, `DELIVERY_MIN_WEEKS` / `DELIVERY_MAX_WEEKS`,
+« sauf indication contraire » si le message en précise un autre), le titulaire,
+l’IBAN, le BIC et la **référence à indiquer dans le libellé du virement**, avec
+un avertissement : *nos coordonnées bancaires ne changent jamais par e-mail*.
 
 Les coordonnées viennent de la configuration serveur (`BANK_TRANSFER_HOLDER`,
 `BANK_TRANSFER_IBAN`, `BANK_TRANSFER_BIC`, `BANK_TRANSFER_BANK`). Sans titulaire
@@ -81,6 +83,15 @@ n’est mise à jour qu’après « J’ai noté le code ».
 
 Messages affichés : code non reconnu, expiré, désactivé, déjà utilisé, trop de
 tentatives, compte indisponible. Aucun ne révèle une adresse ou un autre client.
+
+**Un code par personne.** Hors commande, l’équipe crée un site
+(`/admin/sites` → « Créer un site »), puis remet depuis sa fiche un code à
+chaque personne (« Codes d’accès — un par personne » : adresse, rôle, durée).
+Le code part par e-mail et s’affiche une fois. Émettre un nouveau code pour la
+même adresse sur ce site désactive celui qu’elle n’a pas encore utilisé : une
+personne n’a jamais deux codes valables pour un même site. Les comptes ainsi
+créés apparaissent dans `/admin/utilisateurs` ; l’équipe garde la main sur le
+site. Parcours vérifié par `tests/e2e/journeys/site-access-code.spec.ts`.
 
 ## 5. Accès (client)
 
@@ -151,3 +162,4 @@ Sans clé, les e-mails sont seulement journalisés (mode console).
 | `tests/unit/site-orders.test.ts` | Format et empreinte des codes, montants, e-mails (échappement, IBAN, référence), configuration Resend |
 | `tests/e2e/journeys/bank-transfer.spec.ts` | Le parcours entier par l’interface, de la commande à la réinitialisation du mot de passe |
 | `tests/e2e/journeys/penetration.spec.ts` | Un client ne lit, ne valide ni ne consomme rien d’un autre |
+| `tests/e2e/journeys/site-access-code.spec.ts` | Un code par personne : le nouveau désactive l’ancien, le code crée le compte une seule fois |

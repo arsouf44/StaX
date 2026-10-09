@@ -188,7 +188,7 @@ export default function HowItWorksPage() {
             </Reveal>
             <div className="lg:sticky lg:top-28">
               <BrowserFrame
-                url="nemasus.fr/app"
+                url="nemasus.com/app"
                 label="Illustration : le suivi du projet dans l’espace client, étape par étape"
               >
                 <ProjectMock />
@@ -271,7 +271,7 @@ export default function HowItWorksPage() {
             <Reveal delay={80}>
               <div className="stage">
                 <BrowserFrame
-                  url="nemasus.fr/app/editeur"
+                  url="nemasus.com/app/editeur"
                   label="Illustration : l’éditeur Nemasus, ouvert à la livraison du site"
                 >
                   <EditorMock />

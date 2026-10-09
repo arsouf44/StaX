@@ -163,7 +163,12 @@ describe('le vrai produit, dit clairement', () => {
   });
 
   it('la FAQ de l’accueil est complète et répond d’abord « non, vous ne construisez rien »', () => {
-    expect(HOMEPAGE_FAQ).toHaveLength(6);
+    // Huit questions : le produit, puis les objections d'achat (prix, délai,
+    // satisfaction, paiement), puis l'autonomie et l'accès.
+    expect(HOMEPAGE_FAQ).toHaveLength(8);
+    expect(HOMEPAGE_FAQ.map((item) => item.question)).toContain(
+      'Et si le résultat ne me convient pas ?',
+    );
     expect(HOMEPAGE_FAQ[0]?.question).toBe('Est-ce que je construis mon site moi-même ?');
     expect(HOMEPAGE_FAQ[0]?.answer).toMatch(/^Non\./);
   });

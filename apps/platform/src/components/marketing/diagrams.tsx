@@ -13,9 +13,8 @@ import { cn } from '@nemasus/ui';
 /* -------------------------------------------------------------------------- */
 
 const SITES = [
-  { host: 'restaurant-dupont.example', project: 'restaurant-dupont', color: '#2f5f86' },
-  { host: 'atelier-camille.example', project: 'atelier-camille', color: '#4f9a7a' },
-  { host: 'martin-plomberie.example', project: 'martin-plomberie', color: '#c9956b' },
+  { host: 'atelier-voltaire.example', project: 'atelier-voltaire', color: '#ad8b62' },
+  { host: 'votre-entreprise.example', project: 'votre-entreprise', color: '#2f5f86' },
 ];
 
 /**
