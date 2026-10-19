@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { isIndexable } from '@nemasus/config';
 import { BRAND } from '@nemasus/ui/brand/tokens';
 
 /**
@@ -72,9 +73,17 @@ export function pageMetadata(page: PageSeo): Metadata {
       description,
       images: ['/twitter-image'],
     },
-    robots:
-      page.index === false
-        ? { index: false, follow: true }
+    /*
+     * `robots` par page ECRASE celui de la mise en page racine : la regle qui
+     * retire le site des moteurs tant qu'il n'a pas son propre domaine doit
+     * donc etre reprise ici, sinon chaque page la contredirait.
+     */
+    robots: !isIndexable()
+      ? // Le site ne s'est pas reconnu : rien n'est explore, rien n'est indexe.
+        { index: false, follow: false }
+      : page.index === false
+        ? // Cette page-la n'est pas indexable, mais ses liens restent suivis.
+          { index: false, follow: true }
         : {
             index: true,
             follow: true,

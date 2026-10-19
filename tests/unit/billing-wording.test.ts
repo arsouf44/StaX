@@ -7,11 +7,19 @@ import { formatMaintenance, maintenancePeriodLabel } from '@nemasus/payments/mon
 /**
  * Periodicite de la maintenance.
  *
- * La maintenance Nemasus est MENSUELLE et commence a la LIVRAISON du site. Un
- * libelle « / an », « annuelle » ou « premiere annee de maintenance » oublie
- * dans un ecran annoncerait un prix ou un engagement faux au moment ou la
- * personne decide d'acheter. Aucune exception ne signale ce genre d'erreur :
- * seule une regle le peut.
+ * DEUX PERIODICITES COEXISTENT, et c'est la source de l'erreur que cette
+ * regle attrape :
+ *
+ *  - l'OFFRE PUBLIQUE est annuelle : la maintenance est comprise la premiere
+ *    annee, puis facturee a l'annee (voir `pricingPolicyConfig`) ;
+ *  - les CONTRATS deja vendus sur l'ancienne grille sont mensuels, et leur
+ *    periodicite reelle est lue dans `billing_interval` (migration 0043).
+ *
+ * Un ecran de facturation qui ecrirait « / an » en dur annoncerait donc une
+ * periodicite fausse au client dont le contrat est mensuel. La regle reste
+ * entiere pour ces ecrans ; seuls les fichiers qui portent le PRIX PUBLIC de
+ * l'offre ont le droit d'ecrire une periodicite annuelle, parce que c'est la
+ * leur.
  */
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -20,6 +28,14 @@ const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const ALLOWED = new Set([
   join(ROOT, 'packages/payments/src/money.ts'),
   join(ROOT, 'packages/types/src/entities.ts'),
+  // Le prix public de l'offre et son unique rendu : la periodicite annoncee
+  // est celle de l'offre, pas celle d'un contrat en cours.
+  join(ROOT, 'packages/config/src/legal.ts'),
+  join(ROOT, 'apps/platform/src/components/marketing/offer-terms.tsx'),
+  join(ROOT, 'apps/platform/src/content/faq.ts'),
+  join(ROOT, 'apps/platform/src/content/legal.ts'),
+  join(ROOT, 'apps/platform/src/lib/llms.ts'),
+  join(ROOT, 'apps/platform/src/lib/schema.ts'),
 ]);
 
 function sourceFiles(directory: string, files: string[] = []): string[] {

@@ -16,6 +16,10 @@ const ORIGIN = 'https://nemasus.example';
 beforeAll(() => {
   process.env.PLATFORM_URL = ORIGIN;
   process.env.NEXT_PUBLIC_PLATFORM_URL = ORIGIN;
+  // Les pages ne s'offrent aux moteurs qu'en production, sous leur propre
+  // domaine : les deux conditions sont posees ici pour que les assertions
+  // portent sur le comportement reel du site en ligne.
+  process.env.NEMASUS_ENV = 'production';
 });
 
 describe('description pour les moteurs', () => {
@@ -87,6 +91,43 @@ describe('metadonnees d une page', () => {
     expect(og.modifiedTime).toBe('2026-10-08');
   });
 
+  it.each([
+    ['une adresse de déploiement', 'https://nemasus-xyz.vercel.app'],
+    ['un hôte Cloudflare Pages', 'https://nemasus.pages.dev'],
+    ['la machine locale', 'http://localhost:3000'],
+    ['une boucle locale', 'http://127.0.0.1:3000'],
+    ['une adresse servie en clair', 'http://nemasus.com'],
+  ])('retire TOUT le site des moteurs sous %s', async (_label, url) => {
+    // Sans `PLATFORM_URL`, l'adresse publique retombe sur celle du
+    // deploiement ou sur localhost : le site serait indexe sous une adresse
+    // qui n'est pas la sienne, et le vrai domaine en deviendrait un
+    // duplicata. Le controle porte sur l'adresse RESOLUE, pas sur la
+    // presence d'une variable.
+    process.env.PLATFORM_URL = url;
+    process.env.NEXT_PUBLIC_PLATFORM_URL = url;
+    try {
+      const { platformUrlIsNotPublic, isIndexable } = await import('@nemasus/config');
+      expect(platformUrlIsNotPublic()).toBe(true);
+      expect(isIndexable()).toBe(false);
+
+      const { pageMetadata } = await import('~/lib/seo');
+      const meta = pageMetadata({ path: '/', title: 'Accueil', description: 'D.' });
+      expect(meta.robots).toMatchObject({ index: false, follow: false });
+
+      const robots = (await import('~/app/robots')).default;
+      expect(robots().rules).toEqual([{ userAgent: '*', disallow: '/' }]);
+    } finally {
+      process.env.PLATFORM_URL = ORIGIN;
+      process.env.NEXT_PUBLIC_PLATFORM_URL = ORIGIN;
+    }
+  });
+
+  it('s offre aux moteurs sous son propre domaine, en HTTPS', async () => {
+    const { isIndexable, platformUrlIsNotPublic } = await import('@nemasus/config');
+    expect(platformUrlIsNotPublic()).toBe(false);
+    expect(isIndexable()).toBe(true);
+  });
+
   it('sait retirer une page des moteurs tout en gardant ses liens suivis', async () => {
     const { pageMetadata } = await import('~/lib/seo');
     const meta = pageMetadata({
@@ -156,20 +197,26 @@ describe('llms.txt — le site ecrit pour les assistants', () => {
     // Nemasus ressemble, vu de loin, a un createur de sites en ligne.
     expect(text).toContain('Ce que ce n’est pas');
     expect(text).toContain('glisser-déposer');
-    expect(text).toContain('aucun prix public');
     expect(text).toContain('virement bancaire');
     expect(text).toContain('code d’accès personnel');
   });
 
-  it('n annonce ni prix, ni chiffre d affaires, ni promesse inventee', async () => {
+  it('donne le prix de depart AVEC son cout recurrent, jamais seul', async () => {
     const { llmsFullTxt, llmsTxt } = await import('~/lib/llms');
+    const { pricingPolicyConfig } = await import('@nemasus/config');
+    const pricing = pricingPolicyConfig();
+
     for (const [name, text] of [
       ['llms.txt', llmsTxt()],
       ['llms-full.txt', llmsFullTxt()],
     ] as const) {
-      expect(text, name).not.toMatch(/\d[\d\s\u00a0\u202f]*(?:,\d{2})?\s?€|€\s?\d/);
-      expect(text, name).not.toMatch(/\/\s?mois|par mois|abonnement mensuel/i);
-      // Aucun chiffre de resultat : la regle du site vaut pour ses fichiers.
+      // Un assistant qui ne lit que le prix d'appel repondra « 350 € » tout
+      // court. Les deux montants et le « HT » doivent etre dans le fichier.
+      expect(text, name).toMatch(new RegExp(`${pricing.fromEur}\\s?€ HT`));
+      expect(text, name).toMatch(new RegExp(`${pricing.maintenanceEurPerYear}\\s?€ HT par an`));
+      expect(text, name).toMatch(/hors taxes/i);
+      // Ni abonnement mensuel, ni chiffre de resultat invente.
+      expect(text, name).not.toMatch(/abonnement mensuel|par mois/i);
       expect(text, name).not.toMatch(/\d+\s?% de (?:ventes|disponibilité|clients)/i);
       expect(text, name).not.toMatch(/CONFIGURER/i);
     }

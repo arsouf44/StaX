@@ -186,9 +186,9 @@ describe('injection de formule CSV', () => {
 
 describe('resolution du tenant par hostname', () => {
   const config = {
-    platformHost: 'nemasus.fr',
-    sitesDomain: 'sites.nemasus.fr',
-    previewDomain: 'preview.sites.nemasus.fr',
+    platformHost: 'nemasus.com',
+    sitesDomain: 'sites.nemasus.com',
+    previewDomain: 'preview.sites.nemasus.com',
   };
 
   it('normalise l en-tete Host', () => {
@@ -199,11 +199,11 @@ describe('resolution du tenant par hostname', () => {
   });
 
   it('distingue plateforme, sous-domaine, apercu et domaine client', () => {
-    expect(resolveHostname('nemasus.fr', config).kind).toBe('platform');
-    expect(resolveHostname('www.nemasus.fr', config).kind).toBe('platform');
-    expect(resolveHostname('preview.sites.nemasus.fr', config).kind).toBe('preview');
+    expect(resolveHostname('nemasus.com', config).kind).toBe('platform');
+    expect(resolveHostname('www.nemasus.com', config).kind).toBe('platform');
+    expect(resolveHostname('preview.sites.nemasus.com', config).kind).toBe('preview');
 
-    const tenant = resolveHostname('restaurant-dupont.sites.nemasus.fr', config);
+    const tenant = resolveHostname('restaurant-dupont.sites.nemasus.com', config);
     expect(tenant.kind).toBe('platform-subdomain');
     expect(tenant.subdomain).toBe('restaurant-dupont');
 
@@ -211,8 +211,8 @@ describe('resolution du tenant par hostname', () => {
   });
 
   it('refuse un sous-domaine imbrique ou malforme', () => {
-    expect(resolveHostname('a.b.sites.nemasus.fr', config).kind).toBe('invalid');
-    expect(resolveHostname('-mauvais.sites.nemasus.fr', config).kind).toBe('invalid');
+    expect(resolveHostname('a.b.sites.nemasus.com', config).kind).toBe('invalid');
+    expect(resolveHostname('-mauvais.sites.nemasus.com', config).kind).toBe('invalid');
     expect(resolveHostname('', config).kind).toBe('invalid');
     expect(resolveHostname('pas-de-point', config).kind).toBe('invalid');
   });
@@ -232,17 +232,29 @@ describe('resolution du tenant par hostname', () => {
 
 describe('cle de cache edge', () => {
   it('isole chaque tenant et chaque version', () => {
-    const a = buildCacheKey({ hostname: 'a.sites.nemasus.fr', path: '/', contentHash: 'abc123ff' });
-    const b = buildCacheKey({ hostname: 'b.sites.nemasus.fr', path: '/', contentHash: 'abc123ff' });
-    const c = buildCacheKey({ hostname: 'a.sites.nemasus.fr', path: '/', contentHash: 'def456aa' });
+    const a = buildCacheKey({
+      hostname: 'a.sites.nemasus.com',
+      path: '/',
+      contentHash: 'abc123ff',
+    });
+    const b = buildCacheKey({
+      hostname: 'b.sites.nemasus.com',
+      path: '/',
+      contentHash: 'abc123ff',
+    });
+    const c = buildCacheKey({
+      hostname: 'a.sites.nemasus.com',
+      path: '/',
+      contentHash: 'def456aa',
+    });
     expect(a).not.toBe(b);
     expect(a).not.toBe(c);
-    expect(a).toContain('a.sites.nemasus.fr');
+    expect(a).toContain('a.sites.nemasus.com');
   });
 
   it('refuse une empreinte forgee', () => {
     expect(() =>
-      buildCacheKey({ hostname: 'a.sites.nemasus.fr', path: '/', contentHash: '../../etc' }),
+      buildCacheKey({ hostname: 'a.sites.nemasus.com', path: '/', contentHash: '../../etc' }),
     ).toThrow();
   });
 });

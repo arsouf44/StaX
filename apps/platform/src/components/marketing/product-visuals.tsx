@@ -315,9 +315,18 @@ export function ProjectMock({ className }: { className?: string }) {
 }
 
 /** Courbe de frequentation. Forme fixe et deterministe : aucune donnee inventee. */
+/**
+ * Courbe de frequentation de l'exemple.
+ *
+ * Une courbe sans echelle ne se lit pas : l'œil n'y voit qu'une decoration,
+ * et sur le site d'un studio cela donne l'impression d'un graphique pose la
+ * pour remplir. Elle porte donc ses reperes — le maximum, le minimum et les
+ * bornes de la periode — comme le fera celle du vrai tableau de bord.
+ */
 function SparkChart({ className }: { className?: string }) {
   const points = [18, 24, 21, 32, 28, 41, 38, 46, 44, 52, 49, 58, 54, 63];
   const max = Math.max(...points);
+  const min = Math.min(...points);
   const width = 260;
   const height = 64;
   const step = width / (points.length - 1);
@@ -330,27 +339,40 @@ function SparkChart({ className }: { className?: string }) {
     .join(' ');
 
   return (
-    <svg
-      aria-hidden="true"
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
-      className={cn('h-16 w-full', className)}
-    >
-      <defs>
-        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#2f5f86" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#2f5f86" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${path} L${width} ${height} L0 ${height} Z`} fill="url(#spark-fill)" />
-      <path
-        d={path}
-        fill="none"
-        stroke="#2f5f86"
-        strokeWidth="1.5"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
+    <div className={cn('flex gap-2', className)}>
+      <div className="flex shrink-0 flex-col justify-between py-px text-[8px] text-[#838c94] tabular-nums">
+        <span>{max}</span>
+        <span>{min}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <svg
+          aria-hidden="true"
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="none"
+          className="h-16 w-full"
+        >
+          <defs>
+            <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop stopColor="#2f5f86" stopOpacity="0.28" />
+              <stop offset="1" stopColor="#2f5f86" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${path} L${width} ${height} L0 ${height} Z`} fill="url(#spark-fill)" />
+          <path
+            d={path}
+            fill="none"
+            stroke="#2f5f86"
+            strokeWidth="1.5"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        <div className="flex justify-between text-[8px] text-[#838c94]">
+          <span>il y a 30 jours</span>
+          <span>visiteurs par jour</span>
+          <span>aujourd’hui</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -430,11 +452,20 @@ export function EditorMock({ className }: { className?: string }) {
             Aperçu de votre site — atelier-voltaire.example
           </p>
           <div className="mt-2 border border-[rgb(20_24_28/0.14)] p-4">
+            {/*
+              Le champ selectionne montre son VRAI texte, pas une barre grise :
+              c'est ce que le client verra dans l'editeur, et une maquette
+              remplie de gris se lit comme une page inachevee.
+            */}
             <div className="outline-1 outline-offset-4 outline-[#2f5f86] outline-dashed">
-              <p className="text-[9px] text-[#2f5f86]">Titre · modifiable</p>
-              <div className="mt-1.5 h-2.5 w-2/3 bg-[rgb(20_24_28/0.28)]" />
+              <p className="text-[9px] text-[#2f5f86]">Titre de la page</p>
+              <p className="mt-1 font-serif text-[13px] leading-tight text-[#14181c]">
+                Architecture intérieure à Paris
+              </p>
             </div>
-            <div className="mt-2 h-2 w-1/2 bg-[rgb(20_24_28/0.14)]" />
+            <p className="mt-2 text-[9px] leading-relaxed text-[#5e676f]">
+              Nous dessinons des intérieurs qui vous ressemblent, du plan à la livraison.
+            </p>
             <div className="mt-3 flex gap-2">
               <span className="bg-[#14181c] px-3 py-1 text-[9px] text-[#f1f2f3]">
                 Découvrir nos projets

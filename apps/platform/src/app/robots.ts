@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { deployEnvironment, platformUrl } from '@nemasus/config';
+import { isIndexable, platformUrl } from '@nemasus/config';
 
 /**
  * Chemins sans rien d'indexable, qui exposeraient des pages personnelles dans
@@ -79,14 +79,17 @@ const GENERATIVE_AGENTS = [
 /**
  * Directives destinees aux robots.
  *
- * Hors production, TOUT est interdit a l indexation : un environnement de
- * preversion indexe par erreur cannibalise le referencement du site reel et
- * expose des contenus non finalises.
+ * TOUT est interdit a l indexation dans deux cas :
+ *  - hors production, parce qu'une preversion indexee par erreur cannibalise
+ *    le referencement du site reel et expose des contenus non finalises ;
+ *  - quand l'adresse publique est celle d'un deploiement (`.vercel.app`)
+ *    faute de domaine configure, parce que le site serait indexe sous une
+ *    adresse technique qui n'est pas la sienne et qui changera.
  */
 export default function robots(): MetadataRoute.Robots {
   const origin = platformUrl().replace(/\/+$/, '');
 
-  if (deployEnvironment() !== 'production') {
+  if (!isIndexable()) {
     return { rules: [{ userAgent: '*', disallow: '/' }] };
   }
 

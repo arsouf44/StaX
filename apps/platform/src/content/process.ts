@@ -20,7 +20,7 @@ export const ORDER_JOURNEY: readonly ProcessStep[] = [
   {
     title: 'Vous commandez',
     description:
-      'En quelques minutes, en ligne : votre activité, vos coordonnées, votre projet et l’adresse souhaitée. Aucun compte à créer, aucun paiement à ce stade, aucun engagement.',
+      'En quelques minutes, en ligne : votre activité, vos coordonnées, votre projet et l’adresse souhaitée. Aucun compte à créer — vous décrivez votre projet, nous revenons vers vous par écrit.',
     detail: 'Accusé de réception immédiat par e-mail',
   },
   {

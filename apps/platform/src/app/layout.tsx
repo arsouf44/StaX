@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { platformUrl, publicEnv } from '@nemasus/config';
+import { isIndexable, platformUrl, publicEnv } from '@nemasus/config';
 import { BRAND } from '@nemasus/ui/brand';
 import { ToastProvider } from '@nemasus/ui';
 import './globals.css';
@@ -31,11 +31,20 @@ export const metadata: Metadata = {
     url: platformUrl(),
   },
   twitter: { card: 'summary_large_image', title: `${BRAND.name} — ${BRAND.tagline}` },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
-  },
+  /*
+   * Une page ne s'offre aux moteurs que sous sa propre adresse. Tant que
+   * `PLATFORM_URL` n'est pas posee, l'adresse publique est celle du
+   * deploiement : le lien canonique pointerait vers `.vercel.app`, les
+   * moteurs indexeraient ce domaine technique, et le vrai domaine en
+   * deviendrait un duplicata. Dans ce cas le site se retire de lui-meme.
+   */
+  robots: isIndexable()
+    ? {
+        index: true,
+        follow: true,
+        googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+      }
+    : { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

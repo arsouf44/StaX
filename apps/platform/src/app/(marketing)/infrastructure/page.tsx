@@ -17,10 +17,14 @@ const LAYERS = [
   {
     name: 'Code source',
     provider: 'GitHub',
-    role: 'Chaque site possède son propre dépôt de code, créé pour lui. Chaque publication y devient un commit identifiable : l’historique de votre site est celui de son code.',
+    // Qui detient le depot : dit franchement. L'ancienne formulation
+    // (« acces de Nemasus limite aux depots autorises ») laissait croire que
+    // le depot etait celui du client. Il est a nous ; le client en obtient
+    // une copie sur demande, et l'article 12 des CGV l'y engage.
+    role: 'Chaque site possède son propre dépôt de code, créé pour lui dans l’organisation GitHub privée de Nemasus. Chaque publication y devient un commit identifiable : l’historique de votre site est celui de son code.',
     facts: [
-      'Un dépôt par site, jamais partagé entre clients',
-      'Accès de Nemasus limité aux dépôts autorisés, avec des droits minimaux',
+      'Un dépôt privé par site, jamais partagé entre clients',
+      'Le dépôt est détenu par Nemasus ; vous en obtenez une copie complète sur demande',
       'Chaque version publiée correspond à un commit',
     ],
   },

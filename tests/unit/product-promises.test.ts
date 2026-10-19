@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { pricingPolicyConfig } from '@nemasus/config';
 import { buildTerms, buildTermsOfUse, type LegalDocument } from '~/content/legal';
 import { FAQ_ITEMS, HOMEPAGE_FAQ } from '~/content/faq';
 import { ORDER_JOURNEY, PRINCIPLE_POINTS, PROCESS_STEPS } from '~/content/process';
@@ -127,7 +128,10 @@ describe('le vrai produit, dit clairement', () => {
       'Vous recevez votre code',
       'Votre espace s’ouvre',
     ]);
-    expect(ORDER_JOURNEY[0]?.description).toMatch(/Aucun compte à créer, aucun paiement/);
+    // La premiere etape dit qu'aucun compte n'est a creer ; les conditions de
+    // paiement et de remboursement vivent desormais dans leur propre bloc
+    // (`OfferTerms`), pour cesser d'etre repetees de section en section.
+    expect(ORDER_JOURNEY[0]?.description).toMatch(/Aucun compte à créer/);
     expect(ORDER_JOURNEY[2]?.description).toMatch(/usage unique/);
   });
 
@@ -156,7 +160,10 @@ describe('le vrai produit, dit clairement', () => {
 
   it('la FAQ explique le prix, le virement et le code d’accès', () => {
     const answers = FAQ_ITEMS.map((item) => `${item.question} ${item.answer}`).join(' ');
-    expect(answers).toMatch(/pas de grille tarifaire/i);
+    // La reponse « Combien coute un site ? » donne le prix d'appel ET la
+    // maintenance : un prix de depart seul ferait croire a un cout unique.
+    expect(answers).toMatch(/350\s?€ HT/);
+    expect(answers).toMatch(/32\s?€ HT par an/);
     expect(answers).toMatch(/virement bancaire/);
     expect(answers).toMatch(/code d’accès/);
     expect(answers).toMatch(/Mot de passe oublié/);
@@ -211,23 +218,25 @@ const PUBLIC_PRICING_SCOPE = CUSTOMER_FACING.filter(
     !file.endsWith('quote-form.tsx'),
 );
 
-describe('aucune grille tarifaire visible', () => {
-  it('aucun montant en euros, aucune offre, aucun abonnement dans les pages publiques', () => {
+describe('un prix d’appel, jamais une grille tarifaire', () => {
+  /**
+   * Le site affiche desormais un prix de DEPART. Ce qui reste interdit, c'est
+   * la grille : des formules nommees, des paliers, un abonnement mensuel. Un
+   * montant en euros ecrit a la main dans une page l'est aussi — le prix a une
+   * source unique, `pricingPolicyConfig()`, sinon deux pages finiront par
+   * annoncer deux prix differents.
+   */
+  it('n’affiche ni formule nommée, ni palier, ni abonnement mensuel', () => {
     const offenders: string[] = [];
     const rules: Array<{ rule: RegExp; why: string }> = [
-      { rule: /\d\s?€|€\s?\d/, why: 'montant affiché' },
       { rule: /\b(Essentiel|Premium|Ultra Premium|Exceptionnel)\b/, why: 'nom d’offre' },
       { rule: /\/tarifs\b/, why: 'lien vers les tarifs' },
       { rule: /maintenance mensuelle|abonnement mensuel|par mois\b/i, why: 'abonnement' },
       { rule: /\bHT\b.*\bTTC\b/, why: 'prix HT/TTC' },
     ];
     for (const file of PUBLIC_PRICING_SCOPE) {
-      // Les e-mails transactionnels affichent le montant CONVENU d'une
-      // commande (modalités de virement) : c'est une donnée, pas un tarif.
-      const isEmail = file.includes('/packages/emails/src/');
       for (const { line, number } of visibleLines(file)) {
         for (const { rule, why } of rules) {
-          if (isEmail && why === 'montant affiché') continue;
           if (rule.test(line)) {
             offenders.push(
               `${file.slice(ROOT.length)}:${number} (${why}) — ${line.trim().slice(0, 90)}`,
@@ -237,6 +246,32 @@ describe('aucune grille tarifaire visible', () => {
       }
     }
     expect(offenders, offenders.join('\n')).toEqual([]);
+  });
+
+  it('aucun montant écrit à la main : le prix vient d’une seule source', () => {
+    const offenders: string[] = [];
+    for (const file of PUBLIC_PRICING_SCOPE) {
+      // Le contenu de la FAQ et les e-mails citent un montant en texte : la
+      // reponse doit se lire telle quelle, et un e-mail porte le montant
+      // CONVENU d'une commande, qui est une donnee et non un tarif.
+      if (file.includes('/packages/emails/src/') || file.endsWith('content/faq.ts')) continue;
+      for (const { line, number } of visibleLines(file)) {
+        if (/\d\s?€|€\s?\d/.test(line)) {
+          offenders.push(`${file.slice(ROOT.length)}:${number} — ${line.trim().slice(0, 90)}`);
+        }
+      }
+    }
+    expect(offenders, offenders.join('\n')).toEqual([]);
+  });
+
+  it('le prix de départ ne paraît jamais sans son coût récurrent', () => {
+    const pricing = pricingPolicyConfig();
+    expect(pricing.published).toBe(true);
+    // `sentence` est la seule formulation qu'une page a le droit d'afficher
+    // seule : elle porte les deux montants et le « hors taxes ».
+    expect(pricing.sentence).toContain(String(pricing.fromEur));
+    expect(pricing.sentence).toContain(String(pricing.maintenanceEurPerYear));
+    expect(pricing.sentence).toMatch(/HT/);
   });
 
   it('les anciennes pages d’offres redirigent vers l’explication du parcours', () => {
@@ -257,7 +292,10 @@ describe('textes juridiques cohérents avec le fonctionnement réel', () => {
     expect(cgv).toMatch(/Modalités de paiement/);
     expect(cgv).toMatch(/virement bancaire/);
     expect(cgv).toMatch(/Code d’accès/);
-    expect(cgv).toMatch(/ne publie pas de grille tarifaire/);
+    // L'article 6 dit exactement ce que dit la page : prix d'appel, montant
+    // final convenu par ecrit, et jamais une grille de formules.
+    expect(cgv).toMatch(/prix d’appel/);
+    expect(cgv).toMatch(/non une grille tarifaire/);
     expect(cgv).toMatch(/Aucun abonnement/);
     expect(cgv).not.toMatch(
       /carte bancaire, par l’intermédiaire de Stripe|abonnement mensuel|prélev/i,

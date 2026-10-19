@@ -25,13 +25,13 @@ const STEPS: readonly Step[] = [
     title: 'Conception',
     text: 'Structure, contenus, identité visuelle et fonctionnalités. Vous suivez l’avancement et validez les choix importants depuis votre espace.',
     art: 'design',
-    label: 'Maquette d’un site sur une grille de douze colonnes',
+    label: 'Le plan d’une page d’accueil, zone par zone : promesse, photo, sections',
   },
   {
     title: 'Développement',
     text: 'Notre équipe code votre site dans un projet qui n’appartient qu’à lui. Aucun modèle, aucune génération automatique.',
     art: 'build',
-    label: 'La même page construite, avec son code à côté',
+    label: 'La même page, terminée : titre, bouton de réservation et sections remplies',
   },
   {
     title: 'Mise en ligne',

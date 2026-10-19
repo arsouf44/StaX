@@ -1,5 +1,5 @@
 {
-  "$schema": "https://nemasus.fr/schemas/nemasus.manifest.v1.json",
+  "$schema": "https://nemasus.com/schemas/nemasus.manifest.v1.json",
   "contract": 1,
   "site": {
     "name": "Boulangerie Martin",

@@ -52,19 +52,45 @@ test.describe('Site public', () => {
     }
   });
 
-  test('aucun prix, aucune offre : on commande, on vire, on reçoit son code', async ({ page }) => {
+  test('un prix de départ, jamais une grille d’offres', async ({ page }) => {
     for (const path of ['/', '/comment-ca-marche', '/faq', '/sur-mesure']) {
       await page.goto(path);
       const main = await page.locator('main').innerText();
-      expect(main, path).not.toMatch(
-        /\d[\d\s\u00a0\u202f]*(?:,\d{2})?\s?€|€\s?\d|\/\s?mois|par mois|HT\b/,
-      );
+      // Ce qui reste interdit : des formules nommees, des paliers, un
+      // abonnement mensuel. Un prix de depart, lui, filtre les prospects.
       expect(main, path).not.toMatch(/abonnement mensuel|Choisir cette offre|Nos offres/i);
+      expect(main, path).not.toMatch(/\/\s?mois|par mois/i);
+      expect(main, path).not.toMatch(/\b(Essentiel|Premium|Ultra Premium)\b/);
     }
+
+    // La page ou se decide l'achat porte le prix ET son cout recurrent : un
+    // prix de depart seul ferait croire a un cout unique.
+    await page.goto('/');
+    const home = await page.locator('main').innerText();
+    // Espace insecable avant le symbole : la typographie francaise l'impose,
+    // le test ne doit donc pas exiger une espace ordinaire.
+    expect(home).toMatch(/350\s?€ HT/);
+    expect(home).toMatch(/32\s?€ HT par an/);
+    expect(home).toMatch(/hors taxes/i);
+
     await page.goto('/comment-ca-marche');
     const body = await page.locator('main').innerText();
     expect(body).toContain('virement');
     expect(body).toContain('code d’accès');
+    expect(body).toMatch(/350\s?€ HT/);
+  });
+
+  test('les garanties sont écrites une seule fois, dans un bloc identifiable', async ({ page }) => {
+    await page.goto('/');
+    const main = await page.locator('main').innerText();
+    expect(main).toContain('Le prix, et ce qui vous protège');
+    // Eparpillees, ces conditions etaient impossibles a verifier ; repetees,
+    // elles cessaient d'etre lues. Une seule occurrence, donc.
+    const occurrences = (text: string, needle: string) =>
+      text.toLowerCase().split(needle.toLowerCase()).length - 1;
+    expect(occurrences(main, 'sans engagement')).toBeLessThanOrEqual(1);
+    expect(occurrences(main, 'aucun paiement')).toBeLessThanOrEqual(1);
+    await expect(page.locator('#conditions')).toBeVisible();
   });
 
   test('l’ancienne page des tarifs mène au parcours de commande expliqué', async ({ page }) => {
@@ -195,7 +221,9 @@ test.describe('Site public', () => {
     const body = (await page.locator('body').textContent()) ?? '';
     expect(body).toContain('Paiement, code d’accès et facturation');
     expect(body).toContain('virement bancaire');
-    expect(body).toContain('ne publie pas de grille tarifaire');
+    // L'article 6 dit ce que dit la page : un prix d'appel, et non une grille.
+    expect(body).toContain('prix d’appel');
+    expect(body).toContain('non une grille tarifaire');
     // `\b` : « exceptionnelle » (force majeure) n'est pas le nom d'une offre.
     expect(body).not.toMatch(/\bExceptionnel\b|Ultra Premium|maintenance mensuelle/i);
   });
@@ -321,7 +349,8 @@ test.describe('Site public', () => {
     expect(text.startsWith('# Nemasus')).toBe(true);
     // Ce qu'un assistant doit cesser de se tromper a dire sur Nemasus.
     expect(text).toContain('Ce que ce n’est pas');
-    expect(text).toContain('aucun prix public');
+    expect(text).toContain('350 € HT');
+    expect(text).toContain('32 € HT par an');
     expect(text).toContain('virement bancaire');
     expect(text).not.toMatch(/CONFIGURER/i);
 

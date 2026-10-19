@@ -1,4 +1,9 @@
-import { isLegalValueConfigured, legalValue, platformUrl } from '@nemasus/config';
+import {
+  isLegalValueConfigured,
+  legalValue,
+  platformUrl,
+  pricingPolicyConfig,
+} from '@nemasus/config';
 import { BRAND } from '@nemasus/ui/brand/tokens';
 import type { FaqItem } from '~/content/faq';
 import type { ProcessStep } from '~/content/process';
@@ -88,9 +93,55 @@ export function websiteJsonLd(): SchemaNode {
   };
 }
 
-/** Le service vendu, décrit sans prix : le montant est convenu avec chaque client. */
+/**
+ * Le service vendu, avec son prix d'appel.
+ *
+ * `Offer` porte le prix de DEPART (`priceSpecification` + `minPrice`), jamais
+ * un prix ferme : le montant final dépend du projet. La maintenance annuelle
+ * y figure comme une offre liée, parce qu'un prix de départ publié sans son
+ * coût récurrent induit en erreur — dans un résultat de recherche comme sur la
+ * page. `valueAddedTaxIncluded: false` dit que les montants sont hors taxes.
+ */
 export function serviceJsonLd(): SchemaNode {
+  const pricing = pricingPolicyConfig();
+  const offers = pricing.published
+    ? {
+        offers: {
+          '@type': 'Offer',
+          name: 'Conception et développement d’un site web professionnel',
+          priceCurrency: 'EUR',
+          valueAddedTaxIncluded: false,
+          eligibleCustomerType: 'Business',
+          priceSpecification: {
+            '@type': 'PriceSpecification',
+            priceCurrency: 'EUR',
+            minPrice: pricing.fromEur,
+            valueAddedTaxIncluded: false,
+            description: pricing.sentence,
+          },
+          addOn: {
+            '@type': 'Offer',
+            name: pricing.maintenanceIncludedFirstYear
+              ? 'Maintenance annuelle, comprise la première année'
+              : 'Maintenance annuelle',
+            priceCurrency: 'EUR',
+            valueAddedTaxIncluded: false,
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: pricing.maintenanceEurPerYear,
+              priceCurrency: 'EUR',
+              valueAddedTaxIncluded: false,
+              unitCode: 'ANN',
+              billingDuration: 1,
+              billingIncrement: 1,
+            },
+          },
+        },
+      }
+    : {};
+
   return {
+    ...offers,
     '@type': 'Service',
     '@id': `${origin()}/#service`,
     name: 'Conception, développement et mise en ligne de sites web professionnels',

@@ -151,7 +151,7 @@ depuis son historique : cela crée une nouvelle version et un nouveau commit.
 
 | Worker | Nom | Sert |
 | --- | --- | --- |
-| `apps/site-runtime` | `nemasus-sites` | API des sites ; sites de l’ancien moteur (`*.sites.nemasus.fr`, domaines rattachés) |
+| `apps/site-runtime` | `nemasus-sites` | API des sites ; sites de l’ancien moteur (`*.sites.nemasus.com`, domaines rattachés) |
 
 La plateforme (`apps/platform`) n’est pas un Worker : elle est déployée par
 Vercel ([vercel.md](./vercel.md)).
@@ -176,8 +176,8 @@ Les sites construits avant le modèle actuel (`architecture = 'legacy_engine'`)
 restent servis par `nemasus-sites`, tenant résolu par le nom d’hôte :
 
 ```
-*.sites.nemasus.fr             → nemasus-sites
-preview.sites.nemasus.fr       → nemasus-sites   (aperçus privés, jamais indexés)
+*.sites.nemasus.com             → nemasus-sites
+preview.sites.nemasus.com       → nemasus-sites   (aperçus privés, jamais indexés)
 <domaine rattaché>          → nemasus-sites   (Cloudflare for SaaS)
 ```
 

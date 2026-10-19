@@ -190,19 +190,19 @@ describe('e-mails de la commande', () => {
       code: '7K2M-9QXP-4HTA',
       companyName: 'Boulangerie Martin',
       orderReference: 'CMD-2026-00001',
-      accessUrl: 'https://nemasus.fr/acces?code=7K2M-9QXP-4HTA',
+      accessUrl: 'https://nemasus.com/acces?code=7K2M-9QXP-4HTA',
       expiresLabel: '7 novembre 2026',
     });
     expect(email.text).toContain('7K2M-9QXP-4HTA');
     expect(email.text).toMatch(/usage unique/);
     expect(email.text).toContain('7 novembre 2026');
-    expect(email.html).toContain('https://nemasus.fr/acces?code=7K2M-9QXP-4HTA');
+    expect(email.html).toContain('https://nemasus.com/acces?code=7K2M-9QXP-4HTA');
   });
 
   it('réinitialisation : lien d’une heure, une seule fois', () => {
     const email = passwordResetEmail({
       to: 'jeanne@boulangerie.example',
-      resetUrl: 'https://nemasus.fr/nouveau-mot-de-passe?jeton=abc',
+      resetUrl: 'https://nemasus.com/nouveau-mot-de-passe?jeton=abc',
       validForMinutes: 60,
     });
     expect(email.text).toMatch(/valable 1 heure/);

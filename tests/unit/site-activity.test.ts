@@ -31,7 +31,7 @@ describe('notifications au commerçant', () => {
           replyTo: 'Jeanne@Exemple.test',
         },
       },
-      'https://app.nemasus.fr/',
+      'https://app.nemasus.com/',
     );
     expect(emails.map((email) => email.to)).toEqual(base.recipients);
     const [first] = emails;
@@ -39,7 +39,7 @@ describe('notifications au commerçant', () => {
     expect(first?.replyTo).toBe('jeanne@exemple.test');
     expect(first?.text).toContain('Faites-vous des pains sans gluten ?');
     expect(first?.text).toContain('Répondez directement à cet e-mail');
-    expect(first?.html).toContain('https://app.nemasus.fr/app/messages');
+    expect(first?.html).toContain('https://app.nemasus.com/app/messages');
   });
 
   it('un message sans adresse du visiteur ne promet pas de réponse directe', () => {
@@ -49,7 +49,7 @@ describe('notifications au commerçant', () => {
         kind: 'message',
         detail: { senderName: 'Un visiteur', excerpt: 'Bonjour', replyTo: 'pas une adresse' },
       },
-      'https://app.nemasus.fr',
+      'https://app.nemasus.com',
     );
     expect(email?.replyTo).not.toBe('pas une adresse');
     expect(email?.text).not.toContain('Répondez directement');
@@ -68,12 +68,12 @@ describe('notifications au commerçant', () => {
           serviceName: 'Atelier pain',
         },
       },
-      'https://app.nemasus.fr',
+      'https://app.nemasus.com',
     );
     expect(email?.subject).toMatch(/^Demande de réservation — samedi 3 octobre 2026 à 19:30$/u);
     expect(email?.text).toContain('1 personne.');
     expect(email?.text).not.toMatch(/personne\(s\)/);
-    expect(email?.html).toContain('https://app.nemasus.fr/app/reservations');
+    expect(email?.html).toContain('https://app.nemasus.com/app/reservations');
   });
 
   it('une commande payée : montant en euros, lien vers les commandes', () => {
@@ -88,11 +88,11 @@ describe('notifications au commerçant', () => {
           replyTo: 'lea@exemple.test',
         },
       },
-      'https://app.nemasus.fr',
+      'https://app.nemasus.com',
     );
     expect(email?.subject).toBe('Nouvelle commande payée — CMD-42');
     expect(email?.text).toMatch(/24,50\s€/u);
     expect(email?.replyTo).toBe('lea@exemple.test');
-    expect(email?.html).toContain('https://app.nemasus.fr/app/commandes');
+    expect(email?.html).toContain('https://app.nemasus.com/app/commandes');
   });
 });

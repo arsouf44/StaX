@@ -1,4 +1,9 @@
-import { isLegalValueConfigured, legalValue, platformUrl } from '@nemasus/config';
+import {
+  isLegalValueConfigured,
+  legalValue,
+  platformUrl,
+  pricingPolicyConfig,
+} from '@nemasus/config';
 import { BRAND } from '@nemasus/ui/brand/tokens';
 import { FAQ_CATEGORIES, FAQ_ITEMS, type FaqItem } from '~/content/faq';
 import { FEATURE_PAGES } from '~/content/features';
@@ -31,6 +36,30 @@ function configured(field: Parameters<typeof legalValue>[0]): string | undefined
   return isLegalValueConfigured(field) ? legalValue(field) : undefined;
 }
 
+/**
+ * Le prix, pour un assistant.
+ *
+ * Un assistant qui lit « à partir de 350 € » sans la maintenance répondra
+ * « 350 € » tout court à la question « combien coûte un site Nemasus ». Les
+ * deux montants restent donc dans la même phrase, et le « hors taxes » avec
+ * eux.
+ */
+function priceEssential(): string {
+  const pricing = pricingPolicyConfig();
+  if (!pricing.published) {
+    return '- **Prix** : aucun prix public. Le montant est convenu par écrit avec chaque client après étude de sa demande.';
+  }
+  return (
+    `- **Prix** : à partir de ${pricing.fromEur} € HT pour un site conçu et développé sur mesure, ` +
+    (pricing.maintenanceIncludedFirstYear
+      ? `maintenance comprise la première année puis ${pricing.maintenanceEurPerYear} € HT par an. `
+      : `plus ${pricing.maintenanceEurPerYear} € HT par an de maintenance. `) +
+    'C’est un prix de départ, pas une grille tarifaire : le montant final dépend du nombre de ' +
+    'pages et des fonctionnalités, et il est communiqué par écrit avant tout paiement. Montants ' +
+    'hors taxes, les prestations étant réservées aux professionnels et aux associations.'
+  );
+}
+
 /** Une ligne par lien, au format attendu : `- [nom](url) : note`. */
 function linkLines(links: ReadonlyArray<{ label: string; href: string; description?: string }>) {
   return links.map(
@@ -51,7 +80,7 @@ function essentials(): string[] {
     '- **Qui fait le site** : notre équipe, dans un projet propre à chaque client (dépôt de code et hébergement dédiés), sur le domaine du client, en HTTPS.',
     '- **Ce que le client fait après la livraison** : il modifie lui-même ses textes, ses photos, ses horaires et ses informations, puis publie. Chaque publication est un déploiement réel, annoncé en ligne seulement une fois confirmé.',
     '- **Ce que le client ne peut pas faire seul** : ajouter une page, déplacer des sections ou changer le design — ce sont des modifications de structure que l’équipe réalise.',
-    '- **Prix** : aucun prix public, aucune grille tarifaire, aucun abonnement affiché. Le montant est convenu par écrit avec chaque client après étude de sa demande.',
+    priceEssential(),
     '- **Commande** : en ligne, sans compte à créer, sans paiement et sans engagement à cette étape ; ou par téléphone, la commande étant alors saisie par l’équipe.',
     '- **Paiement** : par virement bancaire, sur les coordonnées et la référence envoyées par l’équipe. Aucune carte bancaire n’est demandée.',
     '- **Accès à l’espace client** : par un code d’accès personnel à usage unique, envoyé à réception du virement et vérifié côté serveur.',

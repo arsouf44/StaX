@@ -317,7 +317,7 @@ async function seedDemo(demo: DemoSite): Promise<void> {
   await db.from('site_domains').upsert(
     {
       site_id: siteId,
-      hostname: `${demo.slug}.${readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.nemasus.fr'}`,
+      hostname: `${demo.slug}.${readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.nemasus.com'}`,
       kind: 'subdomain',
       status: 'active',
       is_primary: true,

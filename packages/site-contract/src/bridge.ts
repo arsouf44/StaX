@@ -10,7 +10,7 @@
  * et, dans ses builds d'apercu seulement (quand le bundle porte
  * `nemasus.preview`), charge le script du pont :
  *
- *     <script src="https://app.nemasus.fr/bridge/v1.js" defer></script>
+ *     <script src="https://app.nemasus.com/bridge/v1.js" defer></script>
  *
  * Dans l'editeur, un clic sur un element ouvre le champ correspondant ; une
  * saisie de texte s'affiche aussitot dans l'apercu, en attendant le build.
@@ -93,7 +93,7 @@ export function editorMessage<T extends EditorMessage['type']>(
 
 /**
  * Source du script du pont, servie par Nemasus a `/bridge/v1.js`.
- * `editorOrigin` : origine exacte de l'editeur (https://app.nemasus.fr).
+ * `editorOrigin` : origine exacte de l'editeur (https://app.nemasus.com).
  */
 export function bridgeScript(editorOrigin: string): string {
   const origin = JSON.stringify(new URL(editorOrigin).origin);

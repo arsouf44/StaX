@@ -239,9 +239,9 @@ fonctions non configurées.
 ## Vérification après déploiement
 
 ```bash
-curl -sS https://nemasus.fr/status            # page d’état
-curl -sS https://nemasus.fr/robots.txt        # doit autoriser en production
-curl -sSI https://nemasus.fr | grep -i content-security-policy
+curl -sS https://nemasus.com/status            # page d’état
+curl -sS https://nemasus.com/robots.txt        # doit autoriser en production
+curl -sSI https://nemasus.com | grep -i content-security-policy
 ```
 
 Dans l’interface :

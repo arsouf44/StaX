@@ -44,7 +44,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'commande',
     question: 'Combien coûte un site ?',
     answer:
-      'Il n’y a pas de grille tarifaire : chaque site est conçu sur mesure, selon ce dont votre activité a besoin. Après votre commande, nous étudions votre projet et vous adressons par e-mail le montant convenu, avec les modalités de paiement. Rien n’est dû tant que vous n’avez pas effectué le virement.',
+      'Un site conçu et développé pour votre entreprise démarre à 350 € HT, maintenance comprise la première année, puis 32 € HT par an. Le montant final dépend de ce que votre activité demande : nombre de pages, réservations, boutique, intégrations à vos outils. Après votre commande, nous étudions votre projet et vous adressons par e-mail le montant exact et le délai. Rien n’est dû tant que vous n’avez pas effectué le virement, et nos prestations étant réservées aux professionnels et aux associations, les montants sont indiqués hors taxes.',
   },
   {
     category: 'commande',
@@ -134,7 +134,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     category: 'technique',
     question: 'Où sont hébergées mes données ?',
     answer:
-      'Votre site est un projet indépendant : son code est conservé dans un dépôt GitHub qui lui est propre, et il est servi par le réseau mondial de Cloudflare. Vos données — contenus, messages, réservations, contacts — sont stockées dans une base PostgreSQL hébergée par Supabase, dans une région européenne. La liste complète de nos sous-traitants est publiée et tenue à jour.',
+      'Votre site est un projet indépendant : son code est conservé dans un dépôt GitHub privé qui lui est propre, détenu par Nemasus, et il est servi par le réseau mondial de Cloudflare. Vous pouvez obtenir une copie complète de ce code sur demande (article 12 de nos conditions générales de vente). Vos données — contenus, messages, réservations, contacts — sont stockées dans une base PostgreSQL hébergée par Supabase, dans une région européenne. La liste complète de nos sous-traitants est publiée et tenue à jour.',
   },
   {
     category: 'technique',
