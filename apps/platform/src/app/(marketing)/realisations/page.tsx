@@ -3,14 +3,16 @@ import Link from 'next/link';
 import { Badge, ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@nemasus/ui';
 import { SITE_EXAMPLE, SiteExampleFrame } from '~/components/marketing/site-example';
 import { supportContact } from '~/lib/contact';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/realisations',
   title: 'Réalisations',
   description:
     'Un exemple de site conçu par Nemasus : la page d’accueil d’Atelier Voltaire, architecture ' +
     'intérieure à Paris, à faire défiler. Maquette de présentation, identifiée comme telle.',
-  alternates: { canonical: '/realisations' },
-};
+});
 
 /**
  * Ce que la page d'accueil fait pour son entreprise : les choix de conception
@@ -56,6 +58,17 @@ export default function ShowcasePage() {
   const contact = supportContact();
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/realisations',
+            name: 'Réalisations',
+            description:
+              'Un exemple de site conçu par notre équipe, présenté comme une maquette et identifié comme telle.',
+          }),
+          trailFrom({ name: 'Réalisations', path: '/realisations' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

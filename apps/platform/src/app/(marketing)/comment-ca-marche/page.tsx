@@ -4,12 +4,13 @@ import { CreationTimeline } from '~/components/marketing/diagrams';
 import { BrowserFrame, EditorMock, ProjectMock } from '~/components/marketing/product-visuals';
 import Link from 'next/link';
 import { ORDER_JOURNEY, PROCESS_STEPS } from '~/content/process';
+import { pageMetadata } from '~/lib/seo';
 import {
-  breadcrumbJsonLd,
   howToJsonLd,
   JsonLd,
   organizationJsonLd,
   serviceJsonLd,
+  trailFrom,
   webPageJsonLd,
 } from '~/lib/structured-data';
 
@@ -17,20 +18,12 @@ const DESCRIPTION =
   'Commander un site Nemasus : commande en ligne, modalités de virement par e-mail, code ' +
   'd’accès à réception, puis conception, mise en ligne et livraison.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/comment-ca-marche',
   title: 'Comment ça marche : commande, virement, code d’accès',
   description: DESCRIPTION,
-  alternates: { canonical: '/comment-ca-marche' },
-  openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
-    siteName: 'Nemasus',
-    title: 'Comment ça marche — Nemasus',
-    description: DESCRIPTION,
-    url: '/comment-ca-marche',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
-  },
-};
+  shareTitle: 'Comment ça marche — Nemasus',
+});
 
 const BEFORE_DELIVERY = [
   'Suivre l’avancement réel de votre projet, étape par étape',
@@ -109,10 +102,7 @@ export default function HowItWorksPage() {
             ORDER_JOURNEY,
             '/comment-ca-marche',
           ),
-          breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Comment ça marche', path: '/comment-ca-marche' },
-          ]),
+          trailFrom({ name: 'Comment ça marche', path: '/comment-ca-marche' }),
         ]}
       />
       <Section className="relative overflow-hidden">

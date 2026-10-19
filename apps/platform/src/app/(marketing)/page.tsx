@@ -7,6 +7,7 @@ import { ProcessShowcase } from '~/components/marketing/process-showcase';
 import { SITE_EXAMPLE, SiteExampleFrame } from '~/components/marketing/site-example';
 import { supportContact } from '~/lib/contact';
 import { HOMEPAGE_FAQ } from '~/content/faq';
+import { pageMetadata } from '~/lib/seo';
 import { ORDER_JOURNEY } from '~/content/process';
 import {
   faqJsonLd,
@@ -22,18 +23,15 @@ const DESCRIPTION =
   'mettons en ligne votre site, puis vous le gérez. Commande gratuite et sans engagement.';
 
 export const metadata: Metadata = {
-  title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
-  description: DESCRIPTION,
-  alternates: { canonical: '/' },
-  openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
-    siteName: 'Nemasus',
-    title: 'Nemasus — Nous créons votre site. Vous le gérez ensuite.',
+  // `absolute` : la page d'accueil porte le nom de la marque elle-meme, sans
+  // passer par le gabarit « %s — Nemasus » qui le repeterait.
+  ...pageMetadata({
+    path: '/',
+    title: 'Nemasus — Studio de sites web professionnels sur mesure',
     description: DESCRIPTION,
-    url: '/',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
-  },
+    shareTitle: 'Nemasus — Nous créons votre site. Vous le gérez ensuite.',
+  }),
+  title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
 };
 
 /**

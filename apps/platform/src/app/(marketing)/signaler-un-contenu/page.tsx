@@ -4,7 +4,7 @@ import { Panel } from '@nemasus/ui';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
 import { ContentReportForm } from './report-form';
-import { metaDescription } from '~/lib/seo';
+import { pageMetadata } from '~/lib/seo';
 
 /**
  * Mecanisme de notification des contenus illicites (DSA, article 16).
@@ -14,12 +14,15 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const document = getLegalDocument('signaler-un-contenu');
-  return {
+  return pageMetadata({
+    path: '/signaler-un-contenu',
     title: document.title,
-    description: metaDescription(document.description),
-    alternates: { canonical: '/signaler-un-contenu' },
-    robots: { index: true, follow: true },
-  };
+    description: document.description,
+    // Texte date et versionne : l'Open Graph l'annonce comme un article,
+    // avec la date reelle de sa derniere revision.
+    type: 'article',
+    modified: document.updatedAt,
+  });
 }
 
 export default function ContentReportPage() {

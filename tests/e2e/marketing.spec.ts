@@ -208,6 +208,131 @@ test.describe('Site public', () => {
     expect(text.toLowerCase()).toContain('user-agent: *');
   });
 
+  test('chaque page porte SON lien canonique et SA carte de partage', async ({ page }) => {
+    // La faute silencieuse que ce test attrape : un `og:url` ou un canonique
+    // herite de l'accueil. La page se partage alors avec le mauvais titre, et
+    // les moteurs regroupent trente pages sur une seule adresse.
+    const paths = [
+      '/',
+      '/comment-ca-marche',
+      '/fonctionnalites',
+      '/fonctionnalites/editeur',
+      '/realisations',
+      '/sur-mesure',
+      '/securite',
+      '/infrastructure',
+      '/a-propos',
+      '/contact',
+      '/devis',
+      '/faq',
+      '/aide',
+      '/cgv',
+      '/mentions-legales',
+    ];
+
+    for (const path of paths) {
+      await page.goto(path);
+      const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+      expect(canonical, `canonique de ${path}`).toBeTruthy();
+      expect(new URL(canonical ?? '').pathname, `canonique de ${path}`).toBe(path);
+
+      const ogUrl = await page.locator('meta[property="og:url"]').getAttribute('content');
+      expect(new URL(ogUrl ?? '').pathname, `og:url de ${path}`).toBe(path);
+
+      const description = await page.locator('meta[name="description"]').getAttribute('content');
+      expect(description, `description de ${path}`).toBeTruthy();
+      expect((description ?? '').length, `description de ${path}`).toBeLessThanOrEqual(158);
+
+      const ogTitle = await page.locator('meta[property="og:title"]').getAttribute('content');
+      expect(ogTitle, `og:title de ${path}`).toBeTruthy();
+    }
+  });
+
+  test('chaque page publique expose des donnees structurees valides', async ({ page }) => {
+    const paths = [
+      '/',
+      '/comment-ca-marche',
+      '/fonctionnalites',
+      '/fonctionnalites/domaines',
+      '/realisations',
+      '/sur-mesure',
+      '/securite',
+      '/infrastructure',
+      '/a-propos',
+      '/contact',
+      '/devis',
+      '/faq',
+      '/aide',
+      '/cgv',
+    ];
+
+    for (const path of paths) {
+      await page.goto(path);
+      const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+      expect(blocks.length, `donnees structurees de ${path}`).toBeGreaterThan(0);
+
+      const types: string[] = [];
+      for (const block of blocks) {
+        // Doit s'analyser sans erreur : un JSON-LD casse est purement ignore.
+        const parsed = JSON.parse(block) as {
+          '@context'?: string;
+          '@graph'?: Array<{ '@type'?: string }>;
+        };
+        expect(parsed['@context'], path).toBe('https://schema.org');
+        for (const node of parsed['@graph'] ?? []) {
+          if (node['@type']) types.push(node['@type']);
+        }
+        expect(block, `${path} publie un marqueur de configuration`).not.toMatch(/CONFIGURER/i);
+      }
+
+      // Le fil d'Ariane : ce que Google affiche a la place de l'URL brute.
+      if (path !== '/') {
+        expect(types, `fil d’Ariane de ${path}`).toContain('BreadcrumbList');
+      }
+    }
+  });
+
+  test('robots.txt ouvre le site aux robots des assistants, sans les espaces prives', async ({
+    request,
+  }) => {
+    const text = await (await request.get('/robots.txt')).text();
+    const production = (process.env.NEMASUS_ENV ?? 'production') === 'production';
+    if (!production) {
+      // Une preversion reste fermee : rien a verifier de plus.
+      expect(text.toLowerCase()).toContain('disallow: /');
+      return;
+    }
+    for (const agent of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended']) {
+      expect(text, agent).toContain(`User-Agent: ${agent}`);
+    }
+    // Chaque groupe, y compris ceux des assistants, exclut les espaces prives.
+    for (const group of text.split(/\n(?=User-Agent:)/i).filter((part) => part.includes('Allow'))) {
+      for (const path of ['/app/', '/admin/', '/api/']) {
+        expect(group, `${path} laisse passer un robot`).toContain(`Disallow: ${path}`);
+      }
+    }
+  });
+
+  test('llms.txt et llms-full.txt decrivent le produit reel', async ({ request }) => {
+    const index = await request.get('/llms.txt');
+    expect(index.ok()).toBe(true);
+    expect(index.headers()['content-type']).toContain('text/plain');
+    const text = await index.text();
+    expect(text.startsWith('# Nemasus')).toBe(true);
+    // Ce qu'un assistant doit cesser de se tromper a dire sur Nemasus.
+    expect(text).toContain('Ce que ce n’est pas');
+    expect(text).toContain('aucun prix public');
+    expect(text).toContain('virement bancaire');
+    expect(text).not.toMatch(/CONFIGURER/i);
+
+    const full = await request.get('/llms-full.txt');
+    expect(full.ok()).toBe(true);
+    const fullText = await full.text();
+    expect(fullText).toContain('Limites assumées');
+    expect(fullText).toContain('Questions fréquentes');
+    expect(fullText.length).toBeGreaterThan(text.length);
+  });
+
   test('le plan du site ne contient aucune page privee', async ({ request }) => {
     const response = await request.get('/sitemap.xml');
     expect(response.ok()).toBe(true);

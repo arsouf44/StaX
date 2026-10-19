@@ -2,18 +2,37 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 import { FEATURE_PAGES } from '~/content/features';
+import { pageMetadata } from '~/lib/seo';
+import { collectionPageJsonLd, JsonLd, trailFrom } from '~/lib/structured-data';
+import { FEATURE_LINKS } from '~/lib/navigation';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/fonctionnalites',
   title: 'Fonctionnalités',
   description:
     'Éditeur de contenu, domaines, formulaires, messages, statistiques, référencement, ' +
     'réservations, vente en ligne : ce que fait la plateforme Nemasus.',
-  alternates: { canonical: '/fonctionnalites' },
-};
+});
 
 export default function FeaturesIndexPage() {
   return (
     <>
+      <JsonLd
+        graph={[
+          collectionPageJsonLd({
+            path: '/fonctionnalites',
+            name: 'Fonctionnalités de Nemasus',
+            description:
+              'Ce que le client gère lui-même sur son site après la livraison, fonctionnalité par fonctionnalité, limites comprises.',
+            items: FEATURE_LINKS.map((link) => ({
+              name: link.label,
+              path: link.href,
+              description: link.description,
+            })),
+          }),
+          trailFrom({ name: 'Fonctionnalités', path: '/fonctionnalites' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

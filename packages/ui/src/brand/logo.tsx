@@ -1,3 +1,4 @@
+import { BRAND } from './tokens';
 import type { CSSProperties, SVGProps } from 'react';
 
 /**
@@ -153,21 +154,4 @@ export function faviconDataUri(): string {
   return `data:image/svg+xml,${encodeURIComponent(FAVICON_SVG)}`;
 }
 
-/**
- * Jetons de marque exposes pour les usages hors application : e-mails,
- * documents, exports. Une seule source, jamais de valeur recopiee.
- */
-export const BRAND = {
-  name: 'Nemasus',
-  /** Positionnement, utilise dans les metadonnees et les partages. */
-  tagline: 'Nous créons votre site. Vous le gérez ensuite.',
-  colors: {
-    ink: '#14181C',
-    paper: '#F1F2F3',
-    accent: '#2F5F86',
-    accentLight: '#5D86A8',
-    glacier: '#9FB7CB',
-    ice: '#E3E7EA',
-  },
-  radius: 10,
-} as const;
+export { BRAND };

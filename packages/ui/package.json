@@ -9,6 +9,7 @@
     "./primitives": "./src/primitives/index.ts",
     "./icons": "./src/icons/index.tsx",
     "./brand": "./src/brand/index.tsx",
+    "./brand/tokens": "./src/brand/tokens.ts",
     "./motion": "./src/motion/index.tsx",
     "./*": "./src/*.tsx"
   },

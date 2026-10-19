@@ -17,6 +17,9 @@ export default defineConfig({
       '@nemasus/payments/money': r('./packages/payments/src/money.ts'),
       '@nemasus/payments': r('./packages/payments/src/index.ts'),
       '@nemasus/business': r('./packages/business/src/index.ts'),
+      // Jetons de marque : module pur, lisible sans React (voir
+      // packages/ui/src/brand/tokens.ts).
+      '@nemasus/ui/brand/tokens': r('./packages/ui/src/brand/tokens.ts'),
       '@nemasus/security': r('./packages/security/src/index.ts'),
       '@nemasus/site-engine': r('./packages/site-engine/src/index.ts'),
       '@nemasus/site-contract': r('./packages/site-contract/src/index.ts'),

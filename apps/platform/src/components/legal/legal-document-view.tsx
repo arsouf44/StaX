@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { deployEnvironment, legalStatus, LEGAL_FIELDS } from '@nemasus/config';
 import { Alert, Container, Panel, Section } from '@nemasus/ui';
 import { LEGAL_ORDER, LEGAL_BUILDERS, type LegalBlock, type LegalDocument } from '~/content/legal';
+import { JsonLd, legalPageJsonLd, trailFrom } from '~/lib/structured-data';
 
 /**
  * Rendu d'un document legal.
@@ -103,115 +104,133 @@ export function LegalDocumentView({ document, lead }: LegalDocumentViewProps) {
   );
 
   return (
-    <Section spacing="compact">
-      <Container size="wide">
-        <div className="grid gap-12 lg:grid-cols-[1fr_17rem] lg:gap-16">
-          <div className="max-w-3xl min-w-0">
-            <p className="kicker">Informations légales</p>
-            <h1 className="display-panel mt-4 text-balance">{document.title}</h1>
-            <p className="mt-5 text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
-              {document.description}
-            </p>
-
-            <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
-              <span>Dernière mise à jour : {formatDate(document.updatedAt)}</span>
-              {document.version ? (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span>Version {document.version}</span>
-                </>
-              ) : null}
-            </p>
-
-            {showReviewNotice ? (
-              <Alert
-                tone="warning"
-                className="mt-8"
-                title="Modèle en attente de validation juridique"
-                live="status"
-              >
-                Ce texte est un modèle fourni avec la plateforme. Il doit être relu et validé par un
-                professionnel du droit avant toute ouverture commerciale. Il ne remplace ni ne
-                restreint les protections d’ordre public du droit français et européen de la
-                consommation.
-              </Alert>
-            ) : null}
-
-            {!status.configured ? (
-              <Alert
-                tone="danger"
-                className="mt-4"
-                title="Identité de l’éditeur non configurée"
-                live="status"
-              >
-                Les informations suivantes ne sont pas renseignées et apparaissent ci-dessous sous
-                forme de marqueurs explicites plutôt que de valeurs inventées :{' '}
-                {missingLabels.join(', ')}. Renseignez-les dans les secrets de déploiement
-                (voir&nbsp;
-                <code className="rounded bg-[var(--background-inset)] px-1 py-0.5 text-2xs">
-                  docs/legal-configuration.md
-                </code>
-                ).
-              </Alert>
-            ) : null}
-
-            {document.intro ? (
-              <p className="mt-8 border-l-2 border-[var(--border-strong)] pl-5 text-[0.9375rem] leading-[1.75] text-[var(--foreground-muted)]">
-                {document.intro}
+    <>
+      {/*
+        Les dix documents legaux partagent ce rendu : leur balisage se pose
+        donc ici une seule fois, avec la date reelle du texte plutot que celle
+        du rendu, et le fil d'Ariane que Google affiche a la place de l'URL.
+      */}
+      <JsonLd
+        graph={[
+          legalPageJsonLd({
+            path: `/${document.slug}`,
+            name: document.title,
+            description: document.description,
+            version: document.updatedAt,
+          }),
+          trailFrom({ name: document.title, path: `/${document.slug}` }),
+        ]}
+      />
+      <Section spacing="compact">
+        <Container size="wide">
+          <div className="grid gap-12 lg:grid-cols-[1fr_17rem] lg:gap-16">
+            <div className="max-w-3xl min-w-0">
+              <p className="kicker">Informations légales</p>
+              <h1 className="display-panel mt-4 text-balance">{document.title}</h1>
+              <p className="mt-5 text-lg leading-relaxed text-pretty text-[var(--foreground-muted)]">
+                {document.description}
               </p>
-            ) : null}
 
-            {lead ? <div className="mt-10">{lead}</div> : null}
+              <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
+                <span>Dernière mise à jour : {formatDate(document.updatedAt)}</span>
+                {document.version ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>Version {document.version}</span>
+                  </>
+                ) : null}
+              </p>
 
-            <div className="mt-12 space-y-12">
-              {document.articles.map((article) => (
-                <article key={article.id} id={article.id} className="scroll-mt-28">
-                  <h2 className="text-lg font-medium tracking-[-0.01em]">{article.title}</h2>
-                  <div className="mt-4 space-y-4">
-                    {article.blocks.map((block, index) => (
-                      <BlockView key={index} block={block} />
-                    ))}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
+              {showReviewNotice ? (
+                <Alert
+                  tone="warning"
+                  className="mt-8"
+                  title="Modèle en attente de validation juridique"
+                  live="status"
+                >
+                  Ce texte est un modèle fourni avec la plateforme. Il doit être relu et validé par
+                  un professionnel du droit avant toute ouverture commerciale. Il ne remplace ni ne
+                  restreint les protections d’ordre public du droit français et européen de la
+                  consommation.
+                </Alert>
+              ) : null}
 
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <nav aria-label="Sommaire du document">
-              <p className="kicker">Sommaire</p>
-              <ol className="mt-3 space-y-1.5 border-l border-[var(--border)] pl-4">
+              {!status.configured ? (
+                <Alert
+                  tone="danger"
+                  className="mt-4"
+                  title="Identité de l’éditeur non configurée"
+                  live="status"
+                >
+                  Les informations suivantes ne sont pas renseignées et apparaissent ci-dessous sous
+                  forme de marqueurs explicites plutôt que de valeurs inventées :{' '}
+                  {missingLabels.join(', ')}. Renseignez-les dans les secrets de déploiement
+                  (voir&nbsp;
+                  <code className="rounded bg-[var(--background-inset)] px-1 py-0.5 text-2xs">
+                    docs/legal-configuration.md
+                  </code>
+                  ).
+                </Alert>
+              ) : null}
+
+              {document.intro ? (
+                <p className="mt-8 border-l-2 border-[var(--border-strong)] pl-5 text-[0.9375rem] leading-[1.75] text-[var(--foreground-muted)]">
+                  {document.intro}
+                </p>
+              ) : null}
+
+              {lead ? <div className="mt-10">{lead}</div> : null}
+
+              <div className="mt-12 space-y-12">
                 {document.articles.map((article) => (
-                  <li key={article.id}>
-                    <a
-                      href={`#${article.id}`}
-                      className="block text-xs leading-relaxed text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
-                    >
-                      {article.title}
-                    </a>
-                  </li>
+                  <article key={article.id} id={article.id} className="scroll-mt-28">
+                    <h2 className="text-lg font-medium tracking-[-0.01em]">{article.title}</h2>
+                    <div className="mt-4 space-y-4">
+                      {article.blocks.map((block, index) => (
+                        <BlockView key={index} block={block} />
+                      ))}
+                    </div>
+                  </article>
                 ))}
-              </ol>
-            </nav>
+              </div>
+            </div>
 
-            <nav aria-label="Autres documents légaux" className="mt-10">
-              <p className="kicker">Autres documents</p>
-              <ul className="mt-3 space-y-1.5">
-                {LEGAL_ORDER.filter((slug) => slug !== document.slug).map((slug) => (
-                  <li key={slug}>
-                    <Link
-                      href={`/${slug}`}
-                      className="block text-xs leading-relaxed text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
-                    >
-                      {LEGAL_BUILDERS[slug]().title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </aside>
-        </div>
-      </Container>
-    </Section>
+            <aside className="lg:sticky lg:top-24 lg:self-start">
+              <nav aria-label="Sommaire du document">
+                <p className="kicker">Sommaire</p>
+                <ol className="mt-3 space-y-1.5 border-l border-[var(--border)] pl-4">
+                  {document.articles.map((article) => (
+                    <li key={article.id}>
+                      <a
+                        href={`#${article.id}`}
+                        className="block text-xs leading-relaxed text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
+                      >
+                        {article.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+
+              <nav aria-label="Autres documents légaux" className="mt-10">
+                <p className="kicker">Autres documents</p>
+                <ul className="mt-3 space-y-1.5">
+                  {LEGAL_ORDER.filter((slug) => slug !== document.slug).map((slug) => (
+                    <li key={slug}>
+                      <Link
+                        href={`/${slug}`}
+                        className="block text-xs leading-relaxed text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
+                      >
+                        {LEGAL_BUILDERS[slug]().title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </aside>
+          </div>
+        </Container>
+      </Section>
+    </>
   );
 }

@@ -2,14 +2,16 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 import { DomainRoutingDiagram, OperationalIndicators } from '~/components/marketing/diagrams';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/infrastructure',
   title: 'Infrastructure',
   description:
     'Où tournent vos sites : un dépôt GitHub et un projet Cloudflare par site, une base ' +
     'européenne pour votre espace, chaque publication suivie jusqu’en ligne.',
-  alternates: { canonical: '/infrastructure' },
-};
+});
 
 const LAYERS = [
   {
@@ -67,6 +69,17 @@ const LAYERS = [
 export default function InfrastructurePage() {
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/infrastructure',
+            name: 'Infrastructure',
+            description:
+              'Un dépôt de code et un hébergement par site, une base européenne pour l’espace client, chaque publication suivie jusqu’à sa mise en ligne.',
+          }),
+          trailFrom({ name: 'Infrastructure', path: '/infrastructure' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

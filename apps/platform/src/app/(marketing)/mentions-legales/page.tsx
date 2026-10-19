@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { LegalDocumentView } from '~/components/legal/legal-document-view';
 import { getLegalDocument } from '~/content/legal';
-import { metaDescription } from '~/lib/seo';
+import { pageMetadata } from '~/lib/seo';
 
 /**
  * Rendu dynamique volontaire : l'identite de l'editeur provient des secrets de
@@ -12,12 +12,15 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const document = getLegalDocument('mentions-legales');
-  return {
+  return pageMetadata({
+    path: '/mentions-legales',
     title: document.title,
-    description: metaDescription(document.description),
-    alternates: { canonical: '/mentions-legales' },
-    robots: { index: true, follow: true },
-  };
+    description: document.description,
+    // Texte date et versionne : l'Open Graph l'annonce comme un article,
+    // avec la date reelle de sa derniere revision.
+    type: 'article',
+    modified: document.updatedAt,
+  });
 }
 
 export default function LegalNoticePage() {

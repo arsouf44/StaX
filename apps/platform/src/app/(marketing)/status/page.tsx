@@ -2,15 +2,16 @@ import type { Metadata } from 'next';
 import { missingCapabilities } from '@nemasus/config';
 import { Alert, Container, Panel, Section, SectionHeading, StatusDot } from '@nemasus/ui';
 import { loadPublicHealth } from '~/lib/health';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/status',
   title: 'État des services',
   description:
     'L’état réel des services Nemasus : application, base de données, paiements, e-mails, ' +
     'vérification des domaines. Mesuré, pas déclaré.',
-  alternates: { canonical: '/status' },
-  robots: { index: true, follow: true },
-};
+});
 
 /** Cette page reflète un état mesuré : elle ne doit jamais être servie depuis un cache. */
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,17 @@ export default async function StatusPage() {
 
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/status',
+            name: 'État des services',
+            description:
+              'L’état des services de la plateforme, dérivé des journaux et des mesures, jamais déclaré sain par défaut.',
+          }),
+          trailFrom({ name: 'État des services', path: '/status' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="narrow">
           <SectionHeading
