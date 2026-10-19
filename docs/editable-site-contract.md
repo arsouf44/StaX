@@ -39,7 +39,7 @@ plateforme est indisponible.
 
 ```json
 {
-  "$schema": "https://nemasus.fr/schemas/nemasus.manifest.v1.json",
+  "$schema": "https://nemasus.com/schemas/nemasus.manifest.v1.json",
   "contract": 1,
   "site": { "name": "Boulangerie Lumière", "locales": ["fr"], "defaultLocale": "fr" },
   "content": {
@@ -245,7 +245,7 @@ soit le manifeste.
 
 ```json
 {
-  "$schema": "https://nemasus.fr/schemas/nemasus.content.v1.json",
+  "$schema": "https://nemasus.com/schemas/nemasus.content.v1.json",
   "contract": 1,
   "nemasus": { "site": "1f0a…", "version": 2, "release": "7c3b…", "preview": null },
   "defaultLocale": "fr",
@@ -323,7 +323,7 @@ et, **dans les builds d’aperçu seulement** (quand `nemasus.preview` est
 renseigné), charge le pont :
 
 ```html
-<script src="https://app.nemasus.fr/bridge/v1.js" defer></script>
+<script src="https://app.nemasus.com/bridge/v1.js" defer></script>
 ```
 
 Dans l’éditeur, un clic sur l’élément ouvre le champ correspondant, et une
@@ -348,7 +348,7 @@ bloquent pas : ils sont affichés à l’équipe.
 
 ## 10. Vérifier son manifeste
 
-- Autocomplétion : ajouter `"$schema": "https://nemasus.fr/schemas/nemasus.manifest.v1.json"`.
+- Autocomplétion : ajouter `"$schema": "https://nemasus.com/schemas/nemasus.manifest.v1.json"`.
 - Validation complète (mêmes règles que Nemasus) : `parseManifest` de
   `@nemasus/site-contract` ; l’import dans *Infrastructure & livraison* affiche
   chaque erreur avec son chemin (`pages[0].sections[1].fields[2].maxLength`).

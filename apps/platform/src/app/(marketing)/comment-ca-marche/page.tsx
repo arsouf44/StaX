@@ -4,12 +4,14 @@ import { CreationTimeline } from '~/components/marketing/diagrams';
 import { BrowserFrame, EditorMock, ProjectMock } from '~/components/marketing/product-visuals';
 import Link from 'next/link';
 import { ORDER_JOURNEY, PROCESS_STEPS } from '~/content/process';
+import { PriceLine } from '~/components/marketing/offer-terms';
+import { pageMetadata } from '~/lib/seo';
 import {
-  breadcrumbJsonLd,
   howToJsonLd,
   JsonLd,
   organizationJsonLd,
   serviceJsonLd,
+  trailFrom,
   webPageJsonLd,
 } from '~/lib/structured-data';
 
@@ -17,20 +19,12 @@ const DESCRIPTION =
   'Commander un site Nemasus : commande en ligne, modalités de virement par e-mail, code ' +
   'd’accès à réception, puis conception, mise en ligne et livraison.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/comment-ca-marche',
   title: 'Comment ça marche : commande, virement, code d’accès',
   description: DESCRIPTION,
-  alternates: { canonical: '/comment-ca-marche' },
-  openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
-    siteName: 'Nemasus',
-    title: 'Comment ça marche — Nemasus',
-    description: DESCRIPTION,
-    url: '/comment-ca-marche',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
-  },
-};
+  shareTitle: 'Comment ça marche — Nemasus',
+});
 
 const BEFORE_DELIVERY = [
   'Suivre l’avancement réel de votre projet, étape par étape',
@@ -109,10 +103,7 @@ export default function HowItWorksPage() {
             ORDER_JOURNEY,
             '/comment-ca-marche',
           ),
-          breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Comment ça marche', path: '/comment-ca-marche' },
-          ]),
+          trailFrom({ name: 'Comment ça marche', path: '/comment-ca-marche' }),
         ]}
       />
       <Section className="relative overflow-hidden">
@@ -303,9 +294,13 @@ export default function HowItWorksPage() {
       <Section spacing="compact" className="border-t border-[var(--border)]">
         <Container size="narrow" className="text-center">
           <h2 className="font-serif text-[2.4rem] leading-tight font-normal">Commençons</h2>
-          <p className="mx-auto mt-4 max-w-lg text-[var(--foreground-muted)]">
-            Commander ne vous engage à aucun paiement immédiat : vous recevez d’abord les modalités,
-            et votre espace s’ouvre avec votre code dès réception du virement.
+          <PriceLine className="mx-auto mt-4 max-w-xl text-[var(--foreground-muted)]" />
+          <p className="mx-auto mt-3 max-w-lg text-[13.5px] text-[var(--muted)]">
+            Commander ne vous engage à aucun paiement : vous recevez d’abord le montant exact et le
+            délai par écrit.{' '}
+            <Link href="/#conditions" className="underline underline-offset-4">
+              Le prix et ce qui vous protège
+            </Link>
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <ButtonLink variant="accent" href="/commander" size="pill-lg">

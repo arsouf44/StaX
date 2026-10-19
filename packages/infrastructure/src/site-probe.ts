@@ -79,7 +79,7 @@ export async function probeUrl(
         redirect: 'manual',
         signal: controller.signal,
         headers: {
-          'user-agent': 'Nemasus-Verification/1.0 (+https://nemasus.fr)',
+          'user-agent': 'Nemasus-Verification/1.0 (+https://nemasus.com)',
           accept: 'text/html,*/*',
         },
         cache: 'no-store',

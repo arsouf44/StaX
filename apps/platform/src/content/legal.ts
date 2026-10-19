@@ -4,6 +4,7 @@ import {
   legalValue,
   deliveryPolicyConfig,
   maintenancePolicyConfig,
+  pricingPolicyConfig,
   refundPolicyConfig,
 } from '@nemasus/config';
 
@@ -322,6 +323,7 @@ export function buildLegalNotice(): LegalDocument {
 
 export function buildTerms(): LegalDocument {
   const refund = refundPolicyConfig();
+  const pricing = pricingPolicyConfig();
   const maintenance = maintenancePolicyConfig();
   const delivery = deliveryPolicyConfig();
   const company = legalValue('LEGAL_COMPANY_NAME');
@@ -525,12 +527,25 @@ export function buildTerms(): LegalDocument {
         id: 'prix',
         title: 'Article 6 — Prix',
         blocks: [
+          // Le contrat dit exactement ce que dit la page : si le prix d'appel
+          // n'est pas publie, cet article ne doit pas l'annoncer non plus.
           p(
-            'Le Prestataire ne publie pas de grille tarifaire : chaque Site est conçu sur mesure. ' +
-              'Le montant de la prestation est celui indiqué dans les Modalités de paiement, qui ' +
-              'précisent ce qu’il comprend. Il est exprimé en euros ; la taxe sur la valeur ' +
-              'ajoutée est appliquée selon la réglementation en vigueur et le lieu ' +
-              'd’établissement du Client, et apparaît sur la facture.',
+            (pricing.published
+              ? `Le Prestataire publie un prix d’appel : la création d’un Site débute à ${pricing.fromEur} € hors taxes. ` +
+                (pricing.maintenanceIncludedFirstYear
+                  ? `La maintenance est comprise la première année, puis facturée ${pricing.maintenanceEurPerYear} € hors taxes par an. `
+                  : `La maintenance est facturée ${pricing.maintenanceEurPerYear} € hors taxes par an, en sus. `) +
+                'Ce montant est un point de départ et non une grille tarifaire : chaque Site étant ' +
+                'conçu sur mesure, le montant de la prestation est celui indiqué dans les ' +
+                'Modalités de paiement, qui précisent ce qu’il comprend et ne peut être inférieur ' +
+                'au prix d’appel ci-dessus. '
+              : 'Le Prestataire ne publie pas de grille tarifaire : chaque Site est conçu sur ' +
+                'mesure. Le montant de la prestation est celui indiqué dans les Modalités de ' +
+                'paiement, qui précisent ce qu’il comprend. ') +
+              'Les montants sont exprimés en euros hors taxes, les prestations étant réservées ' +
+              'aux professionnels et aux associations (article 2) ; la taxe sur la valeur ajoutée ' +
+              'est appliquée selon la réglementation en vigueur et le lieu d’établissement du ' +
+              'Client, et apparaît sur la facture.',
           ),
           p(
             'Le montant est déterminé selon l’étendue du projet : nombre et nature des pages, ' +

@@ -2,23 +2,29 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
 import { DomainRoutingDiagram, OperationalIndicators } from '~/components/marketing/diagrams';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/infrastructure',
   title: 'Infrastructure',
   description:
     'Où tournent vos sites : un dépôt GitHub et un projet Cloudflare par site, une base ' +
     'européenne pour votre espace, chaque publication suivie jusqu’en ligne.',
-  alternates: { canonical: '/infrastructure' },
-};
+});
 
 const LAYERS = [
   {
     name: 'Code source',
     provider: 'GitHub',
-    role: 'Chaque site possède son propre dépôt de code, créé pour lui. Chaque publication y devient un commit identifiable : l’historique de votre site est celui de son code.',
+    // Qui detient le depot : dit franchement. L'ancienne formulation
+    // (« acces de Nemasus limite aux depots autorises ») laissait croire que
+    // le depot etait celui du client. Il est a nous ; le client en obtient
+    // une copie sur demande, et l'article 12 des CGV l'y engage.
+    role: 'Chaque site possède son propre dépôt de code, créé pour lui dans l’organisation GitHub privée de Nemasus. Chaque publication y devient un commit identifiable : l’historique de votre site est celui de son code.',
     facts: [
-      'Un dépôt par site, jamais partagé entre clients',
-      'Accès de Nemasus limité aux dépôts autorisés, avec des droits minimaux',
+      'Un dépôt privé par site, jamais partagé entre clients',
+      'Le dépôt est détenu par Nemasus ; vous en obtenez une copie complète sur demande',
       'Chaque version publiée correspond à un commit',
     ],
   },
@@ -67,6 +73,17 @@ const LAYERS = [
 export default function InfrastructurePage() {
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/infrastructure',
+            name: 'Infrastructure',
+            description:
+              'Un dépôt de code et un hébergement par site, une base européenne pour l’espace client, chaque publication suivie jusqu’à sa mise en ligne.',
+          }),
+          trailFrom({ name: 'Infrastructure', path: '/infrastructure' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

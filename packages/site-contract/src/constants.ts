@@ -16,8 +16,8 @@ export const DEFAULT_MANIFEST_PATH = 'nemasus.manifest.json';
 export const DEFAULT_PREVIEW_BRANCH = 'nemasus-preview';
 
 /** Schemas publics, pour l'autocompletion dans l'editeur du developpeur. */
-export const MANIFEST_SCHEMA_URL = 'https://nemasus.fr/schemas/nemasus.manifest.v1.json';
-export const CONTENT_SCHEMA_URL = 'https://nemasus.fr/schemas/nemasus.content.v1.json';
+export const MANIFEST_SCHEMA_URL = 'https://nemasus.com/schemas/nemasus.manifest.v1.json';
+export const CONTENT_SCHEMA_URL = 'https://nemasus.com/schemas/nemasus.content.v1.json';
 
 /**
  * Bornes du contrat. Elles protegent la plateforme (taille des documents,

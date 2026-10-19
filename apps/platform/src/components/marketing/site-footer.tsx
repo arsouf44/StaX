@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { isLegalValueConfigured, legalStatus, legalValue, isProduction } from '@nemasus/config';
 import { Wordmark } from '@nemasus/ui';
+import { BRAND } from '@nemasus/ui/brand/tokens';
 import { COMPANY_LINKS, FEATURE_LINKS, LEGAL_LINKS, RESOURCE_LINKS } from '~/lib/navigation';
 import { internationalPhone } from '~/lib/phone';
 
@@ -108,8 +109,18 @@ export function SiteFooter() {
             </>
           ) : null}
         </p>
+        {/*
+          Le copyright porte la MARQUE, celle que le visiteur vient de lire sur
+          chaque page. L'entite legale est nommee juste apres, comme telle :
+          « © 2026 LallianSe » seul laissait croire a une erreur de pied de
+          page sur le site d'un studio appele Nemasus. Les mentions legales
+          portent, elles, l'identite complete.
+        */}
         <p>
-          © {year} {company}
+          © {year} {BRAND.name}
+          {company && company !== BRAND.name ? (
+            <span className="text-[var(--muted)]"> — marque de {company}</span>
+          ) : null}
         </p>
       </div>
     </footer>

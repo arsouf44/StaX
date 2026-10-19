@@ -179,7 +179,7 @@ function footer(context: RenderContext): RawHtml {
         ${context.hasCustomerAccounts ? html`<p><a href="/compte">Mon espace</a></p>` : ''}
         <p>
           Site réalisé et hébergé par
-          <a href="https://nemasus.fr" target="_blank" rel="noopener">Nemasus</a>
+          <a href="https://nemasus.com" target="_blank" rel="noopener">Nemasus</a>
         </p>
       </div>
     </div>

@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Alert, Container, Panel, Reveal, Section, SectionHeading, ButtonLink } from '@nemasus/ui';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/securite',
   title: 'Sécurité',
   description:
     'Comment Nemasus protège vos données : isolation entre clients imposée par la base, ' +
     'aucune donnée de carte, chiffrement en transit, journaux d’audit.',
-  alternates: { canonical: '/securite' },
-};
+});
 
 const PILLARS = [
   {
@@ -78,6 +80,17 @@ const PILLARS = [
 export default function SecurityPage() {
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/securite',
+            name: 'Sécurité',
+            description:
+              'Isolation entre clients imposée par la base de données, aucune donnée de carte conservée, chiffrement en transit, journaux d’audit.',
+          }),
+          trailFrom({ name: 'Sécurité', path: '/securite' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

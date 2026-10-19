@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import { legalValue } from '@nemasus/config';
 import { ButtonLink, Container, Panel, Section, SectionHeading } from '@nemasus/ui';
+import { pageMetadata } from '~/lib/seo';
+import { aboutPageJsonLd, JsonLd, organizationJsonLd, trailFrom } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/a-propos',
   title: 'À propos',
   description:
     'Qui est Nemasus : un studio qui conçoit pour chaque entreprise un site professionnel, ' +
     'le met en ligne pour de bon, puis le lui confie.',
-  alternates: { canonical: '/a-propos' },
-};
+});
 
 const PRINCIPLES = [
   {
@@ -42,6 +44,18 @@ export default function AboutPage() {
 
   return (
     <>
+      <JsonLd
+        graph={[
+          organizationJsonLd(),
+          aboutPageJsonLd({
+            path: '/a-propos',
+            name: 'À propos de Nemasus',
+            description:
+              'Qui conçoit les sites, selon quels principes, et ce que le studio s’interdit d’affirmer.',
+          }),
+          trailFrom({ name: 'À propos', path: '/a-propos' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

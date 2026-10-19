@@ -42,7 +42,7 @@ export const FEATURE_LINKS: NavLink[] = [
   {
     label: 'Référencement',
     href: '/fonctionnalites/seo',
-    description: 'Le SEO technique fait correctement, des le depart.',
+    description: 'Le référencement technique fait correctement, dès le départ.',
   },
   {
     label: 'Paiements',
@@ -68,11 +68,11 @@ export const FEATURE_LINKS: NavLink[] = [
 
 export const COMPANY_LINKS: NavLink[] = [
   { label: 'À propos', href: '/a-propos', description: 'Qui construit Nemasus, et pourquoi.' },
-  { label: 'Sécurité', href: '/securite', description: 'Ce que nous protegeons, et comment.' },
+  { label: 'Sécurité', href: '/securite', description: 'Ce que nous protégeons, et comment.' },
   {
     label: 'Infrastructure',
     href: '/infrastructure',
-    description: 'Ou tournent vos sites, et avec quelles garanties.',
+    description: 'Où tournent vos sites, et avec quelles garanties.',
   },
   { label: 'État des services', href: '/status', description: 'Disponibilité en temps réel.' },
   { label: 'Contact', href: '/contact', description: 'Parlons de votre projet.' },
@@ -122,6 +122,18 @@ export const LEGAL_LINKS: NavLink[] = [
   { label: 'Signaler un contenu', href: '/signaler-un-contenu' },
   { label: 'Accessibilité', href: '/accessibilite' },
 ];
+
+/**
+ * Derniere revision du contenu editorial du site public.
+ *
+ * Le plan du site annonce cette date, et non celle du jour : une page qui se
+ * declare modifiee a chaque passage du robot n'apprend rien au moteur, qui
+ * finit par ignorer la date. Les pages juridiques, elles, portent la date
+ * reelle de leur texte (`updatedAt`), lue depuis le document lui-meme.
+ *
+ * A mettre a jour quand le contenu change reellement.
+ */
+export const CONTENT_REVISION = '2026-10-09';
 
 /** Pages indexables, pour le sitemap. */
 export const SITEMAP_ROUTES: Array<{

@@ -30,6 +30,7 @@
       "@nemasus/analytics": ["./packages/analytics/src/index.ts"],
       "@nemasus/emails": ["./packages/emails/src/index.ts"],
       "@nemasus/ui": ["./packages/ui/src/index.ts"],
+      "@nemasus/ui/brand/tokens": ["./packages/ui/src/brand/tokens.ts"],
       "~/*": ["./apps/platform/src/*"],
       "server-only": ["./tests/fixtures/server-only.ts"]
     }

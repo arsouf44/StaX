@@ -198,15 +198,20 @@ export function StudioArtSprite() {
             <path d="M228 52 H372 M228 49 V55 M372 49 V55" />
             <path d="M20 58 V154 M17 58 H23 M17 154 H23" />
           </g>
+          {/*
+            Annotations d'une maquette, dans les mots du client : ce que chaque
+            zone de la page accueillera. Jamais d'etiquette de chantier ni de
+            numero de version — un visiteur les lirait comme un oubli.
+          */}
           <g className="font-sans" fontSize="7.5" fill="#2f5f86" letterSpacing=".3">
             <text x="300" y="47" textAnchor="middle">
-              Titre · 2 lignes
+              Votre promesse
+            </text>
+            <text x="121" y="109" textAnchor="middle">
+              Votre photo
             </text>
             <text x="28" y="276">
-              Maquette, version 2
-            </text>
-            <text x="372" y="276" textAnchor="end">
-              12 colonnes
+              Plan de votre page d’accueil
             </text>
           </g>
         </symbol>
@@ -265,35 +270,16 @@ export function StudioArtSprite() {
             <rect x="157" y="198" width="84" height="4" rx="2" />
             <rect x="157" y="207" width="64" height="4" rx="2" />
           </g>
-          <rect
-            x="266"
-            y="172"
-            width="106"
-            height="84"
-            rx="5"
-            fill="none"
-            stroke="#838c94"
-            strokeDasharray="3 3"
-          />
-          <g filter="url(#sx-lift)">
-            <rect x="238" y="188" width="146" height="94" rx="9" fill="#1d2328" />
-          </g>
-          <g className="font-mono" fontSize="7" fill="#9fb7cb">
-            <text x="252" y="208">
-              {'<section class="accueil">'}
-            </text>
-            <text x="260" y="222" fill="#eef1f4">
-              {'<h1>Construit autour</h1>'}
-            </text>
-            <text x="260" y="236" fill="#7fa6c4">
-              {'<Reservation />'}
-            </text>
-            <text x="260" y="250" fill="#eef1f4" fillOpacity=".55">
-              {'<Modifiable champ="horaires" />'}
-            </text>
-            <text x="252" y="264">
-              {'</section>'}
-            </text>
+          {/*
+            La troisieme carte est finie comme les deux autres : cette etape
+            montre un site termine, pas un chantier. Le code n'y figure plus —
+            ce que le client achete est une page, pas un fichier source.
+          */}
+          <rect x="266" y="172" width="106" height="84" rx="5" fill="#f1f2f3" />
+          <rect x="276" y="184" width="54" height="6" rx="3" fill="#c9d0d6" />
+          <g fill="#dde2e6">
+            <rect x="276" y="198" width="84" height="4" rx="2" />
+            <rect x="276" y="207" width="58" height="4" rx="2" />
           </g>
         </symbol>
 
@@ -374,6 +360,22 @@ export function StudioArtSprite() {
             <line x1="40" y1="180" x2="372" y2="180" />
           </g>
           <line x1="40" y1="240" x2="372" y2="240" stroke="#14181c" strokeOpacity=".2" />
+          {/*
+            Les valeurs des lignes de fond : une courbe sans echelle se lit
+            comme une decoration. Chiffres d'exemple, annonces comme tels par
+            le cartouche « Bilan trimestriel · exemple ».
+          */}
+          <g className="font-sans" fontSize="7" fill="#9aa3ab" textAnchor="end">
+            <text x="34" y="243">
+              0
+            </text>
+            <text x="34" y="183">
+              10
+            </text>
+            <text x="34" y="123">
+              20
+            </text>
+          </g>
           <g fill="#dfe4e8">
             <rect x="48" y="206" width="16" height="34" rx="2" />
             <rect x="75" y="200" width="16" height="40" rx="2" />
@@ -442,7 +444,7 @@ export function StudioArtSprite() {
             <rect x="244" y="18" width="128" height="30" rx="8" fill="#fdfdfd" />
           </g>
           <text x="256" y="37" className="font-serif" fontSize="11" fill="#14181c">
-            Bilan trimestriel
+            Bilan trimestriel · exemple
           </text>
           <circle cx="358" cy="33" r="3.5" fill="#2f5f86" />
         </symbol>

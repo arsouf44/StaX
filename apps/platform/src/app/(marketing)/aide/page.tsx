@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ButtonLink, Container, Panel, Section, SectionHeading } from '@nemasus/ui';
-import { breadcrumbJsonLd, JsonLd } from '~/lib/structured-data';
+import { collectionPageJsonLd, JsonLd, trailFrom } from '~/lib/structured-data';
+import { pageMetadata } from '~/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/aide',
   title: 'Centre d’aide',
   description:
     'Guides de l’espace Nemasus : accéder avec votre code, choisir votre mot de passe, ' +
     'modifier et publier votre site, connecter un domaine, gérer vos messages.',
-  alternates: { canonical: '/aide' },
-};
+});
 
 interface Guide {
   id: string;
@@ -127,10 +128,21 @@ export default function HelpPage() {
     <>
       <JsonLd
         graph={[
-          breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Centre d’aide', path: '/aide' },
-          ]),
+          collectionPageJsonLd({
+            path: '/aide',
+            name: 'Centre d’aide',
+            description:
+              'Les guides de l’espace client : accéder avec son code, modifier et publier son site, connecter un domaine, traiter ses messages.',
+            // Chaque guide porte son ancre : un assistant qui cite une reponse
+            // renvoie vers le guide exact, pas vers le haut de la page.
+            items: GUIDES.flatMap((group) =>
+              group.guides.map((guide) => ({
+                name: guide.title,
+                path: `/aide#${guide.id}`,
+              })),
+            ),
+          }),
+          trailFrom({ name: 'Centre d’aide', path: '/aide' }),
         ]}
       />
       <Section className="relative overflow-hidden">

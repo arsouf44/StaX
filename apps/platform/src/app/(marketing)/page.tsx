@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { deliveryPolicyConfig } from '@nemasus/config';
+import { deliveryPolicyConfig, pricingPolicyConfig } from '@nemasus/config';
 import { ButtonLink, Reveal } from '@nemasus/ui';
 import { StudioArtSprite } from '~/components/marketing/studio-art';
 import { ProcessShowcase } from '~/components/marketing/process-showcase';
 import { SITE_EXAMPLE, SiteExampleFrame } from '~/components/marketing/site-example';
 import { supportContact } from '~/lib/contact';
+import { OfferTerms, PriceLine } from '~/components/marketing/offer-terms';
 import { HOMEPAGE_FAQ } from '~/content/faq';
+import { pageMetadata } from '~/lib/seo';
 import { ORDER_JOURNEY } from '~/content/process';
 import {
   faqJsonLd,
@@ -22,18 +24,15 @@ const DESCRIPTION =
   'mettons en ligne votre site, puis vous le gérez. Commande gratuite et sans engagement.';
 
 export const metadata: Metadata = {
-  title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
-  description: DESCRIPTION,
-  alternates: { canonical: '/' },
-  openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
-    siteName: 'Nemasus',
-    title: 'Nemasus — Nous créons votre site. Vous le gérez ensuite.',
+  // `absolute` : la page d'accueil porte le nom de la marque elle-meme, sans
+  // passer par le gabarit « %s — Nemasus » qui le repeterait.
+  ...pageMetadata({
+    path: '/',
+    title: 'Nemasus — Studio de sites web professionnels sur mesure',
     description: DESCRIPTION,
-    url: '/',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Nemasus' }],
-  },
+    shareTitle: 'Nemasus — Nous créons votre site. Vous le gérez ensuite.',
+  }),
+  title: { absolute: 'Nemasus — Studio de sites web professionnels sur mesure' },
 };
 
 /**
@@ -43,9 +42,9 @@ export const metadata: Metadata = {
  */
 function facts(): ReadonlyArray<{ label: string; value: string }> {
   return [
+    { label: 'À partir de', value: pricingPolicyConfig().fromLabel.replace('à partir de ', '') },
     { label: 'Conception', value: 'Sur mesure, sans modèle' },
     { label: 'Délai de référence', value: `${deliveryPolicyConfig().label} après vos éléments` },
-    { label: 'Sans risque', value: 'Remboursé tant que rien n’a commencé' },
     { label: 'Après la livraison', value: 'Vos textes et photos, modifiés par vous' },
   ];
 }
@@ -107,10 +106,7 @@ export default function HomePage() {
                   </span>
                 </Link>
               </div>
-              <p className="mt-5 max-w-[52ch] text-[13px] leading-relaxed text-[var(--muted)]">
-                Gratuit et sans engagement : aucun paiement à la commande. Vous recevez le montant
-                et le délai par écrit, puis vous décidez.
-              </p>
+              <PriceLine className="mt-5 max-w-[52ch] text-[13px] leading-relaxed text-[var(--muted)]" />
             </div>
           </div>
 
@@ -250,33 +246,15 @@ export default function HomePage() {
             ))}
           </ol>
 
-          <div className="mt-14 grid gap-6 border border-[var(--border)] bg-[rgb(255_255_255/0.55)] p-[clamp(22px,3vw,36px)] md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 256 256"
-              fill="currentColor"
-              className="size-10 text-[var(--ink-3)]"
-            >
-              <path d="M208,40H48A16,16,0,0,0,32,56v58.77c0,89.62,75.82,119.34,91,124.38a15.44,15.44,0,0,0,10,0c15.2-5.05,91-34.77,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z" />
-            </svg>
-            <div>
-              <p className="font-serif text-[clamp(1.25rem,1.8vw,1.6rem)] leading-snug text-[var(--ink)]">
-                Votre engagement commence au virement, pas avant.
-              </p>
-              <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-[var(--ink-2)]">
-                Commander est gratuit. Le montant et le délai vous sont communiqués par écrit avant
-                tout paiement, et tant que la réalisation n’a pas commencé, vous pouvez annuler et
-                être intégralement remboursé.{' '}
-                <Link href="/cgv#remboursement" className="underline underline-offset-4">
-                  Conditions de remboursement
-                </Link>
-              </p>
-            </div>
-          </div>
+          <OfferTerms />
 
+          {/*
+            Trois boutons portant le meme libelle se lisent comme un bouton
+            recopie trois fois. Chacun dit donc l'etape ou il mene.
+          */}
           <div className="mt-12 flex flex-wrap items-center gap-x-9 gap-y-5">
             <ButtonLink href="/commander" variant="primary" size="pill">
-              Commander mon site
+              Décrire mon projet
             </ButtonLink>
             <Link href="/acces" className="text-link">
               J’ai reçu mon code d’accès
@@ -428,9 +406,6 @@ export default function HomePage() {
               Nous écrire
             </Link>
           </div>
-          <p className="mt-6 text-[13px] text-[var(--muted)]">
-            Sans engagement · aucun paiement à la commande · remboursé tant que rien n’a commencé
-          </p>
         </div>
       </section>
     </>

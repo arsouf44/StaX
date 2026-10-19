@@ -159,7 +159,7 @@ describe('manifeste', () => {
 
   it('publie un schema JSON pour les developpeurs', () => {
     const schema = manifestJsonSchema();
-    expect(schema['$id']).toBe('https://nemasus.fr/schemas/nemasus.manifest.v1.json');
+    expect(schema['$id']).toBe('https://nemasus.com/schemas/nemasus.manifest.v1.json');
     expect(JSON.stringify(schema)).toContain('opening_hours');
   });
 });
@@ -515,8 +515,8 @@ describe('pont d’apercu', () => {
   });
 
   it('inscrit l’origine exacte de l’editeur et rien d’autre', () => {
-    const script = bridgeScript('https://app.nemasus.fr/app/editeur?x=1');
-    expect(script).toContain('var ORIGIN = "https://app.nemasus.fr";');
+    const script = bridgeScript('https://app.nemasus.com/app/editeur?x=1');
+    expect(script).toContain('var ORIGIN = "https://app.nemasus.com";');
     expect(script).not.toContain('eval(');
     expect(script).not.toContain('innerHTML');
     expect(() => bridgeScript('pas une url')).toThrow();
@@ -573,14 +573,14 @@ describe('pont d’apercu', () => {
       return prevented;
     };
     const finger = (x: number, y: number) => ({ touches: [{ clientX: x, clientY: y }] });
-    runInNewContext(bridgeScript('https://app.nemasus.fr'), {
+    runInNewContext(bridgeScript('https://app.nemasus.com'), {
       window,
       document,
       location: { pathname: '/' },
       setTimeout: (callback: () => void) => timers.push(callback),
     });
     const tick = () => timers.shift()?.();
-    const receive = (data: unknown, origin = 'https://app.nemasus.fr') =>
+    const receive = (data: unknown, origin = 'https://app.nemasus.com') =>
       listeners.forEach((listener) => listener({ origin, source: parent, data }));
     const readies = () => sent.filter((entry) => entry.message['type'] === 'ready').length;
     const selects = () => sent.filter((entry) => entry.message['type'] === 'select');
@@ -591,7 +591,7 @@ describe('pont d’apercu', () => {
     const bridge = runBridge();
     expect(bridge.readies()).toBe(1);
     expect(bridge.sent[0]).toMatchObject({
-      origin: 'https://app.nemasus.fr',
+      origin: 'https://app.nemasus.com',
       message: { type: 'ready', path: '/', fields: ['pages.accueil.hero.titre'] },
     });
     bridge.tick();
@@ -616,7 +616,7 @@ describe('pont d’apercu', () => {
     const bridge = runBridge();
     bridge.receive({ source: 'nemasus-editor', version: 1, type: 'hello' });
     expect(bridge.readies()).toBe(2);
-    expect(bridge.sent.every((entry) => entry.origin === 'https://app.nemasus.fr')).toBe(true);
+    expect(bridge.sent.every((entry) => entry.origin === 'https://app.nemasus.com')).toBe(true);
   });
 
   it('un toucher bref choisit l’element sur telephone, un glissement non', () => {
@@ -631,7 +631,7 @@ describe('pont d’apercu', () => {
     expect(prevented).toBe(true);
     expect(bridge.selects()).toEqual([
       expect.objectContaining({
-        origin: 'https://app.nemasus.fr',
+        origin: 'https://app.nemasus.com',
         message: expect.objectContaining({ address: 'pages.accueil.hero.titre' }),
       }),
     ]);

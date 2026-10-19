@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import { ButtonLink, Container, Section, SectionHeading } from '@nemasus/ui';
 import { FAQ_CATEGORIES, FAQ_ITEMS, type FaqItem } from '~/content/faq';
-import { breadcrumbJsonLd, faqJsonLd, JsonLd, organizationJsonLd } from '~/lib/structured-data';
+import { faqJsonLd, JsonLd, organizationJsonLd, trailFrom } from '~/lib/structured-data';
+import { pageMetadata } from '~/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/faq',
   title: 'Questions fréquentes',
   description:
     'Commande, paiement par virement, code d’accès, modifications, hébergement, ' +
     'référencement : les réponses aux questions les plus fréquentes sur Nemasus.',
-  alternates: { canonical: '/faq' },
-};
+});
 
 export default function FaqPage() {
   const categories = Object.keys(FAQ_CATEGORIES) as Array<FaqItem['category']>;
@@ -20,10 +21,7 @@ export default function FaqPage() {
         graph={[
           organizationJsonLd(),
           faqJsonLd(FAQ_ITEMS, '/faq'),
-          breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Questions fréquentes', path: '/faq' },
-          ]),
+          trailFrom({ name: 'Questions fréquentes', path: '/faq' }),
         ]}
       />
 

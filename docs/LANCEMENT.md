@@ -43,9 +43,9 @@ l'audit opérationnel du 2026-09-30 : [GAP_AUDIT.md § 17](./GAP_AUDIT.md).
 Le code, les textes, les e-mails et les documents juridiques disent
 « Nemasus ». Ce qui reste à faire est **hors du dépôt** :
 
-1. **Nom de domaine.** Achetez `nemasus.fr` (et, par précaution, `nemasus.com`)
+1. **Nom de domaine.** Achetez `nemasus.com` (et, par précaution, `nemasus.com`)
    — ou le domaine de votre choix — puis rattachez-le au projet Vercel
-   (étape 3). Les valeurs `nemasus.fr` écrites dans le code ne sont que des
+   (étape 3). Les valeurs `nemasus.com` écrites dans le code ne sont que des
    exemples et des valeurs de repli.
 2. **Marque.** Vérifiez sur [data.inpi.fr](https://data.inpi.fr) que
    « Nemasus » n'est pas déjà déposé pour des services informatiques
@@ -260,7 +260,7 @@ select vault.create_secret('<valeur exacte de CRON_SECRET sur Vercel>', 'nemasus
 ces secrets sont présents — jamais leur valeur.
 
 **API des sites :** posez `SITES_API_URL` (adresse du Worker `nemasus-sites`,
-par exemple `https://api.nemasus.fr`) : l'écran de livraison affiche alors la
+par exemple `https://api.nemasus.com`) : l'écran de livraison affiche alors la
 ligne exacte de mesure d'audience à ajouter dans chaque site.
 
 **Vérifier :** `/admin/sante` : « Application GitHub », « API Cloudflare des

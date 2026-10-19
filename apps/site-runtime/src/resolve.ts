@@ -65,12 +65,12 @@ interface ResolveRow {
 
 function hostnameConfig() {
   return {
-    platformHost: (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://nemasus.fr').replace(
+    platformHost: (readEnv('NEXT_PUBLIC_PLATFORM_URL') ?? 'https://nemasus.com').replace(
       /^https?:\/\//,
       '',
     ),
-    sitesDomain: readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.nemasus.fr',
-    previewDomain: readEnv('NEXT_PUBLIC_PREVIEW_DOMAIN') ?? 'preview.sites.nemasus.fr',
+    sitesDomain: readEnv('NEXT_PUBLIC_SITES_DOMAIN') ?? 'sites.nemasus.com',
+    previewDomain: readEnv('NEXT_PUBLIC_PREVIEW_DOMAIN') ?? 'preview.sites.nemasus.com',
   };
 }
 

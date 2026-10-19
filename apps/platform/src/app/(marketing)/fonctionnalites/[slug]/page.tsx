@@ -15,7 +15,8 @@ import { FEATURE_PAGES, getFeaturePage } from '~/content/features';
 import { BrowserFrame, DashboardMock, EditorMock } from '~/components/marketing/product-visuals';
 import { SiteExampleStill } from '~/components/marketing/site-example';
 import { DomainRoutingDiagram, PaymentRoutingDiagram } from '~/components/marketing/diagrams';
-import { metaDescription } from '~/lib/seo';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
 /** Les dix pages de fonctionnalités sont pré-rendues au build. */
 export function generateStaticParams() {
@@ -29,12 +30,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const page = getFeaturePage(slug);
-  if (!page) return { title: 'Page introuvable' };
-  return {
+  if (!page) return { title: 'Page introuvable', robots: { index: false, follow: false } };
+  return pageMetadata({
+    path: `/fonctionnalites/${page.slug}`,
     title: page.name,
-    description: metaDescription(page.subtitle),
-    alternates: { canonical: `/fonctionnalites/${page.slug}` },
-  };
+    description: page.subtitle,
+    // Le titre de partage reprend la promesse de la page, plus parlante hors
+    // contexte que le nom de la fonctionnalite seul.
+    shareTitle: page.title,
+  });
 }
 
 export default async function FeatureDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -44,6 +48,19 @@ export default async function FeatureDetailPage({ params }: { params: Promise<{ 
 
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: `/fonctionnalites/${page.slug}`,
+            name: page.title,
+            description: page.subtitle,
+          }),
+          trailFrom(
+            { name: 'Fonctionnalités', path: '/fonctionnalites' },
+            { name: page.name, path: `/fonctionnalites/${page.slug}` },
+          ),
+        ]}
+      />
       <Section className="relative overflow-hidden pb-0">
         <Container size="wide">
           <Breadcrumb

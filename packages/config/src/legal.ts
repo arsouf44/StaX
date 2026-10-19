@@ -403,6 +403,84 @@ export function deliveryPolicyConfig(): DeliveryPolicyConfig {
   };
 }
 
+/**
+ * Prix d'appel public.
+ *
+ * Un prestataire qui n'affiche aucun prix perd les prospects avant la demande
+ * de devis : l'entreprise qui cherche un site ne sait pas si elle parle a un
+ * studio a 350 EUR ou a 15 000 EUR, et elle part. Un prix de depart filtre et
+ * rassure a la fois.
+ *
+ * Deux regles encadrent ce que ce module expose :
+ *
+ *  1. Le cout recurrent ne se cache pas. Annoncer « a partir de 350 EUR » en
+ *     taisant la maintenance annuelle serait une pratique commerciale
+ *     trompeuse (articles L.121-2 et L.121-3 du Code de la consommation, dont
+ *     la prohibition vaut aussi entre professionnels par l'article L.121-5).
+ *     Les deux montants vivent donc ensemble, et toute formulation produite
+ *     ici porte les deux.
+ *  2. Les montants sont HORS TAXES, parce que l'offre est reservee aux
+ *     professionnels et aux associations (article 2 des CGV). C'est dit a
+ *     chaque affichage : un prix HT presente comme un prix tout court est
+ *     lui aussi trompeur.
+ *
+ * `PRICE_FROM_EUR` et `MAINTENANCE_EUR_PER_YEAR` permettent de changer les
+ * montants sans toucher au code. `PRICE_PUBLIC=off` retire entierement
+ * l'affichage public, sans rien casser : les pages omettent alors le bloc, et
+ * l'article 6 des CGV reprend sa formulation sans grille tarifaire.
+ */
+export interface PricingPolicyConfig {
+  /** Prix de depart hors taxes, en euros. */
+  fromEur: number;
+  /** Maintenance annuelle hors taxes, en euros. */
+  maintenanceEurPerYear: number;
+  /** La maintenance est comprise dans le prix de depart la premiere annee. */
+  maintenanceIncludedFirstYear: boolean;
+  /** `false` quand aucun prix ne doit paraitre sur le site public. */
+  published: boolean;
+  /** « a partir de 350 EUR HT » */
+  fromLabel: string;
+  /** « 32 EUR HT par an » */
+  maintenanceLabel: string;
+  /**
+   * La phrase complete, prix de depart ET cout recurrent : la seule
+   * formulation qu'une page a le droit d'afficher seule.
+   */
+  sentence: string;
+}
+
+export function pricingPolicyConfig(): PricingPolicyConfig {
+  const amount = (key: string, fallback: number): number => {
+    const parsed = Number.parseFloat((readEnv(key) ?? '').replace(',', '.'));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+
+  const fromEur = amount('PRICE_FROM_EUR', 350);
+  const maintenanceEurPerYear = amount('MAINTENANCE_EUR_PER_YEAR', 32);
+  const maintenanceIncludedFirstYear =
+    (readEnv('MAINTENANCE_INCLUDED_FIRST_YEAR') ?? 'true').toLowerCase() !== 'false';
+  const published = (readEnv('PRICE_PUBLIC') ?? 'on').toLowerCase() !== 'off';
+
+  // Espace insecable avant le symbole, comme l'impose la typographie francaise.
+  const euros = (value: number): string =>
+    `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value)}\u00a0\u20ac HT`;
+
+  const fromLabel = `à partir de ${euros(fromEur)}`;
+  const maintenanceLabel = `${euros(maintenanceEurPerYear)} par an`;
+
+  return {
+    fromEur,
+    maintenanceEurPerYear,
+    maintenanceIncludedFirstYear,
+    published,
+    fromLabel,
+    maintenanceLabel,
+    sentence: maintenanceIncludedFirstYear
+      ? `Site sur mesure ${fromLabel}, maintenance comprise la première année, puis ${maintenanceLabel}.`
+      : `Site sur mesure ${fromLabel}, plus ${maintenanceLabel} de maintenance.`,
+  };
+}
+
 export interface MaintenancePolicyConfig {
   /** Days a site stays online after the last paid period (service continues). */
   gracePeriodDays: number;

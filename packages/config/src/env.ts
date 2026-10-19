@@ -13,9 +13,9 @@ import {
 /* -------------------------------------------------------------------------- */
 
 const publicSchema = z.object({
-  /** Canonical origin of the platform application, e.g. https://nemasus.fr */
+  /** Canonical origin of the platform application, e.g. https://nemasus.com */
   NEXT_PUBLIC_PLATFORM_URL: z.string().url().default('http://localhost:3000'),
-  /** Apex domain used to mint tenant subdomains, e.g. `sites.nemasus.fr`. */
+  /** Apex domain used to mint tenant subdomains, e.g. `sites.nemasus.com`. */
   NEXT_PUBLIC_SITES_DOMAIN: z.string().min(3).default('sites.localhost'),
   /** Supabase project URL — public by design. */
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().default('http://127.0.0.1:54321'),
@@ -491,6 +491,65 @@ export function bankTransferDetails(): BankTransferDetails | null {
 
 export function platformUrl(): string {
   return readEnv('PLATFORM_URL') ?? publicEnv().NEXT_PUBLIC_PLATFORM_URL;
+}
+
+/**
+ * Hotes qui ne sont pas un site public.
+ *
+ * Deux familles, pour une meme raison : ce ne sont pas des adresses sous
+ * lesquelles une entreprise est connue.
+ *  - les adresses de DEPLOIEMENT, que la plateforme d'hebergement attribue et
+ *    qui changent (`*.vercel.app`, `*.pages.dev`, `*.workers.dev`) ;
+ *  - les adresses LOCALES, qui ne designent que la machine courante.
+ */
+const NON_PUBLIC_HOSTS = [
+  /\.vercel\.app$/i,
+  /\.pages\.dev$/i,
+  /\.workers\.dev$/i,
+  /^localhost$/i,
+  /^127\.\d+\.\d+\.\d+$/,
+  /^\[?::1\]?$/,
+  /\.local$/i,
+];
+
+/**
+ * Vrai quand l'adresse publique n'est pas celle du site.
+ *
+ * C'est la faute de referencement la plus couteuse et la plus silencieuse :
+ * sans `PLATFORM_URL`, l'adresse retombe sur celle que fournit l'hebergeur
+ * (`xxx.vercel.app`) ou, a defaut, sur `http://localhost:3000`. Chaque page
+ * publie alors une URL canonique vers cette adresse. Les moteurs l'indexent,
+ * le vrai domaine en devient un duplicata, et l'adresse change au deploiement
+ * suivant.
+ *
+ * On verifie l'adresse RESOLUE, et non la presence d'une variable : c'est le
+ * seul controle qui tienne, quelle que soit la facon dont la valeur est
+ * arrivee (variable de deploiement, valeur inlinee au build, valeur par
+ * defaut). Un site servi en clair n'est pas davantage une adresse publique.
+ *
+ * Le site s'en protege lui-meme : tant que cette fonction repond vrai, il
+ * refuse l'indexation (voir la mise en page racine et `robots.ts`). Mieux
+ * vaut n'etre pas indexe un jour de plus que l'etre sous une adresse qui
+ * n'est pas la sienne.
+ */
+export function platformUrlIsNotPublic(): boolean {
+  try {
+    const url = new URL(platformUrl());
+    if (NON_PUBLIC_HOSTS.some((pattern) => pattern.test(url.hostname))) return true;
+    // Un domaine public se sert en HTTPS ; une URL en clair trahit une
+    // configuration locale ou incomplete.
+    return url.protocol !== 'https:';
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Vrai quand le site peut etre offert aux moteurs : une production servie
+ * sous sa propre adresse.
+ */
+export function isIndexable(): boolean {
+  return deployEnvironment() === 'production' && !platformUrlIsNotPublic();
 }
 
 export function sitesDomain(): string {

@@ -475,8 +475,8 @@ describe('aucun secret GitHub, Cloudflare ou Stripe côté navigateur', () => {
   });
 
   it('le script de pont publié ne parle qu’à l’origine de Nemasus, sans secret', () => {
-    const script = bridgeScript('https://nemasus.fr');
-    expect(script).toContain('https://nemasus.fr');
+    const script = bridgeScript('https://nemasus.com');
+    expect(script).toContain('https://nemasus.com');
     expect(script).not.toMatch(/postMessage\([^)]*['"]\*['"]/);
     expect(script).not.toMatch(/token|secret/i);
   });

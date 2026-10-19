@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import { ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@nemasus/ui';
 import { CreationTimeline } from '~/components/marketing/diagrams';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, serviceJsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/sur-mesure',
   title: 'Projets sur mesure',
   description:
     'Intégrations, espace client avancé, reprise de données : Nemasus étudie votre besoin ' +
     'et vous adresse une proposition détaillée avant toute commande.',
-  alternates: { canonical: '/sur-mesure' },
-};
+});
 
 const CASES = [
   {
@@ -64,6 +66,18 @@ const PROCESS = [
 export default function CustomPage() {
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/sur-mesure',
+            name: 'Projets sur mesure',
+            description:
+              'Intégrations, espace client avancé, reprise de données : les demandes étudiées et chiffrées avant toute commande.',
+          }),
+          serviceJsonLd(),
+          trailFrom({ name: 'Projets sur mesure', path: '/sur-mesure' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading

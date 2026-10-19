@@ -1,16 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Badge, ButtonLink, Container, Panel, Reveal, Section, SectionHeading } from '@nemasus/ui';
+import { ClientReferences } from '~/components/marketing/client-references';
 import { SITE_EXAMPLE, SiteExampleFrame } from '~/components/marketing/site-example';
 import { supportContact } from '~/lib/contact';
+import { pageMetadata } from '~/lib/seo';
+import { JsonLd, trailFrom, webPageJsonLd } from '~/lib/structured-data';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/realisations',
   title: 'Réalisations',
   description:
     'Un exemple de site conçu par Nemasus : la page d’accueil d’Atelier Voltaire, architecture ' +
     'intérieure à Paris, à faire défiler. Maquette de présentation, identifiée comme telle.',
-  alternates: { canonical: '/realisations' },
-};
+});
 
 /**
  * Ce que la page d'accueil fait pour son entreprise : les choix de conception
@@ -56,6 +59,17 @@ export default function ShowcasePage() {
   const contact = supportContact();
   return (
     <>
+      <JsonLd
+        graph={[
+          webPageJsonLd({
+            path: '/realisations',
+            name: 'Réalisations',
+            description:
+              'Un exemple de site conçu par notre équipe, présenté comme une maquette et identifié comme telle.',
+          }),
+          trailFrom({ name: 'Réalisations', path: '/realisations' }),
+        ]}
+      />
       <Section className="relative overflow-hidden">
         <Container size="wide">
           <SectionHeading
@@ -69,8 +83,9 @@ export default function ShowcasePage() {
               Maquette de présentation
             </Badge>
             <span>
-              {SITE_EXAMPLE.name} est une maquette réalisée par notre studio pour montrer notre
-              niveau de finition. Nous ne présentons de vrais clients qu’avec leur accord.
+              {SITE_EXAMPLE.name} est une démonstration réalisée par notre studio pour montrer notre
+              niveau de finition — ce n’est pas une référence client, et cette entreprise n’existe
+              pas. Nous ne publierons le nom d’un vrai client qu’avec son accord écrit.
             </span>
           </p>
           <SiteExampleFrame className="mt-10" size="tall" eager />
@@ -166,13 +181,15 @@ export default function ShowcasePage() {
                 </ButtonLink>
               )}
             </div>
+            {/* Les garanties sont ecrites une seule fois, sur l'accueil. */}
             <p className="mt-5 text-[13px] text-[var(--muted)]">
-              Sans engagement · aucun paiement à la commande ·{' '}
-              <Link href="/cgv#remboursement" className="underline underline-offset-4">
-                remboursé tant que rien n’a commencé
+              <Link href="/#conditions" className="underline underline-offset-4">
+                Le prix et ce qui vous protège
               </Link>
             </p>
           </Panel>
+          {/* Invisible tant qu'aucune reference reelle n'existe. */}
+          <ClientReferences className="mt-20" />
         </Container>
       </Section>
     </>

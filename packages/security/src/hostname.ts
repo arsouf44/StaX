@@ -12,7 +12,7 @@ export interface ResolvedHostname {
   kind: HostnameKind;
   /** Nom d'hote normalise : minuscules, sans port, sans point final. */
   hostname: string;
-  /** Sous-domaine du tenant, pour `client.sites.nemasus.fr`. */
+  /** Sous-domaine du tenant, pour `client.sites.nemasus.com`. */
   subdomain: string | null;
   isPreview: boolean;
 }
@@ -43,11 +43,11 @@ export function isValidHostname(host: string): boolean {
 }
 
 export interface HostnameConfig {
-  /** Hote de l'application Nemasus, par exemple `nemasus.fr`. */
+  /** Hote de l'application Nemasus, par exemple `nemasus.com`. */
   platformHost: string;
-  /** Domaine parent des sous-domaines clients, par exemple `sites.nemasus.fr`. */
+  /** Domaine parent des sous-domaines clients, par exemple `sites.nemasus.com`. */
   sitesDomain: string;
-  /** Domaine des apercus, par exemple `preview.sites.nemasus.fr`. */
+  /** Domaine des apercus, par exemple `preview.sites.nemasus.com`. */
   previewDomain: string;
 }
 
